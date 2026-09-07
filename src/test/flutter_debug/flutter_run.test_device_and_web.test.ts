@@ -7,7 +7,7 @@ import { DebuggerType, VmService, VmServiceExtension } from "../../shared/enums"
 import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntries, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, deferUntilLast, delay, flutterHelloWorldBrokenFile, flutterHelloWorldGettersFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getPackages, myPackageFolder, openFile, positionOf, privateApi, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -561,15 +561,20 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureVariable(variables, "s", "s", `"Hello!"`);
 		ensureVariable(variables, "m", "m", `Map (10 items)`);
 
-		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
+		// Fetch variables in parallel to speed the telst up.
+		const [listVariables, listLongStringVariables, shortdateListVariables, mapVariables] = await Promise.all([
+			dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference),
+			dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference),
+			dc.getVariables(variables.find((v) => v.name === "tenDates")!.variablesReference),
+			dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference),
+		]);
 		for (let i = 0; i <= 1; i++) {
 			ensureVariableWithIndex(listVariables, i, `l[${i}]`, `[${i}]`, `${i}`);
 		}
 
 		// TODO: Remove this condition when web truncates variables
 		if (!flutterTestDeviceIsWeb) {
-			const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
-			ensureVariable(longStringListVariables, "longStrings[0]", "[0]", {
+			ensureVariable(listLongStringVariables, "longStrings[0]", "[0]", {
 				ends: "…\"", // String is truncated here.
 				starts: "\"This is a long string that is 300 characters!",
 			});
@@ -577,10 +582,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			console.warn(`Skipping long string check for Chrome...`);
 		}
 
-		const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates")!.variablesReference);
 		ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", "DateTime (2005-01-01 00:00:00.000)");
-
-		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 		ensureVariable(mapVariables, undefined, "0", `"l" -> List (12 items)`);
 		ensureVariable(mapVariables, undefined, "1", `"longStrings" -> List (1 item)`);
 		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
@@ -592,46 +594,47 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
 
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `"l"` },
-			value: { evaluateName: `m["l"]`, name: "value", value: "List (12 items)" },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `"longStrings"` },
-			value: { evaluateName: `m["longStrings"]`, name: "value", value: "List (1 item)" },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `"s"` },
-			value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `DateTime (2000-02-14 00:00:00.000)` },
-			value: { evaluateName: undefined, name: "value", value: `"valentines-2000"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `DateTime (2005-01-01 00:00:00.000)` },
-			value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: "true" },
-			value: { evaluateName: `m[true]`, name: "value", value: "true" },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: "1" },
-			value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: "1.1" },
-			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
-		}, dc);
+		await ensureMapEntries(mapVariables, [
+			{
+				key: { evaluateName: undefined, name: "key", value: `"l"` },
+				value: { evaluateName: `m["l"]`, name: "value", value: "List (12 items)" },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `"longStrings"` },
+				value: { evaluateName: `m["longStrings"]`, name: "value", value: "List (1 item)" },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `"s"` },
+				value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `DateTime (2000-02-14 00:00:00.000)` },
+				value: { evaluateName: undefined, name: "value", value: `"valentines-2000"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `DateTime (2005-01-01 00:00:00.000)` },
+				value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: "true" },
+				value: { evaluateName: `m[true]`, name: "value", value: "true" },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: "1" },
+				value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: "1.1" },
+				value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
+			},
+		], dc);
 
 		// The evaluateNames of the variables above should evaluate to the same values.
-		// Re-use the children already fetched above, except for the long strings whose
-		// children are skipped above on web because of truncated-value differences.
-		const listLongStringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
 		const allVariables = listVariables.concat(listLongStringVariables).concat(mapVariables);
 
-		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
+		// Look up the frame once and share it so each evaluation is a single request.
+		const frameId = await dc.getTopFrameId();;
+		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v, frameId)));
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
@@ -733,13 +736,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			path: fsPath(flutterHelloWorldMainFile),
 		});
 
-		const variables = await dc.getTopFrameVariables("Locals");
+		const frameId = await dc.getTopFrameId();
+		const variables = await dc.getTopFrameVariables("Locals", { frameId });
 
 		for (const variable of variables) {
 			const evaluateName = (variable as any).evaluateName as string | undefined;
 			if (!evaluateName)
 				continue;
-			const evaluateResult = await dc.evaluateForFrame(evaluateName);
+			const evaluateResult = await dc.evaluateForFrame(evaluateName, { frameId });
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, variable.value);
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);

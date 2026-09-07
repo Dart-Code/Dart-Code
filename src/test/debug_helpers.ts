@@ -175,11 +175,12 @@ export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], ind
 	ensureVariable(variables, evaluateName, name, value);
 }
 
-export async function ensureVariableEvaluateName(dc: DartDebugClient, variable: DebugProtocol.Variable) {
+export async function ensureVariableEvaluateName(dc: DartDebugClient, variable: DebugProtocol.Variable, frameId?: number) {
 	const evaluateName = (variable as any).evaluateName as string | undefined;
 	if (!evaluateName)
 		return;
-	const evaluateResult = await dc.evaluateForFrame(evaluateName);
+	const id = frameId ?? (await dc.getStack()).body.stackFrames[0].id;
+	const evaluateResult = (await dc.evaluateRequest({ expression: evaluateName, frameId: id })).body;
 	assert.ok(evaluateResult);
 	if (variable.value.endsWith("…\"")) {
 		// If the value was truncated, the evaluate responses should be longer
@@ -206,27 +207,30 @@ interface MapEntry {
 	};
 }
 
-export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry: MapEntry, dc: DartDebugClient) {
+export async function ensureMapEntries(mapEntries: DebugProtocol.Variable[], entries: MapEntry[], dc: DartDebugClient) {
 	assert.ok(mapEntries);
-	let found = false;
-	const keyValues: string[] = [];
-	await Promise.all(mapEntries.map(async (mapEntry) => {
+	// Fetch the children for all entries concurrently.
+	const fetchedEntries = await Promise.all(mapEntries.map(async (mapEntry) => {
 		const variable = await dc.getVariables(mapEntry.variablesReference);
 
 		const key = variable[0];
 		const value = variable[1];
 		assert.ok(key, "Didn't get Key variable");
 		assert.ok(value, "Didn't get Value variable");
-		if (key.name === entry.key.name
+		return { key, value };
+	}));
+
+	const keyValues = fetchedEntries.map(({ key, value }) => `${key.value}=${value.value}`);
+	for (const entry of entries) {
+		const found = fetchedEntries.some(({ key, value }) =>
+			key.name === entry.key.name
 			&& key.value === entry.key.value
 			&& key.evaluateName === entry.key.evaluateName
 			&& value.evaluateName === entry.value.evaluateName
 			&& value.name === entry.value.name
-			&& value.value === entry.value.value)
-			found = true;
-		keyValues.push(`${key.value}=${value.value}`);
-	}));
-	assert.ok(found, `Didn't find map entry for ${entry.key.value}=${entry.value.value}\nGot:\n  ${keyValues.join("\n  ")})`);
+			&& value.value === entry.value.value);
+		assert.ok(found, `Didn't find map entry for ${entry.key.value}=${entry.value.value}\nGot:\n  ${keyValues.join("\n  ")})`);
+	}
 }
 
 export async function getVariablesTree(dc: DartDebugClient, variablesReference: number): Promise<string[]> {

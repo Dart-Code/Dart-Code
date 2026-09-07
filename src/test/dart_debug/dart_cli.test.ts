@@ -13,7 +13,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForFile, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntries, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForFile, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureHasRunWithArgsStarting, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, rangeFor, sb, setConfigForTest, setTestContent, tryDelete, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
@@ -806,38 +806,40 @@ void printSomething() {
 		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
 
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `"l"` },
-			value: { evaluateName: `m["l"]`, name: "value", value: "List (12 items)" },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `"longStrings"` },
-			value: { evaluateName: `m["longStrings"]`, name: "value", value: "List (1 item)" },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `"s"` },
-			value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `DateTime (2000-02-14 00:00:00.000)` },
-			value: { evaluateName: undefined, name: "value", value: `"valentines-2000"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: `DateTime (2005-01-01 00:00:00.000)` },
-			value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: "true" },
-			value: { evaluateName: `m[true]`, name: "value", value: "true" },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: "1" },
-			value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
-		}, dc);
-		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: "1.1" },
-			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
-		}, dc);
+		await ensureMapEntries(mapVariables, [
+			{
+				key: { evaluateName: undefined, name: "key", value: `"l"` },
+				value: { evaluateName: `m["l"]`, name: "value", value: "List (12 items)" },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `"longStrings"` },
+				value: { evaluateName: `m["longStrings"]`, name: "value", value: "List (1 item)" },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `"s"` },
+				value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `DateTime (2000-02-14 00:00:00.000)` },
+				value: { evaluateName: undefined, name: "value", value: `"valentines-2000"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: `DateTime (2005-01-01 00:00:00.000)` },
+				value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: "true" },
+				value: { evaluateName: `m[true]`, name: "value", value: "true" },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: "1" },
+				value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
+			},
+			{
+				key: { evaluateName: undefined, name: "key", value: "1.1" },
+				value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
+			}
+		], dc);
 
 		await dc.terminateRequest();
 	});
@@ -951,13 +953,14 @@ void printSomething() {
 			path: fsPath(helloWorldMainFile),
 		});
 
-		const variables = await dc.getTopFrameVariables("Locals");
+		const frameId = await dc.getTopFrameId();
+		const variables = await dc.getTopFrameVariables("Locals", { frameId });
 
 		for (const variable of variables) {
 			const evaluateName = (variable as any).evaluateName as string | undefined;
 			if (!evaluateName)
 				continue;
-			const evaluateResult = await dc.evaluateForFrame(evaluateName);
+			const evaluateResult = await dc.evaluateForFrame(evaluateName, { frameId });
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, variable.value);
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
@@ -1014,9 +1017,10 @@ void printSomething() {
 				}),
 			);
 
-			assert.equal((await dc.evaluateForFrame(`"test",nq`)).result, `test`);
-			assert.equal((await dc.evaluateForFrame(`10+10,d`)).result, `20`);
-			assert.equal((await dc.evaluateForFrame(`10+10,h`)).result, `0x14`);
+			const frameId = await dc.getTopFrameId();
+			assert.equal((await dc.evaluateForFrame(`"test",nq`, { frameId })).result, `test`);
+			assert.equal((await dc.evaluateForFrame(`10+10,d`, { frameId })).result, `20`);
+			assert.equal((await dc.evaluateForFrame(`10+10,h`, { frameId })).result, `0x14`);
 
 			await dc.terminateRequest();
 		});
@@ -1109,7 +1113,7 @@ void printSomething() {
 				: "Class 'DateTime' has no instance getter 'ye'.";
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-			const error = await dc.evaluateForFrame("DateTime.now().ye", "repl").catch((e) => e);
+			const error = await dc.evaluateForFrame("DateTime.now().ye", { context: "repl" }).catch((e) => e);
 			assert.notEqual(error.message.indexOf(expectedError), -1);
 
 			await dc.terminateRequest();
@@ -1134,7 +1138,7 @@ void printSomething() {
 			);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
+			const error = await dc.evaluateForFrame("DateTime.now().ye", { context: "watch" }).catch((e) => e);
 			assert.equal(error.message, expectedError);
 
 			await dc.terminateRequest();
