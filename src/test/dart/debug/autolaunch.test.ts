@@ -12,7 +12,7 @@ import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryD
 /// Use a unique named config folder so we don't trigger the built-in AutoLaunch for the main extension that's running.
 const testDartCodeConfigFolder = ".test_dart_code";
 const testDebounceDelayMs = 200; // Shorter debounce to use for faster tests.
-const debounceOffset = 30; // Time to wait in addition to the debounce time.
+const debounceOffset = 50; // Time to wait in addition to the debounce time.
 
 describe("debug autolaunch", () => {
 	for (const alreadyExists of [true, false]) {
@@ -74,7 +74,7 @@ describe("debug autolaunch", () => {
 
 			createAutoLaunch();
 
-			// Rapidly write multiple configs
+			// Rapidly write multiple configs.
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
 			await delay(testDebounceDelayMs / 2);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig2] }));
@@ -104,7 +104,7 @@ describe("debug autolaunch", () => {
 		}
 
 		beforeEach(async () => {
-			// Find an available port for our mock WebSocket server
+			// Find an available port for our mock WebSocket server.
 			serverPort = await new Promise<number>((resolve) => {
 				const server = new ws.WebSocketServer({ port: 0 });
 				server.on("listening", () => {
@@ -155,7 +155,7 @@ describe("debug autolaunch", () => {
 			const launchConfig = createLaunchConfig("VM Service Timeout Test", vmServiceUri, timeout);
 
 			await triggerAutoLaunch(filePath, launchConfig);
-			// Don't start the mock server - VM Service should timeout
+			// Don't start the mock server - VM Service should timeout.
 
 			await delay(timeout + 100); // Wait long enough for the timeout.
 			assert.ok(!startDebugSession.called);

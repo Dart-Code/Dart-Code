@@ -553,7 +553,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			path: fsPath(flutterHelloWorldMainFile),
 		});
 
-		const variables = await dc.getTopFrameVariables("Locals");
+		const frameId = await dc.getTopFrameId();
+
+		const variables = await dc.getTopFrameVariables("Locals", { frameId });
 		ensureVariable(variables, "l", "l", `List (12 items)`);
 		ensureVariable(variables, "longStrings", "longStrings", `List (1 item)`);
 		ensureVariable(variables, "tenDates", "tenDates", `List (10 items)`);
@@ -561,7 +563,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureVariable(variables, "s", "s", `"Hello!"`);
 		ensureVariable(variables, "m", "m", `Map (10 items)`);
 
-		// Fetch variables in parallel to speed the telst up.
+		// Fetch variables in parallel to speed the test up.
 		const [listVariables, listLongStringVariables, shortdateListVariables, mapVariables] = await Promise.all([
 			dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference),
 			dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference),
@@ -632,8 +634,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// The evaluateNames of the variables above should evaluate to the same values.
 		const allVariables = listVariables.concat(listLongStringVariables).concat(mapVariables);
 
-		// Look up the frame once and share it so each evaluation is a single request.
-		const frameId = await dc.getTopFrameId();;
 		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v, frameId)));
 
 		await waitAllThrowIfTerminates(dc,
@@ -784,13 +784,17 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		let didStop = false;
 		dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
 
+		// Start the app and wait for the exception to occur and print.
 		await waitAllThrowIfTerminates(dc,
-			dc.debuggerReady()
-				.then(() => delay(2000))
-				.then(() => dc.terminateRequest()),
+			dc.debuggerReady(),
 			dc.configurationSequence(),
-			dc.waitForEvent("terminated"),
 			dc.launch(config),
+			dc.assertOutputContains(undefined, "Exception: Oops"),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
 		);
 
 		assert.equal(didStop, false);
