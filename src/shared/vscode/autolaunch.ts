@@ -15,7 +15,7 @@ export class AutoLaunch implements IAmDisposable {
 	private processingQueue: Promise<void> = Promise.resolve(); // A queue to ensure no overlapped processing due to async work.
 	private isDisposed = false;
 
-	constructor(dartCodeConfigurationPath: string, readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined) {
+	constructor(dartCodeConfigurationPath: string, readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly debounceDelayMs = AutoLaunch.debounceDelayMs) {
 		const watcherPattern = path.isAbsolute(dartCodeConfigurationPath)
 			? new RelativePattern(dartCodeConfigurationPath, autoLaunchFilename)
 			: path.join("**", dartCodeConfigurationPath, autoLaunchFilename).replaceAll("\\", "/");
@@ -55,7 +55,7 @@ export class AutoLaunch implements IAmDisposable {
 			setTimeout(() => {
 				this.debounceTimers.delete(uriString);
 				void this.handleChange(uri);
-			}, AutoLaunch.debounceDelayMs),
+			}, this.debounceDelayMs),
 		);
 	}
 
