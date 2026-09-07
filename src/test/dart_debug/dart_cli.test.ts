@@ -11,7 +11,6 @@ import { DebuggerType } from "../../shared/enums";
 import { versionIsAtLeast } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
-import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntries, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForFile, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureHasRunWithArgsStarting, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, rangeFor, sb, setConfigForTest, setTestContent, tryDelete, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
@@ -703,46 +702,36 @@ void printSomething() {
 		await dc.terminateRequest();
 	});
 
-	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
-		return async () => {
-			await openFile(helloWorldMainFile);
-			const config = await startDebugger(dc, helloWorldMainFile);
+	it("stops at a breakpoint with a condition returning true, not one returning false, and reports evaluation errors", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 
-			let didStop = false;
-			dc.on("stopped", (e) => { if (e.body?.reason === "breakpoint") didStop = true; });
+		const breakpoint1Line = positionOf("^// BREAKPOINT1").line;
+		const breakpoint2Line = positionOf("^// BREAKPOINT2").line;
+		const breakpoint3Line = positionOf("^// BREAKPOINT3").line;
 
-			let expectation: Promise<any> = resolvedPromise;
-			if (shouldStop)
-				expectation = expectation.then(() => dc.waitForStop()).then(() => dc.terminateRequest());
+		await waitAllThrowIfTerminates(
+			dc,
+			dc.waitForEvent("initialized")
+				.then(() => dc.setBreakpointsRequest({
+					breakpoints: [
+						{ condition: "1 == 0", line: breakpoint1Line }, // Miss
+						{ condition: "1 + '1'", line: breakpoint2Line }, // Invalid
+						{ condition: "1 == 1", line: breakpoint3Line }, // Hit
+					],
+					source: { path: fsPath(helloWorldMainFile) },
+				}))
+				.then(() => dc.configurationDoneRequest()),
+			watchPromise("assertOutputContains", dc.assertOutputContains("console", `Debugger failed to evaluate breakpoint condition "1 + '1'"`)),
+			watchPromise("assertStoppedLocation", dc.assertStoppedLocation("breakpoint", {
+				line: breakpoint3Line,
+				path: fsPath(helloWorldMainFile),
+			})),
+			watchPromise("launch", dc.launch(config)),
+		);
 
-			if (expectedError)
-				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));
-
-			await waitAllThrowIfTerminates(dc,
-				dc.waitForEvent("terminated"),
-				dc.waitForEvent("initialized")
-					.then(() => dc.setBreakpointsRequest({
-						// positionOf is 0-based, but seems to want 1-based
-						breakpoints: [{
-							condition,
-							line: positionOf("^// BREAKPOINT1").line,
-						}],
-						source: { path: fsPath(helloWorldMainFile) },
-					}))
-					.then(() => dc.configurationDoneRequest()),
-				expectation,
-				dc.launch(config),
-			);
-
-			assert.equal(didStop, shouldStop);
-
-			await dc.terminateRequest();
-		};
-	}
-
-	it("stops at a breakpoint with a condition returning true", testBreakpointCondition("1 == 1", true));
-	it("does not stop at a breakpoint with a condition returning false", testBreakpointCondition("1 == 0", false));
-	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, `Debugger failed to evaluate breakpoint condition "1 + '1'"`));
+		await dc.terminateRequest();
+	});
 
 	it("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(helloWorldMainFile);
@@ -977,13 +966,14 @@ void printSomething() {
 			path: fsPath(helloWorldMainFile),
 		});
 
-		const variables = await dc.getTopFrameVariables("Locals");
+		const frameId = await dc.getTopFrameId();
+		const variables = await dc.getTopFrameVariables("Locals", { frameId });
 		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
 		const listLongStringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 		const allVariables = listVariables.concat(listLongStringVariables).concat(mapVariables);
 
-		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
+		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v, { frameId })));
 
 		await dc.terminateRequest();
 	});

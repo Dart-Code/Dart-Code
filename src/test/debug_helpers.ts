@@ -175,7 +175,7 @@ export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], ind
 	ensureVariable(variables, evaluateName, name, value);
 }
 
-export async function ensureVariableEvaluateName(dc: DartDebugClient, variable: DebugProtocol.Variable, frameId?: number) {
+export async function ensureVariableEvaluateName(dc: DartDebugClient, variable: DebugProtocol.Variable, { frameId }: { frameId?: number } = {}) {
 	const evaluateName = (variable as any).evaluateName as string | undefined;
 	if (!evaluateName)
 		return;
