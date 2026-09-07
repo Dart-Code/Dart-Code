@@ -60,5 +60,5 @@ void genericMethod<TBool, TDouble, TInt, TString>() {
   print('TBool: ' + TBool.toString()); // BREAKPOINT2
   print('TDouble: ' + TDouble.toString());
   print('TInt: ' + TInt.toString());
-  print('TString: ' + TString.toString());
+  print('TString: ' + TString.toString()); // BREAKPOINT3
 }

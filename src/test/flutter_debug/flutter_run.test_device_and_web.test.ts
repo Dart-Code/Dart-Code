@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { isLinux } from "../../shared/constants";
 import { DebuggerType, VmService, VmServiceExtension } from "../../shared/enums";
 import { fsPath } from "../../shared/utils/fs";
-import { resolvedPromise, waitFor } from "../../shared/utils/promises";
+import { waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntries, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, deferUntilLast, delay, flutterHelloWorldBrokenFile, flutterHelloWorldGettersFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getPackages, myPackageFolder, openFile, positionOf, privateApi, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
@@ -461,76 +461,29 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("downloads SDK source code from the VM");
 
-	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
-		return async () => {
-			await openFile(flutterHelloWorldMainFile);
-			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-
-			let didStop = false;
-			dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
-
-			let expectation: Promise<any> = resolvedPromise;
-			if (shouldStop)
-				expectation = expectation.then(() => dc.waitForStop());
-
-			if (expectedError)
-				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));
-
-			// If we don't have another expectation, then we need to keep running for some period
-			// after launch to ensure we didn't stop unexpectedly.
-			let waitAfterLaunch = 0;
-			if (expectation === resolvedPromise)
-				waitAfterLaunch = 10000;
-
-			await waitAllThrowIfTerminates(
-				dc,
-				dc.waitForEvent("initialized")
-					.then(() => dc.setBreakpointsRequest({
-						// positionOf is 0-based, but seems to want 1-based
-						breakpoints: [{
-							condition,
-							line: positionOf("^// BREAKPOINT1").line,
-						}],
-						source: { path: fsPath(flutterHelloWorldMainFile) },
-					}))
-					.then(() => dc.configurationDoneRequest()),
-				expectation,
-				dc.launch(config)
-			)
-				.then(() => delay(waitAfterLaunch));
-
-			await waitAllThrowIfTerminates(dc,
-				dc.waitForEvent("terminated"),
-				dc.terminateRequest(),
-			);
-
-			assert.equal(didStop, shouldStop);
-		};
-	}
-
-	it("stops at a breakpoint with a condition returning true, but not one returning false", async () => {
+	it("stops at a breakpoint with a condition returning true, not one returning false, and reports evaluation errors", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
-		// genericMethod (BREAKPOINT2) runs before BREAKPOINT1 during the build, so the
-		// false condition is evaluated first and must not stop, then the true condition
-		// stops. If the false condition incorrectly stopped, the location assertion below
-		// would fail because we'd be stopped at BREAKPOINT2 instead of BREAKPOINT1.
+		// BREAKPOINT2 runs before BREAKPOINT1, so the false condition
+		// is evaluated first. The true condition then stops at BREAKPOINT1.
 		const breakpoint1Line = positionOf("^// BREAKPOINT1").line;
 		const breakpoint2Line = positionOf("^// BREAKPOINT2").line;
+		const breakpoint3Line = positionOf("^// BREAKPOINT3").line;
 
 		await waitAllThrowIfTerminates(
 			dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setBreakpointsRequest({
-					// positionOf is 0-based, but seems to want 1-based
 					breakpoints: [
-						{ condition: "1 == 0", line: breakpoint2Line },
-						{ condition: "1 == 1", line: breakpoint1Line },
+						{ condition: "1 == 0", line: breakpoint2Line }, // Miss
+						{ condition: "1 + '1'", line: breakpoint3Line }, // Invalid
+						{ condition: "1 == 1", line: breakpoint1Line }, // Hit
 					],
 					source: { path: fsPath(flutterHelloWorldMainFile) },
 				}))
 				.then(() => dc.configurationDoneRequest()),
+			dc.assertOutputContains("console", `Debugger failed to evaluate breakpoint condition "1 + '1'"`),
 			dc.assertStoppedLocation("breakpoint", {
 				line: breakpoint1Line,
 				path: fsPath(flutterHelloWorldMainFile),
@@ -543,7 +496,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.terminateRequest(),
 		);
 	});
-	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, `Debugger failed to evaluate breakpoint condition "1 + '1'"`));
 
 	it("provides local variables and evaluateNames when stopped at a breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
@@ -634,7 +586,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// The evaluateNames of the variables above should evaluate to the same values.
 		const allVariables = listVariables.concat(listLongStringVariables).concat(mapVariables);
 
-		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v, frameId)));
+		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v, { frameId })));
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
