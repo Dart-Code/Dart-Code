@@ -11,6 +11,8 @@ import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryD
 
 /// Use a unique named config folder so we don't trigger the built-in AutoLaunch for the main extension that's running.
 const testDartCodeConfigFolder = ".test_dart_code";
+const testDebounceDelayMs = 200; // Shorter debounce to use for faster tests.
+const debounceOffset = 30; // Time to wait in addition to the debounce time.
 
 describe("debug autolaunch", () => {
 	for (const alreadyExists of [true, false]) {
@@ -52,7 +54,7 @@ describe("debug autolaunch", () => {
 
 			// Create file initially with empty config.
 			await writeAutoLaunch(filePath);
-			await delay(AutoLaunch.debounceDelayMs + 100); // Wait for initial debounce.
+			await delay(testDebounceDelayMs + debounceOffset); // Wait for initial debounce.
 
 			assert.ok(!startDebugSession.called, "Should not have called startDebugSession for empty config");
 
@@ -67,24 +69,26 @@ describe("debug autolaunch", () => {
 			const { wf, filePath, startDebugSession } = createTestEnvironment();
 			const launchConfig1 = createLaunchConfig("Debounce Test 1");
 			const launchConfig2 = createLaunchConfig("Debounce Test 2");
+			const launchConfig3 = createLaunchConfig("Debounce Test 3");
+			const launchConfig4 = createLaunchConfig("Debounce Test 4");
 
 			createAutoLaunch();
 
 			// Rapidly write multiple configs
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
-			await delay(100);
+			await delay(testDebounceDelayMs / 2);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig2] }));
-			await delay(100);
-			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
-			await delay(100);
-			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig2] }));
+			await delay(testDebounceDelayMs / 2);
+			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig3] }));
+			await delay(testDebounceDelayMs / 2);
+			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig4] }));
 
 			// Wait for debounce a session to start, and then for the debounce time.
 			await waitFor(() => startDebugSession.called);
-			await delay(AutoLaunch.debounceDelayMs + 100);
+			await delay(testDebounceDelayMs + debounceOffset);
 
 			// Should only be called once with the final configuration.
-			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig2));
+			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig4));
 		});
 	});
 
@@ -128,7 +132,7 @@ describe("debug autolaunch", () => {
 			await startMockServer();
 			await triggerAutoLaunch(filePath, launchConfig);
 
-			await waitFor(() => startDebugSession.called, 1000); // Don't wait long, it should connect immediately.
+			await waitFor(() => startDebugSession.called); // Don't wait long, it should connect immediately.
 			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
 		});
 
@@ -140,19 +144,20 @@ describe("debug autolaunch", () => {
 			await triggerAutoLaunch(filePath, launchConfig);
 			void delay(1000).then(startMockServer);
 
-			await waitFor(() => startDebugSession.called, 5000);
+			await waitFor(() => startDebugSession.called);
 			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
 		});
 
 		it("should fail to start debugging if VM Service never becomes available", async () => {
 			const { filePath, startDebugSession } = createTestEnvironment();
 			const vmServiceUri = `ws://localhost:${serverPort}`;
-			const launchConfig = createLaunchConfig("VM Service Timeout Test", vmServiceUri, 1000);
+			const timeout = 500;
+			const launchConfig = createLaunchConfig("VM Service Timeout Test", vmServiceUri, timeout);
 
 			await triggerAutoLaunch(filePath, launchConfig);
 			// Don't start the mock server - VM Service should timeout
 
-			await delay(2000); // Wait long enough for the timeout.
+			await delay(timeout + 100); // Wait long enough for the timeout.
 			assert.ok(!startDebugSession.called);
 		});
 
@@ -211,17 +216,17 @@ function createTestEnvironment(overridePath?: string) {
 
 async function writeAutoLaunch(filePath: string, launchConfig?: any) {
 	const launchConfigs = launchConfig ? { configurations: [launchConfig] } : { configurations: [] };
-	await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
+	await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs), { flush: true });
 }
 
 function createAutoLaunch(overridePath?: string) {
-	const autoLaunch = new AutoLaunch(overridePath ?? testDartCodeConfigFolder, logger, undefined);
+	const autoLaunch = new AutoLaunch(overridePath ?? testDartCodeConfigFolder, logger, undefined, testDebounceDelayMs);
 	defer("dispose AutoLaunch", () => autoLaunch.dispose());
 }
 
 async function triggerAutoLaunch(filePath: string, launchConfig?: any, overridePath?: string) {
 	await writeAutoLaunch(filePath, launchConfig);
-	await delay(100); // Small delay to ensure file exists before we create AutoLaunch.
+	await delay(10); // Small delay to ensure file exists before we create AutoLaunch (although we do flush in writeAutoLaunch).
 
 	createAutoLaunch(overridePath);
 }
