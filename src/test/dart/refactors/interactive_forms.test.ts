@@ -347,7 +347,11 @@ describe("interactive forms", () => {
 
 		describe("file input", () => {
 			it("handles for existing resource using showOpenDialog", async () => {
+				const existingFolderUri = vscode.workspace.workspaceFolders![0].uri;
+				const nonExistentFileUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, "non_existent_file.txt");
+
 				const showOpenDialogMock = mock.method(vscode.window, "showOpenDialog", async (options: any) => {
+					assert.equal(options.defaultUri?.toString(), existingFolderUri.toString());
 					assert.equal(options.canSelectFiles, true);
 					assert.equal(options.canSelectFolders, false);
 					assert.equal(options.title, "Select existing workspace file");
@@ -364,9 +368,10 @@ describe("interactive forms", () => {
 								kind: "file",
 								existence: FileExistence.Existing,
 								type: FileType.Regular,
-								filters: ["dart"]
+								filters: ["dart"],
 							},
-							required: true
+							required: true,
+							default: nonExistentFileUri.toString(),
 						}
 					],
 				});
