@@ -13,7 +13,7 @@ import { getRandomInt } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
-import { delay, logger, privateApi, watchPromise } from "./helpers";
+import { currentTestName, delay, logger, privateApi, watchPromise } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl", "flutter.appStart", "flutter.appStarted", "dart.toolEvent", "dart.flutter.devToolsDeepLink"];
 
@@ -261,9 +261,21 @@ export class DartDebugClient extends DebugClient {
 		return this.stackTraceRequest({ threadId: thread.id, startFrame, levels });
 	}
 
-	public async getTopFrameVariables(scope: "Exceptions" | "Locals"): Promise<DebugProtocol.Variable[]> {
+	private lastTestThatCalledGetTopFrameId: string | undefined = undefined;
+
+	public async getTopFrameId(): Promise<number> {
+		if (this.lastTestThatCalledGetTopFrameId === currentTestName) {
+			throw new Error(`Test "${this.lastTestThatCalledGetTopFrameId}" called getTopFrameId() twice. For performance, only call once and reuse the value.`);
+		}
+		this.lastTestThatCalledGetTopFrameId = currentTestName;
+
 		const stack = await this.getStack();
-		const scopes = await this.scopesRequest({ frameId: stack.body.stackFrames[0].id });
+		return stack.body.stackFrames[0].id;
+	}
+
+	public async getTopFrameVariables(scope: "Exceptions" | "Locals", { frameId }: { frameId?: number } = {}): Promise<DebugProtocol.Variable[]> {
+		frameId ??= await this.getTopFrameId();
+		const scopes = await this.scopesRequest({ frameId });
 		const s = scopes.body.scopes.find((s) => s.name === scope);
 		assert.ok(s);
 		return this.getVariables(s.variablesReference);
@@ -274,16 +286,15 @@ export class DartDebugClient extends DebugClient {
 		return variables.body.variables;
 	}
 
-	public async evaluateForFrame(expression: string, context?: string): Promise<{
+	public async evaluateForFrame(expression: string, { frameId, context }: { frameId?: number, context?: string; } = {}): Promise<{
 		result: string;
 		type?: string;
 		variablesReference: number;
 		namedVariables?: number;
 		indexedVariables?: number;
 	}> {
-		const thread = await this.getMainThread();
-		const stack = await this.stackTraceRequest({ threadId: thread.id });
-		const result = await this.evaluateRequest({ expression, frameId: stack.body.stackFrames[0].id, context });
+		frameId ??= await this.getTopFrameId();
+		const result = await this.evaluateRequest({ expression, frameId, context });
 		return result.body;
 	}
 

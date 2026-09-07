@@ -403,9 +403,10 @@ describe(`flutter run debugger (only test device)`, () => {
 				}),
 			);
 
+			const frameId = await dc.getTopFrameId();
 			// Simple expressions.
 			{
-				const evaluateResult = await dc.evaluateForFrame(`"test"`);
+				const evaluateResult = await dc.evaluateForFrame(`"test"`, { frameId });
 				assert.ok(evaluateResult);
 				assert.equal(evaluateResult.result, `"test"`);
 				assert.equal(evaluateResult.variablesReference, 0);
@@ -413,7 +414,7 @@ describe(`flutter run debugger (only test device)`, () => {
 
 			// Complex expressions.
 			{
-				const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
+				const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`, { frameId });
 				assert.ok(evaluateResult);
 				assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 				assert.equal(evaluateResult.variablesReference, 0);
@@ -421,7 +422,7 @@ describe(`flutter run debugger (only test device)`, () => {
 
 			// An expression that returns a variable.
 			{
-				const evaluateResult = await dc.evaluateForFrame(`new DateTime.now()`);
+				const evaluateResult = await dc.evaluateForFrame(`new DateTime.now()`, { frameId });
 				const thisYear = new Date().getFullYear().toString();
 				assert.ok(evaluateResult);
 				assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
