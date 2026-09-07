@@ -179,8 +179,8 @@ export async function ensureVariableEvaluateName(dc: DartDebugClient, variable: 
 	const evaluateName = (variable as any).evaluateName as string | undefined;
 	if (!evaluateName)
 		return;
-	const id = frameId ?? (await dc.getStack()).body.stackFrames[0].id;
-	const evaluateResult = (await dc.evaluateRequest({ expression: evaluateName, frameId: id })).body;
+	frameId ??= await dc.getTopFrameId();
+	const evaluateResult = (await dc.evaluateRequest({ expression: evaluateName, frameId })).body;
 	assert.ok(evaluateResult);
 	if (variable.value.endsWith("…\"")) {
 		// If the value was truncated, the evaluate responses should be longer
