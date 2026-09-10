@@ -25,6 +25,7 @@ import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils"
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
+import { ClosingLabelsFeature } from "../lsp/closing_labels_decorations";
 import { AddDependencyCodeActionProvider } from "../providers/add_dependency_code_action_provider";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { promptToReloadExtension } from "../utils";
@@ -68,6 +69,7 @@ export class LspAnalyzer extends Analyzer {
 
 		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
+		this.client.registerFeature(new ClosingLabelsFeature());
 		if (config.interactiveForms)
 			this.client.registerFeature(new InteractiveFormsFeature(this.client));
 		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
@@ -407,7 +409,12 @@ export class LspAnalyzer extends Analyzer {
 			initializationOptions: {
 				allowOpenUri: true,
 				appHost: vs.env.appHost,
+
+				// In Oct 2026, we switched to preferring a capability for these instead
+				// of initializationOption, but we still pass this for compatibility with
+				// older SDKs.
 				closingLabels: config.closingLabels,
+
 				completionBudgetMilliseconds: config.completionBudgetMilliseconds,
 				// Flutter Outline notifications/data are used for Flutter UI Guides and
 				// icon previews, so we still need this even though the outline itself

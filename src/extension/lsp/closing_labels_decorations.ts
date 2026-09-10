@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { LanguageClient } from "vscode-languageclient/node";
+import { ClientCapabilities, FeatureState, LanguageClient, StaticFeature } from "vscode-languageclient/node";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
@@ -8,6 +8,26 @@ import { findVisibleEditor } from "../../shared/vscode/editors";
 import { config } from "../config";
 
 const validLastCharacters = [")", "]"];
+
+export class ClosingLabelsFeature implements StaticFeature {
+	public clear() { }
+
+	public fillClientCapabilities(capabilities: ClientCapabilities): void {
+		capabilities.experimental ??= {};
+		// In Oct 2026, we switched to preferring a capability for these instead
+		// of initializationOption.
+		capabilities.experimental.closingLabels =
+			config.closingLabels
+				? {}
+				: undefined;
+	}
+
+	public getState(): FeatureState {
+		return { kind: "static" };
+	}
+
+	public initialize() { }
+}
 
 export class LspClosingLabelsDecorations implements IAmDisposable {
 	private subscriptions: IAmDisposable[] = [];
