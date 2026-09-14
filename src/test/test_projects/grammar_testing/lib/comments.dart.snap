@@ -147,12 +147,9 @@
 #^^^^^ source.dart comment.block.documentation.dart
 #     ^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
 > *    * bbb
-#^ source.dart comment.block.documentation.dart comment.block.documentation.dart
-# ^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
-#      ^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart variable.other.source.dart
+#^^^^^^^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
 > *    */
-#^ source.dart comment.block.documentation.dart comment.block.documentation.dart
-# ^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
 #      ^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
 > */
 #^ source.dart comment.block.documentation.dart
