@@ -29,6 +29,7 @@ describe.only("debug autolaunch", () => {
 					if (alreadyExists) {
 						await triggerAutoLaunch(filePath, launchConfig, overridePath);
 						await waitFor(() => startDebugSession.called);
+						console.warn(JSON.stringify(startDebugSession.getCalls()));
 						assert.ok(startDebugSession.calledOnceWith(baseUri ? wf : undefined, launchConfig));
 					} else {
 						createAutoLaunch(overridePath);
@@ -38,6 +39,7 @@ describe.only("debug autolaunch", () => {
 						await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
 
 						await waitFor(() => startDebugSession.called);
+						console.warn(JSON.stringify(startDebugSession.getCalls()));
 						assert.ok(startDebugSession.calledOnceWith(baseUri ? wf : undefined, launchConfig));
 					}
 				});
