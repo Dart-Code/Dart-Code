@@ -7,7 +7,7 @@ import { autoLaunchFilename } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { AutoLaunch } from "../../../shared/vscode/autolaunch";
-import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, privateApi, sb, tryDelete } from "../../helpers";
+import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryDelete } from "../../helpers";
 
 /// Use a unique named config folder so we don't trigger the built-in AutoLaunch for the main extension that's running.
 const testDartCodeConfigFolder = ".test_dart_code";
@@ -207,11 +207,11 @@ function createTestEnvironment(overridePath?: string) {
 		: fsPath(Uri.joinPath(wf.uri, testDartCodeConfigFolder));
 	const filePath = path.join(folderPath, autoLaunchFilename);
 
-	privateApi.logger.info(`Going to use ${folderPath} for test environment`);
+	console.warn(`Going to use ${folderPath} for test environment`);
 	if (!fs.existsSync(folderPath)) {
-		privateApi.logger.info(`folderPath does not exist, so creating!`);
+		console.warn(`folderPath does not exist, so creating!`);
 		fs.mkdirSync(folderPath, { recursive: true });
-		privateApi.logger.info(`created folderPath`);
+		console.warn(`created folderPath`);
 	}
 	defer(`delete ${folderPath}`, () => tryDelete(folderPath));
 
