@@ -7,14 +7,14 @@ import { autoLaunchFilename } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { AutoLaunch } from "../../../shared/vscode/autolaunch";
-import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryDelete } from "../../helpers";
+import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, privateApi, sb, tryDelete } from "../../helpers";
 
 /// Use a unique named config folder so we don't trigger the built-in AutoLaunch for the main extension that's running.
 const testDartCodeConfigFolder = ".test_dart_code";
 const testDebounceDelayMs = 200; // Shorter debounce to use for faster tests.
 const debounceOffset = 50; // Time to wait in addition to the debounce time.
 
-describe("debug autolaunch", () => {
+describe.only("debug autolaunch", () => {
 	for (const alreadyExists of [true, false]) {
 
 		const groupName = alreadyExists ? "with existing file" : "with file created later";
@@ -207,8 +207,12 @@ function createTestEnvironment(overridePath?: string) {
 		: fsPath(Uri.joinPath(wf.uri, testDartCodeConfigFolder));
 	const filePath = path.join(folderPath, autoLaunchFilename);
 
-	if (!fs.existsSync(folderPath))
+	privateApi.logger.info(`Going to use ${folderPath} for test environment`);
+	if (!fs.existsSync(folderPath)) {
+		privateApi.logger.info(`folderPath does not exist, so creating!`);
 		fs.mkdirSync(folderPath, { recursive: true });
+		privateApi.logger.info(`created folderPath`);
+	}
 	defer(`delete ${folderPath}`, () => tryDelete(folderPath));
 
 	const startDebugSession = sb.stub(debug, "startDebugging").callsFake(() => Promise.resolve());

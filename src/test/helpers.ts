@@ -1115,11 +1115,19 @@ export function delay(milliseconds: number): Promise<void> {
 export function getRandomTempFolder(): string {
 	const r = Math.floor(Math.random() * 100000);
 	const base = path.join(tmpdir(), "dart-code-tests");
-	if (!fs.existsSync(base))
+	privateApi.logger.info(`base is ${base}`);
+	if (!fs.existsSync(base)) {
+		privateApi.logger.info(`base does not exist, so creating!`);
 		fs.mkdirSync(base);
+		privateApi.logger.info(`done creating base`);
+	}
 	const tmpPath = path.join(base, r.toString());
-	if (!fs.existsSync(tmpPath))
+	privateApi.logger.info(`tmpPath is ${tmpPath}`);
+	if (!fs.existsSync(tmpPath)) {
+		privateApi.logger.info(`tmpPath does not exist, so creating!`);
 		fs.mkdirSync(tmpPath);
+		privateApi.logger.info(`done creating tmpPath`);
+	}
 	return tmpPath;
 }
 
