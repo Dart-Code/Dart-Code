@@ -146,7 +146,9 @@ describe("dart_hover_provider", () => {
 		const hover = await getHoverAt("methodTakingString(String ^a");
 		assert.equal(hover.displayText, "String a");
 		// Method args can't have their own docs so return the methods dartdoc.
-		if (hover.documentation?.includes("Type:"))
+		if (hover.documentation?.includes("Declared in"))
+			assert.equal(hover.documentation, `Type: \`String\`\n\nDeclared in \`methodTakingString\` in \`MyTestClass\` in *package:hello_world/everything.dart*.\n\nThis is my method taking a string.`);
+		else if (hover.documentation?.includes("Type:"))
 			assert.equal(hover.documentation, `Type: \`String\`\n\nThis is my method taking a string.`);
 		else
 			assert.equal(hover.documentation, "This is my method taking a string.");
