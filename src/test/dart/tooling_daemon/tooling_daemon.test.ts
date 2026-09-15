@@ -4,6 +4,7 @@ import { isWin } from "../../../shared/constants";
 import { ActiveLocation, ActiveLocationChangedEvent, EventKind, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
+import { getActiveRealFileEditor } from "../../../shared/vscode/editors";
 import { activate, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, setConfigForTest, waitForResult } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
@@ -95,7 +96,7 @@ describe("dart tooling daemon", () => {
 			uri: helloWorldMainFile.toString(),
 		});
 
-		const editor = vs.window.activeTextEditor;
+		const editor = getActiveRealFileEditor();
 		assert.ok(editor);
 		assert.equal(fsPath(editor.document.uri), fsPath(helloWorldMainFile));
 		assert.equal(editor.selection.active.line, targetLine - 1);

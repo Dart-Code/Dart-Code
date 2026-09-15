@@ -248,7 +248,12 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	private getActiveLocation(editor: TextEditor | undefined): ActiveLocation {
-		const document = editor?.document;
+		let document = editor?.document;
+		// Never send any no-file URIs because no DTD client would expect VS Code custom
+		// URIs, unsaved files, etc.
+		if (document?.uri.scheme !== "file")
+			document = undefined;
+
 		return {
 			selections: editor?.selections.map((s) => ({
 				active: {
