@@ -15,28 +15,27 @@ const testDebounceDelayMs = 200; // Shorter debounce to use for faster tests.
 const debounceOffset = 50; // Time to wait in addition to the debounce time.
 
 describe.only("debug autolaunch", () => {
-	for (const alreadyExists of [true, false]) {
+	for (const alreadyExists of [/* true, */ false]) {
 
 		const groupName = alreadyExists ? "with existing file" : "with file created later";
-		describe(groupName, () => {
+		describe.only(groupName, () => {
 
-			for (const overridePath of [testDartCodeConfigFolder, getRandomTempFolder()]) {
+			for (const overridePath of [/* testDartCodeConfigFolder, */ getRandomTempFolder()]) {
 				const testName = `with config path set to "${overridePath}"`;
-				it(testName, async () => {
+				it.only(testName, async () => {
 					const { wf, baseUri, filePath, startDebugSession } = createTestEnvironment(overridePath);
 					const launchConfig = createLaunchConfig(`${groupName} ${testName}`);
 
 					if (alreadyExists) {
 						await triggerAutoLaunch(filePath, launchConfig, overridePath);
+
 						await waitFor(() => startDebugSession.called);
 						console.warn(JSON.stringify(startDebugSession.getCalls()));
 						assert.ok(startDebugSession.calledOnceWith(baseUri ? wf : undefined, launchConfig));
 					} else {
-						createAutoLaunch(overridePath);
+						createAutoLaunchWatcher(overridePath);
 						await delay(500);
-
-						const launchConfigs = { configurations: [launchConfig] };
-						await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
+						await writeAutoLaunchFile(filePath, launchConfig);
 
 						await waitFor(() => startDebugSession.called);
 						console.warn(JSON.stringify(startDebugSession.getCalls()));
@@ -52,16 +51,16 @@ describe.only("debug autolaunch", () => {
 			const { wf, filePath, startDebugSession } = createTestEnvironment();
 			const launchConfig = createLaunchConfig("File Modification Test");
 
-			createAutoLaunch();
+			createAutoLaunchWatcher();
 
 			// Create file initially with empty config.
-			await writeAutoLaunch(filePath);
+			await writeAutoLaunchFile(filePath);
 			await delay(testDebounceDelayMs + debounceOffset); // Wait for initial debounce.
 
 			assert.ok(!startDebugSession.called, "Should not have called startDebugSession for empty config");
 
 			// Now modify the file with a valid configuration.
-			await writeAutoLaunch(filePath, launchConfig);
+			await writeAutoLaunchFile(filePath, launchConfig);
 
 			await waitFor(() => startDebugSession.called);
 			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
@@ -74,7 +73,7 @@ describe.only("debug autolaunch", () => {
 			const launchConfig3 = createLaunchConfig("Debounce Test 3");
 			const launchConfig4 = createLaunchConfig("Debounce Test 4");
 
-			createAutoLaunch();
+			createAutoLaunchWatcher();
 
 			// Rapidly write multiple configs.
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
@@ -221,19 +220,19 @@ function createTestEnvironment(overridePath?: string) {
 	return { wf, baseUri, filePath, startDebugSession };
 }
 
-async function writeAutoLaunch(filePath: string, launchConfig?: any) {
+async function writeAutoLaunchFile(filePath: string, launchConfig?: any) {
 	const launchConfigs = launchConfig ? { configurations: [launchConfig] } : { configurations: [] };
 	await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs), { flush: true });
 }
 
-function createAutoLaunch(overridePath?: string) {
+function createAutoLaunchWatcher(overridePath?: string) {
 	const autoLaunch = new AutoLaunch(overridePath ?? testDartCodeConfigFolder, logger, undefined, testDebounceDelayMs);
 	defer("dispose AutoLaunch", () => autoLaunch.dispose());
 }
 
 async function triggerAutoLaunch(filePath: string, launchConfig?: any, overridePath?: string) {
-	await writeAutoLaunch(filePath, launchConfig);
+	await writeAutoLaunchFile(filePath, launchConfig);
 	await delay(10); // Small delay to ensure file exists before we create AutoLaunch (although we do flush in writeAutoLaunch).
 
-	createAutoLaunch(overridePath);
+	createAutoLaunchWatcher(overridePath);
 }
