@@ -207,7 +207,8 @@ function createTestEnvironment(overridePath?: string) {
 		: fsPath(Uri.joinPath(wf.uri, testDartCodeConfigFolder));
 	const filePath = path.join(folderPath, autoLaunchFilename);
 
-	fs.mkdirSync(folderPath, { recursive: true });
+	if (!fs.existsSync(folderPath))
+		fs.mkdirSync(folderPath, { recursive: true });
 	defer(`delete ${folderPath}`, () => tryDelete(folderPath));
 
 	const startDebugSession = sb.stub(debug, "startDebugging").callsFake(() => Promise.resolve());
