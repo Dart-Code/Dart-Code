@@ -104,8 +104,8 @@ jobs:
         # To update PATH, but it goes to the `bin` folder and we want the .exe, so we just
         # hard-code it for now.
         run: |
-          choco install antigravity --yes
-          "ANTIGRAVITY_EXE=C:\Users\runneradmin\AppData\Local\Programs\Antigravity\Antigravity.exe" >> $env:GITHUB_ENV
+          choco install antigravity-ide --yes
+          "ANTIGRAVITY_EXE=C:\Users\runneradmin\AppData\Local\Programs\Antigravity IDE\Antigravity IDE.exe" >> $env:GITHUB_ENV
         shell: pwsh
 
       - name: Set up Flutter ${{ matrix.build-version }}
