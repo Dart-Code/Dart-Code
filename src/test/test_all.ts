@@ -273,6 +273,7 @@ const suppressOutputPatterns = [
 	/DeprecationWarning:/i,
 	/--trace-deprecation/i,
 	/workbench#open\(\)/i,
+	/\[chat-stt\]/i,
 	// DialogService refusales appear twice, once with and once without the prefix, so remove the dupe
 	/Error: DialogService/i,
 	// Verbose stack traces from VS Code errors
@@ -284,6 +285,7 @@ const suppressOutputPatterns = [
 	/Unknown channel: agentHost/i,
 	/AgentHost:renderer/i,
 	/\[AgentHost\]/i,
+	/\[RemoteAgentHost\]/i,
 	/\[ChatModelSelection\]/i,
 	// Multiline claude spam.
 	/\[RemoteAgentHostProtocol\]/i,
