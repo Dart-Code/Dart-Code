@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { debug, Uri, workspace } from "vscode";
 import * as ws from "ws";
-import { autoLaunchFilename } from "../../../shared/constants";
+import { autoLaunchFilename, isWin } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { AutoLaunch } from "../../../shared/vscode/autolaunch";
@@ -20,16 +20,17 @@ describe("debug autolaunch", () => {
 		const groupName = alreadyExists ? "with existing file" : "with file created later";
 		describe(groupName, () => {
 
-			for (const overridePath of [testDartCodeConfigFolder, getRandomTempFolder()]) {
+			for (const overridePath of [testDartCodeConfigFolder, getRandomTargetFolder()]) {
 				const testName = `with config path set to "${overridePath}"`;
 				it(testName, async () => {
 					const { wf, baseUri, filePath, startDebugSession } = createTestEnvironment(overridePath);
+					const expectedWorkspaceFolder = baseUri || isWin ? wf : undefined;
 					const launchConfig = createLaunchConfig(`${groupName} ${testName}`);
 
 					if (alreadyExists) {
 						await triggerAutoLaunch(filePath, launchConfig, overridePath);
 						await waitFor(() => startDebugSession.called);
-						assert.ok(startDebugSession.calledOnceWith(baseUri ? wf : undefined, launchConfig));
+						assert.ok(startDebugSession.calledOnceWith(expectedWorkspaceFolder, launchConfig));
 					} else {
 						createAutoLaunch(overridePath);
 						await delay(500);
@@ -38,7 +39,7 @@ describe("debug autolaunch", () => {
 						await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
 
 						await waitFor(() => startDebugSession.called);
-						assert.ok(startDebugSession.calledOnceWith(baseUri ? wf : undefined, launchConfig));
+						assert.ok(startDebugSession.calledOnceWith(expectedWorkspaceFolder, launchConfig));
 					}
 				});
 			}
@@ -193,6 +194,20 @@ function createLaunchConfig(name: string, vmServiceUri?: string, waitForVmServic
 		...(vmServiceUri && { vmServiceUri }),
 		...(waitForVmServiceMs && { waitForVmServiceMs }),
 	});
+}
+
+/**
+ *
+ * Gets a random folder to use for writing the autolaunch file to.
+ *
+ * On Windows, we use a folder inside the workspace because %TEMP% the GitHub-hosted Windows runners do not trigger
+ * watcher events (either through VS Code or the native node APIs). We still use temp on other platforms to test a path
+ * outside of the workspace.
+ */
+function getRandomTargetFolder(): string {
+	return isWin
+		? fs.mkdtempSync(path.join(fsPath(workspace.workspaceFolders![0].uri), "dart-code-tests-"))
+		: getRandomTempFolder();
 }
 
 function createTestEnvironment(overridePath?: string) {
