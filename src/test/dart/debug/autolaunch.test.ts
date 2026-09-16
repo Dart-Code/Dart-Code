@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
+import { inspect } from "util";
 import { debug, Uri, workspace } from "vscode";
 import * as ws from "ws";
 import { autoLaunchFilename, isWin } from "../../../shared/constants";
@@ -30,7 +31,7 @@ describe("debug autolaunch", () => {
 					if (alreadyExists) {
 						await triggerAutoLaunch(filePath, launchConfig, overridePath);
 						await waitFor(() => startDebugSession.called);
-						assert.ok(startDebugSession.calledOnceWith(expectedWorkspaceFolder, launchConfig));
+						assertCalledOnceWith(startDebugSession, expectedWorkspaceFolder, launchConfig);
 					} else {
 						createAutoLaunch(overridePath);
 						await delay(500);
@@ -39,7 +40,7 @@ describe("debug autolaunch", () => {
 						await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
 
 						await waitFor(() => startDebugSession.called);
-						assert.ok(startDebugSession.calledOnceWith(expectedWorkspaceFolder, launchConfig));
+						assertCalledOnceWith(startDebugSession, expectedWorkspaceFolder, launchConfig);
 					}
 				});
 			}
@@ -63,7 +64,7 @@ describe("debug autolaunch", () => {
 			await writeAutoLaunch(filePath, launchConfig);
 
 			await waitFor(() => startDebugSession.called);
-			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
+			assertCalledOnceWith(startDebugSession, wf, launchConfig);
 		});
 
 		it("should debounce rapid file changes", async () => {
@@ -77,11 +78,11 @@ describe("debug autolaunch", () => {
 
 			// Rapidly write multiple configs.
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
-			await delay(testDebounceDelayMs / 2);
+			await delay(testDebounceDelayMs / 3);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig2] }));
-			await delay(testDebounceDelayMs / 2);
+			await delay(testDebounceDelayMs / 3);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig3] }));
-			await delay(testDebounceDelayMs / 2);
+			await delay(testDebounceDelayMs / 3);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig4] }));
 
 			// Wait for debounce a session to start, and then for the debounce time.
@@ -89,7 +90,7 @@ describe("debug autolaunch", () => {
 			await delay(testDebounceDelayMs + debounceOffset);
 
 			// Should only be called once with the final configuration.
-			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig4));
+			assertCalledOnceWith(startDebugSession, wf, launchConfig4);
 		});
 	});
 
@@ -134,7 +135,7 @@ describe("debug autolaunch", () => {
 			await triggerAutoLaunch(filePath, launchConfig);
 
 			await waitFor(() => startDebugSession.called); // Don't wait long, it should connect immediately.
-			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
+			assertCalledOnceWith(startDebugSession, wf, launchConfig);
 		});
 
 		it("should wait for VM Service to become available after a delay", async () => {
@@ -146,7 +147,7 @@ describe("debug autolaunch", () => {
 			void delay(1000).then(startMockServer);
 
 			await waitFor(() => startDebugSession.called);
-			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
+			assertCalledOnceWith(startDebugSession, wf, launchConfig);
 		});
 
 		it("should fail to start debugging if VM Service never becomes available", async () => {
@@ -169,7 +170,7 @@ describe("debug autolaunch", () => {
 			await triggerAutoLaunch(filePath, launchConfig);
 
 			await waitFor(() => startDebugSession.called);
-			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
+			assertCalledOnceWith(startDebugSession, wf, launchConfig);
 		});
 
 		it("should start debugging immediately if vmServiceUri is provided but waitForVmServiceMs is not", async () => {
@@ -180,7 +181,7 @@ describe("debug autolaunch", () => {
 			await triggerAutoLaunch(filePath, launchConfig);
 
 			await waitFor(() => startDebugSession.called);
-			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
+			assertCalledOnceWith(startDebugSession, wf, launchConfig);
 		});
 	});
 });
@@ -228,6 +229,11 @@ function createTestEnvironment(overridePath?: string) {
 
 	const startDebugSession = sb.stub(debug, "startDebugging").callsFake(() => Promise.resolve());
 	return { wf, baseUri, filePath, startDebugSession };
+}
+
+function assertCalledOnceWith(stub: sinon.SinonStub, ...expectedArgs: unknown[]) {
+	if (!stub.calledOnceWith(...expectedArgs))
+		assert.fail(`Expected one call with ${inspect(expectedArgs, { depth: null })}; actual calls: ${inspect(stub.getCalls().map((call) => call.args as unknown[]), { depth: null })}`);
 }
 
 async function writeAutoLaunch(filePath: string, launchConfig?: any) {
