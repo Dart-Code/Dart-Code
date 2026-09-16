@@ -230,25 +230,28 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	private updateActiveLocation(editor: TextEditor | undefined) {
+		// Exclude any editors that are not real editors (output panes, test result diffs etc.).
+		if (editor && !this.isRealEditor(editor))
+			return;
+
 		// Usually we only send the change if the editor whose selection changed is still
 		// the active editor. However, if the active editor is a "non-editor" (for example an Output pane
 		// or embedded Widget Inspector), we will still allow this, to support selection changes triggered
 		// by the inspector when the inspector retains focus.
-		if (window.activeTextEditor && editor !== window.activeTextEditor) {
+		if (window.activeTextEditor && editor !== window.activeTextEditor && this.isRealEditor(window.activeTextEditor))
 			return;
-		}
-
-		// Exclude any editors that are not real editors (output panes, test result diffs etc.).
-		if (editor && !this.isRealEditor(editor)) {
-			return;
-		}
 
 		const activeLocation = this.editorServices.activeLocation = this.getActiveLocation(editor);
 		void this.sendActiveLocation(activeLocation);
 	}
 
 	private getActiveLocation(editor: TextEditor | undefined): ActiveLocation {
-		const document = editor?.document;
+		let document = editor?.document;
+		// Never send any no-file URIs because no DTD client would expect VS Code custom
+		// URIs, unsaved files, etc.
+		if (document?.uri.scheme !== "file")
+			document = undefined;
+
 		return {
 			selections: editor?.selections.map((s) => ({
 				active: {
