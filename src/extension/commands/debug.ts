@@ -252,7 +252,9 @@ export class DebugCommands implements IAmDisposable {
 				return this.devTools.spawn(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource, location, triggeredAutomatically }, true);
 			} else if (session.session.configuration.noDebug) {
 				void vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
-			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {
+			} else if (session.configuration.args?.includes("--wasm") || session.configuration.toolArgs?.includes("--wasm")) {
+				void vs.window.showInformationMessage(`DevTools is not available for an app build with Wasm.`);
+			} else if (session.flutterMode && session.flutterDeviceId) {
 				void vs.window.showInformationMessage(`DevTools is not available for an app running in ${session.flutterMode} mode on device '${session.flutterDeviceId}'.`);
 			} else if (session.hasStarted) {
 				void vs.window.showInformationMessage("DevTools is not available for an app running in this mode.");
