@@ -12,7 +12,7 @@ import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryD
 
 /// Use a unique named config folder so we don't trigger the built-in AutoLaunch for the main extension that's running.
 const testDartCodeConfigFolder = ".test_dart_code";
-const testDebounceDelayMs = 200; // Shorter debounce to use for faster tests.
+const testDebounceDelayMs = 500; // Shorter debounce to use for faster tests.
 const debounceOffset = 50; // Time to wait in addition to the debounce time.
 
 describe("debug autolaunch", () => {
@@ -78,11 +78,11 @@ describe("debug autolaunch", () => {
 
 			// Rapidly write multiple configs.
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
-			await delay(testDebounceDelayMs / 3);
+			await delay(testDebounceDelayMs / 5);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig2] }));
-			await delay(testDebounceDelayMs / 3);
+			await delay(testDebounceDelayMs / 5);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig3] }));
-			await delay(testDebounceDelayMs / 3);
+			await delay(testDebounceDelayMs / 5);
 			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig4] }));
 
 			// Wait for debounce a session to start, and then for the debounce time.
