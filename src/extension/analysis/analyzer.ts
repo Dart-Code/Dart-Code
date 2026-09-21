@@ -297,10 +297,11 @@ export class LspAnalyzer extends Analyzer {
 				return hints;
 			},
 
-			resolveCompletionItem: (item: vs.CompletionItem, token: vs.CancellationToken, next: ls.ResolveCompletionItemSignature) => {
-				if (item.documentation)
-					item.documentation = cleanDocString(item.documentation);
-				return next(item, token);
+			resolveCompletionItem: async (item: vs.CompletionItem, token: vs.CancellationToken, next: ls.ResolveCompletionItemSignature) => {
+				const resolvedItem = await next(item, token);
+				if (resolvedItem?.documentation)
+					resolvedItem.documentation = cleanDocString(resolvedItem.documentation);
+				return resolvedItem;
 			},
 
 			provideHover: async (document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken, next: ls.ProvideHoverSignature) => {

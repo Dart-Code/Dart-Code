@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, completionLabel, ensureCompletion, flutterHelloWorldMainFile, getCompletionsAt, getPackages, openFile, privateApi, setTestContent } from "../../helpers";
+import { activate, completionLabel, ensureCompletion, flutterHelloWorldCounterAppFile, flutterHelloWorldMainFile, getCompletionsAt, getPackages, openFile, privateApi, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -15,6 +15,15 @@ describe("completion_item_provider", () => {
 
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text(…)", "Text");
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text.rich(…)", "Text.rich");
+	});
+
+	it("includes an icon preview in resolved icon completions", async () => {
+		await openFile(flutterHelloWorldCounterAppFile);
+		const completions = await getCompletionsAt("Icons.add^", { resolveCount: 100 });
+		const completion = ensureCompletion(completions, vs.CompletionItemKind.Field, "add");
+		const documentation = (completion.documentation as vs.MarkdownString).value;
+
+		assert.match(documentation, /!\[add\]\(.+\/media\/doc-icons\/material\/add%402x\.png\|width=32,height=32\)/);
 	});
 
 	describe("with not-imported completions", () => {
