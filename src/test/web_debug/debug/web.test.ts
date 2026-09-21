@@ -204,9 +204,10 @@ describe("web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		// Skipped due to "Module dart_sdk not loaded in the browser"
-		// https://github.com/dart-lang/webdev/issues/2869
-		it.skip("complex expressions", async () => {
+		it("complex expressions", async function () {
+			if (privateApi.dartCapabilities.hasWebModuleNotLoadedIssue)
+				this.skip();
+
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -222,9 +223,10 @@ describe("web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		// Skipped due to "Module dart_sdk not loaded in the browser"
-		// https://github.com/dart-lang/webdev/issues/2869
-		it.skip("an expression that returns a variable", async () => {
+		it("an expression that returns a variable", async function () {
+			if (privateApi.dartCapabilities.hasWebModuleNotLoadedIssue)
+				this.skip();
+
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -241,9 +243,10 @@ describe("web debugger", () => {
 			assert.ok(evaluateResult.variablesReference);
 		});
 
-		// Skipped due to "Module dart_sdk not loaded in the browser"
-		// https://github.com/dart-lang/webdev/issues/2869
-		it.skip("complex expressions when in a top level function", async () => {
+		it("complex expressions when in a top level function", async function () {
+			if (privateApi.dartCapabilities.hasWebModuleNotLoadedIssue)
+				this.skip();
+
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -295,9 +298,10 @@ describe("web debugger", () => {
 		ensureVariable(variables, "$_threadException.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	// Skipped due to "Module dart_sdk not loaded in the browser"
-	// https://github.com/dart-lang/webdev/issues/2869
-	it.skip("logs expected text (and does not stop) at a logpoint", async () => {
+	it("logs expected text (and does not stop) at a logpoint", async function () {
+		if (privateApi.dartCapabilities.hasWebModuleNotLoadedIssue)
+			this.skip();
+
 		await openFile(webHelloWorldMainFile);
 		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(dc, webHelloWorldIndexFile));
 		await waitAllThrowIfTerminates(dc,
