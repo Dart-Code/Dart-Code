@@ -8,7 +8,7 @@ import { DebuggerType } from "../../shared/enums";
 import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
-import { TestOutlineVisitor } from "../../shared/utils/outline";
+import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
@@ -593,6 +593,34 @@ hello_world
 		});
 	}
 
+	describe("auto test invocation mode", () => {
+		beforeEach("set config.testInvocationMode", () => setConfigForTest("dart", "testInvocationMode", "auto"));
+
+		it("uses line numbers for a saved file when the test name contains $", async () => {
+			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test) => test.fullName.includes("$"));
+
+			assert.ok(config.program.includes("?line="), `Expected to run by line, got program ${config.program}`);
+			assert.ok(!config.toolArgs?.includes("--name"), `Expected no --name arg, got ${JSON.stringify(config.toolArgs)}`);
+		});
+
+		it("uses the test name for a saved file when the test name does not contain $", async () => {
+			const config = await captureTestDebugConfiguration(helloWorldTestMainFile, (test) => !test.fullName.includes("$") && !test.isGroup);
+
+			assert.ok(!config.program.includes("?line="), `Expected to run by name, got program ${config.program}`);
+			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
+		});
+
+		it("uses the test name when the file is unsaved even if the test name contains $", async () => {
+			// Unsaved files may format-on-save and shift lines, so we don't use line numbers.
+			const editor = await openFile(helloWorldTestTreeFile);
+			await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// unsaved\n"));
+			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test) => test.fullName.includes("$"));
+
+			assert.ok(!config.program.includes("?line="), `Expected to run by name, got program ${config.program}`);
+			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
+		});
+	});
+
 	it("can run tests outside of main()", async () => {
 		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
 		await openFile(helloWorldTestEmptyFile);
@@ -798,6 +826,32 @@ test/empty_test.dart
 		const suite = findSuiteNode(fsPath(testSuiteUri));
 		appendNode(suite);
 		return lines.join("\n").trim();
+	}
+
+	/*
+	 * Invokes the outline test command used by CodeLens and returns the launch
+	 * configuration that would have been started, without spawning a debug session.
+	 */
+	async function captureTestDebugConfiguration(fileUri: vs.Uri, selectTest: (test: TestOutlineInfo) => boolean): Promise<vs.DebugConfiguration> {
+		await openFile(fileUri);
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
+
+		const visitor = new TestOutlineVisitor(logger, fsPath(fileUri));
+		const outline = privateApi.fileTracker.getOutlineFor(fileUri);
+		if (!outline)
+			throw new Error(`Did not get outline for ${fileUri}`);
+		visitor.visit(outline);
+		const test = visitor.tests.find(selectTest);
+		if (!test)
+			throw new Error(`Did not find a matching test in ${fileUri}`);
+
+		// Resolving true would hang: runTests only finishes after the session terminates,
+		// and a stubbed start never produces that event. false still captures the config.
+		const startDebugging = sb.stub(vs.debug, "startDebugging").resolves(false);
+		await vs.commands.executeCommand("_dart.startWithoutDebuggingTestFromOutline", test, undefined);
+
+		assert.ok(startDebugging.calledOnce);
+		return startDebugging.firstCall.args[1] as vs.DebugConfiguration;
 	}
 
 	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, lineDelta = 0) {

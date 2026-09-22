@@ -199,7 +199,7 @@ class Config {
 	get showSkippedTests(): boolean { return this.getConfig<boolean>("showSkippedTests", true); }
 	get showTestCodeLens(): boolean { return this.getConfig<boolean>("showTestCodeLens", true); }
 	get showTodos(): boolean | string[] { return this.getConfig<boolean | string[]>("showTodos", true); }
-	get testInvocationMode(): "name" | "line" { return this.getConfig<"name" | "line">("testInvocationMode", "name"); }
+	get testInvocationMode(): "name" | "line" | "auto" { return this.getConfig<"name" | "line" | "auto">("testInvocationMode", "name"); }
 	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null)))); }
 	get toolingDaemonAdditionalArgs(): string[] { return this.getConfig<string[]>("toolingDaemonAdditionalArgs", []); }
 	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
