@@ -158,9 +158,14 @@ export class TestCommands implements IAmDisposable {
 	}
 
 	private async runTests({ includeCoverage, programPath, debug, testSelection, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate, isFlutter }: TestLaunchInfo): Promise<boolean> {
+		const programUri = vs.Uri.file(programPath);
+		const programUriString = programUri.toString();
+		const doc = vs.workspace.textDocuments.find((doc) => doc.uri.toString() === programUriString);
+		const docIsDirty = doc?.isDirty ?? false;
+
 		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.
-			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
+			const template = getLaunchConfigDefaultTemplate(programUri, debug);
 			if (template)
 				launchTemplate = Object.assign({}, template, launchTemplate);
 		}
@@ -183,13 +188,24 @@ export class TestCommands implements IAmDisposable {
 				dartTestCapabilities = getPackageTestCapabilitiesForDartProject(this.logger, this.wsContext, projectFolderPath);
 		}
 
-		let shouldRunTestsByLine = false;
+		let preferredTestMode = config.testInvocationMode;
+		if (preferredTestMode === "auto") {
+			// Default to line if the test is complex, but only if the file is not dirty, because
+			// if we try to save, we might trigger the formatter which will then change the line
+			// number where the test is.
+			if (!docIsDirty && testSelection?.length && testSelection.find((ts) => ts.name.includes("$")))
+				preferredTestMode = "line";
+			else
+				preferredTestMode = "name";
+		}
+
+		let doRunTestsByLine = false;
 		// Determine whether we can and should run tests by line number.
-		if (testSelection?.length && config.testInvocationMode === "line") {
+		if (testSelection?.length && preferredTestMode === "line") {
 			if (isFlutter) {
-				shouldRunTestsByLine = true;
+				doRunTestsByLine = true;
 			} else if (dartTestCapabilities?.supportsRunTestsByLine) {
-				shouldRunTestsByLine = true;
+				doRunTestsByLine = true;
 			}
 		}
 
@@ -203,7 +219,7 @@ export class TestCommands implements IAmDisposable {
 					!!isFlutter,
 					programPath,
 					testSelection,
-					shouldRunTestsByLine,
+					doRunTestsByLine,
 					shouldRunSkippedTests,
 					launchTemplate,
 					dartTestCapabilities,
@@ -231,7 +247,7 @@ export class TestCommands implements IAmDisposable {
 					resolve(true);
 			}));
 			const didStart = await vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(vs.Uri.file(programPath)),
+				vs.workspace.getWorkspaceFolder(programUri),
 				launchConfiguration
 			);
 			if (!didStart) {
