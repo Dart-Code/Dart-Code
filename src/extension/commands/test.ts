@@ -11,7 +11,7 @@ import { RunnableTreeNode, SuiteData, SuiteNode, TestNode, TreeNode } from "../.
 import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
-import { fsPath, getPackageName, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
+import { fsPath, getPackageName, isWithinPath, mkDirRecursive, uriComparisonString } from "../../shared/utils/fs";
 import { TestOutlineInfo } from "../../shared/utils/outline";
 import { TestSelection, createTestFileAction, defaultTestFileContents, getLaunchConfig, getTestSelectionForNodes, getTestSelectionForOutline } from "../../shared/utils/test";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
@@ -159,8 +159,8 @@ export class TestCommands implements IAmDisposable {
 
 	private async runTests({ includeCoverage, programPath, debug, testSelection, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate, isFlutter }: TestLaunchInfo): Promise<boolean> {
 		const programUri = vs.Uri.file(programPath);
-		const programUriString = programUri.toString();
-		const doc = vs.workspace.textDocuments.find((doc) => doc.uri.toString() === programUriString);
+		const programUriComparisonString = uriComparisonString(programUri);
+		const doc = vs.workspace.textDocuments.find((doc) => uriComparisonString(doc.uri) === programUriComparisonString);
 		const docIsDirty = doc?.isDirty ?? false;
 
 		if (useLaunchJsonTestTemplate) {
