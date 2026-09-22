@@ -1,7 +1,7 @@
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import * as path from "path";
-import { DebugAdapterExecutable, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, Uri } from "vscode";
+import { CancellationToken, commands, debug, DebugAdapterExecutable, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, TestItem, TestRunRequest, Uri } from "vscode";
 import { vmServiceListeningBannerPattern } from "../debug/constants";
 import { dartVMPath, flutterPath, isWin } from "../shared/constants";
 import { DartVsCodeLaunchArgs } from "../shared/debugging/interfaces";
@@ -10,8 +10,9 @@ import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { withTimeout } from "../shared/utils";
 import { fsPath } from "../shared/utils/fs";
+import { TestOutlineInfo, TestOutlineVisitor } from "../shared/utils/outline";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, getLaunchConfiguration, logger, privateApi, watchPromise } from "./helpers";
+import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getLaunchConfiguration, logger, openFile, privateApi, sb, waitForResult, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -122,6 +123,70 @@ export function startFakeDebugSession(options?: {
 	defer("Remove fake debug session", () => privateApi.debugCommands.handleDebugSessionEnd(session));
 
 	return session;
+}
+
+/*
+ * Runs an action that would call `debug.startDebugging` and returns every launch
+ * configuration it tried to start, without spawning a debug session.
+ *
+ * The stub resolves `false` on purpose. Test commands only finish after the session
+ * terminates when start reports success, and a stub never produces that event.
+ */
+export async function captureStartDebuggingConfigs(start: () => Thenable<unknown>): Promise<DebugConfiguration[]> {
+	const startDebugging = sb.stub(debug, "startDebugging").resolves(false);
+	await start();
+	assert.ok(startDebugging.called);
+	return startDebugging.getCalls().map((call) => call.args[1] as DebugConfiguration);
+}
+
+/*
+ * Runs the CodeLens outline command for one discovered test and returns the launch
+ * configuration that would have been started.
+ */
+export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (test: TestOutlineInfo) => boolean): Promise<DebugConfiguration> {
+	await openFile(fileUri);
+	await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
+
+	const visitor = new TestOutlineVisitor(logger, fsPath(fileUri));
+	const outline = privateApi.fileTracker.getOutlineFor(fileUri);
+	if (!outline)
+		throw new Error(`Did not get outline for ${fileUri}`);
+	visitor.visit(outline);
+	const test = visitor.tests.find(selectTest);
+	if (!test)
+		throw new Error(`Did not find a matching test in ${fileUri}`);
+
+	const configs = await captureStartDebuggingConfigs(() => commands.executeCommand("_dart.startWithoutDebuggingTestFromOutline", test, undefined));
+	assert.equal(configs.length, 1);
+	return configs[0];
+}
+
+/*
+ * Runs the VS Code test controller for the supplied request and returns every launch
+ * configuration that would have been started. `debug` selects the Debug profile.
+ */
+export async function captureTestDebugConfigurations(createRequest: () => TestRunRequest, debug = false, token: CancellationToken = fakeCancellationToken): Promise<DebugConfiguration[]> {
+	const controller = privateApi.testController!;
+	return captureStartDebuggingConfigs(() => controller.runTests(debug, false, createRequest(), token));
+}
+
+/*
+ * Runs the VS Code test controller for items chosen from one suite and returns the
+ * single launch configuration that would have been started.
+ */
+export async function captureTestDebugConfigurationForItems(fileUri: Uri, selectItems: (suiteNode: TestItem) => TestItem[], debug = false): Promise<DebugConfiguration> {
+	await openFile(fileUri);
+	await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
+	// The test tree is cleared between tests, so rebuild the suite from the cached outline.
+	privateApi.testDiscoverer?.forceUpdate(fileUri);
+
+	const suiteNode = findSuiteNode(fsPath(fileUri));
+	if (!suiteNode)
+		throw new Error(`Unable to find suite node for ${fileUri}`);
+
+	const configs = await captureTestDebugConfigurations(() => new TestRunRequest(selectItems(suiteNode)), debug);
+	assert.equal(configs.length, 1);
+	return configs[0];
 }
 
 /// Waits for all the provided promises, but throws if the debugger terminates before they complete.

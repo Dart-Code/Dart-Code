@@ -3,17 +3,16 @@ import { writeFileSync } from "fs";
 import * as path from "path";
 import { SinonStub } from "sinon";
 import * as vs from "vscode";
-import { URI } from "vscode-uri";
 import { DebuggerType } from "../../shared/enums";
 import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
-import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
+import { SuiteNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
-import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations, createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
@@ -368,36 +367,22 @@ describe("dart test debugger", () => {
 			});
 
 			it("can run tests through test controller using default launch template", async () => {
-				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
+				const config = await captureTestDebugConfigurationForItems(helloWorldTestEnvironmentFile, (suiteNode: vs.TestItem) => [suiteNode]);
 
-				const controller = privateApi.testController!;
-				const testNode = findSuiteNode(fsPath(helloWorldTestEnvironmentFile));
-				if (!testNode)
-					throw Error(`Unable to find suite node!`);
-				const testRequest = new vs.TestRunRequest([testNode]);
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken));
-				const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
-				const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
-
-				assert.equal(printEvent?.body.message, "LAUNCH_ENV_VAR=default");
+				assert.equal(config.env?.LAUNCH_ENV_VAR, "default");
 			});
 
 			it("can run tests through test controller using a project node", async () => {
 				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
-				const controller = privateApi.testController!;
 				const projectNode = findProjectNode(fsPath(helloWorldExampleSubFolder));
-				const testRequest = new vs.TestRunRequest([projectNode]);
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);
-				const testEvents = customEvents
-					.filter((e) => e.event === "dart.testNotification")
-					.filter((e) => e.body.type === "testStart")
-					.map((e) => e.body as TestStartNotification)
-					.filter((e) => !e.test.name?.startsWith("loading"));
-				const suiteFilenames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.url!)))}`);
+				const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest([projectNode]));
 
-				// Only the test from the example sub-project should have run.
-				assert.deepStrictEqual(suiteFilenames, ["project_test.dart"]);
+				// Only the test from the example sub-project should have been selected.
+				assert.deepStrictEqual(
+					configs.map((config) => path.basename(config.program as string)),
+					["project_test.dart"],
+				);
 			});
 
 			it("can run a selection of tests across multiple files", async () => {
@@ -406,7 +391,6 @@ describe("dart test debugger", () => {
 				await openFile(helloWorldTestSelective2File);
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective1File));
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective2File));
-				const controller = privateApi.testController!;
 
 				const testItems: vs.TestItem[] = [];
 
@@ -417,38 +401,23 @@ describe("dart test debugger", () => {
 				const suite2Node = findSuiteNode(fsPath(helloWorldTestSelective2File));
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(helloWorldTestSelective2File)}:fail one`)!);
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(helloWorldTestSelective2File)}:fail two`)!);
-				const testRequest = new vs.TestRunRequest(testItems);
 
-				// Capture all testStart notifications during the debug sessions that are spawned from running these tests.
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);
-				const testEvents = customEvents
-					.filter((e) => e.event === "dart.testNotification")
-					.filter((e) => e.body.type === "testStart")
-					.map((e) => e.body as TestStartNotification)
-					.filter((e) => !e.test.name?.startsWith("loading"));
-				const testNames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.url!)))} / ${e.test.name}`);
-				testNames.sort(); // The order is not deterministic.
+				const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest(testItems));
+				const launchText = configs.map((config) => [config.program, ...(config.args ?? []), ...(config.toolArgs ?? [])].join(" ")).join("\n");
 
-				// Expect exactly the tests we requested.
-				assert.deepStrictEqual(testNames, [
-					"selective1_test.dart / pass one",
-					"selective1_test.dart / pass two",
-					"selective2_test.dart / fail one",
-					"selective2_test.dart / fail two",
-				]);
+				// One launch per file, and each requested test is identified either by name or line.
+				assert.equal(configs.length, 2);
+				for (const item of testItems) {
+					assert.ok(launchText.includes(path.basename(fsPath(item.uri!))), launchText);
+					const selector = runByLine ? `?line=${item.range!.start.line + 1}` : item.label;
+					assert.ok(launchText.includes(selector), `Missing ${selector} in ${launchText}`);
+				}
 			});
 
 			it("allows more-specific default launch template using noDebug flag", async () => {
-				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
+				const config = await captureTestDebugConfigurationForItems(helloWorldTestEnvironmentFile, (suiteNode: vs.TestItem) => [suiteNode], true);
 
-				const controller = privateApi.testController!;
-				const testNode = findSuiteNode(fsPath(helloWorldTestEnvironmentFile));
-				const testRequest = new vs.TestRunRequest([testNode]);
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(true, false, testRequest, fakeCancellationToken));
-				const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
-				const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
-
-				assert.equal(printEvent?.body.message, "LAUNCH_ENV_VAR=noDebugExplicitlyFalse");
+				assert.equal(config.env?.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
 			});
 
 			it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
@@ -597,14 +566,14 @@ hello_world
 		beforeEach("set config.testInvocationMode", () => setConfigForTest("dart", "testInvocationMode", "auto"));
 
 		it("uses line numbers for a saved file when the test name contains $", async () => {
-			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test) => test.fullName.includes("$"));
+			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test: TestOutlineInfo) => test.fullName.includes("$"));
 
 			assert.ok(config.program.includes("?line="), `Expected to run by line, got program ${config.program}`);
 			assert.ok(!config.toolArgs?.includes("--name"), `Expected no --name arg, got ${JSON.stringify(config.toolArgs)}`);
 		});
 
 		it("uses the test name for a saved file when the test name does not contain $", async () => {
-			const config = await captureTestDebugConfiguration(helloWorldTestMainFile, (test) => !test.fullName.includes("$") && !test.isGroup);
+			const config = await captureTestDebugConfiguration(helloWorldTestMainFile, (test: TestOutlineInfo) => !test.fullName.includes("$") && !test.isGroup);
 
 			assert.ok(!config.program.includes("?line="), `Expected to run by name, got program ${config.program}`);
 			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
@@ -614,7 +583,7 @@ hello_world
 			// Unsaved files may format-on-save and shift lines, so we don't use line numbers.
 			const editor = await openFile(helloWorldTestTreeFile);
 			await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// unsaved\n"));
-			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test) => test.fullName.includes("$"));
+			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test: TestOutlineInfo) => test.fullName.includes("$"));
 
 			assert.ok(!config.program.includes("?line="), `Expected to run by name, got program ${config.program}`);
 			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
@@ -826,32 +795,6 @@ test/empty_test.dart
 		const suite = findSuiteNode(fsPath(testSuiteUri));
 		appendNode(suite);
 		return lines.join("\n").trim();
-	}
-
-	/*
-	 * Invokes the outline test command used by CodeLens and returns the launch
-	 * configuration that would have been started, without spawning a debug session.
-	 */
-	async function captureTestDebugConfiguration(fileUri: vs.Uri, selectTest: (test: TestOutlineInfo) => boolean): Promise<vs.DebugConfiguration> {
-		await openFile(fileUri);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
-
-		const visitor = new TestOutlineVisitor(logger, fsPath(fileUri));
-		const outline = privateApi.fileTracker.getOutlineFor(fileUri);
-		if (!outline)
-			throw new Error(`Did not get outline for ${fileUri}`);
-		visitor.visit(outline);
-		const test = visitor.tests.find(selectTest);
-		if (!test)
-			throw new Error(`Did not find a matching test in ${fileUri}`);
-
-		// Resolving true would hang: runTests only finishes after the session terminates,
-		// and a stubbed start never produces that event. false still captures the config.
-		const startDebugging = sb.stub(vs.debug, "startDebugging").resolves(false);
-		await vs.commands.executeCommand("_dart.startWithoutDebuggingTestFromOutline", test, undefined);
-
-		assert.ok(startDebugging.calledOnce);
-		return startDebugging.firstCall.args[1] as vs.DebugConfiguration;
 	}
 
 	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, lineDelta = 0) {

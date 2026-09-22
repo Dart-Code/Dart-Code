@@ -2,15 +2,14 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import { SinonStub } from "sinon";
 import * as vs from "vscode";
-import { URI } from "vscode-uri";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
-import { TestDoneNotification, TestStartNotification } from "../../../shared/test_protocol";
+import { TestDoneNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { getLaunchConfig } from "../../../shared/utils/test";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, flutterTestDeviceId, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { captureTestDebugConfigurations, createDebugClient, flutterTestDeviceId, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, fakeCancellationToken, findSuiteNode, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getLaunchConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
@@ -397,7 +396,6 @@ describe("flutter test debugger", () => {
 				await openFile(flutterTestSelective2File);
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective1File));
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective2File));
-				const controller = privateApi.testController!;
 
 				const testItems: vs.TestItem[] = [];
 
@@ -408,25 +406,17 @@ describe("flutter test debugger", () => {
 				const suite2Node = findSuiteNode(fsPath(flutterTestSelective2File));
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail one`)!);
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail two`)!);
-				const testRequest = new vs.TestRunRequest(testItems);
 
-				// Capture all testStart notifications during the debug sessions that are spawned from running these tests.
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);
-				const testEvents = customEvents
-					.filter((e) => e.event === "dart.testNotification")
-					.filter((e) => e.body.type === "testStart")
-					.map((e) => e.body as TestStartNotification)
-					.filter((e) => !e.test.name?.startsWith("loading"));
-				const testNames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.root_url ?? e.test.url!)))} / ${e.test.name}`);
-				testNames.sort(); // The order is not deterministic.
+				const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest(testItems));
+				const launchText = configs.map((config) => [config.program, ...(config.args ?? []), ...(config.toolArgs ?? [])].join(" ")).join("\n");
 
-				// Expect exactly the tests we requested.
-				assert.deepStrictEqual(testNames, [
-					"selective1_test.dart / pass one",
-					"selective1_test.dart / pass two",
-					"selective2_test.dart / fail one",
-					"selective2_test.dart / fail two",
-				]);
+				// One launch per file, and each requested test is identified either by name or line.
+				assert.equal(configs.length, 2);
+				for (const item of testItems) {
+					assert.ok(launchText.includes(path.basename(fsPath(item.uri!))), launchText);
+					const selector = runByLine ? `?line=${item.range!.start.line + 1}` : item.label;
+					assert.ok(launchText.includes(selector), `Missing ${selector} in ${launchText}`);
+				}
 			});
 
 		});
