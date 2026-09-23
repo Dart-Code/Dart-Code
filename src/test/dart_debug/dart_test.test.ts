@@ -36,21 +36,307 @@ describe("dart test debugger", () => {
 		return editor;
 	}
 
+	it("runs a Dart test script to completion", async () => {
+		await openFile(helloWorldTestMainFile);
+		const config = await startDebugger(dc, helloWorldTestMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("can run using a custom tool", async () => {
+		const root = fsPath(helloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "dart_test");
+
+		const config = await startDebugger(dc, helloWorldTestMainFile, {
+			customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
+			// Replace "run --no-spawn-devtools test:test"
+			customToolReplacesArgs: 3,
+			enableAsserts: false,
+			noDebug: true,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, `-r json`);
+	});
+
+	it("can replace all args using custom tool", async () => {
+		const root = fsPath(helloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "dart_test");
+
+		const config = await startDebugger(dc, helloWorldTestMainFile, {
+			customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
+			customToolReplacesArgs: 999999,
+			enableAsserts: false,
+			noDebug: true,
+			// These differ to the usual ones so we can detect they replaced them.
+			toolArgs: ["-j2", "-r", "json"],
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, `-j2 -r json`);
+	});
+
+	it("receives the expected events from a Dart test script", async () => {
+		await openFile(helloWorldTestMainFile);
+		const config = await startDebugger(dc, helloWorldTestMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertOutputContains("console", `✓ String .split() splits the string on the delimiter`),
+			dc.assertPassingTest("String .split() splits the string on the delimiter"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("stops at a breakpoint", async () => {
+		await openFile(helloWorldTestMainFile);
+		const config = await startDebugger(dc, helloWorldTestMainFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldTestMainFile),
+		});
+	});
+
+	it("stops on exception", async () => {
+		await openFile(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {}),
+			dc.launch(config),
+		);
+	});
+
+	it.skip("stops at the correct location on exception", async () => {
+		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
+		// as deemphasized.
+		await openFile(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(helloWorldTestBrokenFile),
+			}),
+			dc.launch(config),
+		);
+	});
+
+	it("provides exception details when stopped on exception", async () => {
+		await openFile(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {}),
+			dc.launch(config),
+		);
+
+		const variables = await dc.getTopFrameVariables("Exceptions");
+		assert.ok(variables);
+		const v = variables.find((v) => v.name === "message");
+		assert.ok(v);
+		assert.equal(v.evaluateName, "$_threadException.message");
+		const expectedStart = `"Expected: <2>\n  Actual: <1>`;
+		assert.ok(
+			v.value.startsWith(expectedStart),
+			`Exception didn't have expected prefix\n` +
+			`+ expected - actual\n` +
+			`+ ${JSON.stringify(expectedStart)}\n` +
+			`- ${JSON.stringify(v.value)}\n`,
+		);
+	});
+
+	it("sends failure results for failing tests", async () => {
+		await openFile(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertFailingTest("might fail today"),
+			dc.assertOutput("stderr", `Expected: <2>\n  Actual: <1>`),
+			dc.launch(config),
+		);
+	});
+
+	it("builds the expected tree from a test run", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(dc, helloWorldTestTreeFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		const expectedResults = getExpectedResults();
+		const actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
+
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		checkTreeNodeResults(actualResults, expectedResults);
+	});
+
+	it("builds the expected tree if tests are run in multiple overlapping sessions", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/2934
+		await openFile(helloWorldTestShortFile);
+		const runTests = async () => {
+			// Create separate debug clients for each run, else we'll send multiple
+			// launchRequests to the same one.
+			const testDc = createDebugClient(DebuggerType.DartTest);
+			const config = await startDebugger(testDc, helloWorldTestShortFile);
+			config.noDebug = true;
+			await waitAllThrowIfTerminates(testDc,
+				testDc.configurationSequence(),
+				testDc.waitForEvent("terminated"),
+				testDc.launch(config),
+			);
+		};
+		await Promise.all([
+			runTests(),
+			runTests(),
+		]);
+
+		const expectedResults = getExpectedResults();
+		const actualResults = makeTestTextTree({ uriFilter: helloWorldTestShortFile }).join("\n");
+
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		checkTreeNodeResults(actualResults, expectedResults);
+	});
+
+	it("runs all tests if given a folder", async () => {
+		const config = await startDebugger(dc, "./test/");
+		config.noDebug = true;
+
+		const events: vs.DebugSessionCustomEvent[] = [];
+		const eventHandler = (e: vs.DebugSessionCustomEvent) => events.push(e);
+		dc.on("dart.testNotification", eventHandler);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+		dc.removeListener("dart.testNotification", eventHandler);
+
+		const testEvents = events.filter((e) => e.event === "dart.testNotification");
+		const suiteEvents = testEvents.filter((e) => e.body.type === "suite");
+		const suiteNames = suiteEvents.map((e) => path.basename((e.body as SuiteNotification).suite.path));
+		suiteNames.sort();
+
+		assert.deepStrictEqual(
+			suiteNames,
+			[
+				"basic_test.dart",
+				"broken_test.dart",
+				"discovery_large_test.dart",
+				"discovery_test.dart",
+				"dupe_name_test.dart",
+				"dynamic_test.dart",
+				"empty_test.dart",
+				"environment_test.dart",
+				// These excluded tests show up because we for testing they're
+				// directly inside the run folder. For the cases we care about (excluding
+				// nexted projects, etc.) this wouldn't happen.
+				"excluded_test.dart",
+				"excluded_test.dart",
+				"folder_test.dart",
+				"project_test.dart",
+				"rename_test.dart",
+				"selective1_test.dart",
+				"selective2_test.dart",
+				"short_test.dart",
+				"skip_test.dart",
+				"tree_test.dart",
+			],
+		);
+	});
+
+	it("can run nested projects through Test: Run All Tests", async () => {
+		let startedSessions = 0;
+		let runningSessions = 0;
+
+		const startSub = vs.debug.onDidStartDebugSession((_s) => {
+			startedSessions++;
+			runningSessions++;
+		});
+		const endSub = vs.debug.onDidTerminateDebugSession((_s) => {
+			runningSessions--;
+		});
+
+		try {
+			await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
+			// Allow some time for sessions to start so the startedSessions check doesn't
+			// fire immediately after only creating the first session.
+			await delay(500);
+			await waitFor(
+				() => startedSessions > 0 && runningSessions === 0,
+				300, // check every 300ms
+				60000, // wait up to 60 seconds
+			);
+		} finally {
+			startSub.dispose();
+			endSub.dispose();
+		}
+		const testFiles = [
+			helloWorldProjectTestFile,
+			helloWorldExampleSubFolderProjectTestFile,
+		];
+
+		for (const file of testFiles) {
+			await openFile(file);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			checkTreeNodeResults(actualResults, expectedResults);
+		}
+	});
+
+	it("can run tests through test controller using default launch template", async () => {
+		const config = await captureTestDebugConfigurationForItems(helloWorldTestEnvironmentFile, (suiteNode: vs.TestItem) => [suiteNode]);
+
+		assert.equal(config.env?.LAUNCH_ENV_VAR, "default");
+	});
+
+	it("can run tests through test controller using a project node", async () => {
+		await privateApi.testDiscoverer?.ensureSuitesDiscovered();
+
+		const projectNode = findProjectNode(fsPath(helloWorldExampleSubFolder));
+		const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest([projectNode]));
+
+		// Only the test from the example sub-project should have been selected.
+		assert.deepStrictEqual(
+			configs.map((config) => path.basename(config.program as string)),
+			["project_test.dart"],
+		);
+	});
+
+	it("allows more-specific default launch template using noDebug flag", async () => {
+		const config = await captureTestDebugConfigurationForItems(helloWorldTestEnvironmentFile, (suiteNode: vs.TestItem) => [suiteNode], true);
+
+		assert.equal(config.env?.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
+	});
+
 	for (const runByLine of [false, true]) {
 		describe(`when running tests by ${runByLine ? "line" : "name"}`, () => {
 			beforeEach("set config.testInvocationMode", async () => {
 				await setConfigForTest("dart", "testInvocationMode", runByLine ? "line" : "name");
 			});
 
-			it("runs a Dart test script to completion", async () => {
-				await openFile(helloWorldTestMainFile);
-				const config = await startDebugger(dc, helloWorldTestMainFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-			});
+			// Only tests that pass a test selection are affected by the invocation
+			// mode, so only those run in both modes here.
 
 			it("can run tests from codelens", async () => {
 				const search = `test^(".split() splits`;
@@ -80,175 +366,6 @@ describe("dart test debugger", () => {
 				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
 			});
 
-			it("can run using a custom tool", async () => {
-				const root = fsPath(helloWorldFolder);
-				const hasRunFile = prepareHasRunFile(root, "dart_test");
-
-				const config = await startDebugger(dc, helloWorldTestMainFile, {
-					customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
-					// Replace "run --no-spawn-devtools test:test"
-					customToolReplacesArgs: 3,
-					enableAsserts: false,
-					noDebug: true,
-				});
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-
-				ensureHasRunWithArgsStarting(root, hasRunFile, `-r json`);
-			});
-
-			it("can replace all args using custom tool", async () => {
-				const root = fsPath(helloWorldFolder);
-				const hasRunFile = prepareHasRunFile(root, "dart_test");
-
-				const config = await startDebugger(dc, helloWorldTestMainFile, {
-					customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
-					customToolReplacesArgs: 999999,
-					enableAsserts: false,
-					noDebug: true,
-					// These differ to the usual ones so we can detect they replaced them.
-					toolArgs: ["-j2", "-r", "json"],
-				});
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-
-				ensureHasRunWithArgsStarting(root, hasRunFile, `-j2 -r json`);
-			});
-
-			it("receives the expected events from a Dart test script", async () => {
-				await openFile(helloWorldTestMainFile);
-				const config = await startDebugger(dc, helloWorldTestMainFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertOutputContains("console", `✓ String .split() splits the string on the delimiter`),
-					dc.assertPassingTest("String .split() splits the string on the delimiter"),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-			});
-
-			it("stops at a breakpoint", async () => {
-				await openFile(helloWorldTestMainFile);
-				const config = await startDebugger(dc, helloWorldTestMainFile);
-				await dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-					path: fsPath(helloWorldTestMainFile),
-				});
-			});
-
-			it("stops on exception", async () => {
-				await openFile(helloWorldTestBrokenFile);
-				const config = await startDebugger(dc, helloWorldTestBrokenFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertStoppedLocation("exception", {}),
-					dc.launch(config),
-				);
-			});
-
-			it.skip("stops at the correct location on exception", async () => {
-				// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
-				// as deemphasized.
-				await openFile(helloWorldTestBrokenFile);
-				const config = await startDebugger(dc, helloWorldTestBrokenFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertStoppedLocation("exception", {
-						line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
-						path: fsPath(helloWorldTestBrokenFile),
-					}),
-					dc.launch(config),
-				);
-			});
-
-			it("provides exception details when stopped on exception", async () => {
-				await openFile(helloWorldTestBrokenFile);
-				const config = await startDebugger(dc, helloWorldTestBrokenFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertStoppedLocation("exception", {}),
-					dc.launch(config),
-				);
-
-				const variables = await dc.getTopFrameVariables("Exceptions");
-				assert.ok(variables);
-				const v = variables.find((v) => v.name === "message");
-				assert.ok(v);
-				assert.equal(v.evaluateName, "$_threadException.message");
-				const expectedStart = `"Expected: <2>\n  Actual: <1>`;
-				assert.ok(
-					v.value.startsWith(expectedStart),
-					`Exception didn't have expected prefix\n` +
-					`+ expected - actual\n` +
-					`+ ${JSON.stringify(expectedStart)}\n` +
-					`- ${JSON.stringify(v.value)}\n`,
-				);
-			});
-
-			it("sends failure results for failing tests", async () => {
-				await openFile(helloWorldTestBrokenFile);
-				const config = await startDebugger(dc, helloWorldTestBrokenFile);
-				config.noDebug = true;
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertFailingTest("might fail today"),
-					dc.assertOutput("stderr", `Expected: <2>\n  Actual: <1>`),
-					dc.launch(config),
-				);
-			});
-
-			it("builds the expected tree from a test run", async () => {
-				await openFile(helloWorldTestTreeFile);
-				const config = await startDebugger(dc, helloWorldTestTreeFile);
-				config.noDebug = true;
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-
-				const expectedResults = getExpectedResults();
-				const actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
-
-				assert.ok(expectedResults);
-				assert.ok(actualResults);
-				checkTreeNodeResults(actualResults, expectedResults);
-			});
-
-			it("builds the expected tree if tests are run in multiple overlapping sessions", async () => {
-				// https://github.com/Dart-Code/Dart-Code/issues/2934
-				await openFile(helloWorldTestShortFile);
-				const runTests = async () => {
-					// Create separate debug clients for each run, else we'll send multiple
-					// launchRequests to the same one.
-					const testDc = createDebugClient(DebuggerType.DartTest);
-					const config = await startDebugger(testDc, helloWorldTestShortFile);
-					config.noDebug = true;
-					await waitAllThrowIfTerminates(testDc,
-						testDc.configurationSequence(),
-						testDc.waitForEvent("terminated"),
-						testDc.launch(config),
-					);
-				};
-				await Promise.all([
-					runTests(),
-					runTests(),
-				]);
-
-				const expectedResults = getExpectedResults();
-				const actualResults = makeTestTextTree({ uriFilter: helloWorldTestShortFile }).join("\n");
-
-				assert.ok(expectedResults);
-				assert.ok(actualResults);
-				checkTreeNodeResults(actualResults, expectedResults);
-			});
-
 			it("warns if multiple tests run when one was expected", async function () {
 				// SDK DAP doesn't warn on this, but will be handled by package:test in future
 				// https://github.com/dart-lang/test/issues/1571
@@ -274,114 +391,6 @@ describe("dart test debugger", () => {
 					dc.assertOutputContains("console", "You may have multiple tests with the same name"),
 					dc.waitForEvent("terminated"),
 					dc.launch(config),
-				);
-			});
-
-			it("runs all tests if given a folder", async () => {
-				const config = await startDebugger(dc, "./test/");
-				config.noDebug = true;
-
-				const events: vs.DebugSessionCustomEvent[] = [];
-				const eventHandler = (e: vs.DebugSessionCustomEvent) => events.push(e);
-				dc.on("dart.testNotification", eventHandler);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-				dc.removeListener("dart.testNotification", eventHandler);
-
-				const testEvents = events.filter((e) => e.event === "dart.testNotification");
-				const suiteEvents = testEvents.filter((e) => e.body.type === "suite");
-				const suiteNames = suiteEvents.map((e) => path.basename((e.body as SuiteNotification).suite.path));
-				suiteNames.sort();
-
-				assert.deepStrictEqual(
-					suiteNames,
-					[
-						"basic_test.dart",
-						"broken_test.dart",
-						"discovery_large_test.dart",
-						"discovery_test.dart",
-						"dupe_name_test.dart",
-						"dynamic_test.dart",
-						"empty_test.dart",
-						"environment_test.dart",
-						// These excluded tests show up because we for testing they're
-						// directly inside the run folder. For the cases we care about (excluding
-						// nexted projects, etc.) this wouldn't happen.
-						"excluded_test.dart",
-						"excluded_test.dart",
-						"folder_test.dart",
-						"project_test.dart",
-						"rename_test.dart",
-						"selective1_test.dart",
-						"selective2_test.dart",
-						"short_test.dart",
-						"skip_test.dart",
-						"tree_test.dart",
-					],
-				);
-			});
-
-			it("can run nested projects through Test: Run All Tests", async () => {
-				let startedSessions = 0;
-				let runningSessions = 0;
-
-				const startSub = vs.debug.onDidStartDebugSession((_s) => {
-					startedSessions++;
-					runningSessions++;
-				});
-				const endSub = vs.debug.onDidTerminateDebugSession((_s) => {
-					runningSessions--;
-				});
-
-				try {
-					await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
-					// Allow some time for sessions to start so the startedSessions check doesn't
-					// fire immediately after only creating the first session.
-					await delay(500);
-					await waitFor(
-						() => startedSessions > 0 && runningSessions === 0,
-						300, // check every 300ms
-						60000, // wait up to 60 seconds
-					);
-				} finally {
-					startSub.dispose();
-					endSub.dispose();
-				}
-				const testFiles = [
-					helloWorldProjectTestFile,
-					helloWorldExampleSubFolderProjectTestFile,
-				];
-
-				for (const file of testFiles) {
-					await openFile(file);
-					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
-
-					assert.ok(expectedResults);
-					assert.ok(actualResults);
-					checkTreeNodeResults(actualResults, expectedResults);
-				}
-			});
-
-			it("can run tests through test controller using default launch template", async () => {
-				const config = await captureTestDebugConfigurationForItems(helloWorldTestEnvironmentFile, (suiteNode: vs.TestItem) => [suiteNode]);
-
-				assert.equal(config.env?.LAUNCH_ENV_VAR, "default");
-			});
-
-			it("can run tests through test controller using a project node", async () => {
-				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
-
-				const projectNode = findProjectNode(fsPath(helloWorldExampleSubFolder));
-				const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest([projectNode]));
-
-				// Only the test from the example sub-project should have been selected.
-				assert.deepStrictEqual(
-					configs.map((config) => path.basename(config.program as string)),
-					["project_test.dart"],
 				);
 			});
 
@@ -414,11 +423,6 @@ describe("dart test debugger", () => {
 				}
 			});
 
-			it("allows more-specific default launch template using noDebug flag", async () => {
-				const config = await captureTestDebugConfigurationForItems(helloWorldTestEnvironmentFile, (suiteNode: vs.TestItem) => [suiteNode], true);
-
-				assert.equal(config.env?.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
-			});
 
 			it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
 				// When we run an individual test, it will always have an ID of 1. Since the test we ran might
