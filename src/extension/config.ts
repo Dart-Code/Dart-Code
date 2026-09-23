@@ -80,6 +80,7 @@ class Config {
 	get debugExtensionBackendProtocol(): "sse" | "ws" { return this.getConfig<"sse" | "ws">("debugExtensionBackendProtocol", "ws"); }
 	get debugExternalPackageLibraries(): boolean { return this.getConfig<boolean>("debugExternalPackageLibraries", false); }
 	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
+	get defaultExceptionPauseMode(): "none" | "unhandled" | "all" { return this.getConfig<"none" | "unhandled" | "all">("defaultExceptionPauseMode", "unhandled"); }
 	get devToolsBrowser(): "chrome" | "default" { return this.getConfig<"chrome" | "default">("devToolsBrowser", "chrome"); }
 	get devToolsLocation(): DevToolsLocationsWithDefault {
 		const defaultValue: DevToolsLocationsWithDefault = { default: "beside" };

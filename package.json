@@ -2867,6 +2867,17 @@
 						"markdownDescription": "Whether to mark external pub package libraries (including `package:flutter`) as debuggable, enabling stepping into them while debugging.",
 						"scope": "window"
 					},
+					"dart.defaultExceptionPauseMode": {
+						"enum": ["none", "unhandled", "all"],
+						"default": "unhandled",
+						"enumDescriptions": [
+							"Do not break on any exceptions",
+							"Break only on uncaught exceptions",
+							"Break on all exceptions"
+						],
+						"markdownDescription": "The default exception pause mode. VS Code may persist settings in existing workspaces, so this only controls the default setting advertised by the debug adapter.",
+						"scope": "window"
+					},
 					"dart.evaluateGettersInDebugViews": {
 						"type": "boolean",
 						"default": true,

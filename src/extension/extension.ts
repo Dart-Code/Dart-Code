@@ -70,6 +70,7 @@ import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToImportsCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
+import { DartDebugDefaultExceptionPauseModeFactory } from "./providers/debug_adapter_default_exception_pause_mode";
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
 import { DartDebugForcedAnsiColorSupportFactory } from "./providers/debug_adapter_forced_ansi_color_support";
 import { DartDebugForcedDebugModeFactory } from "./providers/debug_adapter_forced_debug_mode_factory";
@@ -512,10 +513,12 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", removeErrorShowUser));
 	const launchStatus = new DartDebugAdapterLaunchStatusFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", launchStatus));
+	const defaultExceptionPauseMode = new DartDebugDefaultExceptionPauseModeFactory();
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", defaultExceptionPauseMode));
 	// Logger goes last, so it logs any mutations made by the above.
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
-	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, forcedAnsiColors, forcedSingleThread, removeErrorShowUser, launchStatus, debugLogger];
+	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, forcedAnsiColors, forcedSingleThread, removeErrorShowUser, launchStatus, defaultExceptionPauseMode, debugLogger];
 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
