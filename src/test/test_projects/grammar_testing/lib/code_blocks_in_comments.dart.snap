@@ -1,0 +1,60 @@
+>/// Multiline dartdoc comment with more than three backticks.
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>///
+#^^^^ source.dart comment.block.documentation.dart
+>/// ``````
+#^^^^^^^^^^ source.dart comment.block.documentation.dart
+>/// code in six backticks
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// ```
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// three backticks is nested code
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// ```
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// more code
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// ``````
+#^^^^^^^^^^ source.dart comment.block.documentation.dart
+>///
+#^^^^ source.dart comment.block.documentation.dart
+>/// Text
+#^^^^^^^^^ source.dart comment.block.documentation.dart
+>var moreBackticks;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^^^^^^^^^^^^ source.dart
+#                 ^ source.dart punctuation.terminator.dart
+>
+>/// Multiline dartdoc comment with more closing backticks.
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>///
+#^^^^ source.dart comment.block.documentation.dart
+>/// ``````
+#^^^^^^^^^^ source.dart comment.block.documentation.dart
+>/// code in six backticks
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// ```
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// still code
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// ``````````````````
+#^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>///
+#^^^^ source.dart comment.block.documentation.dart
+>/// Text
+#^^^^^^^^^ source.dart comment.block.documentation.dart
+>var moreClosingBackticks;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^^^^^^^^^^^^^^^^^^^ source.dart
+#                        ^ source.dart punctuation.terminator.dart
+>
