@@ -25,10 +25,18 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 		void Promise.all([
 			dtdUri ?? Promise.resolve(),
 			devToolsServerUri ?? Promise.resolve(),
-		]).then(() => this.start());
+		]).then(() => {
+			if (this.isDisposed)
+				return;
+
+			return this.start();
+		});
 	}
 
 	private async start(): Promise<void> {
+		if (this.isDisposed)
+			return;
+
 		try {
 			const flutterExecutable = path.join(this.flutterSdkPath, flutterPath);
 			const args = getGlobalFlutterArgs();
@@ -39,6 +47,8 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 
 			const dtdUri = await this.dtdUri;
 			const devToolsServerUri = await this.devToolsServerUri;
+			if (this.isDisposed)
+				return;
 
 			if (dtdUri)
 				args.push("--dtd-url", dtdUri);

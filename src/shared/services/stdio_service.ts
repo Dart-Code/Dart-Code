@@ -19,6 +19,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private processExitCompleter = new PromiseCompleter<ProcessExitCodes>();
 	public processExit = this.processExitCompleter.promise;
 	private description: string | undefined;
+	protected isDisposed = false;
 
 	constructor(
 		public readonly logger: Logger,
@@ -301,6 +302,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	public async dispose(): Promise<void> {
+		this.isDisposed = true;
+
 		this.logTraffic(`Process ${this.description} is being disposed`);
 		for (const pid of this.additionalPidsToTerminate) {
 			try {
