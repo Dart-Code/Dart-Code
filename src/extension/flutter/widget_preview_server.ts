@@ -60,6 +60,12 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 		}
 	}
 
+	override async dispose(): Promise<void> {
+		await super.dispose();
+		if (!this.previewUrlCompleter.isComplete)
+			this.previewUrlCompleter.reject("Widget preview was disposed");
+	}
+
 	protected shouldHandleMessage(message: string): boolean {
 		return message.startsWith("[{") && message.endsWith("}]");
 	}
