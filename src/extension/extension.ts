@@ -855,6 +855,7 @@ function getSettingsThatRequireRestart(): Record<string, string | number | boole
 		analyzerDiagnosticsPort: config.analyzerDiagnosticsPort,
 		analyzerVmServicePort: config.analyzerVmServicePort,
 		analyzerInstrumentationLogFile: config.analyzerInstrumentationLogFile,
+		analyzerSessionLogFile: config.analyzerSessionLogFile,
 		extensionLogFile: config.extensionLogFile,
 		analyzerAdditionalArgs: config.analyzerAdditionalArgs?.join(","),
 		analyzerVmAdditionalArgs: config.analyzerVmAdditionalArgs?.join(","),
