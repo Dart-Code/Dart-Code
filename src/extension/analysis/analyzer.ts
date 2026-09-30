@@ -778,9 +778,11 @@ function getAnalyzerArgs(logger: Logger) {
 	analyzerArgs.push(`--client-id=${clientID}`);
 	analyzerArgs.push(`--client-version=${extensionVersion}`);
 
-	// The analysis server supports a verbose instrumentation log file.
+	// The analysis server supports verboses log files.
 	if (config.analyzerInstrumentationLogFile)
 		analyzerArgs.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
+	if (config.analyzerSessionLogFile)
+		analyzerArgs.push(`--session-log=${config.analyzerSessionLogFile}`);
 
 	// Allow arbitrary args to be passed to the analysis server.
 	if (config.analyzerAdditionalArgs)

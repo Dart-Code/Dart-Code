@@ -16,6 +16,7 @@
 	"dart.extensionLogFile": "logs/extension.txt",
 	"dart.analyzerLogFile": "logs/analyzer.txt",
 	//"dart.analyzerInstrumentationLogFile": "logs/analyzer.instrum.txt",
+	//"dart.analyzerSessionLogFile": "logs/analyzer.session.txt",
 	"dart.flutterDaemonLogFile": "logs/flutter_daemon.txt",
 	"dart.dapLogFile": "logs/dap.txt",
 	"dart.analysisExcludedFolders": [

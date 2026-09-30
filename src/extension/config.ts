@@ -55,6 +55,7 @@ class Config {
 	get analyzerAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerAdditionalArgs", []); }
 	get analyzerDiagnosticsPort(): undefined | number { return this.getConfig<null | number>("analyzerDiagnosticsPort", null); }
 	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null)))); }
+	get analyzerSessionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerSessionLogFile", null)))); }
 	get analyzerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null)))); }
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get analyzerSshHost(): undefined | string { return this.getConfig<null | string>("analyzerSshHost", null); }
@@ -283,6 +284,7 @@ export class ResourceConfig {
 
 	get analysisExcludedFolders(): string[] { return this.getConfig<string[]>("analysisExcludedFolders", []); }
 	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null)))); }
+	get analyzerSessionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerSessionLogFile", null)))); }
 	get analyzerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null)))); }
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get cliAdditionalArgs(): string[] { return this.getConfig<string[]>("cliAdditionalArgs", []); }
