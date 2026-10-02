@@ -16,6 +16,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	private view?: WidgetPreviewView;
 	private setUpPreviewPromise: Promise<void> | undefined;
 	private hasShownProgress = false;
+	private isDisposed = false;
 
 	constructor(
 		private readonly logger: Logger,
@@ -43,7 +44,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	}
 
 	private startServer() {
-		if (this.server)
+		if (this.isDisposed || this.server)
 			return;
 
 		// Start the preview server.
@@ -81,13 +82,25 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			}
 
 			const server = await this.serverCompleter.promise;
+			if (this.isDisposed)
+				return;
+
 			const dtdUri = await this.dtdUri;
+			if (this.isDisposed)
+				return;
+
 			const previewUrls: WebViewUrls = {
 				viewUrl: await server.previewUrl,
 				authUrls: dtdUri ? [dtdUri] : undefined,
 			};
+			if (this.isDisposed)
+				return;
+
 			completer.resolve(await exposeWebViewUrls(previewUrls, this.logger));
 		} catch (e) {
+			if (this.isDisposed)
+				return;
+
 			const message = `Flutter Widget Preview: ${e}`;
 			this.logger.error(message);
 			vs.window.showWarningMessage(message);
@@ -96,7 +109,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 
 	public showProgressIfRequired() {
 		const server = this.server;
-		if (this.hasShownProgress || !server)
+		if (this.isDisposed || this.hasShownProgress || !server)
 			return;
 
 		this.hasShownProgress = true;
@@ -111,13 +124,20 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	}
 
 	public async showPreview(): Promise<void> {
+		if (this.isDisposed)
+			return;
+
 		this.startServer();
 		this.showProgressIfRequired();
 		await this.setUpPreview();
+		if (this.isDisposed)
+			return;
+
 		this.view?.show();
 	}
 
 	public dispose(): void {
+		this.isDisposed = true;
 		disposeAll(this.disposables);
 	}
 }
