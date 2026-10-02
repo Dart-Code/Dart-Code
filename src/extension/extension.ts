@@ -416,7 +416,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
 		: undefined;
 	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
-	void analyzer.connectToDtd(dartToolingDaemon);
+
+	// Connect the analysis server to DTD, and track when it connects because things like the Widget Preview
+	// are delayed until this is done to avoid some possible races.
+	const analyzerConnectedToDtd = analyzer.connectToDtd(dartToolingDaemon).catch(() => { });
 
 	const devTools = new DevToolsManager(logger, extContext, analytics, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);
@@ -438,7 +441,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const firstFlutterProject = workspaceContext.firstFlutterProject;
 		if (firstFlutterProject) {
 			const flutterProjectOrWorkspace = getPubWorkspaceFolderOrPackageFolderPath(firstFlutterProject);
-			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation, flutterWidgetPreviewBehavior));
+			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation, flutterWidgetPreviewBehavior, analyzerConnectedToDtd));
 		}
 	}
 

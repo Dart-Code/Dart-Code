@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { FLUTTER_WIDGET_PREVIEW_SUPPORTED_CONTEXT } from "../../../shared/constants.contexts";
 import { IAmDisposable, Logger } from "../../../shared/interfaces";
-import { disposeAll, PromiseCompleter } from "../../../shared/utils";
+import { disposeAll, PromiseCompleter, withTimeout } from "../../../shared/utils";
 import { FlutterWidgetPreviewServer } from "../../flutter/widget_preview_server";
 import { exposeWebViewUrls, WebViewUrls } from "../../views/shared";
 import { WidgetPreviewEmbeddedView, WidgetPreviewSidebarView, WidgetPreviewView } from "./webviews";
@@ -17,6 +17,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	private setUpPreviewPromise: Promise<void> | undefined;
 	private hasShownProgress = false;
 	private isDisposed = false;
+	private waitForAnalyzerDtd: Promise<void>;
 
 	constructor(
 		private readonly logger: Logger,
@@ -26,7 +27,12 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 		readonly tempWorkingDirectory: string,
 		private readonly location: "sidebar" | "beside",
 		private readonly behavior: "startEagerly" | "startLazily",
+		analyzerConnectedToDtd: Promise<void>,
 	) {
+		this.waitForAnalyzerDtd = withTimeout(analyzerConnectedToDtd, "Timed out waiting for the analyzer to connect to DTD", 30).catch((e) => {
+			if (!this.isDisposed)
+				this.logger.warn(`Flutter Widget Preview will start without waiting for the analyzer to connect to DTD: ${e}`);
+		});
 		// Register a command to show the preview.
 		this.disposables.push(vs.commands.registerCommand("flutter.showWidgetPreview", () => this.showPreview()));
 
@@ -40,10 +46,15 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			void this.setUpPreview();
 
 		if (this.behavior === "startEagerly")
-			this.startServer();
+			void this.startServer();
 	}
 
-	private startServer() {
+	private async startServer() {
+		if (this.isDisposed || this.server)
+			return;
+
+		await this.waitForAnalyzerDtd;
+
 		if (this.isDisposed || this.server)
 			return;
 
@@ -127,7 +138,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 		if (this.isDisposed)
 			return;
 
-		this.startServer();
+		void this.startServer();
 		this.showProgressIfRequired();
 		await this.setUpPreview();
 		if (this.isDisposed)
