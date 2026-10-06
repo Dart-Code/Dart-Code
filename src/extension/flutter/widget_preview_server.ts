@@ -10,7 +10,7 @@ import { config } from "../config";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification> {
-	private readonly previewUrlCompleter = new PromiseCompleter<string>();
+	private readonly previewUrlCompleter = new PromiseCompleter<string | undefined>();
 	public readonly previewUrl = this.previewUrlCompleter.promise;
 
 	constructor(
@@ -58,6 +58,12 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 		} catch (e) {
 			this.logger.error(`Failed to start Widget Preview server: ${e}`);
 		}
+	}
+
+	override async dispose(): Promise<void> {
+		await super.dispose();
+		if (!this.previewUrlCompleter.isComplete)
+			this.previewUrlCompleter.resolve(undefined);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
