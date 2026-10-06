@@ -89,8 +89,12 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			if (this.isDisposed)
 				return;
 
+			const previewUrl = await server.previewUrl;
+			if (!previewUrl)
+				return;
+
 			const previewUrls: WebViewUrls = {
-				viewUrl: await server.previewUrl,
+				viewUrl: previewUrl,
 				authUrls: dtdUri ? [dtdUri] : undefined,
 			};
 			if (this.isDisposed)
