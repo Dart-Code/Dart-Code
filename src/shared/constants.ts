@@ -39,6 +39,7 @@ export const platformEol = isWin ? "\r\n" : "\n";
 const androidStudioExecutableNames = isWin ? ["studio64.exe"] : ["studio", "studio.sh"];
 export const executableNames = {
 	dart: isWin ? "dart.exe" : "dart",
+	dartaotruntime: isWin ? "dartaotruntime.exe" : "dartaotruntime",
 	dartdoc: isWin ? "dartdoc.bat" : "dartdoc",
 	devToolsToolBinary: isWin ? "dt.bat" : "dt",
 	devToolsToolLegacyBinary: isWin ? "devtools_tool.bat" : "devtools_tool",
@@ -48,6 +49,7 @@ export const executableNames = {
 };
 export const getExecutableName = (cmd: string) => (executableNames as Record<string, string | undefined>)[cmd] ?? cmd;
 export const dartVMPath = "bin/" + executableNames.dart;
+export const dartAotRuntimePath = "bin/" + executableNames.dartaotruntime;
 export const devToolsToolPath = "tool/bin/" + executableNames.devToolsToolBinary;
 export const devToolsToolLegacyPath = "tool/bin/" + executableNames.devToolsToolLegacyBinary;
 

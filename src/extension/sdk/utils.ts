@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { commands, ExtensionContext, extensions, ProgressLocation, Uri, window, workspace } from "vscode";
-import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartAotRuntimePath, dartPlatformName, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { existsAndIsDirectorySync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter, safeRealpathSync } from "../../shared/utils/fs";
@@ -631,7 +631,7 @@ export class SdkUtils {
 	}
 
 	private findDartSdk(folders: string[]): SdkSearchResults {
-		return this.searchPaths(folders, executableNames.dart, (p) => this.containsFile(p, dartVMPath) && this.containsFile(p, analyzerSnapshotPath));
+		return this.searchPaths(folders, executableNames.dart, (p) => this.containsFile(p, dartVMPath) && (this.containsFile(p, analyzerSnapshotPath) || this.containsFile(p, dartAotRuntimePath)));
 	}
 
 	private findFlutterSdk(folders: string[]): SdkSearchResults {
