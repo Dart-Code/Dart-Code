@@ -843,8 +843,52 @@ ${ringLogContents.split("\n").filter((l) => l.includes("[General]") || l.include
 			}
 		}
 
-		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData: changedSettingsNames.join(",") }), 50);
+		const restartData = getConfigurationChangeRestartData(changedSettingsNames, prevObject, newObject);
+		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData }), 50);
 	}
+}
+
+function getConfigurationChangeRestartData(changedSettingsNames: string[], prevObject: Record<string, string | number | boolean | undefined>, newObject: Record<string, string | number | boolean | undefined>): string {
+	const restartData = changedSettingsNames.join(",");
+	if (restartData !== "flutterSdkPath")
+		return restartData;
+
+	return `${restartData}:${describeSdkPathChange(prevObject.flutterSdkPath, newObject.flutterSdkPath)}`;
+}
+
+function describeSdkPathChange(prev: string | number | boolean | undefined, next: string | number | boolean | undefined): string {
+	// Change detection uses `!==`, so these should never be equal. If they are, that's a bug in the detection.
+	if (prev === next)
+		return "unchangedValue";
+	if (typeof prev !== "string" && prev !== undefined || typeof next !== "string" && next !== undefined)
+		return "unexpectedType";
+
+	// Distinguish undefined from empty, since both are falsy but still trigger a restart.
+	if (prev === undefined)
+		return next === "" ? "nullToEmpty" : "nullToValue";
+	if (next === undefined)
+		return prev === "" ? "emptyToNull" : "valueToNull";
+	if (prev === "")
+		return "emptyToValue";
+	if (next === "")
+		return "valueToEmpty";
+
+	const isUri = (s: string) => /^file:/i.test(s);
+	if (isUri(prev) && !isUri(next))
+		return "uriToPath";
+	if (!isUri(prev) && isUri(next))
+		return "pathToUri";
+
+	const normaliseSlashes = (s: string) => s.replace(/\\/g, "/");
+	const stripTrailingSlashes = (s: string) => s.replace(/[\\/]+$/, "");
+
+	if (normaliseSlashes(prev) === normaliseSlashes(next))
+		return "sameValueDifferentSlashDirections";
+	if (stripTrailingSlashes(prev) === stripTrailingSlashes(next))
+		return "sameValueDifferentTrailingSlash";
+	if (prev.toLowerCase() === next.toLowerCase())
+		return "sameValueDifferentCasing";
+	return "differentValues";
 }
 
 function getSettingsThatRequireRestart(): Record<string, string | number | boolean | undefined> {
