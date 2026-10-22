@@ -702,6 +702,19 @@ describe("pub package commands", () => {
 				"Your SDK has been updated since you last fetched packages for package:hello_world (+ 2 others), would you like to fetch updated packages?",
 			);
 		});
+
+		it("prioritizes an UPGRADE project in the SDK upgrade message when preceded by GET projects", async () => {
+			await promptToRunPubUpgrade([
+				makeStatus(helloWorldFolder, "GET"),
+				makeStatus(helloWorldExampleSubFolder, "UPGRADE"),
+				makeStatus(vs.Uri.file(standalone1), "GET"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"Your SDK has been updated since you last fetched packages for package:hello_world_example (example) (+ 2 others), would you like to fetch updated packages?",
+			);
+		});
 	});
 });
 

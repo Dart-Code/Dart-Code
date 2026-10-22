@@ -255,7 +255,13 @@ export async function promptToRunPubUpgrade(statuses: PubPackageStatus[]) {
 	if (!statuses.length)
 		return;
 
-	const folders = statuses.map((s) => s.folderUri);
+	// Put UPGRADE projects first so the named project in the prompt is one that
+	// actually triggered the SDK upgrade check, while still running across all folders.
+	const sortedStatuses = [
+		...statuses.filter((s) => s.pubRequired === "UPGRADE"),
+		...statuses.filter((s) => s.pubRequired !== "UPGRADE"),
+	];
+	const folders = sortedStatuses.map((s) => s.folderUri);
 	const projectsSummary = formatProjectsDisplaySummary(folders);
 
 	const label = "Run 'pub upgrade'";
