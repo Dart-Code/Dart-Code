@@ -12,6 +12,7 @@ export class WorkspaceContext implements IAmDisposable {
 		public readonly hasAnyWebProjects: boolean,
 		public readonly hasAnyStandardDartProjects: boolean,
 		public readonly hasProjectsInFuchsiaTree: boolean,
+		// The first project we care about (could be either a standard Dart project or a Flutter project).
 		public readonly firstDartProject: string | undefined,
 		public readonly firstFlutterProject: string | undefined,
 	) {

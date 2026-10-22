@@ -27,7 +27,7 @@ import { getPubWorkspaceFolderOrPackageFolderPath } from "../shared/vscode/pub";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { ProjectFinder, clearCaches, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { ProjectFinder, clearCaches, createWatcher, envUtils, getDartWorkspaceFolders, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
@@ -416,8 +416,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// for https://github.com/dart-lang/sdk/issues/64641 because DTD uses its working directory as the project root,
 	// and otherwise it would inherit whatever the CWD was when VS Code was launched (which could be a different
 	// project if we used File -> Open).
+	const dartWorkspaceFolders = getDartWorkspaceFolders();
 	const dtdWorkingDirectory = workspaceContext.firstDartProject
-		?? (vs.workspace.workspaceFolders?.length ? fsPath(vs.workspace.workspaceFolders[0].uri) : undefined);
+		?? (dartWorkspaceFolders.length ? fsPath(dartWorkspaceFolders[0].uri) : undefined);
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
 		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, dtdWorkingDirectory, deviceManager)
 		: undefined;
