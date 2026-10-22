@@ -33,6 +33,7 @@ import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
+import { CachingMiddlewareFeature } from "./caching_middleware";
 import { LegacyRefactors } from "./features/legacy_refactors";
 import { FileTracker } from "./file_tracker";
 import {
@@ -47,6 +48,7 @@ let hasShownDartOsVersionError = false;
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
 	public readonly fileTracker: FileTracker;
+	private readonly cachingMiddleware: CachingMiddlewareFeature | undefined;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
@@ -62,6 +64,8 @@ export class LspAnalyzer extends Analyzer {
 
 
 		// Set up features that register capabilities and may also wrap client middleware.
+		if (config.lspCachingMiddleware)
+			this.disposables.push(this.cachingMiddleware = new CachingMiddlewareFeature(this.client));
 		this.disposables.push(this.refactors = new InteractiveRefactors(logger, this.client));
 		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(this.client));
 		this.disposables.push(this.fileTracker = new FileTracker(logger, this.client, wsContext));
@@ -70,6 +74,8 @@ export class LspAnalyzer extends Analyzer {
 		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
 		this.client.registerFeature(new ClosingLabelsFeature());
+		if (this.cachingMiddleware)
+			this.client.registerFeature(this.cachingMiddleware);
 		if (config.interactiveForms)
 			this.client.registerFeature(new InteractiveFormsFeature(this.client));
 		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
