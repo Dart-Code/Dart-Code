@@ -78,8 +78,11 @@ export class TestDiscoverer implements IAmDisposable {
 	private isExcludedPath(fileOrFolderPath: string) {
 		// Hidden folders like .git and .dart_tool are not in excludedFolders (they are skipped
 		// when traversing directories in discoverTestSuites), but the file watcher may fire directly
-		// for files or folders created inside them.
-		if (fileOrFolderPath.includes(`${path.sep}.`))
+		// for files or folders created inside them. Check the path relative to the workspace folder
+		// so that a '.' in an ancestor of the workspace folder does not exclude the whole workspace.
+		const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(fileOrFolderPath));
+		const relativePath = ws ? path.relative(fsPath(ws.uri), fileOrFolderPath) : path.basename(fileOrFolderPath);
+		if (relativePath.split(path.sep).some((s) => s.startsWith(".")))
 			return true;
 
 		return this.excludedFolders
