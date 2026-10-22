@@ -39,13 +39,14 @@ export class DartToolingDaemon implements IAmDisposable {
 		logger: Logger,
 		sdks: DartSdks,
 		protected readonly dartCapabilities: DartCapabilities,
+		workingDirectory: string | undefined,
 		additionalArgs: string[],
 		maxLogLineLength: number | undefined,
 		getToolEnv: () => any,
 		private readonly promptToReloadExtension: (logger: Logger, options: { prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; restartReason: ExtensionRestartReason }) => Promise<void>,
 	) {
 		this.logger = new CategoryLogger(logger, LogCategory.DartToolingDaemon);
-		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, additionalArgs, maxLogLineLength, getToolEnv);
+		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, workingDirectory, additionalArgs, maxLogLineLength, getToolEnv);
 		this.disposables.push(this.dtdProcess);
 
 		void this.dtdProcess.dtdUri.then(() => this.connect());
@@ -341,7 +342,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return this.dtdSecretCompleter.promise;
 	}
 
-	constructor(logger: Logger, private readonly sdks: DartSdks, additionalArgs: string[], maxLogLineLength: number | undefined, getToolEnv: () => any) {
+	constructor(logger: Logger, private readonly sdks: DartSdks, workingDirectory: string | undefined, additionalArgs: string[], maxLogLineLength: number | undefined, getToolEnv: () => any) {
 		super(logger, maxLogLineLength, true, true);
 
 		const executable = path.join(this.sdks.dart, dartVMPath);
@@ -351,7 +352,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 			...additionalArgs,
 		];
 
-		this.createProcess(undefined, executable, daemonArgs, { toolEnv: getToolEnv() });
+		this.createProcess(workingDirectory, executable, daemonArgs, { toolEnv: getToolEnv() });
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {

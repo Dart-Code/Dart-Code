@@ -331,11 +331,12 @@ export class SdkUtils {
 				dartSdkIsFromFlutter: false,
 				flutter: undefined,
 				isPreReleaseSdk: false,
-			}, {}, false, false, false, false, undefined);
+			}, {}, false, false, false, false, undefined, undefined);
 		}
 
 		// TODO: This has gotten very messy and needs tidying up...
 
+		let firstDartProject: string | undefined;
 		let firstFlutterProject: string | undefined;
 		let hasAnyFlutterProject = false;
 		let hasAnyWebProject = false;
@@ -362,7 +363,8 @@ export class SdkUtils {
 			const kind = isSomethingFlutter ? "Flutter" : "non-Flutter";
 			this.logger.info(`Found ${kind} project at ${folder} (Pubspec? ${hasPubspecFile}, Mobile? ${refsFlutter}, Create Trigger? ${hasFlutterCreateProjectTriggerFile}, Flutter Repo? ${isFlutterRepo})`);
 
-			// Track the first Flutter Project so we can try finding the Flutter SDK from its packages file.
+			// Track the first Dart and Flutter projects.
+			firstDartProject = firstDartProject || ((isSomethingFlutter || hasPubspecFile) ? folder : undefined);
 			firstFlutterProject = firstFlutterProject || (isSomethingFlutter ? folder : undefined);
 
 			// Set some flags we'll use to construct the workspace, so we know what things we need to light up.
@@ -543,6 +545,7 @@ export class SdkUtils {
 			hasAnyWebProject,
 			hasAnyStandardDartProject,
 			!!fuchsiaRoot && hasAnyStandardDartProject,
+			firstDartProject,
 			firstFlutterProject,
 		);
 	}
