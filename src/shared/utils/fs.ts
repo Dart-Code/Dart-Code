@@ -339,6 +339,7 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 // - are the Flutter repo root
 export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, onlyWorkspaceRoots?: boolean }, token: MyCancellationToken): Promise<string[]> {
 	const dartToolFolderName = `${path.sep}.dart_tool${path.sep}`;
+	const widgetPreviewFolderName = `${path.sep}.widget_preview${path.sep}`;
 
 	let previousLevelFolders = roots.slice();
 	let allPossibleFolders = previousLevelFolders.slice();
@@ -357,7 +358,12 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 	}
 
 	allPossibleFolders = allPossibleFolders
-		.filter((f) => !f.includes(dartToolFolderName) && excludedFolders.every((ef) => !isWithinPathOrEqual(f, ef)));
+		.filter((f) => {
+			const folderWithTrailingSlash = `${f}${path.sep}`;
+			return !folderWithTrailingSlash.includes(dartToolFolderName)
+				&& !folderWithTrailingSlash.includes(widgetPreviewFolderName)
+				&& excludedFolders.every((ef) => !isWithinPathOrEqual(f, ef));
+		});
 
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
 		exists: options?.requirePubspec

@@ -3,7 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
-import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
+import { nullLogger } from "../../../shared/logging";
+import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
 import { createTempPubPackage, defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, testProjectsFolder, tryDelete } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
@@ -304,3 +305,40 @@ describe("hasPackageMapFile", () => {
 		assert.equal(hasPackageMapFile(fileInsideFile), false);
 	});
 });
+
+describe("findProjectFolders", () => {
+	let tempFolder: string;
+
+	beforeEach(() => {
+		tempFolder = getRandomTempFolder();
+		defer("delete temp folder", () => tryDelete(tempFolder));
+	});
+
+	function createPubspec(relativeFolder: string) {
+		const folder = path.join(tempFolder, relativeFolder);
+		fs.mkdirSync(folder, { recursive: true });
+		fs.writeFileSync(path.join(folder, "pubspec.yaml"), "name: test\n");
+		return folder;
+	}
+
+	it("excludes .dart_tool and .widget_preview folders and their children", async () => {
+		const mainProject = createPubspec("my_project");
+		const subProject = createPubspec(path.join("my_project", "sub_project"));
+		const excludedProject = createPubspec(path.join("my_project", "excluded_project"));
+		createPubspec(path.join("my_project", ".dart_tool"));
+		createPubspec(path.join("my_project", ".dart_tool", "nested_project"));
+		createPubspec(path.join("my_project", ".widget_preview"));
+		createPubspec(path.join("my_project", ".widget_preview", "nested_project"));
+
+		const projects = await findProjectFolders(
+			nullLogger,
+			[tempFolder],
+			[excludedProject],
+			{ requirePubspec: true, sort: true, searchDepth: 5 },
+			{ isCancellationRequested: false },
+		);
+
+		assert.deepStrictEqual(projects, [mainProject, subProject]);
+	});
+});
+
