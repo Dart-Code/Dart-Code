@@ -164,6 +164,42 @@ describe("caching middleware", () => {
 			assert.equal(nextMock.mock.callCount(), 2);
 		});
 
+		it("does not cancel underlying request unless all callers cancel", async () => {
+			const { provideDocumentSymbols } = createTestHarness();
+			const doc = createFakeDocument("file:///test/cancel.dart", 1);
+			const symbols = [createFakeSymbol("MyClass")];
+
+			let capturedToken: vs.CancellationToken | undefined;
+			const completer = new PromiseCompleter<vs.DocumentSymbol[]>();
+			const nextMock = mock.fn((_doc: vs.TextDocument, token: vs.CancellationToken) => {
+				capturedToken = token;
+				return completer.promise;
+			});
+
+			const cts1 = new vs.CancellationTokenSource();
+			const cts2 = new vs.CancellationTokenSource();
+			defer("dispose cts", () => {
+				cts1.dispose();
+				cts2.dispose();
+			});
+
+			const promise1 = provideDocumentSymbols(doc, cts1.token, nextMock);
+			const promise2 = provideDocumentSymbols(doc, cts2.token, nextMock);
+			assert.strictEqual(promise1, promise2);
+			assert.ok(capturedToken);
+
+			// Cancelling only the first caller should not cancel the underlying request.
+			cts1.cancel();
+			assert.equal(capturedToken.isCancellationRequested, false);
+
+			// Cancelling the second caller as well should cancel the underlying request.
+			cts2.cancel();
+			assert.equal(capturedToken.isCancellationRequested, true);
+
+			completer.resolve(symbols);
+			await Promise.all([promise1, promise2]);
+		});
+
 		it("does not cache if request fails or returns null", async () => {
 			const { provideDocumentSymbols } = createTestHarness();
 			const doc = createFakeDocument("file:///test/null.dart", 1);

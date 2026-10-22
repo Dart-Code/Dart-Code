@@ -1,14 +1,14 @@
 import * as vs from "vscode";
-import { CancellationToken, ClientCapabilities, FeatureState, LanguageClient, ProvideDocumentSymbolsSignature, StaticFeature } from "vscode-languageclient/node";
+import { ClientCapabilities, FeatureState, LanguageClient, ProvideDocumentSymbolsSignature, StaticFeature } from "vscode-languageclient/node";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
-import { DocumentCache } from "../../shared/utils/document_cache";
+import { VersionedDocumentCache } from "../../shared/vscode/document_cache";
 
 type DocumentSymbolsResult = vs.SymbolInformation[] | vs.DocumentSymbol[] | null | undefined;
 
-interface CachedDocumentSymbols {
-	version: number;
+interface InFlightDocumentSymbols {
 	promise: Promise<DocumentSymbolsResult>;
+	tokenSource?: CompositeCancellationTokenSource;
 }
 
 /**
@@ -18,21 +18,11 @@ interface CachedDocumentSymbols {
  */
 export class CachingMiddlewareFeature implements StaticFeature, IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
-	private readonly documentSymbols = new DocumentCache<CachedDocumentSymbols>();
+	private readonly documentSymbols = new VersionedDocumentCache<InFlightDocumentSymbols>();
 
 	constructor(private readonly client: LanguageClient) {
+		this.disposables.push(this.documentSymbols);
 		this.addMiddleware();
-
-		this.disposables.push(
-			vs.workspace.onDidCloseTextDocument((doc) => {
-				this.documentSymbols.delete(doc.uri);
-			}),
-			vs.workspace.onDidChangeTextDocument((e) => {
-				const cached = this.documentSymbols.get(e.document.uri);
-				if (cached && cached.version !== e.document.version)
-					this.documentSymbols.delete(e.document.uri);
-			}),
-		);
 	}
 
 	public fillClientCapabilities(_capabilities: ClientCapabilities): void { }
@@ -66,42 +56,85 @@ export class CachingMiddlewareFeature implements StaticFeature, IAmDisposable {
 		token: vs.CancellationToken,
 		next: ProvideDocumentSymbolsSignature,
 	): Promise<DocumentSymbolsResult> {
-		if (document.isClosed)
+		if (document.isClosed || token.isCancellationRequested)
 			return Promise.resolve(next(document, token));
 
-		const uri = document.uri;
-		const version = document.version;
-
-		const existing = this.documentSymbols.get(uri);
-		if (existing?.version === version)
+		const existing = this.documentSymbols.get(document);
+		if (existing) {
+			existing.tokenSource?.addToken(token);
 			return existing.promise;
+		}
 
-		// Use a non-cancelling token for the underlying request so that if one caller cancels
-		// its token, other concurrent callers (or future callers for the same version) still get
-		// the results.
-		const promise = Promise.resolve(next(document, CancellationToken.None)).then(
-			(result) => {
-				// If the document was closed or modified while the request was in-flight, or if
-				// no results were returned (e.g. null/undefined), do not keep it in the cache.
-				if (document.isClosed || document.version !== version || !result) {
-					if (this.documentSymbols.get(uri)?.promise === promise)
-						this.documentSymbols.delete(uri);
-				}
-				return result;
-			},
-			(error) => {
-				if (this.documentSymbols.get(uri)?.promise === promise)
-					this.documentSymbols.delete(uri);
-				throw error;
-			},
-		);
+		const version = document.version;
+		const tokenSource = new CompositeCancellationTokenSource(token);
+		let shouldKeepInCache = false;
+		const entry: InFlightDocumentSymbols = {
+			tokenSource,
+			promise: Promise.resolve(next(document, tokenSource.token)).then(
+				(result) => {
+					shouldKeepInCache = !document.isClosed
+						&& document.version === version
+						&& !tokenSource.token.isCancellationRequested
+						&& !!result;
+					return result;
+				},
+			).finally(() => {
+				entry.tokenSource = undefined;
+				tokenSource.dispose();
+				if (!shouldKeepInCache)
+					this.documentSymbols.deleteIfSame(document, entry);
+			}),
+		};
 
-		this.documentSymbols.set(uri, { version, promise });
-		return promise;
+		this.documentSymbols.set(document, entry);
+		return entry.promise;
 	}
 
 	public dispose(): void {
 		this.clear();
+		disposeAll(this.disposables);
+	}
+}
+
+/**
+ * Wraps a `CancellationTokenSource` that only cancels once all attached `CancellationToken`s
+ * have been cancelled.
+ */
+class CompositeCancellationTokenSource implements IAmDisposable {
+	private readonly tokenSource = new vs.CancellationTokenSource();
+	private readonly disposables: IAmDisposable[] = [];
+	private readonly tokens: vs.CancellationToken[] = [];
+	private isDisposed = false;
+
+	constructor(initialToken: vs.CancellationToken) {
+		this.disposables.push(this.tokenSource);
+		this.addToken(initialToken);
+	}
+
+	public get token(): vs.CancellationToken {
+		return this.tokenSource.token;
+	}
+
+	public addToken(token: vs.CancellationToken): void {
+		if (this.isDisposed || this.tokenSource.token.isCancellationRequested)
+			return;
+
+		this.tokens.push(token);
+		if (token.isCancellationRequested) {
+			this.checkCancellation();
+		} else {
+			this.disposables.push(token.onCancellationRequested(() => this.checkCancellation()));
+		}
+	}
+
+	private checkCancellation(): void {
+		if (!this.isDisposed && this.tokens.length > 0 && this.tokens.every((t) => t.isCancellationRequested))
+			this.tokenSource.cancel();
+	}
+
+	public dispose(): void {
+		this.isDisposed = true;
+		this.tokens.length = 0;
 		disposeAll(this.disposables);
 	}
 }
