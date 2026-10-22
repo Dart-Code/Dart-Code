@@ -61,7 +61,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", probablyTriggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/.dart_tool/package_config.json file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/.dart_tool/package_config.json file" },
 		]);
 	});
 
@@ -76,7 +76,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", probablyTriggeredByFile: "pubspec.lock", reason: "The proj1/pubspec.lock file was modified more recently than the proj1/.dart_tool/package_config.json file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", triggeredByFile: "pubspec.lock", reason: "The proj1/pubspec.lock file was modified more recently than the proj1/.dart_tool/package_config.json file" },
 		]);
 	});
 
@@ -91,7 +91,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", probablyTriggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/pubspec.lock file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/pubspec.lock file" },
 		]);
 	});
 
@@ -307,7 +307,7 @@ describe("pub package status", () => {
 			};
 
 			expectStatus(workspace, [
-				{ folder: "/projects/root", pubRequired: "GET", probablyTriggeredByFile: "pubspec.yaml", reason: "The root/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
+				{ folder: "/projects/root", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The root/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
 				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj3", pubRequired: false, reason: "Up-to-date" },
@@ -329,7 +329,7 @@ describe("pub package status", () => {
 			};
 
 			expectStatus(workspace, [
-				{ folder: "/projects/root", pubRequired: "GET", probablyTriggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
+				{ folder: "/projects/root", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
 				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj3", pubRequired: false, reason: "Up-to-date" },
@@ -359,7 +359,7 @@ describe("pub package status", () => {
 		});
 	}
 
-	function expectStatus(workspace: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", probablyTriggeredByFile?: "pubspec.yaml" | "pubspec.lock", reason?: string }>) {
+	function expectStatus(workspace: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", triggeredByFile?: "pubspec.yaml" | "pubspec.lock", reason?: string }>) {
 		workspace.openFolders = workspace.openFolders.map(fixPath);
 		const fixedFiles: typeof workspace.files = {};
 		for (const p of Object.keys(workspace.files))
@@ -617,8 +617,8 @@ describe("pub package commands", () => {
 			showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(undefined);
 		});
 
-		function makeStatus(folderUri: vs.Uri, pubRequired: "GET" | "UPGRADE", probablyTriggeredByFile?: "pubspec.yaml" | "pubspec.lock"): PubPackageStatus {
-			return { folderUri, pubRequired, probablyTriggeredByFile, workspace: "NONE" };
+		function makeStatus(folderUri: vs.Uri, pubRequired: "GET" | "UPGRADE", triggeredByFile?: "pubspec.yaml" | "pubspec.lock"): PubPackageStatus {
+			return { folderUri, pubRequired, triggeredByFile, workspace: "NONE" };
 		}
 
 		it("shows general message for single project when reason is not a specific file modification", async () => {

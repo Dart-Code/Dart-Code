@@ -13,7 +13,7 @@ export interface PubPackageStatus {
 	folderUri: Uri;
 	pubRequired: false | "GET" | "UPGRADE";
 	reason?: string;
-	probablyTriggeredByFile?: "pubspec.yaml" | "pubspec.lock";
+	triggeredByFile?: "pubspec.yaml" | "pubspec.lock";
 	workspace: "NONE" | "ROOT" | "PROJECT";
 }
 
@@ -188,7 +188,7 @@ function getPubPackageStatus(
 	const pubspecLockModified = tryMtimeSync(pubspecLockPath);
 	const packageMapModified = tryMtimeSync(packageMapPath);
 	if (pubspecLockModified && packageMapModified && pubspecLockModified > packageMapModified) {
-		return { ...result, pubRequired: "GET", probablyTriggeredByFile: "pubspec.lock", reason: `The ${displayPath(pubspecLockPath)} file was modified${maybeDate(pubspecLockModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
+		return { ...result, pubRequired: "GET", triggeredByFile: "pubspec.lock", reason: `The ${displayPath(pubspecLockPath)} file was modified${maybeDate(pubspecLockModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
 	}
 
 	const relevantProjectFolders = isWorkspaceRoot ? [folder, ...getWorkspaceFolderPaths(logger, folder, pubspecContent)] : [folder];
@@ -199,9 +199,9 @@ function getPubPackageStatus(
 			continue;
 
 		if (packageMapModified && pubspecModified > packageMapModified) {
-			return { ...result, pubRequired: "GET", probablyTriggeredByFile: "pubspec.yaml", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
+			return { ...result, pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
 		} else if (pubspecLockModified && pubspecModified > pubspecLockModified) {
-			return { ...result, pubRequired: "GET", probablyTriggeredByFile: "pubspec.yaml", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(pubspecLockPath)} file${maybeDate(pubspecLockModified)}` };
+			return { ...result, pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(pubspecLockPath)} file${maybeDate(pubspecLockModified)}` };
 		}
 	}
 
@@ -226,15 +226,14 @@ function formatProjectsDisplaySummary(folders: Uri[]): string {
 		: firstName;
 }
 
-export async function promptToRunPubGet(foldersOrStatuses: Uri[] | PubPackageStatus[]) {
-	if (!foldersOrStatuses.length)
+export async function promptToRunPubGet(statuses: PubPackageStatus[]) {
+	if (!statuses.length)
 		return;
 
-	const statuses: Array<Pick<PubPackageStatus, "folderUri" | "probablyTriggeredByFile">> = foldersOrStatuses.map((item) => item instanceof Uri ? { folderUri: item } : item);
 	const folders = statuses.map((s) => s.folderUri);
 	const projectsSummary = formatProjectsDisplaySummary(folders);
 
-	const triggeredByFiles = uniq(statuses.map((s) => s.probablyTriggeredByFile));
+	const triggeredByFiles = uniq(statuses.map((s) => s.triggeredByFile));
 	const singleTriggeredByFile = triggeredByFiles.length === 1 ? triggeredByFiles[0] : undefined;
 
 	const message = singleTriggeredByFile
@@ -252,11 +251,11 @@ export function runPubGet(folders: Uri[]) {
 }
 
 
-export async function promptToRunPubUpgrade(foldersOrStatuses: Uri[] | PubPackageStatus[]) {
-	if (!foldersOrStatuses.length)
+export async function promptToRunPubUpgrade(statuses: PubPackageStatus[]) {
+	if (!statuses.length)
 		return;
 
-	const folders = foldersOrStatuses.map((item) => item instanceof Uri ? item : item.folderUri);
+	const folders = statuses.map((s) => s.folderUri);
 	const projectsSummary = formatProjectsDisplaySummary(folders);
 
 	const label = "Run 'pub upgrade'";
