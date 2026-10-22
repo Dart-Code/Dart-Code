@@ -331,13 +331,13 @@ export class PackageCommands extends BaseSdkCommands {
 			const projectsRequiringPub = pubStatuses.map((result) => result.folderUri);
 
 			if (options?.upgradeOnSdkChange && someProjectsRequirePubUpgrade)
-				await promptToRunPubUpgrade(projectsRequiringPub);
+				await promptToRunPubUpgrade(pubStatuses);
 			else if (!forcePrompt && projectsRequiringPub.length === 0 && uri)
 				await this.runPubGetWithRelatives(projectFolders, uri);
 			else if (!forcePrompt && projectsRequiringPub.length === 1)
 				await this.runPubGetWithRelatives(projectFolders, projectsRequiringPub[0]);
 			else if (projectsRequiringPub.length)
-				await promptToRunPubGet(projectsRequiringPub);
+				await promptToRunPubGet(pubStatuses);
 		} finally {
 			isFetchingPackages = false;
 		}
