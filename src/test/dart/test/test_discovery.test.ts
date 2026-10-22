@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
-import { activate, checkTreeNodeResults, clearTestTree, defer, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -61,6 +61,36 @@ hello_world
     test/rename_test.dart [0/1 passed] Unknown
         test 2 Unknown
 		`);
+	});
+
+	it("handles renaming of test files discovered from outline before suite discovery", async () => {
+		const originalFilename = "disk_rename_before_discovery_original_test.dart";
+		const originalFilePath = path.join(fsPath(helloWorldTestFolder), originalFilename);
+		defer("Cleanup original", () => tryDelete(originalFilePath));
+
+		const newFilename = "disk_rename_before_discovery_new_test.dart";
+		const newFilePath = path.join(fsPath(helloWorldTestFolder), newFilename);
+		defer("Cleanup new", () => tryDelete(newFilePath));
+
+		fs.writeFileSync(originalFilePath, `
+import "package:test/test.dart";
+
+void main() => test("test 1", () {});
+		`);
+
+		// Open the file so it is discovered via the Outline before ensureSuitesDiscovered() has run.
+		await openFile(vs.Uri.file(originalFilePath));
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(originalFilename)));
+
+		// Rename the file on disk before full suite discovery has run.
+		fs.renameSync(originalFilePath, newFilePath);
+		await delay(500);
+
+		// Now trigger full suite discovery (eg. opening the Testing view or running all tests).
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(newFilename)));
+		assert.equal(makeTestTextTree().some((s) => s.includes(originalFilename)), false);
 	});
 
 	it("discovers a large number of tests in a reasonable time", async () => {
@@ -148,6 +178,29 @@ void main() => test("test inside ${newFilename}", () {});
 
 		await waitForResult(() => !makeTestTextTree().some((s) => s.includes(originalFilename)));
 		await waitForResult(() => makeTestTextTree().some((s) => s.includes(newFilename)));
+	});
+
+	it("handles renaming of test folders on disk", async () => {
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const originalFoldername = "disk_rename_folder_original";
+		const originalFolderPath = path.join(fsPath(helloWorldTestFolder), originalFoldername);
+		const originalFilePath = path.join(originalFolderPath, "my_test.dart");
+		defer("Cleanup original", () => tryDelete(originalFolderPath));
+
+		const newFoldername = "disk_rename_folder_new";
+		const newFolderPath = path.join(fsPath(helloWorldTestFolder), newFoldername);
+		defer("Cleanup new", () => tryDelete(newFolderPath));
+
+		fs.mkdirSync(originalFolderPath, { recursive: true });
+		fs.writeFileSync(originalFilePath, "");
+
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(`${originalFoldername}/my_test.dart`)));
+
+		fs.renameSync(originalFolderPath, newFolderPath);
+
+		await waitForResult(() => !makeTestTextTree().some((s) => s.includes(`${originalFoldername}/my_test.dart`)));
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(`${newFoldername}/my_test.dart`)));
 	});
 
 	it("discovers tests if runTests is called with undefined include", async () => {

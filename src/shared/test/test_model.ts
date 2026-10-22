@@ -359,12 +359,10 @@ export class TestModel {
 			nodesToRemove.add(suite.node);
 			this.suites.deleteForPath(suiteOrDirectoryPath);
 		} else {
-			for (const suitePath of Object.keys(this.suites)) {
-				if (isWithinPath(suitePath, suiteOrDirectoryPath)) {
-					const suite = this.suites.getForPath(suitePath);
-					if (suite)
-						nodesToRemove.add(suite.node);
-					this.suites.deleteForPath(suitePath);
+			for (const suite of this.suites.values()) {
+				if (isWithinPath(suite.path, suiteOrDirectoryPath)) {
+					nodesToRemove.add(suite.node);
+					this.suites.deleteForPath(suite.path);
 				}
 			}
 		}
