@@ -35,18 +35,26 @@ export class TestDiscoverer implements IAmDisposable {
 		this.disposables.push(
 			watcher,
 			watcher.onDidCreate(async (uri) => {
+				// Only handle created files/folders if we have already triggered full suite
+				// discovery. Otherwise, they will be discovered when ensureSuitesDiscovered()
+				// is eventually called.
 				if (!this.testDiscoveryPerformed)
 					return;
 
+				// Wait for initial discovery to complete so excludedFolders is populated.
 				await this.testDiscoveryPerformed;
 				const filePath = fsPath(uri);
 				if (this.isExcludedPath(filePath))
 					return;
 
-				if (isTestFile(filePath))
+				if (isTestFile(filePath)) {
 					this.model.suiteDiscovered(undefined, filePath);
-				else if (existsAndIsDirectorySync(filePath))
+				} else if (existsAndIsDirectorySync(filePath)) {
+					// If a folder was created or renamed, the watcher event fires only for the
+					// folder itself and not the files inside it, so traverse this folder to
+					// discover any test suites within it.
 					await this.discoverTestSuites(filePath, true);
+				}
 			}),
 			watcher.onDidDelete((uri) => {
 				const filePath = fsPath(uri);
@@ -68,9 +76,10 @@ export class TestDiscoverer implements IAmDisposable {
 	}
 
 	private isExcludedPath(fileOrFolderPath: string) {
-		const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(fileOrFolderPath));
-		const relativePath = ws ? path.relative(fsPath(ws.uri), fileOrFolderPath) : path.basename(fileOrFolderPath);
-		if (relativePath.split(path.sep).some((s) => s.startsWith(".")))
+		// Hidden folders like .git and .dart_tool are not in excludedFolders (they are skipped
+		// when traversing directories in discoverTestSuites), but the file watcher may fire directly
+		// for files or folders created inside them.
+		if (fileOrFolderPath.includes(`${path.sep}.`))
 			return true;
 
 		return this.excludedFolders
@@ -88,11 +97,6 @@ export class TestDiscoverer implements IAmDisposable {
 			},
 			async () => {
 				try {
-					for (const suite of this.model.suites.values()) {
-						if (!isTestFile(suite.path))
-							this.model.clearSuiteOrDirectory(suite.path);
-					}
-
 					const projectFoldersAndExclusions = await getAllProjectFoldersAndExclusions(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 					const projectFolders = projectFoldersAndExclusions.projectFolders;
 					this.excludedFolders = projectFoldersAndExclusions.excludedFolders;
