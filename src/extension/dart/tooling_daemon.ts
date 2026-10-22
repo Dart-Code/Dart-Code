@@ -32,12 +32,14 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		logger: Logger,
 		sdks: DartSdks,
 		dartCapabilities: DartCapabilities,
+		workingDirectory: string | undefined,
 		deviceManager: FlutterDeviceManager | undefined,
 	) {
 		super(
 			logger,
 			sdks,
 			dartCapabilities,
+			workingDirectory,
 			config.toolingDaemonAdditionalArgs,
 			config.maxLogLineLength,
 			getToolEnv,
