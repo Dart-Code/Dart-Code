@@ -6,7 +6,7 @@ import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protoco
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
+import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { OutlineVisitor } from "../../shared/utils/outline";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions } from "../../shared/vscode/utils";
@@ -20,13 +20,41 @@ export class TestDiscoverer implements IAmDisposable {
 	private readonly debounceTimers: Record<string, NodeJS.Timeout> = {};
 	private readonly debounceDuration = 1500;
 
-	private hasSetupFileHandlers = false;
-
 	public testDiscoveryPerformed: Promise<void> | undefined;
 	public excludedFolders: Set<string> | undefined;
 
 	constructor(private readonly logger: Logger, public readonly fileTracker: FileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline((o) => this.handleOutline(o)));
+
+		const watcher = vs.workspace.createFileSystemWatcher(
+			"**/*",
+			false, // ignoreCreateEvents
+			true, // ignoreChangeEvents
+			false, // ignoreDeleteEvents
+		);
+		this.disposables.push(
+			watcher,
+			watcher.onDidCreate(async (uri) => {
+				if (!this.testDiscoveryPerformed)
+					return;
+
+				await this.testDiscoveryPerformed;
+				const filePath = fsPath(uri);
+				if (this.isExcludedPath(filePath))
+					return;
+
+				if (isTestFile(filePath))
+					this.model.suiteDiscovered(undefined, filePath);
+				else if (existsAndIsDirectorySync(filePath))
+					await this.discoverTestSuites(filePath, true);
+			}),
+			watcher.onDidDelete((uri) => {
+				const filePath = fsPath(uri);
+				// Don't use isTestFile() here because it calls isDartDocument() which checks
+				// for existence, but we've just been deleted.
+				this.model.clearSuiteOrDirectory(filePath);
+			}),
+		);
 	}
 
 	/// Performs suite discovery if it has not already finished. If discovery
@@ -40,6 +68,11 @@ export class TestDiscoverer implements IAmDisposable {
 	}
 
 	private isExcludedPath(fileOrFolderPath: string) {
+		const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(fileOrFolderPath));
+		const relativePath = ws ? path.relative(fsPath(ws.uri), fileOrFolderPath) : path.basename(fileOrFolderPath);
+		if (relativePath.split(path.sep).some((s) => s.startsWith(".")))
+			return true;
+
 		return this.excludedFolders
 			? [...this.excludedFolders].some((f) => isWithinPathOrEqual(fileOrFolderPath, f))
 			: false;
@@ -47,36 +80,7 @@ export class TestDiscoverer implements IAmDisposable {
 
 	/// Immediately performs suite discovery. Use [ensureSuitesDiscovered] if you want
 	/// to just ensure discovery has run at least once.
-	///
-	/// Also sets up handlers so creating/renaming/deleting files updates the
-	/// discovered suite list correctly.
 	private async performSuiteDiscovery() {
-		// Set up events for create/rename/delete so we keep the suites updated
-		// once we have discovered them.
-		if (!this.hasSetupFileHandlers) {
-			this.hasSetupFileHandlers = true;
-			const watcher = vs.workspace.createFileSystemWatcher(
-				"**/*_test.dart",
-				false, // ignoreCreateEvents
-				true, // ignoreChangeEvents
-				false, // ignoreDeleteEvents
-			);
-			this.disposables.push(
-				watcher,
-				watcher.onDidCreate(async (uri) => {
-					const filePath = fsPath(uri);
-					if (isTestFile(filePath) && !this.isExcludedPath(filePath))
-						this.model.suiteDiscovered(undefined, filePath);
-				}),
-				watcher.onDidDelete((uri) => {
-					const filePath = fsPath(uri);
-					// Don't use isTestFile() here because it calls isDartDocument() which checks
-					// for existence, but we've just been deleted.
-					this.model.clearSuiteOrDirectory(filePath);
-				}),
-			);
-		}
-
 		await vs.window.withProgress(
 			{
 				location: vs.ProgressLocation.Window,
@@ -84,6 +88,11 @@ export class TestDiscoverer implements IAmDisposable {
 			},
 			async () => {
 				try {
+					for (const suite of this.model.suites.values()) {
+						if (!isTestFile(suite.path))
+							this.model.clearSuiteOrDirectory(suite.path);
+					}
+
 					const projectFoldersAndExclusions = await getAllProjectFoldersAndExclusions(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 					const projectFolders = projectFoldersAndExclusions.projectFolders;
 					this.excludedFolders = projectFoldersAndExclusions.excludedFolders;
