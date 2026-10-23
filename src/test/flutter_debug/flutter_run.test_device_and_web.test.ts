@@ -500,10 +500,51 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("provides local variables and evaluateNames when stopped at a breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const debugConfig = await startDebugger(dc, flutterHelloWorldMainFile);
-		await dc.hitBreakpoint(debugConfig, {
-			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(flutterHelloWorldMainFile),
-		});
+
+		const breakpoint1Line = positionOf("^// BREAKPOINT1").line;
+		const breakpoint2Line = positionOf("^// BREAKPOINT2").line;
+
+		if (!flutterTestDeviceIsWeb) {
+			// Check that type args are excluded from local variables when stopped at a breakpoint in a generic method.
+			// https://github.com/dart-lang/webdev/issues/2340
+			await waitAllThrowIfTerminates(
+				dc,
+				dc.waitForEvent("initialized")
+					.then(() => dc.setBreakpointsRequest({
+						breakpoints: [
+							{ line: breakpoint2Line },
+							{ line: breakpoint1Line },
+						],
+						source: { path: fsPath(flutterHelloWorldMainFile) },
+					}))
+					.then(() => dc.configurationDoneRequest()),
+				dc.assertStoppedLocation("breakpoint", {
+					line: breakpoint2Line,
+					path: fsPath(flutterHelloWorldMainFile),
+				}),
+				dc.launch(debugConfig),
+			);
+
+			const stack = await dc.getStack();
+			const genericVariables = await dc.getTopFrameVariables("Locals", { frameId: stack.body.stackFrames[0].id });
+			ensureVariable(genericVariables, "a", "a", `1`);
+			// Ensure there were no others.
+			assert.equal(genericVariables.length, 1);
+
+			await waitAllThrowIfTerminates(
+				dc,
+				dc.assertStoppedLocation("breakpoint", {
+					line: breakpoint1Line,
+					path: fsPath(flutterHelloWorldMainFile),
+				}),
+				dc.resume(),
+			);
+		} else {
+			await dc.hitBreakpoint(debugConfig, {
+				line: breakpoint1Line,
+				path: fsPath(flutterHelloWorldMainFile),
+			});
+		}
 
 		const frameId = await dc.getTopFrameId();
 
@@ -587,29 +628,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const allVariables = listVariables.concat(listLongStringVariables).concat(mapVariables);
 
 		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v, { frameId })));
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async function () {
-		// https://github.com/dart-lang/webdev/issues/2340
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
-		await openFile(flutterHelloWorldMainFile);
-		const debugConfig = await startDebugger(dc, flutterHelloWorldMainFile);
-		await dc.hitBreakpoint(debugConfig, {
-			line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, but seems to want 1-based
-			path: fsPath(flutterHelloWorldMainFile),
-		});
-
-		const variables = await dc.getTopFrameVariables("Locals");
-		ensureVariable(variables, "a", "a", `1`);
-		// Ensure there were no others.
-		assert.equal(variables.length, 1);
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
