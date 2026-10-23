@@ -1461,19 +1461,7 @@ insp=<inspected variable>
 	});
 
 	describe("attaches", () => {
-		it("to a paused Dart script and can unpause to run it to completion", async () => {
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
-			const observatoryUri = await process.vmServiceUri;
-
-			const config = await attachDebugger(observatoryUri);
-			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
-				dc.waitForEvent("terminated"),
-				dc.launch(config),
-			);
-		});
-
-		it("to a paused Dart script and can collects stdout", async () => {
+		it("to a paused Dart script, collects stdout, and can unpause to run it to completion", async () => {
 			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
 			const observatoryUri = await process.vmServiceUri;
 
@@ -1502,51 +1490,23 @@ insp=<inspected variable>
 		});
 
 		it("when provided only a port in launch.config", async () => {
-			const vmArgs = ["--disable-service-auth-codes"];
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
-			const observatoryUri = await process.vmServiceUri;
-			const observatoryPort = /:([0-9]+)\//.exec(observatoryUri)![1];
-
 			// Include whitespace as a test for trimming.
-			const config = await attachDebugger(` ${observatoryPort} `);
-			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
-				dc.waitForEvent("terminated"),
-				dc.launch(config),
-			);
+			const config = await getAttachConfiguration({ vmServiceUri: " 1234 " });
+			assert.ok(config);
+			assert.equal(config.vmServiceUri, "http://127.0.0.1:1234");
 		});
 
 		it("to the observatory uri provided by the user when not specified in launch.json", async () => {
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
-			const observatoryUri = await process.vmServiceUri;
-
 			const showInputBox = sb.stub(vs.window, "showInputBox");
-			showInputBox.resolves(observatoryUri);
+			showInputBox.resolves("http://127.0.0.1:1234/foo/");
 
-			const config = await attachDebugger(undefined);
-			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
-				dc.waitForEvent("terminated"),
-				dc.launch(config),
-			);
-
+			const config = await getAttachConfiguration();
 			assert.ok(showInputBox.calledOnce);
+			assert.ok(config);
+			assert.equal(config.vmServiceUri, "http://127.0.0.1:1234/foo/");
 		});
 
-		it("to a paused Dart script and can set breakpoints", async () => {
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
-			const observatoryUri = await process.vmServiceUri;
-
-			const config = await attachDebugger(observatoryUri);
-			await dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(helloWorldMainFile),
-			});
-
-			await dc.terminateRequest();
-		});
-
-		it("and removes breakpoints and unpauses on detach", async () => {
+		it("to a paused Dart script, can set breakpoints, and removes breakpoints and unpauses on detach", async () => {
 			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
 			const observatoryUri = await process.vmServiceUri;
 
