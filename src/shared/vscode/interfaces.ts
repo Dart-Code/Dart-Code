@@ -1,4 +1,4 @@
-import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, TestController, TestItem, TestRun, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
@@ -166,6 +166,7 @@ export interface InternalExtensionApi {
 	testController: {
 		controller: TestController;
 		runTests(debug: boolean, includeCoverage: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>;
+		registerTestRun(dartCodeDebugSessionID: string, run: TestRun, { wasStartedByTestRunner }: { wasStartedByTestRunner: boolean }): void;
 		getLatestData(test: TestItem): TreeNode | undefined,
 		handleDebugSessionEnd(e: DebugSession): void,
 		coverageParser: CoverageParser,
