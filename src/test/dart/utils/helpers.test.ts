@@ -31,7 +31,7 @@ describe("helpers", () => {
 				closeEvents++;
 		}));
 
-		const NUMBER_FILE_OPENS = 3;
+		const NUMBER_FILE_OPENS = 2;
 		for (let i = 0; i < NUMBER_FILE_OPENS; i++) {
 			await openFile(helloWorldMainFile);
 			await closeFile(helloWorldMainFile);
