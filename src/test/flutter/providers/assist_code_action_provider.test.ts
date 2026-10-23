@@ -7,7 +7,7 @@ describe("assist_code_action_provider", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
-	it("sets selection correctly for code actions with legacy snippet text edits", async function () {
+	it("sets selection correctly for code actions with legacy snippet text edits", async () => {
 		await openFile(flutterEmptyFile);
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -29,13 +29,7 @@ class Danny extends StatelessWidget {
 
 		// Apply edit first if there is one (for the new SnippetTextEdits this will just be inline).
 		if (action.edit) {
-			// TODO(dantup): This doesn't work properly because executeCodeActionProvider returns broken edits that have
-			//  lost their keepWhitespace. For now, we just have to skip the test in this mode (but it has been manually tested, it
-			//  doesn't affect the real extension use).
-			//
-			// https://github.com/microsoft/vscode/issues/325990
-			// await vs.workspace.applyEdit(action.edit);
-			this.skip();
+			await vs.workspace.applyEdit(action.edit);
 		}
 
 		// Execute the command if there is one (this could be the wrapped version for the legacy SnippetTextEdits).
