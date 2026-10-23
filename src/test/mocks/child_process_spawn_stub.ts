@@ -83,6 +83,10 @@ export class ChildProcessSpawnStub {
 		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "pub"));
 	}
 
+	static dartOrFlutterPub() {
+		return new ChildProcessSpawnStub((bin, args) => (ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) || ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter)) && ChildProcessSpawnStub.includesArg(args, "pub"));
+	}
+
 	public get calls(): SpawnedProcessCall[] {
 		return this.fakedCalls.slice();
 	}
