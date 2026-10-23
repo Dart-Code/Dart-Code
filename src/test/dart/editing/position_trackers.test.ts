@@ -360,99 +360,71 @@ describe("multi-document position tracker", () => {
 		assert.ok(positionsEqual(position2, position1));
 	});
 
-	it("retains tracking when document is closed and re-opened", async () => {
+	it("handles documents being closed and re-opened", async () => {
 		const tracker = new DocumentPositionTracker();
 		defer("Dispose tracker", () => tracker.dispose());
 
-		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test.txt"));
+		const retainedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test.txt"));
+		const diskModMixedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_mixed.txt"));
+		const diskModNewlineFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_newline.txt"));
 
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
-		defer("Delete test file", () => tryDelete(workingFile));
+		fs.writeFileSync(fsPath(retainedFile), Buffer.from("1 22 333 4444 55555"));
+		fs.writeFileSync(fsPath(diskModMixedFile), Buffer.from("12345"));
+		fs.writeFileSync(fsPath(diskModNewlineFile), Buffer.from("12345"));
+		defer("Delete test files", () => {
+			tryDelete(retainedFile);
+			tryDelete(diskModMixedFile);
+			tryDelete(diskModNewlineFile);
+		});
 
-		const doc = await vs.workspace.openTextDocument(workingFile);
-		await vs.window.showTextDocument(doc);
-		let position: Position | undefined = positionOf("^333", doc);
+		// Case 1: Retains tracking when document is closed and re-opened without external modification.
+		const retainedDoc = await vs.workspace.openTextDocument(retainedFile);
+		await vs.window.showTextDocument(retainedDoc);
+		let retainedPos: Position | undefined = positionOf("^333", retainedDoc);
+		tracker.trackPosition(retainedDoc, retainedPos, (newPosition) => retainedPos = newPosition);
 
-		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
-		await closeFile(workingFile);
+		// Case 2: Invalidates all trackers if any become invalid references on disk while closed.
+		const mixedDoc = await vs.workspace.openTextDocument(diskModMixedFile);
+		await vs.window.showTextDocument(mixedDoc);
+		let mixedPos1: Position | undefined = positionOf("^1", mixedDoc);
+		let mixedPos5: Position | undefined = positionOf("^5", mixedDoc);
+		tracker.trackPosition(mixedDoc, mixedPos1, (newPosition) => mixedPos1 = newPosition);
+		tracker.trackPosition(mixedDoc, mixedPos5, (newPosition) => mixedPos5 = newPosition);
 
-		// Should not become undefined.
-		assert.ok(position);
+		// Case 3: Invalidates all trackers if file is modified externally causing position mismatch.
+		const newlineDoc = await vs.workspace.openTextDocument(diskModNewlineFile);
+		await vs.window.showTextDocument(newlineDoc);
+		let newlinePos1: Position | undefined = positionOf("^3", newlineDoc);
+		tracker.trackPosition(newlineDoc, newlinePos1, (newPosition) => newlinePos1 = newPosition);
 
-		// Re-open the document.
-		const doc2 = await vs.workspace.openTextDocument(workingFile);
-		const editor2 = await vs.window.showTextDocument(doc2);
+		// Close all three documents with a single forceDocumentCloseEvents pass.
+		await vs.commands.executeCommand("workbench.action.closeAllEditors");
+		await closeFile(diskModNewlineFile);
 
-		// Edit the document.
-		await editor2.edit((eb) => eb.insert(new vs.Position(0, 0), "start "));
-
-		// Tracked position should have moved.
-		assert.ok(positionsEqual(position, positionOf("start 1 22 ^333 4444 55555", doc2)));
-	});
-
-	it("invalidates all trackers if any become invalid references", async () => {
-		const tracker = new DocumentPositionTracker();
-		defer("Dispose tracker", () => tracker.dispose());
-
-		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_mixed.txt"));
-
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
-		defer("Delete test file", () => tryDelete(workingFile));
-
-		const doc = await vs.workspace.openTextDocument(workingFile);
-		await vs.window.showTextDocument(doc);
-		let position1: Position | undefined = positionOf("^1", doc);
-		let position5: Position | undefined = positionOf("^5", doc);
-
-		tracker.trackPosition(doc, position1, (newPosition) => position1 = newPosition);
-		tracker.trackPosition(doc, position5, (newPosition) => position5 = newPosition);
-
-		await closeFile(workingFile);
-
-		// Modify the document on disk to be shorter ("123")
-		// position1 is still valid.
-		// position5 is invalid.
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("123"));
+		// Modify files on disk while closed:
+		// Case 2: Shorter ("123") so mixedPos1 is still valid, mixedPos5 is invalid.
+		fs.writeFileSync(fsPath(diskModMixedFile), Buffer.from("123"));
+		// Case 3: Include a newline at the start so offsets are valid, but position for offset has changed.
+		fs.writeFileSync(fsPath(diskModNewlineFile), Buffer.from("\n12345"));
 		await delay(10);
 
-		// Re-open the document.
-		await vs.workspace.openTextDocument(workingFile);
+		// Verify Case 1: Should not become undefined, and should track edits after re-open.
+		assert.ok(retainedPos);
+		const retainedDoc2 = await vs.workspace.openTextDocument(retainedFile);
+		const retainedEditor2 = await vs.window.showTextDocument(retainedDoc2);
+		await retainedEditor2.edit((eb) => eb.insert(new vs.Position(0, 0), "start "));
+		assert.ok(positionsEqual(retainedPos, positionOf("start 1 22 ^333 4444 55555", retainedDoc2)));
 
-		// Tracked position should have become undefined.
-		await waitFor(() => position1 === undefined && position5 === undefined); // Allow some time.
-		assert.equal(position1, undefined);
-		assert.equal(position5, undefined);
-	});
+		// Verify Case 2: Re-open and verify both tracked positions become undefined.
+		await vs.workspace.openTextDocument(diskModMixedFile);
+		await waitFor(() => mixedPos1 === undefined && mixedPos5 === undefined);
+		assert.equal(mixedPos1, undefined);
+		assert.equal(mixedPos5, undefined);
 
-	it("invalidates all trackers if file is modified externally causing position mismatch", async () => {
-		const tracker = new DocumentPositionTracker();
-		defer("Dispose tracker", () => tracker.dispose());
-
-		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_newline.txt"));
-
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
-		defer("Delete test file", () => tryDelete(workingFile));
-
-		const doc = await vs.workspace.openTextDocument(workingFile);
-		await vs.window.showTextDocument(doc);
-		let position1: Position | undefined = positionOf("^3", doc);
-
-		tracker.trackPosition(doc, position1, (newPosition) => position1 = newPosition);
-
-		await closeFile(workingFile);
-
-		// Modify the document on disk to include a newline at the start.
-		// The offsets are still valid, but the position for offset
-		// has changed.
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("\n12345"));
-		await delay(10);
-
-		// Re-open the document.
-		await vs.workspace.openTextDocument(workingFile);
-
-		// Tracked position should have become undefined because offset->position changed.
-		await waitFor(() => position1 === undefined); // Allow some time.
-		assert.equal(position1, undefined);
+		// Verify Case 3: Re-open and verify tracked position becomes undefined because offset->position changed.
+		await vs.workspace.openTextDocument(diskModNewlineFile);
+		await waitFor(() => newlinePos1 === undefined);
+		assert.equal(newlinePos1, undefined);
 	});
 
 	it("updates to undefined if text is deleted", async () => {
@@ -585,98 +557,71 @@ describe("multi-document range tracker", () => {
 		assert.ok(rangesEqual(range2, range1));
 	});
 
-	it("retains tracking when document is closed and re-opened", async () => {
+	it("handles documents being closed and re-opened", async () => {
 		const tracker = new DocumentRangeTracker();
 		defer("Dispose tracker", () => tracker.dispose());
 
-		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test.txt"));
+		const retainedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_range.txt"));
+		const diskModMixedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_range.txt"));
+		const diskModNewlineFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_newline_range.txt"));
 
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
-		defer("Delete test file", () => tryDelete(workingFile));
+		fs.writeFileSync(fsPath(retainedFile), Buffer.from("1 22 333 4444 55555"));
+		fs.writeFileSync(fsPath(diskModMixedFile), Buffer.from("12345"));
+		fs.writeFileSync(fsPath(diskModNewlineFile), Buffer.from("12345"));
+		defer("Delete test files", () => {
+			tryDelete(retainedFile);
+			tryDelete(diskModMixedFile);
+			tryDelete(diskModNewlineFile);
+		});
 
-		const doc = await vs.workspace.openTextDocument(workingFile);
-		await vs.window.showTextDocument(doc);
-		let range: Range | undefined = rangeOf("|333|", doc);
+		// Case 1: Retains tracking when document is closed and re-opened without external modification.
+		const retainedDoc = await vs.workspace.openTextDocument(retainedFile);
+		await vs.window.showTextDocument(retainedDoc);
+		let retainedRange: Range | undefined = rangeOf("|333|", retainedDoc);
+		tracker.trackRange(retainedDoc, retainedRange, (newRange) => retainedRange = newRange);
 
-		tracker.trackRange(doc, range, (newRange) => range = newRange);
-		await closeFile(workingFile);
+		// Case 2: Invalidates all trackers if any become invalid references on disk while closed.
+		const mixedDoc = await vs.workspace.openTextDocument(diskModMixedFile);
+		await vs.window.showTextDocument(mixedDoc);
+		let mixedRange1: Range | undefined = rangeOf("|1|", mixedDoc);
+		let mixedRange5: Range | undefined = rangeOf("|5|", mixedDoc);
+		tracker.trackRange(mixedDoc, mixedRange1, (newRange) => mixedRange1 = newRange);
+		tracker.trackRange(mixedDoc, mixedRange5, (newRange) => mixedRange5 = newRange);
 
-		// Should not become undefined.
-		assert.ok(range);
+		// Case 3: Invalidates all range trackers if file is modified externally causing position mismatch.
+		const newlineDoc = await vs.workspace.openTextDocument(diskModNewlineFile);
+		await vs.window.showTextDocument(newlineDoc);
+		let newlineRange: Range | undefined = rangeOf("|1|", newlineDoc);
+		tracker.trackRange(newlineDoc, newlineRange, (newRange) => newlineRange = newRange);
 
-		// Re-open the document.
-		const doc2 = await vs.workspace.openTextDocument(workingFile);
-		const editor2 = await vs.window.showTextDocument(doc2);
+		// Close all three documents with a single forceDocumentCloseEvents pass.
+		await vs.commands.executeCommand("workbench.action.closeAllEditors");
+		await closeFile(diskModNewlineFile);
 
-		// Edit the document.
-		await editor2.edit((eb) => eb.insert(new vs.Position(0, 0), "start "));
-
-		// Tracked range should have moved.
-		assert.ok(rangesEqual(range, rangeOf("|333|", doc2)));
-	});
-
-	it("invalidates all trackers if any become invalid references", async () => {
-		const tracker = new DocumentRangeTracker();
-		defer("Dispose tracker", () => tracker.dispose());
-
-		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_range.txt"));
-
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
-		defer("Delete test file", () => tryDelete(workingFile));
-
-		const doc = await vs.workspace.openTextDocument(workingFile);
-		await vs.window.showTextDocument(doc);
-		let range1: Range | undefined = rangeOf("|1|", doc);
-		let range5: Range | undefined = rangeOf("|5|", doc);
-
-		tracker.trackRange(doc, range1, (newRange) => range1 = newRange);
-		tracker.trackRange(doc, range5, (newRange) => range5 = newRange);
-
-		await closeFile(workingFile);
-
-		// Modify the document on disk to be shorter ("123")
-		// range1 is still valid.
-		// range5 is invalid.
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("123"));
+		// Modify files on disk while closed:
+		// Case 2: Shorter ("123") so mixedRange1 is still valid, mixedRange5 is invalid.
+		fs.writeFileSync(fsPath(diskModMixedFile), Buffer.from("123"));
+		// Case 3: Include a newline at the start so offsets are valid, but positions are not.
+		fs.writeFileSync(fsPath(diskModNewlineFile), Buffer.from("\n12345"));
 		await delay(10);
 
-		// Re-open the document.
-		await vs.workspace.openTextDocument(workingFile);
+		// Verify Case 1: Should not become undefined, and should track edits after re-open.
+		assert.ok(retainedRange);
+		const retainedDoc2 = await vs.workspace.openTextDocument(retainedFile);
+		const retainedEditor2 = await vs.window.showTextDocument(retainedDoc2);
+		await retainedEditor2.edit((eb) => eb.insert(new vs.Position(0, 0), "start "));
+		assert.ok(rangesEqual(retainedRange, rangeOf("|333|", retainedDoc2)));
 
-		// Tracked range should have become undefined.
-		await waitFor(() => range1 === undefined && range5 === undefined); // Allow some time.
-		assert.equal(range1, undefined);
-		assert.equal(range5, undefined);
-	});
+		// Verify Case 2: Re-open and verify both tracked ranges become undefined.
+		await vs.workspace.openTextDocument(diskModMixedFile);
+		await waitFor(() => mixedRange1 === undefined && mixedRange5 === undefined);
+		assert.equal(mixedRange1, undefined);
+		assert.equal(mixedRange5, undefined);
 
-	it("invalidates all range trackers if file is modified externally causing position mismatch", async () => {
-		const tracker = new DocumentRangeTracker();
-		defer("Dispose tracker", () => tracker.dispose());
-
-		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_newline_range.txt"));
-
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
-		defer("Delete test file", () => tryDelete(workingFile));
-
-		const doc = await vs.workspace.openTextDocument(workingFile);
-		await vs.window.showTextDocument(doc);
-		let range: Range | undefined = rangeOf("|1|", doc);
-
-		tracker.trackRange(doc, range, (newRange) => range = newRange);
-
-		await closeFile(workingFile);
-
-		// Modify the document on disk to include a newline at the start.
-		// The offsets are still valid, but the positions are not.
-		fs.writeFileSync(fsPath(workingFile), Buffer.from("\n12345"));
-		await delay(10);
-
-		// Re-open the document.
-		await vs.workspace.openTextDocument(workingFile);
-
-		// Tracked range should have become undefined because offset->position changed.
-		await waitFor(() => range === undefined); // Allow some time.
-		assert.equal(range, undefined);
+		// Verify Case 3: Re-open and verify tracked range becomes undefined because offset->position changed.
+		await vs.workspace.openTextDocument(diskModNewlineFile);
+		await waitFor(() => newlineRange === undefined);
+		assert.equal(newlineRange, undefined);
 	});
 
 	it("updates to undefined if text is deleted", async () => {
