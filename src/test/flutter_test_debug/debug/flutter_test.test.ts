@@ -9,7 +9,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import { getLaunchConfig } from "../../../shared/utils/test";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
-import { captureTestDebugConfigurations, createDebugClient, flutterTestDeviceId, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { captureStartDebuggingConfigs, captureTestDebugConfigurations, createDebugClient, flutterTestDeviceId, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, fakeCancellationToken, findSuiteNode, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getLaunchConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
@@ -315,14 +315,20 @@ describe("flutter test debugger", () => {
 				assert.equal(runAction.command!.arguments![0].fullName, "Hello world test");
 				assert.equal(runAction.command!.arguments![0].isGroup, false);
 
-				const customEvents = await captureDebugSessionCustomEvents(async () => {
-					const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
-					assert.ok(didStart);
-				});
+				if (runByLine) {
+					const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+					assert.equal(configs.length, 1);
+					assert.ok((configs[0].program as string).endsWith(`?line=${testPos.line + 1}`), configs[0].program as string);
+				} else {
+					const customEvents = await captureDebugSessionCustomEvents(async () => {
+						const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+						assert.ok(didStart);
+					});
 
-				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
-				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
+					// Ensure we got at least a "testDone" notification so we know the test run started correctly.
+					const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
+					assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
+				}
 			});
 
 			it("can run test with multiline name from codelens", async function () {
@@ -346,14 +352,13 @@ describe("flutter test debugger", () => {
 				assert.equal(runAction.command!.arguments![0].fullName, "multi\nline\ntest");
 				assert.equal(runAction.command!.arguments![0].isGroup, false);
 
-				const customEvents = await captureDebugSessionCustomEvents(async () => {
-					const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
-					assert.ok(didStart);
-				});
-
-				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
-				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
+				const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+				assert.equal(configs.length, 1);
+				if (runByLine) {
+					assert.ok((configs[0].program as string).endsWith(`?line=${testPos.line + 1}`), configs[0].program as string);
+				} else {
+					assert.ok((configs[0].toolArgs as string[] | undefined)?.includes("^multi\\nline\\ntest( \\(variant: .*\\))?$"), JSON.stringify(configs[0].toolArgs));
+				}
 			});
 
 			it("can run skipped tests from codelens", async function () {
@@ -377,17 +382,23 @@ describe("flutter test debugger", () => {
 				assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
 				assert.equal(runAction.command!.arguments![0].isGroup, false);
 
-				const customEvents = await captureDebugSessionCustomEvents(async () => {
-					const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
-					assert.ok(didStart);
-				});
+				if (!runByLine) {
+					const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+					assert.equal(configs.length, 1);
+					assert.ok((configs[0].toolArgs as string[] | undefined)?.includes("--run-skipped"), JSON.stringify(configs[0].toolArgs));
+				} else {
+					const customEvents = await captureDebugSessionCustomEvents(async () => {
+						const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+						assert.ok(didStart);
+					});
 
-				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
-				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
+					// Ensure we got at least a "testDone" notification so we know the test run started correctly.
+					const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
+					assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
 
-				const testDone = testDoneNotification.body as TestDoneNotification;
-				assert.equal(testDone.skipped, false); // Test should have run.
+					const testDone = testDoneNotification.body as TestDoneNotification;
+					assert.equal(testDone.skipped, false); // Test should have run.
+				}
 			});
 
 			it("can run a selection of tests across multiple files", async () => {
@@ -454,38 +465,42 @@ describe("flutter test debugger", () => {
 			assert.ok(coverage.statementCoverage.total > 0);
 		});
 
-		it("and includes dependencies", async () => {
-			// Discover tests.
-			await openFile(flutterHelloWorldExampleTestFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
+		it("and includes dependencies and excludes configured paths", async () => {
+			let terminatedSession: vs.DebugSession | undefined;
+			const endSub = vs.debug.onDidTerminateDebugSession((s) => terminatedSession = s);
+			try {
+				// Discover tests.
+				await openFile(flutterHelloWorldExampleTestFile);
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
 
-			const controller = privateApi.testController!;
-			const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
-			const testRequest = new vs.TestRunRequest([suiteNode]);
+				const controller = privateApi.testController!;
+				const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
+				const testRequest = new vs.TestRunRequest([suiteNode]);
 
-			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+				await controller.runTests(false, true, testRequest, fakeCancellationToken);
 
-			assert(addCoverageStub?.called);
-			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
-			assert.deepStrictEqual(coverageFiles, [fsPath(flutterHelloWorldExamplePrinterFile), fsPath(flutterHelloWorldPrinterFile)]);
-		});
+				assert(addCoverageStub?.called);
+				const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+				assert.deepStrictEqual(coverageFiles, [fsPath(flutterHelloWorldExamplePrinterFile), fsPath(flutterHelloWorldPrinterFile)]);
 
-		it("and excludes configured paths", async () => {
-			await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
+				// Re-parse the generated coverage with an exclude pattern without re-running `flutter test`.
+				assert.ok(terminatedSession);
+				addCoverageStub.resetHistory();
+				await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
+				const run = controller.controller.createTestRun(testRequest);
+				try {
+					controller.registerTestRun(terminatedSession.configuration.dartCodeDebugSessionID as string, run, { wasStartedByTestRunner: true });
+					controller.handleDebugSessionEnd(terminatedSession);
+				} finally {
+					run.end();
+				}
 
-			// Discover tests.
-			await openFile(flutterHelloWorldExampleTestFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
-
-			const controller = privateApi.testController!;
-			const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
-			const testRequest = new vs.TestRunRequest([suiteNode]);
-
-			await controller.runTests(false, true, testRequest, fakeCancellationToken);
-
-			assert(addCoverageStub?.called);
-			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
-			assert.deepStrictEqual(coverageFiles, [fsPath(flutterHelloWorldPrinterFile)]);
+				assert(addCoverageStub?.called);
+				const filteredCoverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+				assert.deepStrictEqual(filteredCoverageFiles, [fsPath(flutterHelloWorldPrinterFile)]);
+			} finally {
+				endSub.dispose();
+			}
 		});
 
 		it("uses correct regex for --coverage-package", () => {
