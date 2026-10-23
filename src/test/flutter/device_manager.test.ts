@@ -270,6 +270,7 @@ describe("device_manager", () => {
 	});
 
 	it("handles unresponsive tryGetSupportedPlatformTypes", async () => {
+		dm.unresponsiveTimeoutPeriodSeconds = 0.2;
 		daemon.supportedPlatforms = ["a", "b"];
 		daemon.supportedPlatformsDelaySeconds = 10;
 		const platforms = await dm.tryGetSupportedPlatformTypes("fake");

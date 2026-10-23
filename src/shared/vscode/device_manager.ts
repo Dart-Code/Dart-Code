@@ -14,7 +14,7 @@ import { isRunningLocally } from "./utils";
 import { Context } from "./workspace";
 
 export class FlutterDeviceManager implements IAmDisposable {
-	private readonly unresponsiveTimeoutPeriodSeconds = 5;
+	public unresponsiveTimeoutPeriodSeconds = 5;
 	private subscriptions: IAmDisposable[] = [];
 	private statusBarItem: vs.StatusBarItem;
 	public currentDevice?: f.Device;
