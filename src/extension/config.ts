@@ -162,6 +162,7 @@ class Config {
 	}
 	get hotReloadProgress(): "notification" | "statusBar" { return this.getConfig<"notification" | "statusBar">("hotReloadProgress", "notification"); }
 	get includeDependenciesInWorkspaceSymbols(): boolean { return this.getConfig<boolean>("includeDependenciesInWorkspaceSymbols", true); }
+	get lspCachingMiddleware(): boolean { return this.getConfig<boolean>("lspCachingMiddleware", true); }
 	get lspSnippetTextEdits(): boolean { return this.getConfig<boolean>("lspSnippetTextEdits", true); }
 	get maxCompletionItems(): undefined | number { return this.getConfig<null | number>("maxCompletionItems", null); }
 	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }

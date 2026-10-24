@@ -27,7 +27,7 @@ import { getPubWorkspaceFolderOrPackageFolderPath } from "../shared/vscode/pub";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { ProjectFinder, clearCaches, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { ProjectFinder, clearCaches, createWatcher, envUtils, getDartWorkspaceFolders, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
@@ -412,8 +412,15 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const extensionRecommendations = new ExtensionRecommentations(logger, analytics, extContext);
 
 	// Dart Tooling Daemon.
+	// Set the working directory to the first Dart project's folder (or first workspace folder) as a workaround
+	// for https://github.com/dart-lang/sdk/issues/64641 because DTD uses its working directory as the project root,
+	// and otherwise it would inherit whatever the CWD was when VS Code was launched (which could be a different
+	// project if we used File -> Open).
+	const dartWorkspaceFolders = getDartWorkspaceFolders();
+	const dtdWorkingDirectory = workspaceContext.firstDartProject
+		?? (dartWorkspaceFolders.length ? fsPath(dartWorkspaceFolders[0].uri) : undefined);
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
-		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
+		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, dtdWorkingDirectory, deviceManager)
 		: undefined;
 	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
 	void analyzer.connectToDtd(dartToolingDaemon);

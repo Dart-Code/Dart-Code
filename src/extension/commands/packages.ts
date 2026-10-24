@@ -328,16 +328,15 @@ export class PackageCommands extends BaseSdkCommands {
 			this.logger.info(`Found pub status for ${pubStatuses.length} folders:${pubStatuses.map((result) => `\n    ${fsPath(result.folderUri)} (pubRequired?: ${result.pubRequired}, reason: ${result.reason})`).join("")}`);
 
 			const someProjectsRequirePubUpgrade = pubStatuses.some((result) => result.pubRequired === "UPGRADE");
-			const projectsRequiringPub = pubStatuses.map((result) => result.folderUri);
 
 			if (options?.upgradeOnSdkChange && someProjectsRequirePubUpgrade)
-				await promptToRunPubUpgrade(projectsRequiringPub);
-			else if (!forcePrompt && projectsRequiringPub.length === 0 && uri)
+				await promptToRunPubUpgrade(pubStatuses);
+			else if (!forcePrompt && pubStatuses.length === 0 && uri)
 				await this.runPubGetWithRelatives(projectFolders, uri);
-			else if (!forcePrompt && projectsRequiringPub.length === 1)
-				await this.runPubGetWithRelatives(projectFolders, projectsRequiringPub[0]);
-			else if (projectsRequiringPub.length)
-				await promptToRunPubGet(projectsRequiringPub);
+			else if (!forcePrompt && pubStatuses.length === 1)
+				await this.runPubGetWithRelatives(projectFolders, pubStatuses[0].folderUri);
+			else if (pubStatuses.length)
+				await promptToRunPubGet(pubStatuses);
 		} finally {
 			isFetchingPackages = false;
 		}

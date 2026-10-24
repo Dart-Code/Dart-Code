@@ -6,9 +6,9 @@ import * as vs from "vscode";
 import { getFolderToRunCommandIn } from "../../../extension/utils/vscode/projects";
 import { isWin } from "../../../shared/constants";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
-import { getPubWorkspaceOrPackageFolderInfo, getPubWorkspaceStatus } from "../../../shared/vscode/pub";
+import { getPubWorkspaceOrPackageFolderInfo, getPubWorkspaceStatus, promptToRunPubGet, promptToRunPubUpgrade, PubPackageStatus } from "../../../shared/vscode/pub";
 import * as sharedVscodeUtils from "../../../shared/vscode/utils";
-import { activate, activateWithoutAnalysis, defer, privateApi, sb, tryDelete } from "../../helpers";
+import { activate, activateWithoutAnalysis, defer, helloWorldExampleSubFolder, helloWorldFolder, privateApi, sb, tryDelete } from "../../helpers";
 
 describe("pub package status", () => {
 	before("activate", () => activate());
@@ -61,7 +61,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/.dart_tool/package_config.json file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/.dart_tool/package_config.json file" },
 		]);
 	});
 
@@ -76,7 +76,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The proj1/pubspec.lock file was modified more recently than the proj1/.dart_tool/package_config.json file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", triggeredByFile: "pubspec.lock", reason: "The proj1/pubspec.lock file was modified more recently than the proj1/.dart_tool/package_config.json file" },
 		]);
 	});
 
@@ -91,7 +91,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/pubspec.lock file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/pubspec.lock file" },
 		]);
 	});
 
@@ -307,7 +307,7 @@ describe("pub package status", () => {
 			};
 
 			expectStatus(workspace, [
-				{ folder: "/projects/root", pubRequired: "GET", reason: "The root/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
+				{ folder: "/projects/root", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The root/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
 				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj3", pubRequired: false, reason: "Up-to-date" },
@@ -329,7 +329,7 @@ describe("pub package status", () => {
 			};
 
 			expectStatus(workspace, [
-				{ folder: "/projects/root", pubRequired: "GET", reason: "The proj1/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
+				{ folder: "/projects/root", pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: "The proj1/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
 				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
 				{ folder: "/projects/root/proj3", pubRequired: false, reason: "Up-to-date" },
@@ -359,7 +359,7 @@ describe("pub package status", () => {
 		});
 	}
 
-	function expectStatus(workspace: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", reason?: string }>) {
+	function expectStatus(workspace: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", triggeredByFile?: "pubspec.yaml" | "pubspec.lock", reason?: string }>) {
 		workspace.openFolders = workspace.openFolders.map(fixPath);
 		const fixedFiles: typeof workspace.files = {};
 		for (const p of Object.keys(workspace.files))
@@ -607,6 +607,113 @@ describe("pub package commands", () => {
 
 			assert.equal(showQuickPick.called, false);
 			assert.equal(folder, workspaceRoot);
+		});
+	});
+
+	describe("pub prompts", () => {
+		let showInformationMessage: sinon.SinonStub;
+
+		beforeEach("set up showInformationMessage stub", () => {
+			showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(undefined);
+		});
+
+		function makeStatus(folderUri: vs.Uri, pubRequired: "GET" | "UPGRADE", triggeredByFile?: "pubspec.yaml" | "pubspec.lock"): PubPackageStatus {
+			return { folderUri, pubRequired, triggeredByFile, workspace: "NONE" };
+		}
+
+		it("shows general message for single project when reason is not a specific file modification", async () => {
+			await promptToRunPubGet([makeStatus(helloWorldFolder, "GET")]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"Some packages are missing or out of sync for package:hello_world, would you like to fetch them now?",
+			);
+		});
+
+		it("shows general message for two projects", async () => {
+			await promptToRunPubGet([
+				makeStatus(helloWorldFolder, "GET"),
+				makeStatus(helloWorldExampleSubFolder, "GET"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"Some packages are missing or out of sync for package:hello_world (+ 1 other), would you like to fetch them now?",
+			);
+		});
+
+		it("shows general message for three projects", async () => {
+			await promptToRunPubGet([
+				makeStatus(helloWorldFolder, "GET"),
+				makeStatus(helloWorldExampleSubFolder, "GET"),
+				makeStatus(vs.Uri.file(standalone1), "GET"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"Some packages are missing or out of sync for package:hello_world (+ 2 others), would you like to fetch them now?",
+			);
+		});
+
+		it("shows pubspec.yaml message when all projects were triggered by pubspec.yaml", async () => {
+			await promptToRunPubGet([
+				makeStatus(helloWorldFolder, "GET", "pubspec.yaml"),
+				makeStatus(helloWorldExampleSubFolder, "GET", "pubspec.yaml"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"pubspec.yaml was modified recently in package:hello_world (+ 1 other), would you like to fetch updated packages?",
+			);
+		});
+
+		it("shows pubspec.lock message when all projects were triggered by pubspec.lock", async () => {
+			await promptToRunPubGet([
+				makeStatus(helloWorldFolder, "GET", "pubspec.lock"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"pubspec.lock was modified recently in package:hello_world, would you like to fetch updated packages?",
+			);
+		});
+
+		it("shows general message when projects have mixed triggers", async () => {
+			await promptToRunPubGet([
+				makeStatus(helloWorldFolder, "GET", "pubspec.yaml"),
+				makeStatus(helloWorldExampleSubFolder, "GET", "pubspec.lock"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"Some packages are missing or out of sync for package:hello_world (+ 1 other), would you like to fetch them now?",
+			);
+		});
+
+		it("shows SDK upgrade message with project summary", async () => {
+			await promptToRunPubUpgrade([
+				makeStatus(helloWorldFolder, "UPGRADE"),
+				makeStatus(helloWorldExampleSubFolder, "UPGRADE"),
+				makeStatus(vs.Uri.file(standalone1), "UPGRADE"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"Your SDK has been updated since you last fetched packages for package:hello_world (+ 2 others), would you like to fetch updated packages?",
+			);
+		});
+
+		it("prioritizes an UPGRADE project in the SDK upgrade message when preceded by GET projects", async () => {
+			await promptToRunPubUpgrade([
+				makeStatus(helloWorldFolder, "GET"),
+				makeStatus(helloWorldExampleSubFolder, "UPGRADE"),
+				makeStatus(vs.Uri.file(standalone1), "GET"),
+			]);
+			assert.equal(showInformationMessage.calledOnce, true);
+			assert.equal(
+				showInformationMessage.firstCall.args[0],
+				"Your SDK has been updated since you last fetched packages for package:hello_world_example (example) (+ 2 others), would you like to fetch updated packages?",
+			);
 		});
 	});
 });

@@ -7,8 +7,15 @@ import { Logger, Sdks } from "../interfaces";
 import { PackageMap } from "../pub/package_map";
 import { uniq } from "../utils";
 import { fsPath, getPubGeneratorVersion, isWithinPath } from "../utils/fs";
+import { getPackageOrFolderDisplayName } from "./display_names";
 
-interface PubPackageStatus { folderUri: Uri, pubRequired: false | "GET" | "UPGRADE", reason?: string, workspace: "NONE" | "ROOT" | "PROJECT" }
+export interface PubPackageStatus {
+	folderUri: Uri;
+	pubRequired: false | "GET" | "UPGRADE";
+	reason?: string;
+	triggeredByFile?: "pubspec.yaml" | "pubspec.lock";
+	workspace: "NONE" | "ROOT" | "PROJECT";
+}
 
 /**
  * Information about a package folder, that is either a single package
@@ -181,7 +188,7 @@ function getPubPackageStatus(
 	const pubspecLockModified = tryMtimeSync(pubspecLockPath);
 	const packageMapModified = tryMtimeSync(packageMapPath);
 	if (pubspecLockModified && packageMapModified && pubspecLockModified > packageMapModified) {
-		return { ...result, pubRequired: "GET", reason: `The ${displayPath(pubspecLockPath)} file was modified${maybeDate(pubspecLockModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
+		return { ...result, pubRequired: "GET", triggeredByFile: "pubspec.lock", reason: `The ${displayPath(pubspecLockPath)} file was modified${maybeDate(pubspecLockModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
 	}
 
 	const relevantProjectFolders = isWorkspaceRoot ? [folder, ...getWorkspaceFolderPaths(logger, folder, pubspecContent)] : [folder];
@@ -192,9 +199,9 @@ function getPubPackageStatus(
 			continue;
 
 		if (packageMapModified && pubspecModified > packageMapModified) {
-			return { ...result, pubRequired: "GET", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
+			return { ...result, pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(packageMapPath)} file${maybeDate(packageMapModified)}` };
 		} else if (pubspecLockModified && pubspecModified > pubspecLockModified) {
-			return { ...result, pubRequired: "GET", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(pubspecLockPath)} file${maybeDate(pubspecLockModified)}` };
+			return { ...result, pubRequired: "GET", triggeredByFile: "pubspec.yaml", reason: `The ${displayPath(relevantPubspecYamlPath)} file was modified${maybeDate(pubspecModified)} more recently than the ${displayPath(pubspecLockPath)} file${maybeDate(pubspecLockModified)}` };
 		}
 	}
 
@@ -211,9 +218,30 @@ function getPubPackageStatus(
 	return { ...result, pubRequired: false, reason: "Up-to-date" };
 }
 
-export async function promptToRunPubGet(folders: Uri[]) {
+function formatProjectsDisplaySummary(folders: Uri[]): string {
+	const firstName = getPackageOrFolderDisplayName(fsPath(folders[0]));
+	const otherCount = folders.length - 1;
+	return otherCount > 0
+		? `${firstName} (+ ${otherCount} other${otherCount === 1 ? "" : "s"})`
+		: firstName;
+}
+
+export async function promptToRunPubGet(statuses: PubPackageStatus[]) {
+	if (!statuses.length)
+		return;
+
+	const folders = statuses.map((s) => s.folderUri);
+	const projectsSummary = formatProjectsDisplaySummary(folders);
+
+	const triggeredByFiles = uniq(statuses.map((s) => s.triggeredByFile));
+	const singleTriggeredByFile = triggeredByFiles.length === 1 ? triggeredByFiles[0] : undefined;
+
+	const message = singleTriggeredByFile
+		? `${singleTriggeredByFile} was modified recently in ${projectsSummary}, would you like to fetch updated packages?`
+		: `Some packages are missing or out of sync for ${projectsSummary}, would you like to fetch them now?`;
+
 	const label = "Run 'pub get'";
-	const clickedButton = await window.showInformationMessage("Some packages are missing or out of date, would you like to get them now?", label);
+	const clickedButton = await window.showInformationMessage(message, label);
 	if (clickedButton === label)
 		await runPubGet(folders);
 }
@@ -223,9 +251,21 @@ export function runPubGet(folders: Uri[]) {
 }
 
 
-export async function promptToRunPubUpgrade(folders: Uri[]) {
+export async function promptToRunPubUpgrade(statuses: PubPackageStatus[]) {
+	if (!statuses.length)
+		return;
+
+	// Put UPGRADE projects first so the named project in the prompt is one that
+	// actually triggered the SDK upgrade check, while still running across all folders.
+	const sortedStatuses = [
+		...statuses.filter((s) => s.pubRequired === "UPGRADE"),
+		...statuses.filter((s) => s.pubRequired !== "UPGRADE"),
+	];
+	const folders = sortedStatuses.map((s) => s.folderUri);
+	const projectsSummary = formatProjectsDisplaySummary(folders);
+
 	const label = "Run 'pub upgrade'";
-	const clickedButton = await window.showInformationMessage("Your SDK has been updated since you last fetched packages, would you like to fetch updated packages?", label);
+	const clickedButton = await window.showInformationMessage(`Your SDK has been updated since you last fetched packages for ${projectsSummary}, would you like to fetch updated packages?`, label);
 	if (clickedButton === label)
 		await runPubUpgrade(folders);
 }
