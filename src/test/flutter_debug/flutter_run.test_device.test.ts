@@ -396,14 +396,49 @@ describe(`flutter run debugger (only test device)`, () => {
 		it("simple expressions, complex expressions, and expressions that return variables", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await waitAllThrowIfTerminates(dc,
-				dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line,
+
+			const breakpoint1Line = positionOf("^// BREAKPOINT1").line;
+			const breakpoint2Line = positionOf("^// BREAKPOINT2").line;
+
+			// BREAKPOINT2 is in a top-level function called before BREAKPOINT1.
+			await waitAllThrowIfTerminates(
+				dc,
+				dc.waitForEvent("initialized")
+					.then(() => dc.setBreakpointsRequest({
+						breakpoints: [
+							{ line: breakpoint2Line },
+							{ line: breakpoint1Line },
+						],
+						source: { path: fsPath(flutterHelloWorldMainFile) },
+					}))
+					.then(() => dc.configurationDoneRequest()),
+				dc.assertStoppedLocation("breakpoint", {
+					line: breakpoint2Line,
 					path: fsPath(flutterHelloWorldMainFile),
 				}),
+				dc.launch(config),
 			);
 
-			const frameId = await dc.getTopFrameId();
+			// Complex expressions when in a top-level function.
+			{
+				const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
+				assert.ok(evaluateResult);
+				assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
+				assert.equal(evaluateResult.variablesReference, 0);
+			}
+
+			// Resume to BREAKPOINT1.
+			await waitAllThrowIfTerminates(
+				dc,
+				dc.assertStoppedLocation("breakpoint", {
+					line: breakpoint1Line,
+					path: fsPath(flutterHelloWorldMainFile),
+				}),
+				dc.resume(),
+			);
+
+			const stack = await dc.getStack();
+			const frameId = stack.body.stackFrames[0].id;
 			// Simple expressions.
 			{
 				const evaluateResult = await dc.evaluateForFrame(`"test"`, { frameId });
@@ -428,27 +463,6 @@ describe(`flutter run debugger (only test device)`, () => {
 				assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
 				assert.ok(evaluateResult.variablesReference);
 			}
-
-			await waitAllThrowIfTerminates(dc,
-				dc.waitForEvent("terminated"),
-				dc.terminateRequest(),
-			);
-		});
-
-		it("complex expressions when in a top level function", async () => {
-			await openFile(flutterHelloWorldMainFile);
-			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await waitAllThrowIfTerminates(dc,
-				dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT2").line,
-					path: fsPath(flutterHelloWorldMainFile),
-				}),
-			);
-
-			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
-			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
-			assert.equal(evaluateResult.variablesReference, 0);
 
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
