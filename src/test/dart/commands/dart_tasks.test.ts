@@ -4,31 +4,23 @@ import * as path from "path";
 import * as vs from "vscode";
 import { executableNames } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, defer, helloWorldFolder, privateApi, tryDelete } from "../../helpers";
+import { activate, defer, helloWorldFolder, sb } from "../../helpers";
 
 describe("dart tasks", () => {
 	beforeEach("activate", () => activate());
-	const dartDocOutputPath = path.join(fsPath(helloWorldFolder), "doc");
-	beforeEach("clear out sample folder", () => tryDelete(dartDocOutputPath));
 
-	it("dart.task.dartdoc causes documentation to be generated", async function () {
-		// https://github.com/dart-lang/dartdoc/issues/3823
-		if (privateApi.dartCapabilities.version.startsWith("3.5."))
-			this.skip();
+	it("dart.task.dartdoc causes documentation to be generated", async () => {
+		const executeTask = sb.stub(vs.tasks, "executeTask").resolves(undefined);
 
-		assert.ok(!fs.existsSync(dartDocOutputPath));
-		await new Promise<void>(async (resolve, reject) => {
-			vs.tasks.onDidEndTaskProcess((task) => {
-				if (task.execution === taskExecution) {
-					if (task.exitCode)
-						reject(new Error(`Task quit with code ${task.exitCode}`));
-					else
-						resolve();
-				}
-			});
-			const taskExecution = await vs.commands.executeCommand<vs.TaskExecution>("dart.task.dartdoc");
-		});
-		assert.ok(fs.existsSync(dartDocOutputPath));
+		await vs.commands.executeCommand("dart.task.dartdoc");
+
+		assert.ok(executeTask.calledOnce);
+		const task = executeTask.firstCall.args[0] as vs.Task;
+		assert.equal(fsPath((task.scope as vs.WorkspaceFolder).uri), fsPath(helloWorldFolder));
+		const execution = task.execution as vs.ProcessExecution;
+		assert.ok(execution.process.endsWith(executableNames.dart), `Task execution process was ${execution.process}`);
+		assert.deepEqual(execution.args, ["doc", "."]);
+		assert.equal(execution.options?.cwd, "");
 	});
 
 	it("includes build_runner tasks that use 'dart run'", async () => {
