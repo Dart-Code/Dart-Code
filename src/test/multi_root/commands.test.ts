@@ -41,12 +41,12 @@ describe("dart.getPackages", () => {
 		await vs.commands.executeCommand("dart.getPackages.all");
 
 		assert.deepStrictEqual(
-			spawn.calls.map((c) => c.cwd),
+			spawn.calls.map((c) => c.cwd).sort(),
 			[
-				fsPath(flutterHelloWorldExampleFolder),
-				fsPath(helloWorldExampleSubFolder),
 				fsPath(flutterHelloWorldFolder),
+				fsPath(flutterHelloWorldExampleFolder),
 				fsPath(helloWorldFolder),
+				fsPath(helloWorldExampleSubFolder),
 			],
 		);
 	}).timeout(fiveMinutesInMs);
