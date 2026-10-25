@@ -356,20 +356,21 @@ describe("findProjectFolders", () => {
 	});
 
 	it("searches full searchDepth from nested roots without re-scanning nested roots", async () => {
-		const outerRoot = path.join(tempFolder, "outer");
-		const innerRoot = path.join(outerRoot, "level1", "inner_root");
-		const innerProject = path.join(innerRoot, "level2", "inner_project");
-		const deepProject = path.join(innerProject, "level3", "deep_project");
-		mkDirRecursive(deepProject);
-		fs.writeFileSync(path.join(innerProject, "pubspec.yaml"), "name: inner_project\n");
-		fs.writeFileSync(path.join(deepProject, "pubspec.yaml"), "name: deep_project\n");
+		const level1 = path.join(tempFolder, "level1");
+		const level2 = path.join(level1, "level2");
+		const level3 = path.join(level2, "level3");
+		const level4 = path.join(level3, "level4");
+		const level5 = path.join(level4, "level5");
+		const level6 = path.join(level5, "level6");
+		const level7 = path.join(level6, "level7");
+		mkDirRecursive(level7);
+		fs.writeFileSync(path.join(level5, "pubspec.yaml"), "name: level5\n");
+		fs.writeFileSync(path.join(level7, "pubspec.yaml"), "name: level7\n");
 
 		// With searchDepth = 5:
-		// - outerRoot (depth 1) -> level1 (depth 2) -> inner_root (depth 3) -> level2 (depth 4) -> inner_project (depth 5):
-		//   cannot reach deep_project (depth 7 from outerRoot), AND would discover inner_project a second time if inner_root was not skipped.
-		// - inner_root (depth 1) -> level2 (depth 2) -> inner_project (depth 3) -> level3 (depth 4) -> deep_project (depth 5):
-		//   reaches both inner_project and deep_project.
-		const projects = await findProjectFolders(logger, [outerRoot, innerRoot], [], { requirePubspec: true, searchDepth: 5 }, fakeCancellationToken);
-		assert.deepStrictEqual(projects, [innerProject, deepProject]);
+		// - level1 searches down to level5 (5 levels deep), skipping level3 because it is already in the roots.
+		// - level3 searches 5 levels deep from itself (level3 -> level4 -> level5 -> level6 -> level7), finding both level5 and level7.
+		const projects = await findProjectFolders(logger, [level1, level3], [], { requirePubspec: true, searchDepth: 5 }, fakeCancellationToken);
+		assert.deepStrictEqual(projects, [level5, level7]);
 	});
 });
