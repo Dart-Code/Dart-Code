@@ -13,7 +13,7 @@ import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations, createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -329,6 +329,145 @@ describe("dart test debugger", () => {
 		assert.equal(config.env?.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
 	});
 
+	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
+		// When we run an individual test, it will always have an ID of 1. Since the test we ran might
+		// not have been ID=1 in the previous run, we need to be sure we update the correct node in the tree.
+		// To test it, we'll run the whole suite, ensure the results are as expected, and then re-check it
+		// after running each test individually.
+
+		async function checkResults(description: string): Promise<void> {
+			logger.info(description);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			checkTreeNodeResults(actualResults, expectedResults, description);
+		}
+
+		await runWithoutDebugging(helloWorldTestTreeFile);
+		let numRuns = 1;
+		await checkResults(`After initial run`);
+		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
+		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
+		if (!outline)
+			throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
+		visitor.visit(outline);
+		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
+			// Run the test.
+			const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestTreeFile), [testUtils.getTestSelectionForOutline(test)], false);
+			await runWithoutDebugging(
+				execInfo.programUri,
+				execInfo.args,
+				// Ensure the output contained the test name as a sanity check
+				// that it ran. Because some tests have variables added to the
+				// end, just stop at the $ to avoid failing on them.
+				dc.assertOutputContains("console", test.fullName.split("$")[0]),
+			);
+			await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
+		}
+	});
+
+	it("merges same name items together", async () => {
+		async function checkResults(description: string): Promise<void> {
+			logger.info(description);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTestTextTree({ uriFilter: helloWorldTestDupeNameFile, sortByLabel: true }).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			checkTreeNodeResults(actualResults, expectedResults);
+		}
+
+		await runWithoutDebugging(helloWorldTestDupeNameFile);
+		await checkResults(`After initial run`);
+
+		const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
+		const editor = await vs.window.showTextDocument(doc);
+		const originalText = doc.getText();
+		defer("Restore dupe_name_test.dart", async () => {
+			writeFileSync(fsPath(helloWorldTestDupeNameFile), originalText);
+			await vs.commands.executeCommand("workbench.action.files.revert");
+		});
+
+		// Insert new lines and save to shift the line numbers on disk and in the outline.
+		const originalOutline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
+		await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
+		await doc.save();
+		await waitForResult(() => {
+			const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
+			return !!outline && outline !== originalOutline;
+		});
+
+		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
+		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
+		if (!outline)
+			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
+		visitor.visit(outline);
+
+		// Re-run each test.
+		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
+			const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(test)], true);
+			await runWithoutDebugging(execInfo.programUri, execInfo.args);
+		}
+		await checkResults(`After running tests`);
+		// Re-run each group.
+		for (const group of visitor.tests.filter((t) => t.isGroup)) {
+			const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(group)], true);
+			await runWithoutDebugging(execInfo.programUri, execInfo.args);
+		}
+		await checkResults(`After running groups`);
+	});
+
+	it("can hide skipped tests and groups from tree", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(dc, helloWorldTestTreeFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		// First ensure the full results appear.
+		let expectedResults = getExpectedResults();
+		let actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
+		assert.ok(actualResults);
+		checkTreeNodeResults(actualResults, expectedResults);
+
+		// Check toggling the setting results in the skipped nodes being removed.
+		await setConfigForTest("dart", "showSkippedTests", false);
+		await delay(300); // Allow time for tree to rebuild.
+		// Expected results differ from what's in the file not only because skipped tests are hidden, but because
+		// the counts on the containing nodes will also be reduced.
+		expectedResults = `
+hello_world
+    test/tree_test.dart [6/8 passed] Failed
+        (setUpAll) Passed (utils.dart)
+        (tearDownAll) Passed (utils.dart)
+        failing group 1 [2/3 passed] Failed
+            passing test 1 \${1 + 1} [1/1 passed] Passed
+                passing test 1 2 Passed
+            failing test 1 $foo [0/1 passed] Failed
+                failing test 1 some string Failed
+            group 1.1 [1/1 passed] Passed
+                passing test 1 with ' some " quotes and newlines in name Passed
+        skipped group 2 [1/2 passed] Failed
+            passing test 1 Passed
+            failing test 1 Failed
+        passing group 3 [1/1 passed] Passed
+            passing test 1 Passed
+		`.trim();
+		actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
+		assert.ok(actualResults);
+		checkTreeNodeResults(actualResults, expectedResults);
+	});
+
+	it.skip("removes stale results when running a full suite", () => {
+		// Need to rename a test or something to ensure we get a stale result
+		// after a full suite run?
+	});
+
 	for (const runByLine of [false, true]) {
 		describe(`when running tests by ${runByLine ? "line" : "name"}`, () => {
 			beforeEach("set config.testInvocationMode", async () => {
@@ -421,135 +560,6 @@ describe("dart test debugger", () => {
 					const selector = runByLine ? `?line=${item.range!.start.line + 1}` : item.label;
 					assert.ok(launchText.includes(selector), `Missing ${selector} in ${launchText}`);
 				}
-			});
-
-
-			it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
-				// When we run an individual test, it will always have an ID of 1. Since the test we ran might
-				// not have been ID=1 in the previous run, we need to be sure we update the correct node in the tree.
-				// To test it, we'll run the whole suite, ensure the results are as expected, and then re-check it
-				// after running each test individually.
-
-				async function checkResults(description: string): Promise<void> {
-					logger.info(description);
-					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
-
-					assert.ok(expectedResults);
-					assert.ok(actualResults);
-					checkTreeNodeResults(actualResults, expectedResults, description);
-				}
-
-				await runWithoutDebugging(helloWorldTestTreeFile);
-				let numRuns = 1;
-				await checkResults(`After initial run`);
-				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
-				const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
-				if (!outline)
-					throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
-				visitor.visit(outline);
-				for (const test of visitor.tests.filter((t) => !t.isGroup)) {
-					// Run the test.
-					const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestTreeFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
-					await runWithoutDebugging(
-						execInfo.programUri,
-						execInfo.args,
-						// Ensure the output contained the test name as a sanity check
-						// that it ran. Because some tests have variables added to the
-						// end, just stop at the $ to avoid failing on them.
-						dc.assertOutputContains("console", test.fullName.split("$")[0]),
-					);
-					await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
-				}
-			});
-
-			it("merges same name items together", async () => {
-				async function checkResults(description: string): Promise<void> {
-					logger.info(description);
-					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree({ uriFilter: helloWorldTestDupeNameFile, sortByLabel: true }).join("\n");
-
-					assert.ok(expectedResults);
-					assert.ok(actualResults);
-					checkTreeNodeResults(actualResults, expectedResults);
-				}
-
-				await runWithoutDebugging(helloWorldTestDupeNameFile);
-				await checkResults(`After initial run`);
-				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
-				const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
-				if (!outline)
-					throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
-				visitor.visit(outline);
-				const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
-				const editor = await vs.window.showTextDocument(doc);
-				for (const modifyFile of [false, true]) {
-					// We'll run all this twice, once without modifying the file and then with new lines inserted (to
-					// shift the line)
-					if (modifyFile)
-						await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
-					// Re-run each test.
-					for (const test of visitor.tests.filter((t) => !t.isGroup)) {
-						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
-						await runWithoutDebugging(execInfo.programUri, execInfo.args);
-					}
-					await checkResults(`After running tests`);
-					// Re-run each group.
-					for (const group of visitor.tests.filter((t) => t.isGroup)) {
-						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(group)], runByLine);
-						await runWithoutDebugging(execInfo.programUri, execInfo.args);
-					}
-					await checkResults(`After running groups`);
-				}
-			}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
-
-			it("can hide skipped tests and groups from tree", async () => {
-				await openFile(helloWorldTestTreeFile);
-				const config = await startDebugger(dc, helloWorldTestTreeFile);
-				config.noDebug = true;
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-
-				// First ensure the full results appear.
-				let expectedResults = getExpectedResults();
-				let actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
-				assert.ok(actualResults);
-				checkTreeNodeResults(actualResults, expectedResults);
-
-				// Check toggling the setting results in the skipped nodes being removed.
-				await setConfigForTest("dart", "showSkippedTests", false);
-				await delay(300); // Allow time for tree to rebuild.
-				// Expected results differ from what's in the file not only because skipped tests are hidden, but because
-				// the counts on the containing nodes will also be reduced.
-				expectedResults = `
-hello_world
-    test/tree_test.dart [6/8 passed] Failed
-        (setUpAll) Passed (utils.dart)
-        (tearDownAll) Passed (utils.dart)
-        failing group 1 [2/3 passed] Failed
-            passing test 1 \${1 + 1} [1/1 passed] Passed
-                passing test 1 2 Passed
-            failing test 1 $foo [0/1 passed] Failed
-                failing test 1 some string Failed
-            group 1.1 [1/1 passed] Passed
-                passing test 1 with ' some " quotes and newlines in name Passed
-        skipped group 2 [1/2 passed] Failed
-            passing test 1 Passed
-            failing test 1 Failed
-        passing group 3 [1/1 passed] Passed
-            passing test 1 Passed
-		`.trim();
-				actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
-				assert.ok(actualResults);
-				checkTreeNodeResults(actualResults, expectedResults);
-			});
-
-			it.skip("removes stale results when running a full suite", () => {
-				// Need to rename a test or something to ensure we get a stale result
-				// after a full suite run?
 			});
 
 			if (runByLine) {
