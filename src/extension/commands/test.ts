@@ -67,7 +67,7 @@ export class TestCommands implements IAmDisposable {
 			return projectFolders.find((f) => isWithinPath(suitePath, f));
 		}
 
-		const projectsWithTests: Array<{ projectFolder: string, name: string, relativeTestPaths: string[] }> = [];
+		const projectsWithTests: Array<{ projectFolder: string, name: string, integrationTests: boolean, relativeTestPaths: string[] }> = [];
 		function addTestItemsForProject(projectFolder: string, integrationTests: boolean) {
 			if (!suites)
 				return;
@@ -101,7 +101,7 @@ export class TestCommands implements IAmDisposable {
 				if (isRunningAll && !hasExclusions)
 					testPaths = uniq(testPaths.map((suitePath) => suitePath.split(path.sep)[0]));
 
-				projectsWithTests.push({ projectFolder, name, relativeTestPaths: testPaths });
+				projectsWithTests.push({ projectFolder, name, integrationTests, relativeTestPaths: testPaths });
 			}
 		}
 
@@ -115,25 +115,32 @@ export class TestCommands implements IAmDisposable {
 			return;
 		}
 
-		await Promise.all(
-			projectsWithTests.map((projectWithTests) => this.runTests({
-				debug: false,
-				includeCoverage,
-				isFlutter: undefined, // unknown, runTests will compute
-				launchTemplate: {
-					args: projectWithTests.relativeTestPaths.slice(1),
-					cwd: projectWithTests.projectFolder,
-					name: projectWithTests.name,
-				},
-				programPath: path.join(projectWithTests.projectFolder, projectWithTests.relativeTestPaths[0]),
-				shouldRunSkippedTests: false,
-				suppressPrompts: suites?.length !== 1,
-				testRun,
-				testSelection: undefined,
-				token: undefined,
-				useLaunchJsonTestTemplate: true,
-			}))
-		);
+		const runProjectTests = (projectWithTests: { projectFolder: string, name: string, relativeTestPaths: string[] }) => this.runTests({
+			debug: false,
+			includeCoverage,
+			isFlutter: undefined, // unknown, runTests will compute
+			launchTemplate: {
+				args: projectWithTests.relativeTestPaths.slice(1),
+				cwd: projectWithTests.projectFolder,
+				name: projectWithTests.name,
+			},
+			programPath: path.join(projectWithTests.projectFolder, projectWithTests.relativeTestPaths[0]),
+			shouldRunSkippedTests: false,
+			suppressPrompts: suites?.length !== 1,
+			testRun,
+			testSelection: undefined,
+			token: undefined,
+			useLaunchJsonTestTemplate: true,
+		});
+
+		const nonIntegrationTestProjects = projectsWithTests.filter((p) => !p.integrationTests);
+		const integrationTestProjects = projectsWithTests.filter((p) => p.integrationTests);
+
+		// Non-integration tests can run concurrently across projects, but integration tests must
+		// be serialized so they don't fight over the same target device.
+		await Promise.all(nonIntegrationTestProjects.map((projectWithTests) => runProjectTests(projectWithTests)));
+		for (const projectWithTests of integrationTestProjects)
+			await runProjectTests(projectWithTests);
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, nodes: TreeNode[], debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, includeCoverage: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
