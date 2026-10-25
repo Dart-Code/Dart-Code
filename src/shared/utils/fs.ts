@@ -8,7 +8,7 @@ import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger, MyCancellationToken } from "../interfaces";
 import { nullLogger } from "../logging";
 import { PackageMap } from "../pub/package_map";
-import { nullToUndefined, uniq } from "../utils";
+import { nullToUndefined } from "../utils";
 import { sortBy } from "./array";
 
 export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: boolean; } = {}): string {
@@ -341,8 +341,8 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 	const dartToolFolderName = `${path.sep}.dart_tool${path.sep}`;
 	const widgetPreviewFolderName = `${path.sep}.widget_preview${path.sep}`;
 
-	const seenFolders = new Set<string>(roots);
-	let previousLevelFolders = uniq(roots);
+	const rootSet = new Set<string>(roots);
+	let previousLevelFolders = [...rootSet];
 	let allPossibleFolders = previousLevelFolders.slice();
 	// Start at 1, as we already added the roots.
 	const searchDepth = options.onlyWorkspaceRoots ? 1 : options.searchDepth;
@@ -352,8 +352,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 			if (token.isCancellationRequested)
 				break;
 			const childFolders = (await getChildFolders(logger, folder))
-				.filter((f) => !seenFolders.has(f));
-			childFolders.forEach((f) => seenFolders.add(f));
+				.filter((f) => !rootSet.has(f));
 			nextLevelFolders = nextLevelFolders.concat(childFolders);
 		}
 
