@@ -4,7 +4,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { captureTestDebugConfigurations } from "../../debug_helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -226,6 +227,27 @@ void main() => test("test inside ${newFilename}", () {});
 
 		const projectNode = findProjectNode(fsPath(helloWorldExampleSubFolder));
 		assert.ok(projectNode.tags.some((tag) => tag.id === "DartRunnableTest"));
+	});
+
+	it("does not launch duplicate test sessions when workspace folders are nested", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6215
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+		privateApi.clearCaches();
+		defer("Clear project folder cache", () => privateApi.clearCaches());
+
+		// Simulate a multi-root workspace that contains both the parent folder and the nested project folder.
+		sb.stub(vs.workspace, "workspaceFolders").value([
+			{ index: 0, name: "Hub", uri: helloWorldFolder },
+			{ index: 1, name: "App", uri: helloWorldExampleSubFolder },
+		]);
+
+		const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
+		const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest([suiteNode]));
+
+		assert.deepStrictEqual(
+			configs.map((config) => path.basename(config.program as string)),
+			["project_test.dart"],
+		);
 	});
 
 	function preventTestSpawning() {
