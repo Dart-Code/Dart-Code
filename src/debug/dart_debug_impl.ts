@@ -1057,7 +1057,7 @@ export abstract class DartDebugSession extends DebugSession {
 			// TODO: This kinda smells for two reasons:
 			// 1. This is supposed to be an @Function but it has loads of extra stuff on it compare to the docs
 			// 2. We're accessing _kind to check if it's a getter :/
-			getterNames = getterNames.concat(getterNames, c.functions.filter((f) => f._kind === "GetterFunction" && !f.static && !f.const).map((f) => f.name));
+			getterNames = getterNames.concat(c.functions.filter((f) => f._kind === "GetterFunction" && !f.static && !f.const).map((f) => f.name));
 			classRef = c.super;
 		}
 
