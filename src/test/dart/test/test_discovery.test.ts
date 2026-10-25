@@ -250,6 +250,45 @@ void main() => test("test inside ${newFilename}", () {});
 		);
 	});
 
+	it("does not run integration tests across multiple projects concurrently", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6243
+		const mainIntegrationFolder = path.join(fsPath(helloWorldFolder), "integration_test");
+		const mainIntegrationTestFile = path.join(mainIntegrationFolder, "app_test.dart");
+		defer("Cleanup main integration_test", () => tryDelete(mainIntegrationFolder));
+
+		// `example` is a nested sub-project with its own pubspec.yaml.
+		const exampleIntegrationFolder = path.join(fsPath(helloWorldExampleSubFolder), "integration_test");
+		const exampleIntegrationTestFile = path.join(exampleIntegrationFolder, "app_test.dart");
+		defer("Cleanup example integration_test", () => tryDelete(exampleIntegrationFolder));
+
+		fs.mkdirSync(mainIntegrationFolder, { recursive: true });
+		fs.writeFileSync(mainIntegrationTestFile, "");
+		fs.mkdirSync(exampleIntegrationFolder, { recursive: true });
+		fs.writeFileSync(exampleIntegrationTestFile, "");
+
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		let activeSessions = 0;
+		let maxConcurrentSessions = 0;
+		const startDebugging = sb.stub(vs.debug, "startDebugging").callsFake(async () => {
+			activeSessions++;
+			maxConcurrentSessions = Math.max(maxConcurrentSessions, activeSessions);
+			// Yield briefly while this session is active so any concurrently-started session overlaps.
+			await delay(50);
+			activeSessions--;
+			// Return false so `runTests` resolves immediately instead of waiting for `onDidTerminateDebugSession`.
+			return false;
+		});
+
+		const mainSuiteNode = findSuiteNode(mainIntegrationTestFile);
+		const exampleSuiteNode = findSuiteNode(exampleIntegrationTestFile);
+		const controller = privateApi.testController!;
+		await controller.runTests(false, false, new vs.TestRunRequest([mainSuiteNode, exampleSuiteNode]), fakeCancellationToken);
+
+		assert.equal(startDebugging.callCount, 2);
+		assert.equal(maxConcurrentSessions, 1);
+	});
+
 	function preventTestSpawning() {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		executeCommand.withArgs("_dart.runAllTestsWithoutDebugging").resolves();
