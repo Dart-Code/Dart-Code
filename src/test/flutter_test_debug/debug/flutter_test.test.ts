@@ -315,6 +315,10 @@ describe("flutter test debugger", () => {
 				assert.equal(runAction.command!.arguments![0].fullName, "Hello world test");
 				assert.equal(runAction.command!.arguments![0].isGroup, false);
 
+				// To avoid spawning `flutter test` for every combination, we run this test end-to-end
+				// when running by name (`!runByLine`) and only verify the launch configuration when
+				// running by line (`runByLine`), whereas "can run skipped tests from codelens" below
+				// does the reverse.
 				if (runByLine) {
 					const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 					assert.equal(configs.length, 1);
@@ -352,6 +356,8 @@ describe("flutter test debugger", () => {
 				assert.equal(runAction.command!.arguments![0].fullName, "multi\nline\ntest");
 				assert.equal(runAction.command!.arguments![0].isGroup, false);
 
+				// Verify the generated launch config rather than spawning another `flutter test` process
+				// (end-to-end execution from CodeLens is already covered by the other tests in this loop).
 				const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 				assert.equal(configs.length, 1);
 				if (runByLine) {
@@ -382,6 +388,9 @@ describe("flutter test debugger", () => {
 				assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
 				assert.equal(runAction.command!.arguments![0].isGroup, false);
 
+				// To avoid spawning `flutter test` for every combination, we only verify the launch
+				// configuration here when running by name (`!runByLine`, since "can run tests from codelens"
+				// above already ran end-to-end by name), and run end-to-end here when running by line (`runByLine`).
 				if (!runByLine) {
 					const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 					assert.equal(configs.length, 1);
