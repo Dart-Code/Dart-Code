@@ -5,7 +5,7 @@ import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
 import { nullLogger } from "../../../shared/logging";
 import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
-import { createTempPubPackage, defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, testProjectsFolder, tryDelete } from "../../helpers";
+import { createTempPubPackage, defer, fakeCancellationToken, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, testProjectsFolder, tryDelete } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
 	it("handles empty array", () => {
@@ -340,5 +340,36 @@ describe("findProjectFolders", () => {
 
 		assert.deepStrictEqual(projects, [mainProject, subProject]);
 	});
-});
 
+	it("does not return duplicate project folders when roots are nested", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6215
+		const roots = [
+			fsPath(helloWorldFolder),
+			fsPath(helloWorldExampleSubFolder),
+		];
+		const projects = await findProjectFolders(logger, roots, [], { requirePubspec: true, searchDepth: 5 }, fakeCancellationToken);
+		assert.deepStrictEqual(projects, [
+			fsPath(helloWorldFolder),
+			fsPath(helloWorldExampleSubFolder),
+			path.join(fsPath(helloWorldFolder), "nested_flutter_example"),
+		]);
+	});
+
+	it("searches full searchDepth from nested roots without re-scanning nested roots", async () => {
+		const outerRoot = path.join(tempFolder, "outer");
+		const innerRoot = path.join(outerRoot, "level1", "inner_root");
+		const innerProject = path.join(innerRoot, "level2", "inner_project");
+		const deepProject = path.join(innerProject, "level3", "deep_project");
+		mkDirRecursive(deepProject);
+		fs.writeFileSync(path.join(innerProject, "pubspec.yaml"), "name: inner_project\n");
+		fs.writeFileSync(path.join(deepProject, "pubspec.yaml"), "name: deep_project\n");
+
+		// With searchDepth = 5:
+		// - outerRoot (depth 1) -> level1 (depth 2) -> inner_root (depth 3) -> level2 (depth 4) -> inner_project (depth 5):
+		//   cannot reach deep_project (depth 7 from outerRoot), AND would discover inner_project a second time if inner_root was not skipped.
+		// - inner_root (depth 1) -> level2 (depth 2) -> inner_project (depth 3) -> level3 (depth 4) -> deep_project (depth 5):
+		//   reaches both inner_project and deep_project.
+		const projects = await findProjectFolders(logger, [outerRoot, innerRoot], [], { requirePubspec: true, searchDepth: 5 }, fakeCancellationToken);
+		assert.deepStrictEqual(projects, [innerProject, deepProject]);
+	});
+});
