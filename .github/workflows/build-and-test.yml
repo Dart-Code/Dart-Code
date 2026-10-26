@@ -395,8 +395,8 @@ jobs:
   upload_coverage:
 
     name: Send Coverage to Codecov
-    needs: merge_artifacts
-    if: always() && github.event_name == 'push'
+    needs: [build, merge_artifacts]
+    if: needs.build.result == 'success' && needs.merge_artifacts.result == 'success'
     runs-on: ubuntu-latest
 
     steps:
