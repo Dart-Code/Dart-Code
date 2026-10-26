@@ -135,7 +135,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return nodes;
 	}
 
-	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, _token: vs.CancellationToken): Promise<void> {
+	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
 		const isRunningAll = !request.include;
 
 		// If running all tests, ensure we have discovered them all first.
@@ -165,7 +165,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			const nodesToRun = this.extractRunnableNodes(testsToRun);
 			const nodesToExclude = this.extractRunnableNodes(testsToExclude);
 			if (!debug && nodesToRun.every((item) => item instanceof SuiteNode) && nodesToExclude.every((item) => item instanceof SuiteNode)) {
-				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", nodesToRun, nodesToExclude, includeCoverage, run, isRunningAll);
+				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", nodesToRun, nodesToExclude, includeCoverage, run, isRunningAll, token);
 				return;
 			}
 
@@ -188,26 +188,41 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				return; // Shouldn't get here
 			else if (totalItems === 1) {
 				const [[suite, nodes]] = testsBySuite.entries();
-				await vs.commands.executeCommand(command, suite, nodes, false, includeCoverage, run, undefined);
+				await vs.commands.executeCommand(command, suite, nodes, false, includeCoverage, run, token);
 			} else {
 				const title = debug ? "Debugging" : "Running";
 				await vs.window.withProgress({
 					cancellable: true,
 					location: vs.ProgressLocation.Notification,
 					title,
-				}, async (progress, token) => {
-					let currentItem = 0;
+				}, async (progress, progressToken) => {
+					const combinedTokenSource = new vs.CancellationTokenSource();
+					const tokenSubs: IAmDisposable[] = [];
+					if (token?.isCancellationRequested || progressToken?.isCancellationRequested)
+						combinedTokenSource.cancel();
+					if (token)
+						tokenSubs.push(token.onCancellationRequested(() => combinedTokenSource.cancel()));
+					if (progressToken)
+						tokenSubs.push(progressToken.onCancellationRequested(() => combinedTokenSource.cancel()));
 
-					for (const [suite, nodes] of testsBySuite.entries()) {
-						if (token?.isCancellationRequested || !nodes?.length)
-							continue;
+					try {
+						const combinedToken = combinedTokenSource.token;
+						let currentItem = 0;
 
-						currentItem++;
-						const suiteName = path.basename(suite.path);
-						progress.report({ message: `${suiteName}... (${currentItem}/${totalItems})`, increment: 100 / totalItems });
+						for (const [suite, nodes] of testsBySuite.entries()) {
+							if (combinedToken.isCancellationRequested || !nodes?.length)
+								continue;
 
-						const suppressPrompts = true;
-						await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, includeCoverage, run, token);
+							currentItem++;
+							const suiteName = path.basename(suite.path);
+							progress.report({ message: `${suiteName}... (${currentItem}/${totalItems})`, increment: 100 / totalItems });
+
+							const suppressPrompts = true;
+							await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, includeCoverage, run, combinedToken);
+						}
+					} finally {
+						disposeAll(tokenSubs);
+						combinedTokenSource.dispose();
 					}
 				});
 			}

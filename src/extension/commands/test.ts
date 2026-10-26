@@ -38,7 +38,7 @@ export class TestCommands implements IAmDisposable {
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: RunnableTreeNode[], suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: RunnableTreeNode[], suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
-			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, includeCoverage, testRun, isRunningAll)),
+			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean, token?: vs.CancellationToken) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, includeCoverage, testRun, isRunningAll, token)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.commands.registerCommand("dart.findTestOrImplementationFile", () => this.findTestOrImplementationFile(), this),
@@ -49,7 +49,7 @@ export class TestCommands implements IAmDisposable {
 		this.updateEditorContexts(vs.window.activeTextEditor);
 	}
 
-	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, exclusions: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<void> {
+	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, exclusions: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean, token?: vs.CancellationToken): Promise<void> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
 		// as the first one that runs will be used for resolving package: URIs etc. We also can't mix and match
@@ -129,7 +129,7 @@ export class TestCommands implements IAmDisposable {
 			suppressPrompts: suites?.length !== 1,
 			testRun,
 			testSelection: undefined,
-			token: undefined,
+			token,
 			useLaunchJsonTestTemplate: true,
 		});
 
@@ -139,12 +139,14 @@ export class TestCommands implements IAmDisposable {
 		// Non-integration tests can run concurrently across projects, but integration tests must
 		// be serialized so they don't fight over the same target device.
 		await Promise.all(nonIntegrationTestProjects.map((projectWithTests) => runProjectTests(projectWithTests)));
-		for (const projectWithTests of integrationTestProjects)
+		for (const projectWithTests of integrationTestProjects) {
+			if (token?.isCancellationRequested)
+				break;
 			await runProjectTests(projectWithTests);
+		}
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, nodes: TreeNode[], debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, includeCoverage: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
-		// TODO(dantup): We accept a cancellation token here, but it appears never used. Can we remove it?
 		const testSelection = getTestSelectionForNodes(nodes);
 		const programPath = fsPath(URI.file(suiteData.path));
 		const isFlutter = isInsideFlutterProject(vs.Uri.file(suiteData.path));
@@ -165,6 +167,8 @@ export class TestCommands implements IAmDisposable {
 	}
 
 	private async runTests({ includeCoverage, programPath, debug, testSelection, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate, isFlutter }: TestLaunchInfo): Promise<boolean> {
+		if (token?.isCancellationRequested)
+			return false;
 		const programUri = vs.Uri.file(programPath);
 		const programUriComparisonString = uriComparisonString(programUri);
 		const doc = vs.workspace.textDocuments.find((doc) => uriComparisonString(doc.uri) === programUriComparisonString);
@@ -216,6 +220,9 @@ export class TestCommands implements IAmDisposable {
 			}
 		}
 
+		if (token?.isCancellationRequested)
+			return false;
+
 		const subs: IAmDisposable[] = [];
 		return new Promise<boolean>(async (resolve) => {
 			const launchConfiguration = {
@@ -245,8 +252,12 @@ export class TestCommands implements IAmDisposable {
 
 			if (token) {
 				subs.push(vs.debug.onDidStartDebugSession((e) => {
-					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
-						subs.push(token.onCancellationRequested(() => e.customRequest("disconnect")));
+					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID) {
+						if (token.isCancellationRequested)
+							void e.customRequest("disconnect");
+						else
+							subs.push(token.onCancellationRequested(() => e.customRequest("disconnect")));
+					}
 				}));
 			}
 			subs.push(vs.debug.onDidTerminateDebugSession((e) => {
