@@ -14,9 +14,9 @@ For general details on developing VS Code extensions see the [VS Code API docs](
 
 ## LSP and DAP
 
-At the time of writing, the Dart/Flutter extensions are migrating from using VS Code APIs directly for language integration to a [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation [in the Dart analysis server](https://github.com/dart-lang/sdk/blob/main/pkg/analysis_server/tool/lsp_spec/README.md) and also from a Dart Code shipped [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/) implementation to one shipped in the [Dart](https://github.com/dart-lang/sdk/blob/main/third_party/pkg/dap/tool/README.md)/[Flutter](https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/debug_adapters/README.md) SDKs.
+The Dart and Flutter extensions use a [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation [in the Dart analysis server](https://github.com/dart-lang/sdk/blob/main/pkg/analysis_server/tool/lsp_spec/README.md) for language integration and a [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/) implementation shipped in the [Dart](https://github.com/dart-lang/sdk/blob/main/third_party/pkg/dap/tool/README.md) and [Flutter](https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/debug_adapters/README.md) SDKs for debugging.
 
-This means there may be two implementations (one here, one in the SDK) of some functionality. The Dart Code implementations remain available for older SDKs but generally new work should be done in just the SDK LSP/DAP servers (except where the protocols do not support the required functionality).
+A legacy TypeScript DAP implementation remains in `src/debug` for older SDKs, but new language and debugging work should generally be done in the SDK LSP/DAP servers (except where the protocols do not support the required functionality).
 
 ## Project Structure
 
@@ -28,13 +28,11 @@ Source code is split into several top level folders:
 
 The folder contains VS Code extension-specific code - for example VS Code providers and the extension activation/deactivation code. This code should not be imported directly into any files outside of this folder.
 
-The `src/extension/analysis` folder contains classes for interacting with the Dart analysis server (either via its own protocol or LSP) over `stdin`/`stdout` which is used for most of the langauge support in Dart Code. Some of these files were originally auto-generated from the [analysis server specification](https://htmlpreview.github.io/?https://github.com/dart-lang/sdk/blob/master/pkg/analysis_server/doc/api.html) although are now generally hand-maintained.
+The `src/extension/analysis` and `src/extension/lsp` folders contain classes for interacting with the Dart LSP analysis server and layering additional VS Code features on top of LSP.
 
 The `src/extension/commands` folder contains commands that Dart Code handles that are not tied to API providers, such as the command executed when a debug session starts and commands added to the command palette like **Dart: Get Packages**.
 
-The `src/extension/providers` folder contains the implementation for all of the providers wired up in `src/extension/extension.ts` during activation. These provide functionality like code completion, formatting, reporting errors, etc when using the original Dart analysis server protocol. When using LSP (which is the case for almost all users on modern SDKs) these providers are not used, and the client/server negotiate which features are available as part of the LSP initialization.
-
-The `src/extension/services` folder contains some plumbing code for services, such as a base class for various services Dart Code uses that communicate over `stdin`/`stdout` streams.
+The `src/extension/providers` folder contains VS Code providers wired up in `src/extension/extension.ts` during activation for features not handled directly by the LSP client (such as debug configuration/adapter providers, MCP server definitions, and snippet completions).
 
 ### src/debug
 
@@ -46,7 +44,7 @@ Code in this folder must not be imported into any files outside of this folder. 
 
 ### src/shared
 
-This folder contains all shared code that can be used by `extension`, `debug` and `test` code. This code should not contain any global state, nor should it define classes that may be tested with `instanceof`. This is because the extension code is packed with webpack and any state/classes will be duplicated in both packed and unpacked code (leading to multiple copies and unexpected behaviour during test runs). Any code in here that uses the `vscode` module should be inside a folder named `vscode` to allow the lints to detect it being imported into debug adapters (`src/debug`).
+This folder contains all shared code that can be used by `extension`, `debug` and `test` code (including `src/shared/services` for spawning and communicating with daemons and tools over `stdin`/`stdout` or WebSockets). This code should not contain any global state, nor should it define classes that may be tested with `instanceof`. This is because the extension code is packed with webpack and any state/classes will be duplicated in both packed and unpacked code (leading to multiple copies and unexpected behaviour during test runs). Any code in here that uses the `vscode` module should be inside a folder named `vscode` to allow the lints to detect it being imported into debug adapters (`src/debug`).
 
 ### src/test
 
@@ -69,9 +67,9 @@ This will compile Dart Code and launch the Code **Extension Development Host** -
 
 ## Automated Tests
 
-Automated tests live in the `src/test` folder and each sub-folder has a launch configuration you can select form the Debug side bar to run them (for example the `test/dart` folder can be run with the **Dart Tests** debug configuration ). You can also use `npm test` to run the whole suite in one go (without the debugging). Running the test suite may spawn Code windows multiple times during execution as multiple workspaces are tested.
+Automated tests live in the `src/test` folder and each sub-folder has a launch configuration you can select from the Debug side bar to run them (for example the `test/dart` folder can be run with the **Dart Tests** debug configuration). You can also use `npm test` to run the whole suite in one go (or set the `BOT` environment variable, such as `BOT=dart`, to run a single bot's tests). Running the test suite may spawn Code windows multiple times during execution as multiple workspaces are tested.
 
-To run an individual test, add `.only()` to the end of the `describe()` or `it()` calls (such as `describe.only()` or `it.only()`).
+To run an individual test file from the command line, pass a file path or glob to `npm run test <...test-file-globs>`. When launching tests from the VS Code Debug side bar, you can also add `.only()` to `describe()` or `it()` calls (such as `describe.only()` or `it.only()`), though `.only()` is forbidden when running via `npm test`.
 
 All tests will be run on all supported platforms via GitHub Actions periodically, and for a subset of platforms on the `master` branch and PRs.
 
