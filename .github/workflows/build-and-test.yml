@@ -340,6 +340,8 @@ jobs:
     # explicitly check that ran and passed or failed (and was not skipped/cancelled).
     if: always() && (needs.build.result == 'success' || needs.build.result == 'failure')
     runs-on: ubuntu-latest
+    outputs:
+      has_coverage: ${{ steps.merge_coverage.outcome == 'success' }}
 
     steps:
 
@@ -364,8 +366,9 @@ jobs:
         continue-on-error: true # fails if empty
 
       - name: Merge coverage
+        id: merge_coverage
         uses: actions/upload-artifact/merge@v7
-        if: success()
+        if: needs.build.result == 'success'
         with:
           name: coverage
           pattern: coverage-*
@@ -395,8 +398,8 @@ jobs:
   upload_coverage:
 
     name: Send Coverage to Codecov
-    needs: [build, merge_artifacts]
-    if: needs.build.result == 'success' && needs.merge_artifacts.result == 'success'
+    needs: merge_artifacts
+    if: needs.merge_artifacts.outputs.has_coverage == 'true'
     runs-on: ubuntu-latest
 
     steps:
