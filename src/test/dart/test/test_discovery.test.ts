@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { captureTestDebugConfigurations } from "../../debug_helpers";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -288,6 +288,134 @@ void main() => test("test inside ${newFilename}", () {});
 		assert.equal(startDebugging.callCount, 2);
 		assert.equal(maxConcurrentSessions, 1);
 	});
+
+	it("cancels active session and skips remaining integration test projects when token is cancelled in runAllTestsWithoutDebugging", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6247
+		const mainIntegrationFolder = path.join(fsPath(helloWorldFolder), "integration_test");
+		const mainIntegrationTestFile = path.join(mainIntegrationFolder, "app_test.dart");
+		defer("Cleanup main integration_test", () => tryDelete(mainIntegrationFolder));
+
+		const exampleIntegrationFolder = path.join(fsPath(helloWorldExampleSubFolder), "integration_test");
+		const exampleIntegrationTestFile = path.join(exampleIntegrationFolder, "app_test.dart");
+		defer("Cleanup example integration_test", () => tryDelete(exampleIntegrationFolder));
+
+		fs.mkdirSync(mainIntegrationFolder, { recursive: true });
+		fs.writeFileSync(mainIntegrationTestFile, "");
+		fs.mkdirSync(exampleIntegrationFolder, { recursive: true });
+		fs.writeFileSync(exampleIntegrationTestFile, "");
+
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const { startDebugging, disconnectedSessionIds } = stubDebugSessionsWithCancellation((_session, tokenSource) => {
+			tokenSource.cancel();
+		});
+
+		const mainSuiteNode = findSuiteNode(mainIntegrationTestFile);
+		const exampleSuiteNode = findSuiteNode(exampleIntegrationTestFile);
+		const controller = privateApi.testController!;
+		await controller.runTests(false, false, new vs.TestRunRequest([mainSuiteNode, exampleSuiteNode]), startDebugging.tokenSource.token);
+
+		assert.equal(startDebugging.stub.callCount, 1);
+		assert.equal(disconnectedSessionIds.length, 1);
+	});
+
+	it("cancels single-suite test run when TestRunRequest token is cancelled", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6247
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const { startDebugging, disconnectedSessionIds } = stubDebugSessionsWithCancellation((_session, tokenSource) => {
+			tokenSource.cancel();
+		});
+
+		const suiteNode = findSuiteNode(fsPath(helloWorldTestMainFile));
+		const controller = privateApi.testController!;
+		// Use debug=true so we take the single-suite path rather than runAllTestsWithoutDebugging.
+		await controller.runTests(true, false, new vs.TestRunRequest([suiteNode]), startDebugging.tokenSource.token);
+
+		assert.equal(startDebugging.stub.callCount, 1);
+		assert.equal(disconnectedSessionIds.length, 1);
+	});
+
+	it("cancels multi-suite test run and skips remaining suites when TestRunRequest token is cancelled", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6247
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const { startDebugging, disconnectedSessionIds } = stubDebugSessionsWithCancellation((_session, tokenSource) => {
+			tokenSource.cancel();
+		});
+
+		const suiteNode1 = findSuiteNode(fsPath(helloWorldTestMainFile));
+		const suiteNode2 = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
+		const controller = privateApi.testController!;
+		// Use debug=true with two suites so we take the multi-suite withProgress path.
+		await controller.runTests(true, false, new vs.TestRunRequest([suiteNode1, suiteNode2]), startDebugging.tokenSource.token);
+
+		assert.equal(startDebugging.stub.callCount, 1);
+		assert.equal(disconnectedSessionIds.length, 1);
+	});
+
+	it("disconnects session if token is cancelled before onDidStartDebugSession fires and does not start if already cancelled", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6247
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const { startDebugging, disconnectedSessionIds } = stubDebugSessionsWithCancellation((_session, tokenSource) => {
+			tokenSource.cancel();
+		}, { cancelBeforeSessionStartEvent: true });
+
+		const suiteNode = findSuiteNode(fsPath(helloWorldTestMainFile));
+		const controller = privateApi.testController!;
+		await controller.runTests(true, false, new vs.TestRunRequest([suiteNode]), startDebugging.tokenSource.token);
+
+		assert.equal(startDebugging.stub.callCount, 1);
+		assert.equal(disconnectedSessionIds.length, 1);
+
+		// Calling again with an already-cancelled token should not invoke startDebugging at all.
+		await controller.runTests(true, false, new vs.TestRunRequest([suiteNode]), startDebugging.tokenSource.token);
+		assert.equal(startDebugging.stub.callCount, 1);
+	});
+
+	function stubDebugSessionsWithCancellation(
+		onSessionStarted: (session: vs.DebugSession, tokenSource: vs.CancellationTokenSource) => void,
+		options?: { cancelBeforeSessionStartEvent?: boolean },
+	) {
+		const tokenSource = new vs.CancellationTokenSource();
+		const didStartEmitter = new vs.EventEmitter<vs.DebugSession>();
+		const didTerminateEmitter = new vs.EventEmitter<vs.DebugSession>();
+		defer("Dispose cancellation test resources", () => {
+			tokenSource.dispose();
+			didStartEmitter.dispose();
+			didTerminateEmitter.dispose();
+		});
+
+		sb.stub(vs.debug, "onDidStartDebugSession").callsFake(didStartEmitter.event);
+		sb.stub(vs.debug, "onDidTerminateDebugSession").callsFake(didTerminateEmitter.event);
+
+		const disconnectedSessionIds: string[] = [];
+		const stub = sb.stub(vs.debug, "startDebugging").callsFake(async (_folder, launchConfig) => {
+			const config = launchConfig as vs.DebugConfiguration;
+			const session = {
+				configuration: config,
+				customRequest: async (command: string) => {
+					if (command === "disconnect") {
+						disconnectedSessionIds.push(config.dartCodeDebugSessionID as string);
+						didTerminateEmitter.fire(session);
+					}
+				},
+			} as unknown as vs.DebugSession;
+
+			if (options?.cancelBeforeSessionStartEvent) {
+				onSessionStarted(session, tokenSource);
+				didStartEmitter.fire(session);
+			} else {
+				didStartEmitter.fire(session);
+				onSessionStarted(session, tokenSource);
+			}
+
+			return true;
+		});
+
+		return { startDebugging: { stub, tokenSource }, disconnectedSessionIds };
+	}
 
 	function preventTestSpawning() {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
