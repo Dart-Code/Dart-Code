@@ -3790,6 +3790,6 @@
 	"overrides": {
 		"brace-expansion": "^5.0.7",
 		"diff": "^4.0.4",
-		"serialize-javascript": "^7.0.7"
+		"serialize-javascript": "^7.1.4"
 	}
 }
