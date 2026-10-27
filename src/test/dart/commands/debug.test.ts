@@ -6,7 +6,7 @@ import { debugLaunchProgressId, debugTerminatingProgressId, doNotAskAgainAction,
 import { DebugOption, DebuggerType, debugOptionNames } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { startFakeDebugSession } from "../../debug_helpers";
-import { activate, currentDoc, defer, delay, getLaunchConfiguration, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldMainFile, helloWorldTestMainFile, myPackageThingFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
+import { activate, currentDoc, defer, getLaunchConfiguration, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldMainFile, helloWorldTestMainFile, myPackageThingFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("debug commands", () => {
 	before("activate", () => activate());
@@ -204,8 +204,10 @@ describe("debug commands", () => {
 		const session = startFakeDebugSession({ debuggerType: DebuggerType.Dart, id: "opt-session", name: "Opt Session" });
 		const customRequest = sb.spy(session, "customRequest");
 		const origDebugOption = privateApi.debugCommands.currentDebugOption;
+		const origDebugOptionsText = privateApi.debugCommands.debugOptions.text;
 		defer("Restore currentDebugOption", () => {
 			privateApi.debugCommands.currentDebugOption = origDebugOption;
+			privateApi.debugCommands.debugOptions.text = origDebugOptionsText;
 		});
 
 		await setConfigForTest("dart", "debugExternalPackageLibraries", false);
@@ -250,7 +252,7 @@ describe("debug commands", () => {
 		const spyWith = sb.stub(sessionWithLogs, "customRequest").resolves();
 
 		privateApi.debugCommands.setSendLogsToClient(true);
-		await delay(10);
+		await waitForResult(() => spyWithout.calledOnce);
 
 		assert.ok(spyWithout.calledOnceWithExactly("updateSendLogsToClient", { enabled: true }));
 		assert.ok(spyWith.notCalled);
@@ -259,7 +261,7 @@ describe("debug commands", () => {
 		spyWithout.resetHistory();
 		spyWithout.rejects(new Error("Unsupported"));
 		privateApi.debugCommands.setSendLogsToClient(false);
-		await delay(10);
+		await waitForResult(() => spyWithout.calledOnce);
 		assert.ok(spyWithout.calledOnceWithExactly("updateSendLogsToClient", { enabled: false }));
 	});
 
@@ -275,7 +277,7 @@ describe("debug commands", () => {
 				event: "dart.webLaunchUrl",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => openInBrowser.calledOnce);
 			assert.ok(openInBrowser.calledOnceWithExactly("http://localhost:8080", sinon.match.any));
 
 			// Already launched -> ignored.
@@ -285,7 +287,7 @@ describe("debug commands", () => {
 				event: "dart.webLaunchUrl",
 				session,
 			});
-			await delay(10);
+			await Promise.resolve();
 			assert.ok(openInBrowser.notCalled);
 
 			// Suppressed -> ignored.
@@ -295,7 +297,7 @@ describe("debug commands", () => {
 				event: "dart.webLaunchUrl",
 				session,
 			});
-			await delay(10);
+			await Promise.resolve();
 			assert.ok(openInBrowser.notCalled);
 			session.configuration.suppressWebServerDeviceBrowserLaunch = false;
 
@@ -306,8 +308,7 @@ describe("debug commands", () => {
 				event: "dart.webLaunchUrl",
 				session,
 			});
-			await delay(10);
-			assert.ok(logError.calledWith("Failed to launch URL from Flutter app.webLaunchUrl event: http://localhost:8080/fail"));
+			await waitForResult(() => logError.calledWith("Failed to launch URL from Flutter app.webLaunchUrl event: http://localhost:8080/fail"));
 		});
 
 		it("dart.exposeUrl exposes URL and sends exposeUrlResponse, falling back on error", async () => {
@@ -321,7 +322,7 @@ describe("debug commands", () => {
 				event: "dart.exposeUrl",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => customRequest.calledOnce);
 			assert.ok(exposeUrl.calledOnceWithExactly("http://localhost:8080/", sinon.match.any));
 			assert.ok(customRequest.calledOnceWithExactly("exposeUrlResponse", {
 				exposedUrl: "https://exposed.example.com/",
@@ -337,7 +338,7 @@ describe("debug commands", () => {
 				event: "dart.exposeUrl",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => customRequest.calledOnce);
 			assert.ok(logError.calledWithMatch("Failed to expose URL http://localhost:8081/: Error: Expose error"));
 			assert.ok(customRequest.calledOnceWithExactly("exposeUrlResponse", {
 				exposedUrl: "http://localhost:8081/",
@@ -358,7 +359,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => openInBrowser.calledOnce);
 			assert.ok(openInBrowser.calledOnceWithExactly("http://localhost:9090", sinon.match.any));
 
 			// Rejects -> logs error.
@@ -371,8 +372,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await delay(10);
-			assert.ok(logError.calledWith("Failed to launch URL from Flutter app.webLaunchUrl event: http://localhost:9090/fail"));
+			await waitForResult(() => logError.calledWith("Failed to launch URL from Flutter app.webLaunchUrl event: http://localhost:9090/fail"));
 		});
 
 		it("flutter.forwardedEvent (app.warning) handles missing fields, do-not-show, More Info, and Do Not Show Again", async () => {
@@ -395,8 +395,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await delay(10);
-			assert.ok(logWarn.calledWithMatch("Received app.warning event with missing 'warningId' or 'warning' fields"));
+			await waitForResult(() => logWarn.calledWithMatch("Received app.warning event with missing 'warningId' or 'warning' fields"));
 			assert.ok(showWarningMessage.notCalled);
 
 			// Prompt with URL and select "More Info".
@@ -409,7 +408,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => openInBrowser.calledOnce);
 			assert.ok(showWarningMessage.calledOnceWithExactly("Something is wrong", moreInfoAction, doNotShowAgainAction));
 			assert.ok(openInBrowser.calledOnceWithExactly("https://flutter.dev/warn", sinon.match.any));
 
@@ -424,8 +423,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await delay(10);
-			assert.ok(logError.calledWithMatch("Failed to launch URL from Flutter app.warning event: https://flutter.dev/warn"));
+			await waitForResult(() => logError.calledWithMatch("Failed to launch URL from Flutter app.warning event: https://flutter.dev/warn"));
 
 			// Prompt without URL and select "Do Not Show Again".
 			showWarningMessage.resetHistory();
@@ -438,9 +436,8 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => privateApi.context.getAppWarningDoNotShow(warningId) === true);
 			assert.ok(showWarningMessage.calledOnceWithExactly("No URL warning", doNotShowAgainAction));
-			assert.equal(privateApi.context.getAppWarningDoNotShow(warningId), true);
 
 			// Subsequent warning with same warningId is skipped.
 			showWarningMessage.resetHistory();
@@ -452,7 +449,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await delay(10);
+			await Promise.resolve();
 			assert.ok(showWarningMessage.notCalled);
 		});
 
@@ -471,7 +468,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedRequest",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => customRequest.calledOnce);
 			assert.ok(exposeUrl.calledOnceWithExactly("http://localhost:8080/", sinon.match.any));
 			assert.ok(customRequest.calledOnceWithExactly("flutter.sendForwardedRequestResponse", {
 				error: undefined,
@@ -492,7 +489,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedRequest",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => customRequest.calledOnce);
 			assert.ok(logError.calledWithMatch("Failed to expose URL http://localhost:8082/: Error: Expose failed"));
 			assert.ok(customRequest.calledOnceWithExactly("flutter.sendForwardedRequestResponse", {
 				error: undefined,
@@ -592,8 +589,7 @@ describe("debug commands", () => {
 				event: "dart.progressEnd",
 				session,
 			});
-			await delay(420);
-			assert.equal(restartProgress1.isComplete, true);
+			await waitForResult(() => restartProgress1.isComplete);
 		});
 
 		it("dart.flutter.widgetErrorInspectData and dart.flutter.devToolsDeepLink handle suppression, Inspect Widget, and Do Not Ask Again", async () => {
@@ -627,7 +623,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.devToolsDeepLink",
 				session,
 			});
-			await delay(10);
+			await Promise.resolve();
 			assert.ok(showWarningMessage.notCalled);
 			privateApi.debugCommands.suppressFlutterWidgetErrors = false;
 
@@ -641,7 +637,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.widgetErrorInspectData",
 				session,
 			});
-			await delay(10);
+			await Promise.resolve();
 			assert.ok(showWarningMessage.notCalled);
 
 			// Legacy dart.flutter.widgetErrorInspectData: Inspect Widget.
@@ -655,7 +651,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.widgetErrorInspectData",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => spawnDevTools.calledOnce && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(showWarningMessage.calledOnceWithExactly("Legacy overflow error", "Inspect Widget", doNotAskAgainAction));
 			assert.ok(spawnDevTools.calledOnceWithExactly(
 				dartSession as any,
@@ -675,7 +671,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.widgetErrorInspectData",
 				session,
 			});
-			await delay(20);
+			await waitForResult(() => vs.workspace.getConfiguration("dart").get("showInspectorNotificationsForWidgetErrors") === false && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(showWarningMessage.calledOnce);
 
 			await setConfigForTest("dart", "showInspectorNotificationsForWidgetErrors", true);
@@ -692,7 +688,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.devToolsDeepLink",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => spawnDevTools.calledOnce && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(showWarningMessage.calledOnceWithExactly("A RenderFlex overflowed", "Inspect Widget", doNotAskAgainAction));
 			assert.ok(spawnDevTools.calledOnceWithExactly(
 				dartSession as any,
@@ -711,7 +707,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.devToolsDeepLink",
 				session,
 			});
-			await delay(10);
+			await waitForResult(() => showWarningMessage.calledOnce && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(spawnDevTools.notCalled);
 
 			showWarningMessage.resetHistory();
@@ -724,8 +720,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.devToolsDeepLink",
 				session,
 			});
-			await delay(10);
-			assert.ok(logError.calledWith("Failed to parse DevTools deep link URL: ://invalid-url"));
+			await waitForResult(() => logError.calledWith("Failed to parse DevTools deep link URL: ://invalid-url") && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(spawnDevTools.notCalled);
 
 			// New dart.flutter.devToolsDeepLink: Do Not Ask Again.
@@ -739,7 +734,7 @@ describe("debug commands", () => {
 				event: "dart.flutter.devToolsDeepLink",
 				session,
 			});
-			await delay(20);
+			await waitForResult(() => vs.workspace.getConfiguration("dart").get("showInspectorNotificationsForWidgetErrors") === false && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(showWarningMessage.calledOnce);
 		});
 	});
