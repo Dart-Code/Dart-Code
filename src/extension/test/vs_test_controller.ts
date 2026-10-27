@@ -215,10 +215,12 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 							currentItem++;
 							const suiteName = path.basename(suite.path);
-							progress.report({ message: `${suiteName}... (${currentItem}/${totalItems})`, increment: 100 / totalItems });
+							const message = `${suiteName}... (${currentItem}/${totalItems})`;
+							progress.report({ message });
 
 							const suppressPrompts = true;
 							await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, includeCoverage, run, combinedToken);
+							progress.report({ increment: 100 / totalItems, message });
 						}
 					} finally {
 						disposeAll(tokenSubs);
