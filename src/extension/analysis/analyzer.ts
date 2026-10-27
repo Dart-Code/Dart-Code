@@ -496,7 +496,7 @@ export class LspAnalyzer extends Analyzer {
 			asCommand(item: ls.Command): vs.Command;
 			asUri(uri: string): vs.Uri;
 			asRange(range: ls.Range): vs.Range;
-			asTextEditsSync(items: ls.TextEdit[]): vs.TextEdit[];
+			asTextEdit(item: ls.TextEdit): vs.TextEdit;
 			asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined>;
 		};
 		// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
@@ -586,7 +586,7 @@ export class LspAnalyzer extends Analyzer {
 				}
 			} else if (item.changes) {
 				for (const [uri, edits] of Object.entries(item.changes))
-					result.set(p2c.asUri(uri), p2c.asTextEditsSync(edits));
+					result.set(p2c.asUri(uri), edits.map((e) => p2c.asTextEdit(e)));
 			}
 			return result;
 		}
