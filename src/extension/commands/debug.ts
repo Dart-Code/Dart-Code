@@ -58,7 +58,7 @@ export class LastTestDebugSession {
 
 export class DebugCommands implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
-	private debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
+	public readonly debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
 	public currentDebugOption = DebugOption.MyCode;
 	private debugMetrics = vs.window.createStatusBarItem("dartStatusDebugMetrics", vs.StatusBarAlignment.Right, 0);
 	private readonly debugSessionsStatusItem = getLanguageStatusItem("dart.debugSessions", ANALYSIS_FILTERS);
@@ -69,7 +69,7 @@ export class DebugCommands implements IAmDisposable {
 	private onDebugSessionVmServiceAvailableEmitter = new vs.EventEmitter<DartDebugSessionInformation>();
 	public readonly onDebugSessionVmServiceAvailable = this.onDebugSessionVmServiceAvailableEmitter.event;
 	public readonly vmServices: VmServiceExtensions;
-	private suppressFlutterWidgetErrors = false;
+	public suppressFlutterWidgetErrors = false;
 
 	public isInspectingWidget = false;
 	private autoCancelNextInspectWidgetMode = false;
