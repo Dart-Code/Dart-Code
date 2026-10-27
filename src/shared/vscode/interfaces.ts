@@ -1,4 +1,4 @@
-import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, TestController, TestItem, TestRun, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, StatusBarItem, TestController, TestItem, TestRun, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
@@ -82,9 +82,12 @@ export class ProgressMessage {
 export interface DebugCommandHandler {
 	applyNewDebugOption(): void;
 	currentDebugOption: DebugOption;
+	debugOptions: StatusBarItem;
 	getDebugSession(): Promise<{ session: DebugSession } | undefined>;
 	handleBreakpointChange(e: BreakpointsChangeEvent): void;
 	hasPromptedAboutDebugSettings: boolean;
+	setSendLogsToClient(enabled: boolean): void;
+	suppressFlutterWidgetErrors: boolean;
 	vmServices: {
 		serviceIsRegistered(service: VmService): boolean;
 		serviceExtensionIsLoaded(extension: VmServiceExtension): boolean;
@@ -130,6 +133,7 @@ export interface InternalExtensionApi {
 		start(): Promise<string | undefined>;
 		devtoolsUrl: Thenable<string> | undefined;
 		promptForExtensionRecommendations(): Promise<void>;
+		spawn(session: (DartDebugSessionInformation & { vmServiceUri: string }) | undefined, options: Record<string, unknown>, forceShow: boolean): Promise<{ url: string; dispose: () => void } | undefined>;
 	};
 	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
@@ -137,6 +141,7 @@ export interface InternalExtensionApi {
 	deviceManager: FlutterDeviceManager | undefined;
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;
+		exposeUrl(urlString: string, logger?: unknown): Promise<string>;
 	};
 	fileTracker: {
 		getOutlineFor(uri: Uri): lsp.Outline | undefined;
