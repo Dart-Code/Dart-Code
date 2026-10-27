@@ -633,11 +633,11 @@ export class SdkUtils {
 		);
 	}
 
-	private findDartSdk(folders: string[]): SdkSearchResults {
+	public findDartSdk(folders: string[]): SdkSearchResults {
 		return this.searchPaths(folders, executableNames.dart, (p) => this.containsFile(p, dartVMPath) && (this.containsFile(p, analyzerSnapshotPath) || this.containsFile(p, dartAotRuntimePath)));
 	}
 
-	private findFlutterSdk(folders: string[]): SdkSearchResults {
+	public findFlutterSdk(folders: string[]): SdkSearchResults {
 		return this.searchPaths(
 			folders,
 			executableNames.flutter,

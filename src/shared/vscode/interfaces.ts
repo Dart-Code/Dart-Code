@@ -6,7 +6,8 @@ import { FlutterCapabilities } from "../capabilities/flutter";
 import { DartVsCodeLaunchArgs } from "../debugging/interfaces";
 import { DebuggerType, DebugOption, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
-import { CustomScript, DartWorkspaceContext, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, SpawnedProcess } from "../interfaces";
+import { SdkTypeString } from "../constants";
+import { CustomScript, DartWorkspaceContext, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, SdkSearchResults, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { RunProcessResult } from "../processes";
 import { PubDeps } from "../pub/deps";
@@ -22,6 +23,7 @@ import { PickableSetting } from "./input";
 import { InteractiveRefactors } from "./interactive_refactors";
 import { ProjectFinder } from "./utils";
 import { Context } from "./workspace";
+import { WorkspaceContext } from "../workspace";
 
 export class DartDebugSessionInformation {
 	public readonly configuration: DebugConfiguration & DartVsCodeLaunchArgs;
@@ -180,7 +182,22 @@ export interface InternalExtensionApi {
 	// Only available in test runs.
 	mcpServerProvider?: McpServerDefinitionProvider;
 	sdkUtils?: {
-		runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult>
+		findDartSdk(folders: string[]): SdkSearchResults;
+		findFlutterSdk(folders: string[]): SdkSearchResults;
+		handleMissingSdks(workspaceContext: WorkspaceContext): void;
+		runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult>;
+		scanWorkspace(): Promise<WorkspaceContext>;
+		searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): SdkSearchResults;
+		showDartActivationFailure(commandToReRun?: string): void;
+		showFlutterActivationFailure(commandToReRun?: string): void;
+		showFluttersDartSdkActivationFailure(): void;
+		showSdkActivationFailure(
+			sdkType: SdkTypeString,
+			search: (path: string[]) => SdkSearchResults,
+			downloadUrl: string,
+			saveSdkPath: (path: string) => Thenable<void>,
+			commandToReRun?: string,
+		): Promise<void>;
 	},
 }
 
