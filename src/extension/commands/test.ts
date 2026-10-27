@@ -115,7 +115,7 @@ export class TestCommands implements IAmDisposable {
 			return;
 		}
 
-		const runProjectTests = (projectWithTests: { projectFolder: string, name: string, relativeTestPaths: string[] }) => this.runTests({
+		const runProjectTests = (projectWithTests: { projectFolder: string, name: string, relativeTestPaths: string[] }, sessionToken: vs.CancellationToken | undefined = token) => this.runTests({
 			debug: false,
 			includeCoverage,
 			isFlutter: undefined, // unknown, runTests will compute
@@ -129,21 +129,77 @@ export class TestCommands implements IAmDisposable {
 			suppressPrompts: suites?.length !== 1,
 			testRun,
 			testSelection: undefined,
-			token,
+			token: sessionToken,
 			useLaunchJsonTestTemplate: true,
 		});
+
+		const totalItems = projectsWithTests.length;
+		if (totalItems === 1) {
+			await runProjectTests(projectsWithTests[0]);
+			return;
+		}
 
 		const nonIntegrationTestProjects = projectsWithTests.filter((p) => !p.integrationTests);
 		const integrationTestProjects = projectsWithTests.filter((p) => p.integrationTests);
 
-		// Non-integration tests can run concurrently across projects, but integration tests must
-		// be serialized so they don't fight over the same target device.
-		await Promise.all(nonIntegrationTestProjects.map((projectWithTests) => runProjectTests(projectWithTests)));
-		for (const projectWithTests of integrationTestProjects) {
-			if (token?.isCancellationRequested)
-				break;
-			await runProjectTests(projectWithTests);
-		}
+		await vs.window.withProgress({
+			cancellable: true,
+			location: vs.ProgressLocation.Notification,
+			title: "Running",
+		}, async (progress, progressToken) => {
+			const combinedTokenSource = new vs.CancellationTokenSource();
+			const tokenSubs: IAmDisposable[] = [];
+			if (token?.isCancellationRequested || progressToken?.isCancellationRequested)
+				combinedTokenSource.cancel();
+			if (token)
+				tokenSubs.push(token.onCancellationRequested(() => combinedTokenSource.cancel()));
+			if (progressToken)
+				tokenSubs.push(progressToken.onCancellationRequested(() => combinedTokenSource.cancel()));
+
+			try {
+				const combinedToken = combinedTokenSource.token;
+				const activeProjects = new Set<{ projectFolder: string, name: string, relativeTestPaths: string[] }>();
+				let completedItems = 0;
+
+				const updateProgress = (increment?: boolean, fallbackName?: string) => {
+					const activeNames = [...activeProjects].map((p) => p.name);
+					const firstActive = activeNames[0] ?? fallbackName;
+					if (!firstActive)
+						return;
+
+					const otherActiveCount = Math.max(0, activeNames.length - 1);
+					const statusText = otherActiveCount > 0
+						? `${firstActive} (+ ${otherActiveCount} others)`
+						: firstActive;
+					const currentItem = activeNames.length > 0 ? completedItems + 1 : completedItems;
+					progress.report({
+						increment: increment ? 100 / totalItems : undefined,
+						message: `${statusText}... (${currentItem}/${totalItems})`,
+					});
+				};
+
+				const runWithProgress = async (projectWithTests: { projectFolder: string, name: string, relativeTestPaths: string[] }) => {
+					if (combinedToken.isCancellationRequested)
+						return;
+
+					activeProjects.add(projectWithTests);
+					updateProgress();
+					await runProjectTests(projectWithTests, combinedToken);
+					activeProjects.delete(projectWithTests);
+					completedItems++;
+					updateProgress(true, projectWithTests.name);
+				};
+
+				// Non-integration tests can run concurrently across projects, but integration tests must
+				// be serialized so they don't fight over the same target device.
+				await Promise.all(nonIntegrationTestProjects.map((projectWithTests) => runWithProgress(projectWithTests)));
+				for (const projectWithTests of integrationTestProjects)
+					await runWithProgress(projectWithTests);
+			} finally {
+				disposeAll(tokenSubs);
+				combinedTokenSource.dispose();
+			}
+		});
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, nodes: TreeNode[], debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, includeCoverage: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {

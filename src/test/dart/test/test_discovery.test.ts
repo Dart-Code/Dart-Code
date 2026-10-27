@@ -289,6 +289,153 @@ void main() => test("test inside ${newFilename}", () {});
 		assert.equal(maxConcurrentSessions, 1);
 	});
 
+	it("shows a cancellable progress notification when running multiple test sessions", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6246
+		const mainIntegrationFolder = path.join(fsPath(helloWorldFolder), "integration_test");
+		const mainIntegrationTestFile = path.join(mainIntegrationFolder, "app_test.dart");
+		defer("Cleanup main integration_test", () => tryDelete(mainIntegrationFolder));
+
+		const exampleIntegrationFolder = path.join(fsPath(helloWorldExampleSubFolder), "integration_test");
+		const exampleIntegrationTestFile = path.join(exampleIntegrationFolder, "app_test.dart");
+		defer("Cleanup example integration_test", () => tryDelete(exampleIntegrationFolder));
+
+		fs.mkdirSync(mainIntegrationFolder, { recursive: true });
+		fs.writeFileSync(mainIntegrationTestFile, "");
+		fs.mkdirSync(exampleIntegrationFolder, { recursive: true });
+		fs.writeFileSync(exampleIntegrationTestFile, "");
+
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const progressCts = new vs.CancellationTokenSource();
+		defer("Dispose progress cancellation token source", () => progressCts.dispose());
+		const report = sb.stub();
+		const withProgress = sb.stub(vs.window, "withProgress").callsFake(async (_options, task) => {
+			await task({ report }, progressCts.token);
+		});
+
+		const { startDebugging, disconnectedSessionIds } = stubDebugSessionsWithCancellation(() => {
+			// Cancel the progress notification while the first session is running.
+			progressCts.cancel();
+		});
+
+		const mainSuiteNode = findSuiteNode(mainIntegrationTestFile);
+		const exampleSuiteNode = findSuiteNode(exampleIntegrationTestFile);
+		const controller = privateApi.testController!;
+		await controller.runTests(false, false, new vs.TestRunRequest([mainSuiteNode, exampleSuiteNode]), fakeCancellationToken);
+
+		assert.equal(withProgress.callCount, 1);
+		assert.deepStrictEqual(withProgress.firstCall.args[0], {
+			cancellable: true,
+			location: vs.ProgressLocation.Notification,
+			title: "Running",
+		});
+		assert.equal(report.callCount, 2);
+		assert.ok(report.firstCall.calledWithExactly({ increment: undefined, message: "example Integration Tests... (1/2)" }));
+		assert.ok(report.secondCall.calledWithExactly({ increment: 50, message: "example Integration Tests... (1/2)" }));
+		assert.equal(disconnectedSessionIds.length, 1);
+		assert.equal(startDebugging.stub.callCount, 1);
+	});
+
+	it("updates progress message and count accurately when concurrent sessions finish out of order", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6246
+		const mainIntegrationFolder = path.join(fsPath(helloWorldFolder), "integration_test");
+		const mainIntegrationTestFile = path.join(mainIntegrationFolder, "app_test.dart");
+		defer("Cleanup main integration_test", () => tryDelete(mainIntegrationFolder));
+
+		// Second sub-project also named `example` to verify duplicate project folder basenames don't collide.
+		const nestedParentFolder = path.join(fsPath(helloWorldFolder), "nested_pkg");
+		const nestedExampleFolder = path.join(nestedParentFolder, "example");
+		const nestedExamplePubspecFile = path.join(nestedExampleFolder, "pubspec.yaml");
+		const nestedExampleTestFolder = path.join(nestedExampleFolder, "test");
+		const nestedExampleTestFile = path.join(nestedExampleTestFolder, "app_test.dart");
+		defer("Cleanup nested_pkg", () => tryDelete(nestedParentFolder));
+		privateApi.clearCaches();
+		defer("Clear project folder cache", () => privateApi.clearCaches());
+
+		fs.mkdirSync(mainIntegrationFolder, { recursive: true });
+		fs.writeFileSync(mainIntegrationTestFile, "");
+		fs.mkdirSync(nestedExampleTestFolder, { recursive: true });
+		fs.writeFileSync(nestedExamplePubspecFile, "name: nested_example\n");
+		fs.writeFileSync(nestedExampleTestFile, "");
+
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const progressCts = new vs.CancellationTokenSource();
+		defer("Dispose progress cancellation token source", () => progressCts.dispose());
+		const report = sb.stub();
+		sb.stub(vs.window, "withProgress").callsFake(async (_options, task) => {
+			await task({ report }, progressCts.token);
+		});
+
+		const didTerminateEmitter = new vs.EventEmitter<vs.DebugSession>();
+		defer("Dispose terminate emitter", () => didTerminateEmitter.dispose());
+		sb.stub(vs.debug, "onDidTerminateDebugSession").callsFake(didTerminateEmitter.event);
+
+		let finishSecondBeforeFirst = true;
+		let sessions: vs.DebugSession[] = [];
+		sb.stub(vs.debug, "startDebugging").callsFake(async (_folder, launchConfig) => {
+			const session = { configuration: launchConfig as vs.DebugConfiguration } as unknown as vs.DebugSession;
+			sessions.push(session);
+			if (sessions.length === 2) {
+				setTimeout(() => {
+					if (finishSecondBeforeFirst) {
+						// Finish the second-started session (`hello_world Tests`) first, then the first-started (`example Tests`).
+						didTerminateEmitter.fire(sessions[1]);
+						didTerminateEmitter.fire(sessions[0]);
+					} else {
+						// Finish the first-started session (`example Tests`) first, then the second-started (`hello_world Tests`).
+						didTerminateEmitter.fire(sessions[0]);
+						didTerminateEmitter.fire(sessions[1]);
+					}
+				}, 0);
+			} else if (sessions.length === 3) {
+				// Sequential integration test session started after both non-integration sessions finished.
+				setTimeout(() => didTerminateEmitter.fire(sessions[2]), 0);
+			}
+			return true;
+		});
+
+		const suiteNode1 = findSuiteNode(fsPath(helloWorldTestMainFile));
+		const suiteNode2 = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
+		const integrationSuiteNode = findSuiteNode(mainIntegrationTestFile);
+		const controller = privateApi.testController!;
+
+		// Case 1: 2nd-started concurrent session finishes before 1st-started, followed by an integration test session.
+		await controller.runTests(false, false, new vs.TestRunRequest([suiteNode1, suiteNode2, integrationSuiteNode]), fakeCancellationToken);
+
+		assert.equal(report.callCount, 6);
+		assert.ok(report.getCall(0).calledWithExactly({ increment: undefined, message: "example Tests... (1/3)" }));
+		assert.ok(report.getCall(1).calledWithExactly({ increment: undefined, message: "example Tests (+ 1 others)... (1/3)" }));
+		assert.ok(report.getCall(2).calledWithExactly({ increment: 100 / 3, message: "example Tests... (2/3)" }));
+		assert.ok(report.getCall(3).calledWithExactly({ increment: 100 / 3, message: "example Tests... (2/3)" }));
+		assert.ok(report.getCall(4).calledWithExactly({ increment: undefined, message: "hello_world Integration Tests... (3/3)" }));
+		assert.ok(report.getCall(5).calledWithExactly({ increment: 100 / 3, message: "hello_world Integration Tests... (3/3)" }));
+
+		// Case 2: 1st-started concurrent session finishes before 2nd-started.
+		report.resetHistory();
+		sessions = [];
+		finishSecondBeforeFirst = false;
+		await controller.runTests(false, false, new vs.TestRunRequest([suiteNode1, suiteNode2]), fakeCancellationToken);
+
+		assert.equal(report.callCount, 4);
+		assert.ok(report.getCall(0).calledWithExactly({ increment: undefined, message: "example Tests... (1/2)" }));
+		assert.ok(report.getCall(1).calledWithExactly({ increment: undefined, message: "example Tests (+ 1 others)... (1/2)" }));
+		assert.ok(report.getCall(2).calledWithExactly({ increment: 50, message: "hello_world Tests... (2/2)" }));
+		assert.ok(report.getCall(3).calledWithExactly({ increment: 50, message: "hello_world Tests... (2/2)" }));
+
+		// Case 3: Two projects with the same folder basename (`example`) do not collide in `activeProjects`.
+		const nestedExampleSuiteNode = findSuiteNode(nestedExampleTestFile);
+		report.resetHistory();
+		sessions = [];
+		await controller.runTests(false, false, new vs.TestRunRequest([suiteNode2, nestedExampleSuiteNode]), fakeCancellationToken);
+
+		assert.equal(report.callCount, 4);
+		assert.ok(report.getCall(0).calledWithExactly({ increment: undefined, message: "example Tests... (1/2)" }));
+		assert.ok(report.getCall(1).calledWithExactly({ increment: undefined, message: "example Tests (+ 1 others)... (1/2)" }));
+		assert.ok(report.getCall(2).calledWithExactly({ increment: 50, message: "example Tests... (2/2)" }));
+		assert.ok(report.getCall(3).calledWithExactly({ increment: 50, message: "example Tests... (2/2)" }));
+	});
+
 	it("cancels active session and skips remaining integration test projects when token is cancelled in runAllTestsWithoutDebugging", async () => {
 		// https://github.com/Dart-Code/Dart-Code/issues/6247
 		const mainIntegrationFolder = path.join(fsPath(helloWorldFolder), "integration_test");
@@ -340,6 +487,13 @@ void main() => test("test inside ${newFilename}", () {});
 		// https://github.com/Dart-Code/Dart-Code/issues/6247
 		await privateApi.testDiscoverer.ensureSuitesDiscovered();
 
+		const progressCts = new vs.CancellationTokenSource();
+		defer("Dispose progress cancellation token source", () => progressCts.dispose());
+		const report = sb.stub();
+		sb.stub(vs.window, "withProgress").callsFake(async (_options, task) => {
+			await task({ report }, progressCts.token);
+		});
+
 		const { startDebugging, disconnectedSessionIds } = stubDebugSessionsWithCancellation((_session, tokenSource) => {
 			tokenSource.cancel();
 		});
@@ -352,6 +506,9 @@ void main() => test("test inside ${newFilename}", () {});
 
 		assert.equal(startDebugging.stub.callCount, 1);
 		assert.equal(disconnectedSessionIds.length, 1);
+		assert.equal(report.callCount, 2);
+		assert.ok(report.firstCall.calledWithExactly({ message: "basic_test.dart... (1/2)" }));
+		assert.ok(report.secondCall.calledWithExactly({ increment: 50, message: "basic_test.dart... (1/2)" }));
 	});
 
 	it("disconnects session if token is cancelled before onDidStartDebugSession fires and does not start if already cancelled", async () => {
