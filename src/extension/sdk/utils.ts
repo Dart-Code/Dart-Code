@@ -61,7 +61,7 @@ export class SdkUtils {
 		return;
 	}
 
-	private hasShownActivationFailure = false;
+	public hasShownActivationFailure = false;
 	private showRelevantActivationFailureMessage(workspaceContext: WorkspaceContext, isFlutter: boolean, commandToReRun?: string) {
 		if (isFlutter && workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
 			this.showFluttersDartSdkActivationFailure();
