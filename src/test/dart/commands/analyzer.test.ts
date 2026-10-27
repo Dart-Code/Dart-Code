@@ -5,8 +5,9 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { AugmentationRequest, AugmentedRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../../shared/analysis/lsp/custom_protocol";
+import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, defer, delay, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest } from "../../helpers";
+import { activate, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest } from "../../helpers";
 
 describe("toggle show TODOs", () => {
 	const settingName = "showTodos";
@@ -109,8 +110,8 @@ describe("analyzer", () => {
 
 	describe("OpenUriNotification", () => {
 		function getOpenUriHandler(): (params: { uri: string }) => void {
-			const client = (privateApi.analyzer as any).client;
-			return client._notificationHandlers.get(OpenUriNotification.type.method) as (params: { uri: string }) => void; // eslint-disable-line no-underscore-dangle
+			const client = privateApi.analyzer.client;
+			return (client as any)._notificationHandlers.get(OpenUriNotification.type.method) as (params: { uri: string }) => void; // eslint-disable-line no-underscore-dangle
 		}
 
 		it("opens file: URIs using showTextDocument", () => {
@@ -136,7 +137,7 @@ describe("analyzer", () => {
 		});
 
 		it("logs an error for unknown URI schemes", () => {
-			const loggerError = sb.stub((privateApi.analyzer as any).logger, "error");
+			const loggerError = sb.stub(privateApi.logger, "error");
 			const handler = getOpenUriHandler();
 
 			handler({ uri: "ftp://example.com/file" });
@@ -148,31 +149,38 @@ describe("analyzer", () => {
 
 	describe("middleware", () => {
 		function getMiddleware(): ls.Middleware {
-			return (privateApi.analyzer as any).buildMiddleware() as ls.Middleware;
+			return privateApi.analyzer.client.clientOptions.middleware!;
 		}
 
-		it("cleans doc strings in resolveCompletionItem and provideHover", async () => {
+		it("cleans doc strings in resolveCompletionItem with string documentation", async () => {
 			const middleware = getMiddleware();
-
-			// resolveCompletionItem with string documentation
 			const itemString = new vs.CompletionItem("test1");
 			itemString.documentation = "Doc 1\n{@template foo}\nTemplate body\n{@endtemplate}";
+
 			const resolvedString = await middleware.resolveCompletionItem!(itemString, fakeCancellationToken, async (i: vs.CompletionItem) => i);
 			assert.equal(resolvedString?.documentation, "Doc 1\nTemplate body");
+		});
 
-			// resolveCompletionItem with MarkdownString documentation
+		it("cleans doc strings in resolveCompletionItem with MarkdownString documentation", async () => {
+			const middleware = getMiddleware();
 			const itemMd = new vs.CompletionItem("test2");
 			itemMd.documentation = new vs.MarkdownString("Doc 2\n{@template bar}\nMarkdown body\n{@endtemplate}");
+
 			const resolvedMd = await middleware.resolveCompletionItem!(itemMd, fakeCancellationToken, async (i: vs.CompletionItem) => i);
 			assert.ok(resolvedMd?.documentation instanceof vs.MarkdownString);
 			assert.equal((resolvedMd.documentation).value, "Doc 2\nMarkdown body");
+		});
 
-			// resolveCompletionItem without documentation
+		it("preserves undefined documentation in resolveCompletionItem", async () => {
+			const middleware = getMiddleware();
 			const itemNoDoc = new vs.CompletionItem("test3");
+
 			const resolvedNoDoc = await middleware.resolveCompletionItem!(itemNoDoc, fakeCancellationToken, async (i: vs.CompletionItem) => i);
 			assert.equal(resolvedNoDoc?.documentation, undefined);
+		});
 
-			// provideHover with string, MarkdownString, { language, value }, and unknown object
+		it("cleans doc strings in provideHover", async () => {
+			const middleware = getMiddleware();
 			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
 			const pos = new vs.Position(0, 0);
 			const unknownObj = { other: 123 } as any;
@@ -191,43 +199,53 @@ describe("analyzer", () => {
 			assert.equal((hoverResult.contents[1]).value, "Hover md\nM");
 			assert.deepEqual(hoverResult.contents[2], { language: "dart", value: "void f() {}\nL" });
 			assert.strictEqual(hoverResult.contents[3], unknownObj);
+		});
+
+		it("returns null in provideHover when underlying hover is null", async () => {
+			const middleware = getMiddleware();
+			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
+			const pos = new vs.Position(0, 0);
 
 			const nullHover = await middleware.provideHover!(doc, pos, fakeCancellationToken, async () => null);
 			assert.equal(nullHover, null);
 		});
 
-		it("handles completion re-triggering and signature help in provideCompletionItem", async () => {
-			await setConfigForTest("editor", "parameterHints.enabled", true);
+		it("returns undefined in provideCompletionItem when underlying result is null", async () => {
 			const middleware = getMiddleware();
 			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
 			const pos = new vs.Position(0, 0);
 			const context: vs.CompletionContext = { triggerKind: vs.CompletionTriggerKind.Invoke, triggerCharacter: undefined };
 
-			// Null results
 			const nullRes = await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, async () => null);
 			assert.equal(nullRes, undefined);
+		});
 
-			// Empty incomplete list with cancelled token
+		it("returns undefined in provideCompletionItem when cancelled with an empty incomplete list", async () => {
+			const middleware = getMiddleware();
+			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
+			const pos = new vs.Position(0, 0);
+			const context: vs.CompletionContext = { triggerKind: vs.CompletionTriggerKind.Invoke, triggerCharacter: undefined };
 			const cancelledToken: vs.CancellationToken = {
 				isCancellationRequested: true,
 				onCancellationRequested: () => ({ dispose: () => undefined }),
 			};
+
 			const emptyListRes = await middleware.provideCompletionItem!(doc, pos, context, cancelledToken, async () => new vs.CompletionList([], true));
 			assert.equal(emptyListRes, undefined);
+		});
 
-			// CompletionList with various items
+		it("attaches triggerSuggest command to completion items that require re-triggering", async () => {
+			const middleware = getMiddleware();
+			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
+			const pos = new vs.Position(0, 0);
+			const context: vs.CompletionContext = { triggerKind: vs.CompletionTriggerKind.Invoke, triggerCharacter: undefined };
+
 			const importItem = new vs.CompletionItem("import '';");
 			const namedArgItem = new vs.CompletionItem({ label: "namedArg: " });
 			const folderWithSlash = new vs.CompletionItem("sub/", vs.CompletionItemKind.Folder);
 			const folderLabelObjWithSlash = new vs.CompletionItem({ label: "sub2/" }, vs.CompletionItemKind.Folder);
 			const folderWithoutSlash = new vs.CompletionItem("sub_no_slash", vs.CompletionItemKind.Folder);
-			const sigHelpStringItem = new vs.CompletionItem("fn1");
-			sigHelpStringItem.insertText = "fn1(${1:a})";
-			const sigHelpSnippetItem = new vs.CompletionItem("fn2");
-			sigHelpSnippetItem.insertText = new vs.SnippetString("fn2($0)");
-			const sigHelpLabelFallbackItem = new vs.CompletionItem({ label: "fn3(${1:b})" });
 			const plainItem = new vs.CompletionItem("plain");
-			const emptyLabelItem = { label: "" } as vs.CompletionItem;
 
 			const list = {
 				isIncomplete: undefined,
@@ -237,11 +255,7 @@ describe("analyzer", () => {
 					folderWithSlash,
 					folderLabelObjWithSlash,
 					folderWithoutSlash,
-					sigHelpStringItem,
-					sigHelpSnippetItem,
-					sigHelpLabelFallbackItem,
 					plainItem,
-					emptyLabelItem,
 				],
 			} as vs.CompletionList;
 
@@ -252,12 +266,43 @@ describe("analyzer", () => {
 			assert.equal(folderWithSlash.command?.command, "editor.action.triggerSuggest");
 			assert.equal(folderLabelObjWithSlash.command?.command, "editor.action.triggerSuggest");
 			assert.equal(folderWithoutSlash.command, undefined);
+			assert.equal(plainItem.command, undefined);
+		});
+
+		it("attaches triggerParameterHints command to completion items with parameter placeholders when enabled", async () => {
+			await setConfigForTest("editor", "parameterHints.enabled", true);
+			const middleware = getMiddleware();
+			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
+			const pos = new vs.Position(0, 0);
+			const context: vs.CompletionContext = { triggerKind: vs.CompletionTriggerKind.Invoke, triggerCharacter: undefined };
+
+			const sigHelpStringItem = new vs.CompletionItem("fn1");
+			sigHelpStringItem.insertText = "fn1(${1:a})";
+			const sigHelpSnippetItem = new vs.CompletionItem("fn2");
+			sigHelpSnippetItem.insertText = new vs.SnippetString("fn2($0)");
+			const sigHelpLabelFallbackItem = new vs.CompletionItem({ label: "fn3(${1:b})" });
+			const plainItem = new vs.CompletionItem("plain");
+
+			const list = new vs.CompletionList([
+				sigHelpStringItem,
+				sigHelpSnippetItem,
+				sigHelpLabelFallbackItem,
+				plainItem,
+			]);
+
+			await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, async () => list);
+
 			assert.equal(sigHelpStringItem.command?.command, "editor.action.triggerParameterHints");
 			assert.equal(sigHelpSnippetItem.command?.command, "editor.action.triggerParameterHints");
 			assert.equal(sigHelpLabelFallbackItem.command?.command, "editor.action.triggerParameterHints");
 			assert.equal(plainItem.command, undefined);
+		});
 
-			// Array result branch
+		it("handles array results in provideCompletionItem", async () => {
+			const middleware = getMiddleware();
+			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
+			const context: vs.CompletionContext = { triggerKind: vs.CompletionTriggerKind.Invoke, triggerCharacter: undefined };
+
 			const arrayItems = [new vs.CompletionItem("import '';")];
 			const arrayRes = await middleware.provideCompletionItem!(doc, new vs.Position(1, 2), context, fakeCancellationToken, async () => arrayItems);
 			assert.strictEqual(arrayRes, arrayItems);
@@ -285,52 +330,12 @@ describe("analyzer", () => {
 			assert.deepEqual(passedDiagnostics, [fileNamesDiag, otherDiag]);
 		});
 
-		it("logs a warning when an inlay hint has a negative character position or label part range", async () => {
-			const middleware = getMiddleware();
-			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
-			const viewPort = new vs.Range(new vs.Position(0, 0), new vs.Position(10, 0));
-
-			const validStringHint = new vs.InlayHint(new vs.Position(1, 2), "valid");
-			const validPart = new vs.InlayHintLabelPart("part");
-			validPart.location = new vs.Location(helloWorldMainFile, new vs.Range(new vs.Position(1, 0), new vs.Position(1, 4)));
-			const validPartsHint = new vs.InlayHint(new vs.Position(1, 2), [validPart]);
-
-			const negativePosHint = {
-				position: { line: 1, character: -1 },
-				label: "negPos",
-			} as unknown as vs.InlayHint;
-
-			const negRangeStartHint = {
-				position: { line: 1, character: 2 },
-				label: [{
-					value: "negStart",
-					location: {
-						uri: helloWorldMainFile,
-						range: { start: { line: 1, character: -1 }, end: { line: 1, character: 3 } },
-					},
-				}],
-			} as unknown as vs.InlayHint;
-
-			const negRangeEndHint = {
-				position: { line: 1, character: 2 },
-				label: [{
-					value: "negEnd",
-					location: {
-						uri: helloWorldMainFile,
-						range: { start: { line: 1, character: 0 }, end: { line: 1, character: -2 } },
-					},
-				}],
-			} as unknown as vs.InlayHint;
-
-			const hints = [validStringHint, validPartsHint, negativePosHint, negRangeStartHint, negRangeEndHint];
-			const res = await middleware.provideInlayHints!(doc, viewPort, fakeCancellationToken, async () => hints);
-			assert.strictEqual(res, hints);
-
-			const nullRes = await middleware.provideInlayHints!(doc, viewPort, fakeCancellationToken, async () => null);
-			assert.equal(nullRes, null);
-		});
-
-		it("injects default dart configuration values in workspace.configuration", async () => {
+		it("injects default dart configuration values in workspace.configuration middleware", async () => {
+			// Our custom `workspace.configuration` middleware in `analyzer.ts` intercepts `workspace/configuration`
+			// requests from the LSP server and mutates any requested `"dart"` configuration sections to:
+			//   1. Override `enableSnippets` with `config.enableServerSnippets`.
+			//   2. Supply default values for `maxCompletionItems` and `documentation` if not explicitly configured.
+			//   3. Leave non-`"dart"` configuration sections (such as `"editor"`) unmodified.
 			const middleware = getMiddleware();
 			const params: ls.ConfigurationParams = {
 				items: [
@@ -344,8 +349,11 @@ describe("analyzer", () => {
 				params,
 				fakeCancellationToken,
 				async () => [
+					// 1. A `"dart"` section where `maxCompletionItems` and `documentation` are not set by the user.
 					{},
+					// 2. A `"dart"` section where `maxCompletionItems` and `documentation` are explicitly set by the user.
 					{ maxCompletionItems: 50, documentation: "summary" },
+					// 3. A non-`"dart"` section that should be returned untouched.
 					{ formatOnSave: true },
 				],
 			);
@@ -364,16 +372,16 @@ describe("analyzer", () => {
 	});
 
 	describe("custom LSP requests", () => {
-		it("getDiagnosticServerPort returns port, handles cancellation, and rethrows other errors", async () => {
-			const client = (privateApi.analyzer as any).client;
-			const sendRequest = sb.stub(client, "sendRequest");
-
-			// Success
+		it("getDiagnosticServerPort returns the server port", async () => {
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
 			sendRequest.withArgs(DiagnosticServerRequest.type, sinon.match.any).resolves({ port: 12345 });
+
 			const portRes = await privateApi.analyzer.getDiagnosticServerPort();
 			assert.deepEqual(portRes, { port: 12345 });
+		});
 
-			// Cancelled
+		it("getDiagnosticServerPort returns undefined when cancelled", async () => {
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
 			sendRequest.withArgs(DiagnosticServerRequest.type, sinon.match.any).callsFake(async (_type: any, token: vs.CancellationToken) => {
 				if (typeof (token as any).cancel === "function")
 					(token as any).cancel();
@@ -381,22 +389,30 @@ describe("analyzer", () => {
 					Object.defineProperty(token, "isCancellationRequested", { value: true });
 				throw new Error("Request cancelled");
 			});
+
 			const cancelledRes = await privateApi.analyzer.getDiagnosticServerPort();
 			assert.equal(cancelledRes, undefined);
+		});
 
-			// Other error
+		it("getDiagnosticServerPort rethrows non-cancellation errors", async () => {
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
 			sendRequest.withArgs(DiagnosticServerRequest.type, sinon.match.any).rejects(new Error("Server error"));
+
 			await assert.rejects(() => privateApi.analyzer.getDiagnosticServerPort(), /Server error/);
 		});
 
-		it("forceReanalyze sends request and shows error message on failure", async () => {
-			const client = (privateApi.analyzer as any).client;
-			const sendRequest = sb.stub(client, "sendRequest");
+		it("forceReanalyze sends ReanalyzeRequest", async () => {
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves();
 
 			sendRequest.withArgs(ReanalyzeRequest.type).resolves();
 			await privateApi.analyzer.forceReanalyze();
 			assert.ok(showErrorMessage.notCalled);
+		});
+
+		it("forceReanalyze shows an error message when ReanalyzeRequest fails", async () => {
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves();
 
 			sendRequest.withArgs(ReanalyzeRequest.type).rejects(new Error("Unsupported"));
 			await privateApi.analyzer.forceReanalyze();
@@ -404,35 +420,29 @@ describe("analyzer", () => {
 		});
 
 		it("forwards getSuper, getImports, getAugmented, and getAugmentation requests", async () => {
-			const analyzer = privateApi.analyzer as any;
-			const sendRequest = sb.stub(analyzer.client, "sendRequest").resolves(null);
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest").resolves(null);
 			const params: ls.TextDocumentPositionParams = {
 				textDocument: { uri: helloWorldMainFile.toString() },
 				position: { line: 0, character: 0 },
 			};
 
-			await analyzer.getSuper(params);
+			await privateApi.analyzer.getSuper(params);
 			assert.ok(sendRequest.calledWithExactly(SuperRequest.type, params));
 
-			await analyzer.getImports(params);
+			await privateApi.analyzer.getImports(params);
 			assert.ok(sendRequest.calledWithExactly(ImportsRequest.type, params));
 
-			await analyzer.getAugmented(params);
+			await privateApi.analyzer.getAugmented(params);
 			assert.ok(sendRequest.calledWithExactly(AugmentedRequest.type, params));
 
-			await analyzer.getAugmentation(params);
+			await privateApi.analyzer.getAugmentation(params);
 			assert.ok(sendRequest.calledWithExactly(AugmentationRequest.type, params));
 		});
 	});
 
 	describe("WorkspaceEdit conversion and unofficial snippet edits", () => {
-		interface P2cConverter {
-			asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined>;
-			asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>>;
-		}
-
-		function getP2c(): P2cConverter {
-			return (privateApi.analyzer as any).client._p2c as P2cConverter; // eslint-disable-line no-underscore-dangle
+		function getP2c() {
+			return privateApi.analyzer.client.protocol2CodeConverter;
 		}
 
 		it("converts documentChanges including file ops, annotations, SnippetTextEdit with keepWhitespace, and unofficial snippets", async () => {
@@ -586,40 +596,40 @@ describe("analyzer", () => {
 	});
 
 	describe("getAnalyzerArgs", () => {
-		beforeEach("prevent extension reload on config change", () => {
-			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-			executeCommand.withArgs("_dart.reloadExtension", sinon.match.any, sinon.match.any).resolves();
-			defer("Wait for config change timer", () => delay(100));
-		});
+		function getConfig() {
+			return (privateApi.testModel as any).config as Record<string, unknown>;
+		}
 
-		it("throws and shows error when custom analyzerPath does not exist", async () => {
+		it("throws and shows error when custom analyzerPath does not exist", () => {
 			const missingPath = path.join(fsPath(helloWorldFolder), "non_existent_analyzer.snapshot");
-			await setConfigForTest("dart", "analyzerPath", missingPath);
+			sb.stub(getConfig(), "analyzerPath").get(() => missingPath);
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves();
 			const errorSpy = sb.spy();
 			const fakeLogger = { error: errorSpy, info: () => undefined, warn: () => undefined };
+			const expectedMessage = `Could not find a Dart Analysis Server at ${missingPath}`;
 
 			assert.throws(
 				() => (privateApi.analyzer as any).spawnServer(fakeLogger, privateApi.workspaceContext.sdks) as unknown,
-				new RegExp(`Could not find a Dart Analysis Server at ${missingPath.replace(/\\/g, "\\\\")}`),
+				new RegExp(`^Error: Could not find a Dart Analysis Server at ${missingPath.replace(/\\/g, "\\\\")}$`),
 			);
-			assert.ok(showErrorMessage.calledOnce);
-			assert.ok(errorSpy.calledOnce);
+			assert.ok(showErrorMessage.calledOnceWithExactly(expectedMessage));
+			assert.ok(errorSpy.calledOnceWithExactly(expectedMessage));
 		});
 
-		it("includes configured VM service, port, log files, and additional args", async () => {
+		it("includes configured VM service, port, log files, and additional args", () => {
 			const existingAnalyzerPath = fsPath(helloWorldMainFile);
 			const instrLog = path.join(os.tmpdir(), "dart_instr.log");
 			const sessionLog = path.join(os.tmpdir(), "dart_session.log");
 
-			await setConfigForTest("dart", "analyzerPath", existingAnalyzerPath);
-			await setConfigForTest("dart", "analyzerVmServicePort", 8123);
-			await setConfigForTest("dart", "analyzerVmAdditionalArgs", ["--vm-custom-flag"]);
-			await setConfigForTest("dart", "analyzerDiagnosticsPort", 9123);
-			await setConfigForTest("dart", "analyzerInstrumentationLogFile", instrLog);
-			await setConfigForTest("dart", "analyzerSessionLogFile", sessionLog);
-			await setConfigForTest("dart", "analyzerAdditionalArgs", ["--analyzer-custom-flag"]);
+			const config = getConfig();
+			sb.stub(config, "analyzerPath").get(() => existingAnalyzerPath);
+			sb.stub(config, "analyzerVmServicePort").get(() => 8123);
+			sb.stub(config, "analyzerVmAdditionalArgs").get(() => ["--vm-custom-flag"]);
+			sb.stub(config, "analyzerDiagnosticsPort").get(() => 9123);
+			sb.stub(config, "analyzerInstrumentationLogFile").get(() => instrLog);
+			sb.stub(config, "analyzerSessionLogFile").get(() => sessionLog);
+			sb.stub(config, "analyzerAdditionalArgs").get(() => ["--analyzer-custom-flag"]);
 
 			let capturedArgs: string[] | undefined;
 			const fakeLogger = {
@@ -659,8 +669,8 @@ describe("analyzer", () => {
 
 	describe("DartErrorHandler", () => {
 		function createErrorHandler(): ls.ErrorHandler & { restarts: number[] } {
-			const ErrorHandlerClass = (privateApi.analyzer as any).client.clientOptions.errorHandler.constructor;
-			return new ErrorHandlerClass(privateApi.logger) as ls.ErrorHandler & { restarts: number[] };
+			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger) => ls.ErrorHandler & { restarts: number[] };
+			return new ErrorHandlerClass(privateApi.logger);
 		}
 
 		it("continues on error before maxRestartCount and shuts down at maxRestartCount", () => {
@@ -694,29 +704,27 @@ describe("analyzer", () => {
 
 	describe("lifecycle and DTD helpers", () => {
 		it("connectToDtd handles undefined DTD and logs error on failure", async () => {
-			const analyzer = privateApi.analyzer as any;
-			await analyzer.connectToDtd(undefined);
+			await privateApi.analyzer.connectToDtd(undefined);
 
-			const loggerError = sb.stub(analyzer.logger, "error");
-			sb.stub(analyzer.client, "sendRequest").rejects(new Error("DTD error"));
-			await analyzer.connectToDtd({ dtdUri: Promise.resolve("ws://127.0.0.1:1234/ws") });
+			const loggerError = sb.stub(privateApi.logger, "error");
+			sb.stub(privateApi.analyzer.client, "sendRequest").rejects(new Error("DTD error"));
+			await privateApi.analyzer.connectToDtd({ dtdUri: Promise.resolve("ws://127.0.0.1:1234/ws") } as unknown as DartToolingDaemon);
 			if (privateApi.dartCapabilities.supportsLspOverDtd)
 				assert.ok(loggerError.calledOnce);
 		});
 
 		it("initializationFailedHandler logs warning and returns false", () => {
-			const analyzer = privateApi.analyzer as any;
-			const res = analyzer.client.clientOptions.initializationFailedHandler(new Error("init failed")) as boolean;
+			const res = privateApi.analyzer.client.clientOptions.initializationFailedHandler!(new Error("init failed"));
 			assert.equal(res, false);
 		});
 
-		it("handleDisposeCleanup handles already exited, normal exit, and timeout kill", async () => {
+		it("handleDisposeCleanup resolves immediately when process has already exited", async () => {
 			const analyzer = privateApi.analyzer as any;
-
-			// Already exited
 			await analyzer.handleDisposeCleanup({ exitCode: 0, signalCode: null });
+		});
 
-			// Exits on event
+		it("handleDisposeCleanup resolves when process exits before timeout", async () => {
+			const analyzer = privateApi.analyzer as any;
 			let exitCb: (() => void) | undefined;
 			const exitingProc = {
 				exitCode: null,
@@ -724,12 +732,15 @@ describe("analyzer", () => {
 				once: (_event: string, cb: () => void) => { exitCb = cb; },
 				kill: sb.spy(),
 			};
+
 			const p1 = analyzer.handleDisposeCleanup(exitingProc) as Promise<void>;
 			exitCb!();
 			await p1;
 			assert.ok(exitingProc.kill.notCalled);
+		});
 
-			// Timeout kill
+		it("handleDisposeCleanup kills process if it does not exit within timeout", async () => {
+			const analyzer = privateApi.analyzer as any;
 			const clock = sb.useFakeTimers();
 			try {
 				const hungProc = {

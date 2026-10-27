@@ -1,10 +1,15 @@
+import * as ls from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient/node";
 import { EventEmitter } from "./events";
 import { IAmDisposableAsync, Logger } from "./interfaces";
+import { DartToolingDaemon } from "./services/tooling_daemon";
 import { PromiseCompleter, disposeAllAsync } from "./utils";
 import { resolvedPromise } from "./utils/promises";
 
 export abstract class Analyzer implements IAmDisposableAsync {
 	protected disposables: IAmDisposableAsync[] = [];
+
+	public abstract readonly client: LanguageClient;
 
 	protected readonly onReadyCompleter = new PromiseCompleter<void>();
 	public readonly onReady = this.onReadyCompleter.promise;
@@ -23,6 +28,11 @@ export abstract class Analyzer implements IAmDisposableAsync {
 
 	public abstract getDiagnosticServerPort(): Promise<{ port: number } | undefined>;
 	public abstract forceReanalyze(): Promise<void>;
+	public abstract connectToDtd(dtd: DartToolingDaemon | undefined): Promise<void>;
+	public abstract getSuper(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
+	public abstract getImports(params: ls.TextDocumentPositionParams): Promise<ls.Location[] | null>;
+	public abstract getAugmented(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
+	public abstract getAugmentation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
 
 	constructor(protected readonly logger: Logger) {
 		this.disposables.push(this.onAnalysisStatusChangeEmitter);
