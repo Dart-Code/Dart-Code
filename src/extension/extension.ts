@@ -530,9 +530,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
 	// Also the providers for the initial configs.
+	const initialDebugProvider = new InitialLaunchJsonDebugConfigProvider(logger);
+	const dynamicDebugProvider = new DynamicDebugConfigProvider(logger, deviceManager);
 	if (vs.DebugConfigurationProviderTriggerKind) { // Temporary workaround for GitPod/Theia not having this enum.
-		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new InitialLaunchJsonDebugConfigProvider(logger), vs.DebugConfigurationProviderTriggerKind.Initial));
-		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger, deviceManager), vs.DebugConfigurationProviderTriggerKind.Dynamic));
+		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", initialDebugProvider, vs.DebugConfigurationProviderTriggerKind.Initial));
+		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", dynamicDebugProvider, vs.DebugConfigurationProviderTriggerKind.Dynamic));
 	}
 
 	if (config.previewFlutterUiGuides)
@@ -722,6 +724,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			debugSessions,
 			devTools,
 			deviceManager,
+			dynamicDebugProvider,
 			envUtils,
 			fileTracker: analyzer.fileTracker,
 			flutterCapabilities,
@@ -733,6 +736,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			getOutputChannelNames,
 			getToolEnv,
 			initialAnalysis: analyzer.onInitialAnalysis,
+			initialDebugProvider,
 			interactiveRefactors: analyzer.refactors,
 			logger,
 			mcpServerProvider,

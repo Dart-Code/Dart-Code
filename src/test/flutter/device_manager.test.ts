@@ -2,11 +2,12 @@ import { strict as assert } from "assert";
 import { commands } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
 import * as f from "../../shared/flutter/daemon_interfaces";
-import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
+import { IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
 import { activateWithoutAnalysis, delay, logger, privateApi, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../mocks/fake_stdio_service";
+import { androidBogusEmulatorId, androidBogusEmulatorName, androidEmulator, androidEmulatorToOverride, customEmulator1, customEmulator2, customEmulators, desktop, emulatedAndroidMobile, emulatediOSMobile, physicalAndroidMobile, webChrome } from "./flutter_test_devices";
 
 describe("device_manager", () => {
 	let dm: FlutterDeviceManager;
@@ -455,107 +456,3 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		return this.subscribe(this.daemonShowMessageSubscriptions, subscriber);
 	}
 }
-
-const desktop: f.Device & { platformType: string } = {
-	category: "desktop",
-	emulator: false,
-	emulatorId: undefined,
-	ephemeral: false,
-	id: "my-mac",
-	name: "My MacBook",
-	platform: "darwin-x64",
-	platformType: "macos",
-	type: "device",
-};
-
-const webChrome: f.Device & { platformType: string } = {
-	category: "web",
-	emulator: false,
-	emulatorId: undefined,
-	ephemeral: false,
-	id: "chrome",
-	name: "Chrome",
-	platform: "web-javascript",
-	platformType: "web",
-	type: "device",
-};
-
-const physicalAndroidMobile: f.Device = {
-	category: "mobile",
-	emulator: false,
-	emulatorId: undefined,
-	ephemeral: true,
-	id: "my-eyephone",
-	name: "My eyePhone",
-	platform: "android-x64",
-	platformType: "android",
-	type: "device",
-};
-
-const emulatedAndroidMobile: f.Device = {
-	category: "mobile",
-	emulator: true,
-	emulatorId: "my_emulator_id",
-	ephemeral: true,
-	id: "android-pixel-7",
-	name: "Pixel 7",
-	platform: "android-x87",
-	platformType: "android",
-	type: "device",
-};
-
-const androidEmulator: f.FlutterEmulator = {
-	category: "mobile",
-	id: "my_emulator_id",
-	name: "My Cool Emulator!",
-	platformType: "android",
-};
-
-const androidEmulatorToOverride: f.FlutterEmulator = {
-	category: "mobile",
-	id: "my_emulator_id_to_override",
-	name: "WILL BE OVERRIDEN EMULATOR",
-	platformType: "android",
-};
-
-const androidBogusEmulatorName: f.FlutterEmulator = {
-	category: "mobile",
-	id: "my_bogus_emulator",
-	name: "INFO     | my error message https://github.com/Dart-Code/Dart-Code/issues/5052",
-	platformType: "android",
-};
-
-const androidBogusEmulatorId: f.FlutterEmulator = {
-	category: "mobile",
-	id: "INFO     | my_bogus_emulator",
-	name: "My bogus emulator",
-	platformType: "android",
-};
-
-const emulatediOSMobile: f.Device = {
-	category: "mobile",
-	emulator: true,
-	emulatorId: "my_emulator_id",
-	ephemeral: true,
-	id: "ios-simulator",
-	name: "iOS Simulator",
-	platform: "ios-something",
-	platformType: "ios",
-	type: "device",
-};
-
-const customEmulator1: CustomEmulatorDefinition = {
-	args: ["args"],
-	executable: "echo",
-	id: "my-custom-emulator",
-	name: "My custom emulator",
-};
-
-const customEmulator2: CustomEmulatorDefinition = {
-	args: ["args"],
-	executable: "echo",
-	id: "my_emulator_id_to_override",
-	name: "My emulator override",
-};
-
-const customEmulators = [customEmulator1, customEmulator2];

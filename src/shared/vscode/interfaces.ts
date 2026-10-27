@@ -137,6 +137,8 @@ export interface InternalExtensionApi {
 	};
 	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
+	dynamicDebugProvider: DebugConfigurationProvider;
+	initialDebugProvider: DebugConfigurationProvider;
 	debugSessions: DartDebugSessionInformation[];
 	deviceManager: FlutterDeviceManager | undefined;
 	envUtils: {
