@@ -535,8 +535,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger, deviceManager), vs.DebugConfigurationProviderTriggerKind.Dynamic));
 	}
 
-	if (config.previewFlutterUiGuides)
-		context.subscriptions.push(new FlutterUiGuideDecorations(analyzer));
+	const flutterUiGuideDecorations = config.previewFlutterUiGuides
+		? new FlutterUiGuideDecorations(analyzer)
+		: undefined;
+	if (flutterUiGuideDecorations)
+		context.subscriptions.push(flutterUiGuideDecorations);
 
 	if (config.flutterGutterIcons)
 		context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
@@ -726,6 +729,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			fileTracker: analyzer.fileTracker,
 			flutterCapabilities,
 			flutterCommands,
+			flutterUiGuideDecorations,
 			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
 			getLogHeader,

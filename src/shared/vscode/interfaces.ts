@@ -144,6 +144,7 @@ export interface InternalExtensionApi {
 	};
 	flutterCapabilities: FlutterCapabilities;
 	flutterCommands: FlutterCommandHandler;
+	flutterUiGuideDecorations?: any;
 	getLogHeader: () => string;
 	getOutputChannel: (name: string) => OutputChannel;
 	getOutputChannelNames: () => string[];
