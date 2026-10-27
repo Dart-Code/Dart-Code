@@ -185,6 +185,7 @@ export interface InternalExtensionApi {
 		findDartSdk(folders: string[]): SdkSearchResults;
 		findFlutterSdk(folders: string[]): SdkSearchResults;
 		handleMissingSdks(workspaceContext: WorkspaceContext): void;
+		hasShownActivationFailure: boolean;
 		runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult>;
 		scanWorkspace(): Promise<WorkspaceContext>;
 		searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): SdkSearchResults;

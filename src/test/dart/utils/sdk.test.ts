@@ -9,7 +9,7 @@ import { addSdkToPathPrompt, analyzerSnapshotPath, cloningFlutterMessage, DART_D
 import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
-import { activate, defer, delay, getRandomTempFolder, helloWorldFolder, privateApi, sb, tryDelete } from "../../helpers";
+import { activate, defer, deferUntilLast, getRandomTempFolder, helloWorldFolder, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const childProcess = require("child_process") as typeof import("child_process");
@@ -213,21 +213,27 @@ describe("runCustomGetSDKCommand", () => {
 	});
 
 	it("opens workspace or global settings when Open Settings is clicked on error", async () => {
-		sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction as any);
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction as any);
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openGlobalSettings = executeCommand.withArgs("workbench.action.openSettingsJson", sinon.match.any).resolves();
-		const openWorkspaceSettings = executeCommand.withArgs("workbench.action.openWorkspaceSettingsFile", sinon.match.any).resolves();
+		const openGlobalSettings = executeCommand.withArgs("workbench.action.openSettingsJson", sinon.match.any);
+		const openWorkspaceSettings = executeCommand.withArgs("workbench.action.openWorkspaceSettingsFile", sinon.match.any);
 
 		const command: GetSDKCommandConfig = {
 			args: ["1"],
 			executable,
 		};
+		const openedGlobal = new Promise<void>((resolve) => openGlobalSettings.callsFake(async () => resolve()));
 		await privateApi.sdkUtils?.runCustomGetSDKCommand(command, "dart.getDartSdkCommand", false);
+		await openedGlobal;
+		assert.ok(showWarningMessage.calledOnce);
 		assert.ok(openGlobalSettings.calledOnceWithExactly("workbench.action.openSettingsJson", {
 			revealSetting: { key: "dart.getDartSdkCommand" },
 		}));
 
+		const openedWorkspace = new Promise<void>((resolve) => openWorkspaceSettings.callsFake(async () => resolve()));
 		await privateApi.sdkUtils?.runCustomGetSDKCommand(command, "dart.getFlutterSdkCommand", true);
+		await openedWorkspace;
+		assert.equal(showWarningMessage.callCount, 2);
 		assert.ok(openWorkspaceSettings.calledOnceWithExactly("workbench.action.openWorkspaceSettingsFile", {
 			revealSetting: { key: "dart.getFlutterSdkCommand" },
 		}));
@@ -238,9 +244,12 @@ describe("runCustomGetSDKCommand", () => {
 		defer("delete fakeWorkspaceDir", () => tryDelete(fakeWorkspaceDir));
 		const fakeWorkspaceFile = vs.Uri.file(path.join(fakeWorkspaceDir, "my.code-workspace"));
 		sb.stub(vs.workspace, "workspaceFile").get(() => fakeWorkspaceFile);
+		const spawnSpy = sb.spy(childProcess, "spawn");
 
 		const result = await runCommand(0, privateApi.workspaceContext.sdks.dart);
 		assert.equal(result?.path, privateApi.workspaceContext.sdks.dart);
+		assert.ok(spawnSpy.calledOnce);
+		assert.equal(spawnSpy.firstCall.args[2]?.cwd, fakeWorkspaceDir);
 	});
 
 	it("returns undefined path when no workspace is open", async () => {
@@ -254,9 +263,41 @@ describe("runCustomGetSDKCommand", () => {
 });
 
 describe("SdkUtils", () => {
+	const origSetTimeout = global.setTimeout;
+	let executeCommandStub: sinon.SinonStub;
+	let reloadExtensionStub: sinon.SinonStub;
+
 	beforeEach("activate", async () => {
 		await activate();
+
+		executeCommandStub = sb.stub(vs.commands, "executeCommand").callThrough();
+		reloadExtensionStub = executeCommandStub.withArgs("_dart.reloadExtension", sinon.match.any).resolves();
+
+		const timers: NodeJS.Timeout[] = [];
+		sb.stub(global, "setTimeout").callsFake(((fn: () => void, ms?: number) => {
+			const timer = origSetTimeout(fn, ms);
+			timers.push(timer);
+			return timer;
+		}) as typeof global.setTimeout);
+		deferUntilLast("clear pending timers", () => timers.forEach((t) => clearTimeout(t)));
 	});
+
+	async function setWorkspaceConfigForTest(section: string, key: string, value: any): Promise<void> {
+		const conf = vs.workspace.getConfiguration(section);
+		const values = conf.inspect(key);
+		const oldValue = values?.workspaceValue;
+		await conf.update(key, value, vs.ConfigurationTarget.Workspace);
+		defer("Restore workspace test config", () => conf.update(key, oldValue, vs.ConfigurationTarget.Workspace));
+	}
+
+	function waitForStubCall<T = void>(stub: sinon.SinonStub): Promise<T> {
+		return new Promise<T>((resolve) => {
+			stub.callsFake(async (arg: T) => {
+				resolve(arg);
+				return undefined;
+			});
+		});
+	}
 
 	function createTempDir() {
 		const dir = getRandomTempFolder();
@@ -366,134 +407,99 @@ describe("SdkUtils", () => {
 	});
 
 	describe("warnIfBadConfigSdk & openSettingsFile", () => {
-		it("warns when configured dart.sdkPath does not match found SDK and opens settings when clicked", async () => {
+		it("warns when configured global dart.sdkPath does not match found SDK and opens global settings", async () => {
 			const badSdkPath = path.join(createTempDir(), "not-an-sdk");
+			await setConfigForTest("dart", "sdkPath", badSdkPath);
+
 			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction as any);
-			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-			executeCommand.withArgs("_dart.reloadExtension", sinon.match.any).resolves();
-			const openGlobalSettings = executeCommand.withArgs("workbench.action.openSettingsJson", sinon.match.any).resolves();
-			const openWorkspaceSettings = executeCommand.withArgs("workbench.action.openWorkspaceSettingsFile", sinon.match.any).resolves();
+			const openGlobalSettings = executeCommandStub.withArgs("workbench.action.openSettingsJson", sinon.match.any);
+			const openedSettings = waitForStubCall(openGlobalSettings);
 
-			// Stub workspace.getConfiguration("dart") so we don't trigger real configuration change events.
-			let isWorkspace = false;
-			const realGetConfig = vs.workspace.getConfiguration.bind(vs.workspace);
-			const realDartConf = realGetConfig("dart");
-			sb.stub(vs.workspace, "getConfiguration").callsFake(((section?: string, scope?: vs.ConfigurationScope | null): vs.WorkspaceConfiguration => {
-				if (section !== "dart")
-					return realGetConfig(section, scope);
-				return {
-					get: (key: string, defaultValue?: unknown) => key === "sdkPath" ? badSdkPath : realDartConf.get(key, defaultValue),
-					has: (key: string) => realDartConf.has(key),
-					inspect: (key: string) => key === "sdkPath"
-						? { key, workspaceValue: isWorkspace ? badSdkPath : undefined, globalValue: !isWorkspace ? badSdkPath : undefined }
-						: realDartConf.inspect(key),
-					update: async () => undefined,
-				} as unknown as vs.WorkspaceConfiguration;
-			}) as typeof vs.workspace.getConfiguration);
-
-			// Reload internal config wrapper so it picks up the stubbed WorkspaceConfiguration.
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-
-			// 1. Global setting
 			await privateApi.sdkUtils!.scanWorkspace();
-			await delay(50);
+			await openedSettings;
 
-			assert.ok(showWarningMessage.calledWith(
+			assert.ok(showWarningMessage.calledOnceWithExactly(
 				`The SDK configured in dart.sdkPath is not a valid SDK folder: ${badSdkPath}`,
 				openSettingsAction,
 			));
 			assert.ok(openGlobalSettings.calledOnceWithExactly("workbench.action.openSettingsJson", {
 				revealSetting: { key: "dart.sdkPath" },
 			}));
+		});
 
-			// 2. Workspace setting
-			isWorkspace = true;
+		it("warns when configured workspace dart.sdkPath does not match found SDK and opens workspace settings", async () => {
+			const badSdkPath = path.join(createTempDir(), "not-an-sdk");
+			await setWorkspaceConfigForTest("dart", "sdkPath", badSdkPath);
+
+			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction as any);
+			const openWorkspaceSettings = executeCommandStub.withArgs("workbench.action.openWorkspaceSettingsFile", sinon.match.any);
+			const openedSettings = waitForStubCall(openWorkspaceSettings);
+
 			await privateApi.sdkUtils!.scanWorkspace();
-			await delay(50);
+			await openedSettings;
 
+			assert.ok(showWarningMessage.calledOnceWithExactly(
+				`The SDK configured in dart.sdkPath is not a valid SDK folder: ${badSdkPath}`,
+				openSettingsAction,
+			));
 			assert.ok(openWorkspaceSettings.calledOnceWithExactly("workbench.action.openWorkspaceSettingsFile", {
 				revealSetting: { key: "dart.sdkPath" },
 			}));
-
-			(vs.workspace.getConfiguration as sinon.SinonStub).restore();
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-			await delay(100);
 		});
 	});
 
 	describe("handleMissingSdks & showSdkActivationFailure", () => {
-		it("showFluttersDartSdkActivationFailure prompts to reload extension", () => {
+		it("showFluttersDartSdkActivationFailure prompts to reload extension", async () => {
 			const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves("Reload" as any);
-			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-			const reloadStub = executeCommand.withArgs("_dart.reloadExtension", sinon.match.any).resolves();
+			const reloaded = waitForStubCall(reloadExtensionStub);
 
 			privateApi.sdkUtils!.showFluttersDartSdkActivationFailure();
+			await reloaded;
 
-			assert.ok(showInformationMessage.calledOnceWith(
+			assert.ok(showInformationMessage.calledOnceWithExactly(
 				"Could not find Dart in your Flutter SDK. Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 				"Reload",
 				showLogAction,
 			));
-			return delay(20).then(() => {
-				assert.ok(reloadStub.calledOnceWith("_dart.reloadExtension", ExtensionRestartReason.FlutterSdkActivationFailure));
-			});
+			assert.ok(reloadExtensionStub.calledOnceWith("_dart.reloadExtension", ExtensionRestartReason.FlutterSdkActivationFailure));
 		});
 
-		it("showDartActivationFailure and showFlutterActivationFailure invoke showSdkActivationFailure", async () => {
-			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
-			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
-			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-			executeCommand.withArgs("_dart.reloadExtension", sinon.match.any).resolves();
+		it("showDartActivationFailure locates a Dart SDK, updates global sdkPath, and reloads the extension", async () => {
+			await setConfigForTest("dart", "sdkPath", undefined);
 
-			const updatedSettings: Array<{ key: string; value: unknown }> = [];
-			const realGetConfig = vs.workspace.getConfiguration.bind(vs.workspace);
-			const realDartConf = realGetConfig("dart");
-			sb.stub(vs.workspace, "getConfiguration").callsFake(((section?: string, scope?: vs.ConfigurationScope | null): vs.WorkspaceConfiguration => {
-				if (section !== "dart")
-					return realGetConfig(section, scope);
-				return {
-					get: (key: string, defaultValue?: unknown) => realDartConf.get(key, defaultValue),
-					has: (key: string) => realDartConf.has(key),
-					inspect: (key: string) => realDartConf.inspect(key),
-					update: async (key: string, value: unknown) => {
-						updatedSettings.push({ key, value });
-					},
-				} as unknown as vs.WorkspaceConfiguration;
-			}) as typeof vs.workspace.getConfiguration);
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-
-			// Test showDartActivationFailure with Locate SDK -> valid Dart SDK.
 			const tempDir = createTempDir();
 			const dartSdkDir = path.join(tempDir, "dart-sdk");
 			createFakeDartSdk(dartSdkDir);
-			showErrorMessage.onFirstCall().resolves("Locate SDK" as any);
+
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves("Locate SDK" as any);
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(dartSdkDir)]);
+			const reloaded = waitForStubCall(reloadExtensionStub);
 
 			privateApi.sdkUtils!.showDartActivationFailure();
-			await delay(50);
+			await reloaded;
 
-			// Test showFlutterActivationFailure with Locate SDK -> valid Flutter SDK.
+			assert.ok(showErrorMessage.calledOnce);
+			assert.equal(vs.workspace.getConfiguration("dart").inspect("sdkPath")?.globalValue, dartSdkDir);
+			assert.ok(reloadExtensionStub.calledOnceWith("_dart.reloadExtension", ExtensionRestartReason.LocatedSdk));
+		});
+
+		it("showFlutterActivationFailure locates a Flutter SDK, updates global flutterSdkPath, and reloads the extension", async () => {
+			await setConfigForTest("dart", "flutterSdkPath", undefined);
+
+			const tempDir = createTempDir();
 			const flutterSdkDir = path.join(tempDir, "flutter-sdk");
 			createFakeFlutterSdk(flutterSdkDir);
-			showErrorMessage.onSecondCall().resolves("Locate SDK" as any);
-			(vs.window.showOpenDialog as sinon.SinonStub).resolves([vs.Uri.file(flutterSdkDir)]);
+
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves("Locate SDK" as any);
+			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(flutterSdkDir)]);
+			const reloaded = waitForStubCall(reloadExtensionStub);
 
 			privateApi.sdkUtils!.showFlutterActivationFailure();
-			await delay(50);
+			await reloaded;
 
-			assert.deepStrictEqual(updatedSettings, [
-				{ key: "sdkPath", value: dartSdkDir },
-				{ key: "flutterSdkPath", value: flutterSdkDir },
-			]);
-			assert.equal(openInBrowser.called, false);
-
-			(vs.workspace.getConfiguration as sinon.SinonStub).restore();
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-			await delay(100);
+			assert.ok(showErrorMessage.calledOnce);
+			assert.equal(vs.workspace.getConfiguration("dart").inspect("flutterSdkPath")?.globalValue, flutterSdkDir);
+			assert.ok(reloadExtensionStub.calledOnceWith("_dart.reloadExtension", ExtensionRestartReason.LocatedSdk));
 		});
 
 		it("Locate SDK validates via search, loops on invalid folder, saves valid SDK, reloads, and re-runs command", async () => {
@@ -513,9 +519,7 @@ describe("SdkUtils", () => {
 			search.onSecondCall().returns({ sdkPath: fsPath(validFolder), candidatePaths: [fsPath(validFolder)], sdkInitScript: undefined });
 
 			const saveSdkPath = sb.stub().resolves();
-			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-			const reloadStub = executeCommand.withArgs("_dart.reloadExtension", sinon.match.any).resolves();
-			const rerunStub = executeCommand.withArgs("dart.createProject").resolves();
+			const rerunStub = executeCommandStub.withArgs("dart.createProject").resolves();
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Dart",
@@ -529,7 +533,7 @@ describe("SdkUtils", () => {
 			assert.ok(showErrorMessage.firstCall.args[0].startsWith("Could not find a Dart SDK."));
 			assert.equal(showErrorMessage.secondCall.args[0], "That folder does not appear to be a Dart SDK.");
 			assert.ok(saveSdkPath.calledOnceWithExactly(fsPath(validFolder)));
-			assert.ok(reloadStub.calledOnceWith("_dart.reloadExtension", ExtensionRestartReason.LocatedSdk));
+			assert.ok(reloadExtensionStub.calledOnceWith("_dart.reloadExtension", ExtensionRestartReason.LocatedSdk));
 			assert.ok(rerunStub.calledOnceWithExactly("dart.createProject"));
 		});
 
@@ -549,7 +553,8 @@ describe("SdkUtils", () => {
 
 		it("Show Log opens ring log contents", async () => {
 			sb.stub(vs.window, "showErrorMessage").resolves(showLogAction as any);
-			const showTextDocument = sb.stub(vs.window, "showTextDocument").resolves();
+			const showTextDocument = sb.stub(vs.window, "showTextDocument");
+			const shownDoc = waitForStubCall(showTextDocument);
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Dart",
@@ -557,20 +562,71 @@ describe("SdkUtils", () => {
 				DART_DOWNLOAD_URL,
 				() => Promise.resolve(),
 			);
+			await shownDoc;
 
-			await delay(50);
 			assert.ok(showTextDocument.calledOnce);
 		});
 
-		it("handleMissingSdks registers fallback commands and shows startup message on timeout", async () => {
+		it("handleMissingSdks registers fallback commands that trigger activation failure prompts with commandToReRun", () => {
 			const registeredCommands = new Map<string, (...args: any[]) => any>();
 			sb.stub(vs.commands, "registerCommand").callsFake((cmd: string, cb: (...args: any[]) => any) => {
 				registeredCommands.set(cmd, cb);
 				return { dispose: () => undefined };
 			});
 			const timeoutCallbacks: Array<() => void> = [];
-			const origSetTimeout = global.setTimeout;
-			sb.stub(global, "setTimeout").callsFake(((fn: () => void, ms?: number) => {
+			(global.setTimeout as unknown as sinon.SinonStub).callsFake(((fn: () => void, ms?: number) => {
+				if (ms === 500) {
+					timeoutCallbacks.push(fn);
+					return 0 as unknown as NodeJS.Timeout;
+				}
+				return origSetTimeout(fn, ms);
+			}) as typeof global.setTimeout);
+
+			const showFlutterStub = sb.stub(privateApi.sdkUtils!, "showFlutterActivationFailure");
+			const showDartStub = sb.stub(privateApi.sdkUtils!, "showDartActivationFailure");
+
+			const wc = new WorkspaceContext(
+				{ dart: undefined, flutter: undefined, dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
+				{},
+				true,
+				false,
+				false,
+				false,
+				undefined,
+				undefined,
+			);
+			privateApi.sdkUtils!.hasShownActivationFailure = false;
+			privateApi.sdkUtils!.handleMissingSdks(wc);
+
+			assert.equal(registeredCommands.size, 5);
+
+			registeredCommands.get("flutter.createProject")!();
+			assert.ok(showFlutterStub.calledWithExactly("flutter.createProject"));
+
+			registeredCommands.get("dart.createProject")!();
+			assert.ok(showDartStub.calledOnceWithExactly("dart.createProject"));
+
+			registeredCommands.get("_dart.flutter.createSampleProject")!();
+			assert.ok(showFlutterStub.calledWithExactly("_dart.flutter.createSampleProject"));
+
+			registeredCommands.get("flutter.doctor")!();
+			assert.ok(showFlutterStub.calledWithExactly("flutter.doctor"));
+
+			registeredCommands.get("flutter.upgrade")!();
+			assert.ok(showFlutterStub.calledWithExactly("flutter.upgrade"));
+			assert.equal(showFlutterStub.callCount, 4);
+
+			// Because a command already showed the activation failure, the startup timeout should be a no-op.
+			assert.equal(privateApi.sdkUtils!.hasShownActivationFailure, true);
+			timeoutCallbacks.pop()!();
+			assert.equal(showFlutterStub.callCount, 4);
+			assert.equal(showDartStub.callCount, 1);
+		});
+
+		it("handleMissingSdks shows appropriate startup failure prompt on timeout depending on workspace project types", () => {
+			sb.stub(vs.commands, "registerCommand").returns({ dispose: () => undefined });
+			const timeoutCallbacks: Array<() => void> = [];
+			(global.setTimeout as unknown as sinon.SinonStub).callsFake(((fn: () => void, ms?: number) => {
 				if (ms === 500) {
 					timeoutCallbacks.push(fn);
 					return 0 as unknown as NodeJS.Timeout;
@@ -581,6 +637,7 @@ describe("SdkUtils", () => {
 			const showFluttersDartStub = sb.stub(privateApi.sdkUtils!, "showFluttersDartSdkActivationFailure");
 			const showFlutterStub = sb.stub(privateApi.sdkUtils!, "showFlutterActivationFailure");
 			const showDartStub = sb.stub(privateApi.sdkUtils!, "showDartActivationFailure");
+			const loggerErrorSpy = sb.spy(privateApi.logger, "error");
 
 			// Case 1: Flutter project with Flutter SDK but missing Dart SDK.
 			const wcFlutterNoDart = new WorkspaceContext(
@@ -593,21 +650,10 @@ describe("SdkUtils", () => {
 				undefined,
 				undefined,
 			);
-			(privateApi.sdkUtils as any).hasShownActivationFailure = false;
+			privateApi.sdkUtils!.hasShownActivationFailure = false;
 			privateApi.sdkUtils!.handleMissingSdks(wcFlutterNoDart);
-
-			assert.equal(registeredCommands.size, 5);
-			// Trigger timeout before any command runs -> calls showFluttersDartSdkActivationFailure.
 			timeoutCallbacks.pop()!();
 			assert.ok(showFluttersDartStub.calledOnce);
-
-			// Also invoke each registered command to cover their callbacks.
-			registeredCommands.get("flutter.createProject")!();
-			registeredCommands.get("dart.createProject")!();
-			assert.ok(showDartStub.calledOnceWithExactly("dart.createProject"));
-			registeredCommands.get("_dart.flutter.createSampleProject")!();
-			registeredCommands.get("flutter.doctor")!();
-			registeredCommands.get("flutter.upgrade")!();
 
 			// Case 2: Standard Dart project missing Dart SDK.
 			const wcDartOnly = new WorkspaceContext(
@@ -620,10 +666,10 @@ describe("SdkUtils", () => {
 				undefined,
 				undefined,
 			);
-			(privateApi.sdkUtils as any).hasShownActivationFailure = false;
+			privateApi.sdkUtils!.hasShownActivationFailure = false;
 			privateApi.sdkUtils!.handleMissingSdks(wcDartOnly);
 			timeoutCallbacks.pop()!();
-			assert.ok(showDartStub.calledWithExactly(undefined));
+			assert.ok(showDartStub.calledOnceWithExactly(undefined));
 
 			// Case 3: Flutter project missing Flutter SDK.
 			const wcFlutterMissing = new WorkspaceContext(
@@ -636,12 +682,15 @@ describe("SdkUtils", () => {
 				undefined,
 				undefined,
 			);
-			(privateApi.sdkUtils as any).hasShownActivationFailure = false;
+			privateApi.sdkUtils!.hasShownActivationFailure = false;
 			privateApi.sdkUtils!.handleMissingSdks(wcFlutterMissing);
 			timeoutCallbacks.pop()!();
 			assert.ok(showFlutterStub.calledOnceWithExactly(undefined));
 
 			// Case 4: No Dart or Flutter projects open -> logs error and suppresses prompt.
+			showFluttersDartStub.resetHistory();
+			showFlutterStub.resetHistory();
+			showDartStub.resetHistory();
 			const wcEmpty = new WorkspaceContext(
 				{ dart: undefined, flutter: undefined, dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
 				{},
@@ -652,9 +701,13 @@ describe("SdkUtils", () => {
 				undefined,
 				undefined,
 			);
-			(privateApi.sdkUtils as any).hasShownActivationFailure = false;
+			privateApi.sdkUtils!.hasShownActivationFailure = false;
 			privateApi.sdkUtils!.handleMissingSdks(wcEmpty);
 			timeoutCallbacks.pop()!();
+			assert.equal(showFluttersDartStub.called, false);
+			assert.equal(showFlutterStub.called, false);
+			assert.equal(showDartStub.called, false);
+			assert.ok(loggerErrorSpy.calledWith("No Dart or Flutter SDK was found. Suppressing prompt because it doesn't appear that a Dart/Flutter project is open."));
 		});
 	});
 
@@ -681,7 +734,7 @@ describe("SdkUtils", () => {
 					return true;
 				};
 
-				setTimeout(() => {
+				setImmediate(() => {
 					if (res.error) {
 						proc.emit("error", res.error);
 						return;
@@ -694,43 +747,35 @@ describe("SdkUtils", () => {
 					proc.exitCode = code;
 					proc.emit("exit", code, null);
 					proc.emit("close", code, null);
-				}, res.delayMs ?? 1);
+				});
 
 				return proc as ChildProcess;
 			});
 		}
 
-		it("handles non-zero exit code and spawn error when checking git --version (CloneSdkResult.noGit)", async () => {
+		it("shows error and opens setup instructions when git --version fails or errors", async () => {
 			// Also cover active vscode.git extension path lookup.
 			sb.stub(vs.extensions, "getExtension").withArgs("vscode.git").returns({
 				exports: { getAPI: () => ({ git: { path: "/custom/git" } }) },
 				isActive: true,
 			} as any);
 
-			let throwError = false;
-			stubSpawnForGit((_bin, args) => {
+			let gitResult: { exitCode?: number; stderr?: string; error?: Error } = { exitCode: 1, stderr: "git not found" };
+			const spawnedBins: string[] = [];
+			stubSpawnForGit((bin, args) => {
 				if (args.includes("--version")) {
-					if (throwError)
-						return { error: new Error("ENOENT") };
-					return { exitCode: 1, stderr: "git not found" };
+					spawnedBins.push(bin);
+					return gitResult;
 				}
 				return undefined;
 			});
 
+			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
-			// 1st loop: Download SDK -> git exitCode 1 -> shows "Unable to clone Flutter because Git was not found." -> click "Setup Instructions"
+
+			// 1. Non-zero exit code from git --version -> click "Setup Instructions".
 			showErrorMessage.onCall(0).resolves("Download SDK" as any);
 			showErrorMessage.onCall(1).resolves("Setup Instructions" as any);
-			// 2nd loop: Download SDK -> git spawn error -> shows "Unable to clone..." -> dismiss
-			showErrorMessage.onCall(2).resolves("Download SDK" as any);
-			showErrorMessage.onCall(3).resolves(undefined);
-			// 3rd loop: dismiss outer prompt
-			showErrorMessage.onCall(4).resolves(undefined);
-
-			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").callsFake(async () => {
-				throwError = true;
-				return true;
-			});
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Flutter",
@@ -739,14 +784,35 @@ describe("SdkUtils", () => {
 				() => Promise.resolve(),
 			);
 
+			assert.deepStrictEqual(spawnedBins, ["/custom/git"]);
+			assert.ok(showErrorMessage.calledWithExactly(
+				"Unable to clone Flutter because Git was not found. Please clone or download the Flutter SDK manually.",
+				"Setup Instructions",
+			));
 			assert.ok(openInBrowser.calledOnceWithExactly(FLUTTER_DOWNLOAD_URL));
-			assert.ok(showErrorMessage.calledWith(
+
+			// 2. Spawn error from git --version -> dismiss error prompt and outer prompt.
+			showErrorMessage.resetHistory();
+			gitResult = { error: new Error("ENOENT") };
+			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(1).resolves(undefined);
+			showErrorMessage.onCall(2).resolves(undefined);
+
+			await privateApi.sdkUtils!.showSdkActivationFailure(
+				"Flutter",
+				() => ({ candidatePaths: [], sdkInitScript: undefined }),
+				FLUTTER_DOWNLOAD_URL,
+				() => Promise.resolve(),
+			);
+
+			assert.equal(showErrorMessage.callCount, 3);
+			assert.ok(showErrorMessage.secondCall.calledWithExactly(
 				"Unable to clone Flutter because Git was not found. Please clone or download the Flutter SDK manually.",
 				"Setup Instructions",
 			));
 		});
 
-		it("handles cancellation during git --version check and folder selection", async () => {
+		it("returns to activation failure prompt when git check or folder selection is cancelled", async () => {
 			let cancelGitCheck = true;
 			let throwOnGitCancel = false;
 			const origWithProgress = vs.window.withProgress.bind(vs.window);
@@ -759,34 +825,30 @@ describe("SdkUtils", () => {
 				return origWithProgress(options, task);
 			});
 
+			let cloneSpawned = false;
 			stubSpawnForGit((_bin, args) => {
 				if (args.includes("--version")) {
 					if (throwOnGitCancel)
 						return { error: new Error("cancelled error") };
 					return { exitCode: 0, stdout: "git version 2.40.0" };
 				}
+				if (args.includes("clone")) {
+					cloneSpawned = true;
+					return { exitCode: 0 };
+				}
 				return undefined;
 			});
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
-			sb.stub(vs.window, "showOpenDialog").callsFake(async () => undefined);
+			const showOpenDialog = sb.stub(vs.window, "showOpenDialog").resolves(undefined);
 
-			let callIdx = 0;
-			showErrorMessage.callsFake(async () => {
-				callIdx++;
-				if (callIdx === 1)
-					return "Download SDK";
-				if (callIdx === 2) {
-					throwOnGitCancel = true;
-					return "Download SDK";
-				}
-				if (callIdx === 3) {
-					cancelGitCheck = false;
-					throwOnGitCancel = false;
-					return "Download SDK";
-				}
-				return undefined;
+			// 1. Cancelled during git --version check (both exit and error paths).
+			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(1).callsFake(async () => {
+				throwOnGitCancel = true;
+				return "Download SDK";
 			});
+			showErrorMessage.onCall(2).resolves(undefined);
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Flutter",
@@ -795,14 +857,34 @@ describe("SdkUtils", () => {
 				() => Promise.resolve(),
 			);
 
-			assert.equal(callIdx, 4);
+			assert.equal(showErrorMessage.callCount, 3);
+			assert.equal(showOpenDialog.called, false);
+
+			// 2. Cancelled during folder selection (showOpenDialog returns undefined).
+			cancelGitCheck = false;
+			throwOnGitCancel = false;
+			showErrorMessage.resetHistory();
+			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(1).resolves(undefined);
+
+			await privateApi.sdkUtils!.showSdkActivationFailure(
+				"Flutter",
+				() => ({ candidatePaths: [], sdkInitScript: undefined }),
+				FLUTTER_DOWNLOAD_URL,
+				() => Promise.resolve(),
+			);
+
+			assert.equal(showErrorMessage.callCount, 2);
+			assert.ok(showOpenDialog.calledOnce);
+			assert.equal(cloneSpawned, false);
 		});
 
-		it("handles git clone failure, spawn error, and cancellation in cloneFlutterWithProgress", async () => {
-			let mode: "exitCode" | "error" | "cancel" | "cancelError" = "exitCode";
+		it("shows error when git clone fails or errors, and suppresses error when cancelled", async () => {
+			let cancelClone = false;
+			let cloneResult: { exitCode?: number; stderr?: string; error?: Error } = { exitCode: 128, stderr: "fatal: repository not found" };
 			const origWithProgress = vs.window.withProgress.bind(vs.window);
 			sb.stub(vs.window, "withProgress").callsFake(async <R>(options: vs.ProgressOptions, task: (progress: vs.Progress<{ message?: string; increment?: number }>, token: vs.CancellationToken) => Thenable<R>): Promise<R> => {
-				if (options.title === cloningFlutterMessage && (mode === "cancel" || mode === "cancelError")) {
+				if (options.title === cloningFlutterMessage && cancelClone) {
 					const tokenSource = new vs.CancellationTokenSource();
 					tokenSource.cancel();
 					return task({ report: () => undefined }, tokenSource.token);
@@ -813,46 +895,20 @@ describe("SdkUtils", () => {
 			stubSpawnForGit((_bin, args) => {
 				if (args.includes("--version"))
 					return { exitCode: 0, stdout: "git version 2.40.0" };
-				if (args.includes("clone")) {
-					if (mode === "error" || mode === "cancelError")
-						return { error: new Error("clone spawn error") };
-					return { exitCode: 128, stderr: "fatal: repository not found" };
-				}
+				if (args.includes("clone"))
+					return cloneResult;
 				return undefined;
 			});
 
 			const cloneDir = createTempDir();
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(cloneDir)]);
 			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 
-			const errorMessages: string[] = [];
-			sb.stub(vs.window, "showErrorMessage").callsFake(async (msg: string) => {
-				errorMessages.push(msg);
-				if (msg.startsWith("Could not find a Flutter SDK.")) {
-					const count = errorMessages.filter((m) => m.startsWith("Could not find")).length;
-					if (count === 1) {
-						mode = "exitCode";
-						return "Download SDK";
-					}
-					if (count === 2) {
-						mode = "error";
-						return "Download SDK";
-					}
-					if (count === 3) {
-						mode = "cancel";
-						return "Download SDK";
-					}
-					if (count === 4) {
-						mode = "cancelError";
-						return "Download SDK";
-					}
-					return undefined;
-				}
-				if (msg.startsWith("Failed to clone Flutter using Git.")) {
-					return "Setup Instructions";
-				}
-				return undefined;
-			});
+			// 1. Non-zero exit code from git clone -> shows stderr error and setup instructions prompt.
+			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(1).resolves(undefined);
+			showErrorMessage.onCall(2).resolves("Setup Instructions" as any);
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Flutter",
@@ -861,32 +917,61 @@ describe("SdkUtils", () => {
 				() => Promise.resolve(),
 			);
 
-			assert.ok(errorMessages.some((m) => m.includes("Failed to clone Flutter: fatal: repository not found")));
-			assert.ok(errorMessages.some((m) => m.startsWith("Failed to clone Flutter using Git.")));
-			assert.ok(openInBrowser.calledWithExactly(FLUTTER_DOWNLOAD_URL));
+			assert.ok(showErrorMessage.calledWith("Failed to clone Flutter: fatal: repository not found"));
+			assert.ok(showErrorMessage.calledWith(
+				"Failed to clone Flutter using Git. Please clone or download the Flutter SDK manually.",
+				"Setup Instructions",
+			));
+			assert.ok(openInBrowser.calledOnceWithExactly(FLUTTER_DOWNLOAD_URL));
+
+			// 2. Spawn error from git clone -> logs error and shows manual setup message.
+			const loggerErrorSpy = sb.spy(privateApi.logger, "error");
+			showErrorMessage.resetHistory();
+			cloneResult = { error: new Error("clone spawn error") };
+			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(1).resolves(undefined);
+			showErrorMessage.onCall(2).resolves(undefined);
+
+			await privateApi.sdkUtils!.showSdkActivationFailure(
+				"Flutter",
+				() => ({ candidatePaths: [], sdkInitScript: undefined }),
+				FLUTTER_DOWNLOAD_URL,
+				() => Promise.resolve(),
+			);
+
+			assert.ok(loggerErrorSpy.calledWith('Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow: Error: clone spawn error'));
+			assert.ok(showErrorMessage.calledWith(
+				"Failed to clone Flutter using Git. Please clone or download the Flutter SDK manually.",
+				"Setup Instructions",
+			));
+
+			// 3. Cancelled during git clone (both normal exit and error exit) -> no failure message shown.
+			showErrorMessage.resetHistory();
+			cancelClone = true;
+			cloneResult = { exitCode: 1, stderr: "cancelled" };
+			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(1).callsFake(async () => {
+				cloneResult = { error: new Error("cancelled error") };
+				return "Download SDK";
+			});
+			showErrorMessage.onCall(2).resolves(undefined);
+
+			await privateApi.sdkUtils!.showSdkActivationFailure(
+				"Flutter",
+				() => ({ candidatePaths: [], sdkInitScript: undefined }),
+				FLUTTER_DOWNLOAD_URL,
+				() => Promise.resolve(),
+			);
+
+			assert.equal(showErrorMessage.callCount, 3);
+			assert.ok(showErrorMessage.getCalls().every((c) => (c.args[0] as string).startsWith("Could not find a Flutter SDK.")));
 		});
 
 		it("clones Flutter into selected folder, sets global Flutter SDK path, initializes Flutter, and reloads extension", async () => {
+			await setConfigForTest("dart", "flutterSdkPath", undefined);
+
 			const cloneDir = createTempDir();
 			const expectedFlutterFolder = path.join(cloneDir, "flutter");
-
-			const updatedSettings: Array<{ key: string; value: unknown }> = [];
-			const realGetConfig = vs.workspace.getConfiguration.bind(vs.workspace);
-			const realDartConf = realGetConfig("dart");
-			sb.stub(vs.workspace, "getConfiguration").callsFake(((section?: string, scope?: vs.ConfigurationScope | null): vs.WorkspaceConfiguration => {
-				if (section !== "dart")
-					return realGetConfig(section, scope);
-				return {
-					get: (key: string, defaultValue?: unknown) => realDartConf.get(key, defaultValue),
-					has: (key: string) => realDartConf.has(key),
-					inspect: (key: string) => realDartConf.inspect(key),
-					update: async (key: string, value: unknown) => {
-						updatedSettings.push({ key, value });
-					},
-				} as unknown as vs.WorkspaceConfiguration;
-			}) as typeof vs.workspace.getConfiguration);
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
 
 			const spawnedCalls: Array<{ bin: string; args: string[]; cwd?: string }> = [];
 			stubSpawnForGit((bin, args, cwd) => {
@@ -914,9 +999,7 @@ describe("SdkUtils", () => {
 				return undefined;
 			});
 
-			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-			const reloadStub = executeCommand.withArgs("_dart.reloadExtension", sinon.match.any).resolves();
-			const rerunStub = executeCommand.withArgs("flutter.createProject").resolves();
+			const rerunStub = executeCommandStub.withArgs("flutter.createProject").resolves();
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Flutter",
@@ -929,52 +1012,21 @@ describe("SdkUtils", () => {
 			assert.ok(spawnedCalls.some((c) => c.args.includes("--version")));
 			assert.ok(spawnedCalls.some((c) => c.cwd === cloneDir && c.args.join(" ") === "clone -b stable https://github.com/flutter/flutter.git"));
 			assert.ok(spawnedCalls.some((c) => c.bin.endsWith(executableNames.flutter) && c.args.includes("--help")));
-			assert.deepStrictEqual(updatedSettings, [{ key: "flutterSdkPath", value: expectedFlutterFolder }]);
-			assert.ok(showInfo.called);
-			assert.ok(reloadStub.calledOnceWithExactly("_dart.reloadExtension", ExtensionRestartReason.AfterFlutterClone));
+			assert.equal(vs.workspace.getConfiguration("dart").inspect("flutterSdkPath")?.globalValue, expectedFlutterFolder);
+			assert.ok(showInfo.calledWith(addSdkToPathPrompt("Flutter")));
+			assert.ok(reloadExtensionStub.calledOnceWithExactly("_dart.reloadExtension", ExtensionRestartReason.AfterFlutterClone));
 			assert.ok(rerunStub.calledOnceWithExactly("flutter.createProject"));
-
-			(vs.workspace.getConfiguration as sinon.SinonStub).restore();
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-			await delay(100);
 		});
 	});
 
 	describe("scanWorkspace", () => {
-		function stubDartConfig(overrides: Record<string, unknown>, workspaceKeys: string[] = []) {
-			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-			executeCommand.withArgs("_dart.reloadExtension", sinon.match.any).resolves();
-			const realGetConfig = vs.workspace.getConfiguration.bind(vs.workspace);
-			const realDartConf = realGetConfig("dart");
-			sb.stub(vs.workspace, "getConfiguration").callsFake(((section?: string, scope?: vs.ConfigurationScope | null): vs.WorkspaceConfiguration => {
-				if (section !== "dart")
-					return realGetConfig(section, scope);
-				return {
-					get: (key: string, defaultValue?: unknown) => key in overrides ? overrides[key] : realDartConf.get(key, defaultValue),
-					has: (key: string) => realDartConf.has(key),
-					inspect: (key: string) => key in overrides
-						? { key, workspaceValue: workspaceKeys.includes(key) ? overrides[key] : undefined, globalValue: !workspaceKeys.includes(key) ? overrides[key] : undefined }
-						: realDartConf.inspect(key),
-					update: async () => undefined,
-				} as unknown as vs.WorkspaceConfiguration;
-			}) as typeof vs.workspace.getConfiguration);
-			return realDartConf;
-		}
-
 		it("returns early when analyzerSshHost is configured", async () => {
-			const realDartConf = stubDartConfig({ analyzerSshHost: "my-ssh-host", sdkPath: "/remote/dart-sdk" });
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
+			await setConfigForTest("dart", "analyzerSshHost", "my-ssh-host");
+			await setConfigForTest("dart", "sdkPath", "/remote/dart-sdk");
 
 			const wc = await privateApi.sdkUtils!.scanWorkspace();
 			assert.equal(wc.sdks.dart, "/remote/dart-sdk");
 			assert.equal(wc.sdks.flutter, undefined);
-
-			(vs.workspace.getConfiguration as sinon.SinonStub).restore();
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-			await delay(100);
 		});
 
 		it("handles Flutter projects, snap initialization, missing version file, and Fuchsia/Dart SDK roots", async () => {
@@ -1025,16 +1077,15 @@ describe("SdkUtils", () => {
 				{ uri: vs.Uri.file(flutterProj), name: "flutter_proj", index: 1 },
 			]);
 			privateApi.clearCaches();
+			defer("clear caches", () => privateApi.clearCaches());
 
 			const origPath = process.env.PATH;
 			process.env.PATH = `${snapBinDir}${path.delimiter}${path.join(realFlutterSdk, "bin")}`;
 			defer("restore PATH", () => process.env.PATH = origPath);
 
 			const badFlutterPath = path.join(tempDir, "bad-flutter-sdk");
-			const realDartConf = stubDartConfig({ flutterSdkPath: badFlutterPath }, ["flutterSdkPath"]);
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-			sb.stub(vs.window, "showWarningMessage").resolves(undefined);
+			await setWorkspaceConfigForTest("dart", "flutterSdkPath", badFlutterPath);
+			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(undefined);
 
 			const wc = await privateApi.sdkUtils!.scanWorkspace();
 			assert.equal(wc.hasAnyFlutterProjects, true);
@@ -1042,12 +1093,10 @@ describe("SdkUtils", () => {
 			assert.equal(wc.hasProjectsInFuchsiaTree, true);
 			assert.equal(wc.sdks.flutter, realFlutterSdk);
 			assert.equal(wc.sdks.flutterVersion, MISSING_VERSION_FILE_VERSION);
-
-			(vs.workspace.getConfiguration as sinon.SinonStub).restore();
-			privateApi.clearCaches();
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-			await delay(100);
+			assert.ok(showWarningMessage.calledWith(
+				`The SDK configured in dart.flutterSdkPath is not a valid SDK folder: ${badFlutterPath}`,
+				openSettingsAction,
+			));
 		});
 
 		it("handles non-Dart workspace, forceFlutterWorkspace, and fallback Flutter initialization for Dart SDK", async () => {
@@ -1079,14 +1128,14 @@ describe("SdkUtils", () => {
 			]);
 			sb.stub(vs.workspace, "findFiles").resolves([]);
 			privateApi.clearCaches();
+			defer("clear caches", () => privateApi.clearCaches());
 
 			const origPath = process.env.PATH;
 			process.env.PATH = "";
 			defer("restore PATH", () => process.env.PATH = origPath);
 
-			const realDartConf = stubDartConfig({ flutterSdkPath: flutterSdk, sdkPath: undefined });
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
+			await setConfigForTest("dart", "flutterSdkPath", flutterSdk);
+			await setConfigForTest("dart", "sdkPath", undefined);
 
 			const wc = await privateApi.sdkUtils!.scanWorkspace();
 			assert.equal(wc.hasAnyFlutterProjects, false);
@@ -1106,12 +1155,6 @@ describe("SdkUtils", () => {
 				assert.equal(wcBazel.hasAnyFlutterProjects, true);
 				assert.equal(wcBazel.sdks.flutter, flutterSdk);
 			}
-
-			(vs.workspace.getConfiguration as sinon.SinonStub).restore();
-			privateApi.clearCaches();
-			await realDartConf.update("checkForSdkUpdates", false, vs.ConfigurationTarget.Global);
-			await realDartConf.update("checkForSdkUpdates", undefined, vs.ConfigurationTarget.Global);
-			await delay(100);
 		});
 	});
 });
