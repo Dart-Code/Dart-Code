@@ -37,14 +37,14 @@ describe("interactive refactors", () => {
 	});
 
 	/// Rewrites and executes `codeAction` and returns arguments passed to the test refactor command.
-	async function executeRefactor(refactors: InteractiveRefactors, codeAction: vs.CodeAction): Promise<any> {
-		let capturedArgs: any;
+	async function executeRefactor(refactors: InteractiveRefactors, codeAction: vs.CodeAction): Promise<{ arguments: unknown[] }> {
+		let capturedArgs: { arguments: unknown[] } | undefined;
 		refactors.rewriteCommands([codeAction]);
-		const commandSub = vs.commands.registerCommand(testRefactorCommandName, (args: any) => { capturedArgs = args; });
+		const commandSub = vs.commands.registerCommand(testRefactorCommandName, (args: { arguments: unknown[] }) => { capturedArgs = args; });
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		await vs.commands.executeCommand(codeAction.command!.command, ...codeAction.command!.arguments!);
 		commandSub.dispose();
-		return capturedArgs;
+		return capturedArgs!;
 	}
 
 

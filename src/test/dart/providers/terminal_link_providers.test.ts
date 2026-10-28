@@ -4,6 +4,7 @@ import sinon from "sinon";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { Sdks, WorkspaceConfig } from "../../../shared/interfaces";
+import { PackageMap } from "../../../shared/pub/package_map";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartPackageUriLinkProvider } from "../../../shared/vscode/terminal/package_uri_link_provider";
 import { DartPackageUriLink, findFileUriLinks, findPackageUriLinks } from "../../../shared/vscode/terminal_link_provider_utils";
@@ -63,7 +64,7 @@ describe("DartPackageUriTerminalLinkProvider", () => {
 
 	it("navigates directly for a single result", () => {
 		provider.packageMaps = {
-			project1: { resolvePackageUri: () => file1 } as any,
+			project1: { resolvePackageUri: () => file1 } as unknown as PackageMap,
 		};
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const jumpToLineCol = executeCommand.withArgs("_dart.jumpToLineColInUri", sinon.match.any, 1, 2).resolves();
@@ -71,14 +72,14 @@ describe("DartPackageUriTerminalLinkProvider", () => {
 		provider.handleTerminalLink(link);
 
 		assert.equal(jumpToLineCol.calledOnce, true);
-		const [, uri] = jumpToLineCol.firstCall.args;
-		assert.equal(fsPath(uri as vs.Uri), file1);
+		const [, uri] = jumpToLineCol.firstCall.args as [unknown, vs.Uri];
+		assert.equal(fsPath(uri), file1);
 	});
 
 	it("shows peek when multiple results", () => {
 		provider.packageMaps = {
-			project1: { resolvePackageUri: () => file1 } as any,
-			project2: { resolvePackageUri: () => file2 } as any,
+			project1: { resolvePackageUri: () => file1 } as unknown as PackageMap,
+			project2: { resolvePackageUri: () => file2 } as unknown as PackageMap,
 		};
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const goToLocations = executeCommand.withArgs("editor.action.goToLocations", sinon.match.any, sinon.match.any, sinon.match.any, "gotoAndPeek", sinon.match.any).resolves();

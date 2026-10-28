@@ -1029,9 +1029,9 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		if (this.supportedPlatformsDelaySeconds)
 			await delay(this.supportedPlatformsDelaySeconds * 1000);
 
-		const platformTypes = Object.fromEntries(
+		const platformTypes = Object.fromEntries<{ isSupported: boolean }>(
 			[
-				...(this.supportedPlatforms ?? ["android", "ios"]).map((p) => [p, { isSupported: true }]),
+				...(this.supportedPlatforms ?? ["android", "ios"]).map((p): [string, { isSupported: boolean }] => [p, { isSupported: true }]),
 				// Include a dumym platform that is not enabled, to ensure we handled isSupported !== true correctly.
 				["dummy-platform", { isSupported: false }]
 			]
