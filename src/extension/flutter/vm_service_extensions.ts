@@ -70,7 +70,7 @@ export class VmServiceExtensions {
 				if (e.body.extensionRPC === pubRootDirectoriesService) {
 					const params: Record<string, string> = {
 						// TODO: Is this OK???
-						isolateId: e.body.isolateId,
+						isolateId: e.body.isolateId as string,
 					};
 
 					let argNum = 0;
@@ -144,7 +144,7 @@ export class VmServiceExtensions {
 	}
 
 	public async getCurrentServiceExtensionValue(session: vs.DebugSession, method: VmServiceExtension): Promise<unknown> {
-		const responseBody = await this.callServiceExtension(session, method);
+		const responseBody = await this.callServiceExtension(session, method) as Record<string, string | undefined>;
 		return this.extractServiceValue(responseBody[toggleExtensionStateKeys[method]]);
 	}
 
@@ -153,7 +153,7 @@ export class VmServiceExtensions {
 		await this.callServiceExtension(session, method, params);
 	}
 
-	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: any): Promise<any> {
+	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: Record<string, unknown>): Promise<any> {
 		if (!params?.isolateId) {
 			params = params || {};
 			params.isolateId = this.loadedServiceExtensionIsolateIds.get(method);

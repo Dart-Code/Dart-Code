@@ -147,7 +147,6 @@ function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
 			// We will generate errors if we don't have access to this folder
 			// so just skip over it.
 			if (err) {
-				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				logger.warn(`Skipping folder ${folder} due to error: ${err}`);
 				resolve([]);
 			} else {
@@ -239,7 +238,7 @@ export function pubspecContentReferencesFlutter(content: string): boolean {
 	if (!content.includes("flutter"))
 		return false;
 	try {
-		const yaml = YAML.parse(content);
+		const yaml = YAML.parse(content) as Record<string, Record<string, unknown> | undefined> | undefined;
 		return !!(
 			yaml?.dependencies?.flutter
 			|| yaml?.dev_dependencies?.flutter
@@ -257,8 +256,8 @@ export function pubspecContentReferencesFlutter(content: string): boolean {
 
 export function tryGetPackageName(packageDirectory: string): string | undefined {
 	try {
-		const yaml = YAML.parse(fs.readFileSync(path.join(packageDirectory, "pubspec.yaml")).toString());
-		return (yaml?.name ?? undefined) as string | undefined;
+		const yaml = YAML.parse(fs.readFileSync(path.join(packageDirectory, "pubspec.yaml")).toString()) as { name?: string } | undefined;
+		return yaml?.name ?? undefined;
 	} catch {
 		return undefined;
 	}
@@ -398,9 +397,9 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	}
 
 	if (jsonVersionFileContent) {
-		let versionData: any;
+		let versionData: { flutterVersion?: unknown } | undefined;
 		try {
-			versionData = JSON.parse(jsonVersionFileContent);
+			versionData = JSON.parse(jsonVersionFileContent) as { flutterVersion?: unknown } | undefined;
 		} catch (e) {
 			logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON (${String(e)}): ${jsonVersionFileContent}, falling back to legacy file`);
 		}
@@ -452,8 +451,8 @@ export function getPubGeneratorVersion(
 		return undefined;
 	try {
 		const content = readFileSync(packageMapPath);
-		const data = JSON.parse(content);
-		const version = data.generatorVersion as string | undefined | null;
+		const data = JSON.parse(content) as { generatorVersion?: string | null };
+		const version = data.generatorVersion;
 		return nullToUndefined(semver.valid(version));
 	} catch (e) {
 		logger.error(e);

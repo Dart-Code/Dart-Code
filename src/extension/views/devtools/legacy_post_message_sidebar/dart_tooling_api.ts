@@ -28,7 +28,7 @@ export class DartApi implements IAmDisposable {
 		this.post({ jsonrpc: "2.0", ...message });
 	}
 
-	private async handleMessage(message: any): Promise<void> {
+	private async handleMessage(message: { id?: unknown; method?: unknown; params?: unknown }): Promise<void> {
 		if (apiDebugMode)
 			console.log(`VS CODE GOT: ${JSON.stringify(message)}`);
 
@@ -69,9 +69,9 @@ abstract class ToolApi {
 
 	constructor(private readonly dartApi: DartApi) { }
 
-	abstract handleRequest(method: string, params: any): Promise<any>;
+	abstract handleRequest(method: string, params: any): Promise<unknown>;
 
-	public sendEvent(method: string, params: any) {
+	public sendEvent(method: string, params: unknown) {
 		this.dartApi.postMessage({ method: `${this.apiName}.${method}`, params });
 	}
 

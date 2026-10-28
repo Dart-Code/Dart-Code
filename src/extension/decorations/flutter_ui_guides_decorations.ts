@@ -75,7 +75,7 @@ export class FlutterUiGuideDecorations implements IAmDisposable {
 			const lastLineCharacter = lineInfo.range.end.character;
 			const anchorPoint = Math.max(lastLineCharacter < firstGuideChar ? 0 : firstGuideChar, 0);
 
-			const decorationString: string[] = new Array(lastGuideChar).fill(nonBreakingSpace);
+			const decorationString: string[] = new Array<string>(lastGuideChar).fill(nonBreakingSpace);
 			for (const guide of guidesByLine[line]) {
 				if (line !== guide.end.line) {
 					// Only put a vertical line in if we haven't already o

@@ -115,9 +115,9 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 
 		try {
 			const pubspecContent = fs.readFileSync(pubspecPath).toString();
-			const yaml = YAML.parse(pubspecContent);
-			const dependencies = yaml?.dependencies && typeof yaml.dependencies === "object" ? Object.keys(yaml.dependencies as object) : [];
-			const devDependencies = includeDevDependencies && yaml?.dev_dependencies && typeof yaml.dev_dependencies === "object" ? Object.keys(yaml.dev_dependencies as object) : [];
+			const yaml = YAML.parse(pubspecContent) as Record<string, unknown> | undefined;
+			const dependencies = yaml?.dependencies && typeof yaml.dependencies === "object" ? Object.keys(yaml.dependencies) : [];
+			const devDependencies = includeDevDependencies && yaml?.dev_dependencies && typeof yaml.dev_dependencies === "object" ? Object.keys(yaml.dev_dependencies) : [];
 			[...dependencies, ...devDependencies].forEach((d) => existingPackageNames.add(d));
 		} catch {
 			return undefined;

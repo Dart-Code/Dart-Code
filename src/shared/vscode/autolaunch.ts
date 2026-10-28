@@ -73,7 +73,7 @@ export class AutoLaunch implements IAmDisposable {
 			const wf = workspace.getWorkspaceFolder(uri);
 			const filePath = fsPath(uri);
 			const fileContents = fs.readFileSync(filePath, "utf8");
-			const jsonData = JSON.parse(fileContents);
+			const jsonData = JSON.parse(fileContents) as { configurations?: Array<Record<string, unknown>> } | undefined;
 			const configurations = jsonData?.configurations;
 			if (Array.isArray(configurations)) {
 				for (const configuration of configurations) {

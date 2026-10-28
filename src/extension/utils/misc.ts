@@ -39,8 +39,8 @@ export async function getFlutterConfigValue<T>(logger: Logger, flutterSdkPath: s
 			if (firstBrace > 0) {
 				jsonString = jsonString.substring(firstBrace);
 			}
-			const json = JSON.parse(jsonString);
-			return json[flutterConfigKey] as T;
+			const json = JSON.parse(jsonString) as Record<string, T>;
+			return json[flutterConfigKey];
 		}
 		throw Error(`Failed to run "flutter config --machine" (${proc.exitCode}): ${proc.stderr}`);
 	} catch (e) {

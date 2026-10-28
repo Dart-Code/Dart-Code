@@ -192,7 +192,7 @@ async function handleDartCreateTrigger(logger: Logger, wf: vs.WorkspaceFolder, t
 	const templateJson = fs.readFileSync(triggerFile).toString().trim();
 	let template: DartProjectTemplate;
 	try {
-		template = JSON.parse(templateJson);
+		template = JSON.parse(templateJson) as DartProjectTemplate;
 	} catch (e) {
 		logger.error("Failed to get project templates");
 		logger.error(e);

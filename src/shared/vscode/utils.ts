@@ -77,7 +77,7 @@ function getAnalysisOptionsExcludedFolders(
 		const analysisOptionsPath = path.join(projectFolder, "analysis_options.yaml");
 		try {
 			const analysisOptionsContent = fs.readFileSync(analysisOptionsPath);
-			const yaml = YAML.parse(analysisOptionsContent.toString());
+			const yaml = YAML.parse(analysisOptionsContent.toString()) as { analyzer?: { exclude?: unknown } } | undefined;
 			const excluded = yaml?.analyzer?.exclude;
 			if (excluded && Array.isArray(excluded)) {
 				for (let exclude of excluded as string[]) {

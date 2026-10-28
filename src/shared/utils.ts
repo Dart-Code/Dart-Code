@@ -155,8 +155,8 @@ export function errorString(error: any): string {
 
 type BufferedLogMessage =
 	{ type: "info", message: string, category?: LogCategory }
-	| { type: "warn", message: any, category?: LogCategory }
-	| { type: "error", message: any, category?: LogCategory };
+	| { type: "warn", message: unknown, category?: LogCategory }
+	| { type: "error", message: unknown, category?: LogCategory };
 
 export class BufferedLogger implements Logger {
 	private buffer: BufferedLogMessage[] = [];
@@ -164,10 +164,10 @@ export class BufferedLogger implements Logger {
 	public info(message: string, category?: LogCategory): void {
 		this.buffer.push({ type: "info", message, category });
 	}
-	public warn(message: any, category?: LogCategory): void {
+	public warn(message: unknown, category?: LogCategory): void {
 		this.buffer.push({ type: "warn", message, category });
 	}
-	public error(error: any, category?: LogCategory): void {
+	public error(error: unknown, category?: LogCategory): void {
 		this.buffer.push({ type: "error", message: error, category });
 	}
 
