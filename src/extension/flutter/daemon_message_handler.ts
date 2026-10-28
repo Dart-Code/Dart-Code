@@ -55,7 +55,7 @@ export function setUpDaemonMessageHandler(logger: Logger, context: ExtensionCont
 				void window.showErrorMessage(message);
 				break;
 			default:
-				logger.warn(`Unexpected daemon.showMessage type: ${l.level}`);
+				logger.warn(`Unexpected daemon.showMessage type: ${String(l.level)}`);
 		}
 	}));
 }

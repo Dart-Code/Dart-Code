@@ -136,7 +136,7 @@ export class InteractiveRefactors implements IAmDisposable {
 		if (isSaveUriParameter(parameter)) {
 			return (await this.promptUserSaveUri(parameter))?.toString();
 		} else {
-			this.logger.warn(`Unknown parameter kind ${parameter.kind}. Using default value (${parameter.defaultValue})`);
+			this.logger.warn(`Unknown parameter kind ${parameter.kind}. Using default value (${String(parameter.defaultValue)})`);
 			return parameter.defaultValue;
 		}
 	}

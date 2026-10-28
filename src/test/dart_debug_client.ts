@@ -334,7 +334,7 @@ export class DartDebugClient extends DebugClient {
 		return new Promise((resolve, reject) => {
 			setTimeout(
 				() => {
-					reject(new Error(`No customEvent '${type}' matching ${filter} received after ${this.defaultTimeout} ms`));
+					reject(new Error(`No customEvent '${type}' matching ${String(filter)} received after ${this.defaultTimeout} ms`));
 				},
 				this.defaultTimeout,
 			);

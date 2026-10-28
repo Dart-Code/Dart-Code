@@ -312,7 +312,7 @@ export async function activate(file?: vs.Uri | null): Promise<void> {
 	const cpuLoad = os.loadavg();
 	const totalMem = os.totalmem();
 	const freeMem = os.freemem();
-	logger.info(`  cpuLoad: ${cpuLoad}`);
+	logger.info(`  cpuLoad: ${cpuLoad.join(", ")}`);
 	logger.info(`  totalMem: ${totalMem}`);
 	logger.info(`  freeMem: ${freeMem}`);
 	logger.info(`  ${Math.round((freeMem / totalMem) * 100)}% memory is available`);
@@ -916,7 +916,7 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 export function ensureArrayContainsArray<T>(haystack: T[], needle: T[]) {
 	assert.ok(
 		arrayContainsArray(haystack, needle),
-		`Did not find ${needle} in ${haystack}`,
+		`Did not find ${JSON.stringify(needle)} in ${JSON.stringify(haystack)}`,
 	);
 }
 

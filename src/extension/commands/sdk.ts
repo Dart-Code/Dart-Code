@@ -105,7 +105,7 @@ export class BaseSdkCommands implements IAmDisposable {
 
 		// Figure out if there's already one of this command running, in which case we'll chain off the
 		// end of it.
-		const commandId = `${folder}|${commandName}|${args}`;
+		const commandId = `${folder}|${commandName}|${args.join(",")}`;
 		const existingProcess = this.runningCommands[commandId];
 		if (existingProcess && !existingProcess.hasStarted) {
 			// We already have a queued version of this command so there's no value in queueing another
