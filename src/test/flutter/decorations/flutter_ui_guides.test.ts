@@ -21,7 +21,12 @@ describe("flutter_ui_guides_decorations", () => {
 		return () => spy.lastCall?.returnValue as vs.DecorationOptions[] | undefined;
 	}
 
-	function formatGuidesByLine(decorations: vs.DecorationOptions[]) {
+	/**
+	 * Renders a visual representation of the document with UI guide decorations
+	 * overlaid (replacing whitespace) and `~` representing non-breaking spaces (`\xa0`)
+	 * in the decoration string after the anchor point (`^` if empty).
+	 */
+	function renderDocumentWithGuides(doc: vs.TextDocument, decorations: vs.DecorationOptions[], tabSize = 1): string {
 		const guidesByLine = new Map<number, { anchor: number, text: string }>();
 		for (const d of decorations) {
 			guidesByLine.set(d.range.start.line, {
@@ -29,7 +34,30 @@ describe("flutter_ui_guides_decorations", () => {
 				text: d.renderOptions?.before?.contentText ?? "",
 			});
 		}
-		return guidesByLine;
+
+		const lines: string[] = [];
+		for (let lineNum = 0; lineNum < doc.lineCount; lineNum++) {
+			const rawLine = doc.lineAt(lineNum).text;
+			const expandedLine = tabSize > 1 ? rawLine.replace(/\t/g, " ".repeat(tabSize)) : rawLine;
+			const guide = guidesByLine.get(lineNum);
+			if (!guide) {
+				lines.push(expandedLine);
+				continue;
+			}
+
+			// Compute the visual column of the anchor point when tabs are expanded.
+			const prefixBeforeAnchor = rawLine.slice(0, guide.anchor);
+			const visualAnchor = (tabSize > 1 ? prefixBeforeAnchor.replace(/\t/g, " ".repeat(tabSize)) : prefixBeforeAnchor).length;
+			const chars = expandedLine.padEnd(visualAnchor + guide.text.length, " ").split("");
+			for (let i = 0; i < guide.text.length; i++) {
+				const guideChar = guide.text[i];
+				if (guideChar !== "\xa0")
+					chars[visualAnchor + i] = guideChar;
+			}
+			const renderedGuideText = guide.text ? guide.text.replace(/\xa0/g, "~") : "^";
+			lines.push(`${chars.join("")} // @${guide.anchor}: ${renderedGuideText}`);
+		}
+		return lines.join("\n");
 	}
 
 	it("renders expected UI guides for widgets", async () => {
@@ -58,28 +86,27 @@ Widget build() {
 		`.trim()));
 
 		await waitForResult(() => !!getDecorations()?.length, "Wait for UI guide decorations");
-		const guidesByLine = formatGuidesByLine(getDecorations()!);
+		const rendered = renderDocumentWithGuides(currentEditor().document, getDecorations()!);
 
-		// Line 3: "  return Column(" -> start of Column guide at col 2, covered by user text -> 4 NBSPs
-		assert.deepStrictEqual(guidesByLine.get(3), { anchor: 2, text: "\xa0\xa0\xa0\xa0" });
-		// Line 4: "    children: [" -> vertical line at col 2, NBSPs over user text
-		assert.deepStrictEqual(guidesByLine.get(4), { anchor: 2, text: "│\xa0\xa0\xa0" });
-		// Line 5: "      Padding(" -> middleCorner at col 2 (since Container is also a child of Column on line 10), horizontal to col 6 (covered by 'P' so NBSP at index 4)
-		assert.deepStrictEqual(guidesByLine.get(5), { anchor: 2, text: "├───\xa0\xa0" });
-		// Line 6: "        padding: const EdgeInsets.all(8.0)," -> vertical lines at col 2 and col 6
-		assert.deepStrictEqual(guidesByLine.get(6), { anchor: 2, text: "│\xa0\xa0\xa0│\xa0" });
-		// Line 7: "        child: Text('First')," -> vertical line at col 2, bottomCorner at col 6, horizontal to col 8 (covered by 'c' so NBSP)
-		assert.deepStrictEqual(guidesByLine.get(7), { anchor: 2, text: "│\xa0\xa0\xa0╰─\xa0" });
-		// Line 8: "      )," -> vertical line at col 2
-		assert.deepStrictEqual(guidesByLine.get(8), { anchor: 2, text: "│\xa0\xa0\xa0" });
-		// Line 9: "" (empty line) -> anchor is 0 (lastLineCharacter < firstGuideChar), 2 NBSPs + vertical line at col 2
-		assert.deepStrictEqual(guidesByLine.get(9), { anchor: 0, text: "\xa0\xa0│\xa0\xa0\xa0" });
-		// Line 10: "      Container(" -> bottomCorner at col 2, horizontal to col 6 (covered by 'C' so NBSP)
-		assert.deepStrictEqual(guidesByLine.get(10), { anchor: 2, text: "╰───\xa0" });
-		// Line 11: "        child:" -> guide from col 6 to col 6 (so lastGuideChar = 6 and anchorPoint = 6 -> empty contentText)
-		assert.deepStrictEqual(guidesByLine.get(11), { anchor: 6, text: "" });
-		// Line 12: "      Text('Outdented')," -> end of Container->Text guide at col 6, covered by user text ('T' at col 6)
-		assert.deepStrictEqual(guidesByLine.get(12), { anchor: 6, text: "\xa0" });
+		assert.equal(rendered, `
+import 'package:flutter/material.dart';
+
+Widget build() {
+  return Column( // @2: ~~~~
+  │ children: [ // @2: │~~~
+  ├───Padding( // @2: ├───~~
+  │   │ padding: const EdgeInsets.all(8.0), // @2: │~~~│~
+  │   ╰─child: Text('First'), // @2: │~~~╰─~
+  │   ), // @2: │~~~
+  │    // @0: ~~│~~~
+  ╰───Container( // @2: ╰───~
+        child: // @6: ^
+      Text('Outdented'), // @6: ~
+      ),
+    ],
+  );
+}
+		`.trim());
 	});
 
 	it("adjusts guide padding for tabs", async () => {
@@ -103,14 +130,20 @@ Widget build() {
 		].join("\n")));
 
 		await waitForResult(() => !!getDecorations()?.length, "Wait for tab-adjusted UI guide decorations");
-		const guidesByLine = formatGuidesByLine(getDecorations()!);
+		const rendered = renderDocumentWithGuides(editor.document, getDecorations()!, 4);
 
-		// Line 4: "\t\tchildren: [" -> anchor is 1. char 1 is "\t", guide at col 1 is "│", padded with 3 NBSPs (tabSize - 1), plus 1 NBSP at col 2
-		assert.deepStrictEqual(guidesByLine.get(4), { anchor: 1, text: "│\xa0\xa0\xa0\xa0" });
-		// Line 5: "\t\t\tText('A')," -> anchor is 1. char 1 is "\t" (guide "├" padded with 3 "─"), char 2 is "\t" (guide "─" padded with 3 "─"), char 3 is "T" (NBSP)
-		assert.deepStrictEqual(guidesByLine.get(5), { anchor: 1, text: "├───────\xa0" });
-		// Line 6: "\t\t\tText('B')," -> anchor is 1. char 1 is "\t" (guide "╰" padded with 3 "─"), char 2 is "\t" (guide "─" padded with 3 "─"), char 3 is "T" (NBSP)
-		assert.deepStrictEqual(guidesByLine.get(6), { anchor: 1, text: "╰───────\xa0" });
+		assert.equal(rendered, `
+import 'package:flutter/material.dart';
+
+Widget build() {
+    return Column( // @1: ~~
+    │   children: [ // @1: │~~~~
+    ├───────Text('A'), // @1: ├───────~
+    ╰───────Text('B'), // @1: ╰───────~
+        ],
+    );
+}
+		`.trim());
 	});
 
 	it("bails out when outline length does not match document length and updates when switching active editor", async () => {
@@ -170,28 +203,66 @@ Widget build() {
 		`.trim()));
 
 		await waitForResult(() => !!getDecorations()?.length, "Wait for initial UI guide decorations");
-		let guidesByLine = formatGuidesByLine(getDecorations()!);
-		assert.deepStrictEqual(guidesByLine.get(5), { anchor: 2, text: "├───\xa0\xa0" });
-		assert.deepStrictEqual(guidesByLine.get(9), { anchor: 2, text: "╰───\xa0" });
+		const editor = currentEditor();
+		assert.equal(renderDocumentWithGuides(editor.document, getDecorations()!), `
+import 'package:flutter/material.dart';
+
+Widget build() {
+  return Column( // @2: ~~~~
+  │ children: [ // @2: │~~~
+  ├───Padding( // @2: ├───~~
+  │   │ padding: const EdgeInsets.all(8.0), // @2: │~~~│~
+  │   ╰─child: Text('First'), // @2: │~~~╰─~
+  │   ), // @2: │~~~
+  ╰───Text('Second'), // @2: ╰───~
+    ],
+  );
+}
+		`.trim());
 
 		// Insert a newline at the top of the document and verify WidgetGuideTracker immediately shifts guides down by 1 line.
-		const editor = currentEditor();
 		const uiGuides = privateApi.flutterUiGuideDecorations;
 		const updatedGuidesSpy = sb.spy(uiGuides, "buildFromUpdatedGuides");
 
-		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), " // comment\n"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// comment\n"));
 		assert.equal(updatedGuidesSpy.calledOnce, true);
 
-		guidesByLine = formatGuidesByLine(getDecorations()!);
-		assert.deepStrictEqual(guidesByLine.get(6), { anchor: 2, text: "├───\xa0\xa0" });
-		assert.deepStrictEqual(guidesByLine.get(10), { anchor: 2, text: "╰───\xa0" });
+		assert.equal(renderDocumentWithGuides(editor.document, getDecorations()!), `
+// comment
+import 'package:flutter/material.dart';
+
+Widget build() {
+  return Column( // @2: ~~~~
+  │ children: [ // @2: │~~~
+  ├───Padding( // @2: ├───~~
+  │   │ padding: const EdgeInsets.all(8.0), // @2: │~~~│~
+  │   ╰─child: Text('First'), // @2: │~~~╰─~
+  │   ), // @2: │~~~
+  ╰───Text('Second'), // @2: ╰───~
+    ],
+  );
+}
+		`.trim());
 
 		// Delete a range spanning one of the child widgets so its positions are removed from the tracker while the other remains.
 		updatedGuidesSpy.resetHistory();
 		await editor.edit((eb) => eb.delete(rangeOf("|      Text('Second'),\n|", editor.document)));
 		assert.equal(updatedGuidesSpy.calledOnce, true);
-		const remainingGuides = updatedGuidesSpy.lastCall.args[1];
-		assert.equal(remainingGuides.length, 2); // Column -> Padding and Padding -> Text
+		assert.equal(renderDocumentWithGuides(editor.document, getDecorations()!), `
+// comment
+import 'package:flutter/material.dart';
+
+Widget build() {
+  return Column( // @2: ~~~~
+  │ children: [ // @2: │~~~
+  ╰───Padding( // @2: ╰───~~
+      │ padding: const EdgeInsets.all(8.0), // @6: │~
+      ╰─child: Text('First'), // @6: ╰─~
+      ),
+    ],
+  );
+}
+		`.trim());
 
 		// Clean up by disabling UI guides and reloading so dispose() is called on FlutterUiGuideDecorations and WidgetGuideTracker.
 		const uiGuidesDisposeSpy = sb.spy(uiGuides, "dispose");
