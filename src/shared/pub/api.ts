@@ -4,7 +4,7 @@ export class PubApi {
 	public readonly pubUrlBase: string;
 
 	constructor(private readonly webClient: WebClient) {
-		this.pubUrlBase = process.env.PUB_HOSTED_URL || "https://pub.dev";
+		this.pubUrlBase = process.env.PUB_HOSTED_URL || "https://pub.dev"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 	}
 
 	public async getPackage(packageID: string): Promise<PubPackage> {

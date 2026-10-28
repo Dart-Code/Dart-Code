@@ -512,7 +512,7 @@ export class DebugCommands implements IAmDisposable {
 
 			const sessions = debugSessions.map((s) => ({
 				description: s.session.workspaceFolder ? s.session.workspaceFolder.name : undefined,
-				detail: s.session.configuration.deviceName || `Started ${s.sessionStart.toLocaleTimeString()}`,
+				detail: s.session.configuration.deviceName ?? `Started ${s.sessionStart.toLocaleTimeString()}`,
 				label: s.session.name,
 				session: s,
 			}));

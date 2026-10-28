@@ -13,9 +13,9 @@ export class WebClient {
 	public fetch(urlString: string, headers?: http.OutgoingHttpHeaders): Promise<string> {
 		const u = url.parse(urlString);
 		if (u.protocol === "https:" && u.hostname)
-			return this.fetchHttps(u.hostname, u.port || "443", u.path || "", headers);
+			return this.fetchHttps(u.hostname, u.port ?? "443", u.path ?? "", headers);
 		else if (u.protocol === "http:" && u.hostname)
-			return this.fetchHttp(u.hostname, u.port || "80", u.path || "", headers);
+			return this.fetchHttp(u.hostname, u.port ?? "80", u.path ?? "", headers);
 		else
 			return Promise.reject(new Error(`Cannot fetch URL ${urlString}`));
 	}

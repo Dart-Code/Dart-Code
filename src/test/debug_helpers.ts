@@ -14,7 +14,7 @@ import { TestOutlineInfo, TestOutlineVisitor } from "../shared/utils/outline";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getExpectedOutline, getLaunchConfiguration, logger, openFile, privateApi, sb, watchPromise } from "./helpers";
 
-export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
+export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
 
 export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: Record<string, any>): Promise<DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments> {

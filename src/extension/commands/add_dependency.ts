@@ -277,8 +277,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 
 	private async promptForGitPackageInfo(repoUrl?: string): Promise<GitPubPackage | undefined> {
-		if (!repoUrl)
-			repoUrl = await this.promptForGitUrl();
+		repoUrl ??= await this.promptForGitUrl();
 		if (!repoUrl)
 			return;
 

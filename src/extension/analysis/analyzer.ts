@@ -737,7 +737,7 @@ class LoggingTransform extends stream.Transform {
 }
 
 function getAnalyzerArgs(logger: Logger) {
-	const analyzerPath = config.analyzerPath || "language-server";
+	const analyzerPath = config.analyzerPath || "language-server"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
 	// might not exist on the local machine.

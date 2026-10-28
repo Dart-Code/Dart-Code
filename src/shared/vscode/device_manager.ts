@@ -428,7 +428,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 					label: "Available Devices",
 				},
 				...supportedDevices.map((d) => ({
-					description: `${d.id} - ${d.category || d.platform || ""}`,
+					description: `${d.id} - ${d.category || d.platform || ""}`, // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 					detail: d === this.currentDevice ? "Current Device" : undefined,
 					device: d,
 					label: this.labelForDevice(d, { withIcon: true }),
@@ -715,7 +715,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 			const pickableEmulator = {
 				alwaysShow: false,
 				coldBoot: false,
-				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
+				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined, // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 				device: e,
 				label: showAsEmulators ? "$(play) " + `Start ${e.name}` : e.name,
 			};

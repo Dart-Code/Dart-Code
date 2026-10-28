@@ -706,7 +706,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	context.subscriptions.push(workspaceContext.events.onPackageMapChange.listen(() => clearCaches()));
 
-	const dartCodeConfigurationPath = process.env[dartCodeConfigurationPathEnvironmentVariableName] || defaultDartCodeConfigurationPath;
+	const dartCodeConfigurationPath = process.env[dartCodeConfigurationPathEnvironmentVariableName] || defaultDartCodeConfigurationPath; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 	context.subscriptions.push(new AutoLaunch(dartCodeConfigurationPath, logger, deviceManager));
 
 	// Only expose the private APIs during test runs. These are not for use by other extensions, but
