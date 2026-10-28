@@ -16,7 +16,7 @@ import { Context } from "./workspace";
 export class FlutterDeviceManager implements IAmDisposable {
 	public unresponsiveTimeoutPeriodSeconds = 5;
 	private subscriptions: IAmDisposable[] = [];
-	private statusBarItem: vs.StatusBarItem;
+	public readonly statusBarItem: vs.StatusBarItem;
 	public currentDevice?: f.Device;
 	private devices: f.Device[] = [];
 	private emulators: Emulator[] = [];
@@ -327,7 +327,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 		this.extContext.workspaceLastFlutterDeviceId = deviceIdToRemember;
 	}
 
-	protected shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
+	public shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
 
 	/// Like [findBestDevice] but will wait up to [timeMs] for the device.
 	public async waitForBestDevice(id: string, timeMs: number): Promise<f.Device | undefined> {
@@ -667,7 +667,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 		}
 	}
 
-	private async createEmulator(): Promise<boolean> {
+	public async createEmulator(): Promise<boolean> {
 		// TODO: Allow user to create names when we let them customise the emulator type.
 		// const name = await vs.window.showInputBox({
 		// 	prompt: "Enter a name for your new Android Emulator",
@@ -769,7 +769,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 		return true;
 	}
 
-	private async launchCustomEmulator(emulator: CustomEmulator): Promise<boolean> {
+	public async launchCustomEmulator(emulator: CustomEmulator): Promise<boolean> {
 		try {
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,

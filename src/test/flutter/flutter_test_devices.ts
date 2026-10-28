@@ -1,5 +1,5 @@
 import * as f from "../../shared/flutter/daemon_interfaces";
-import { CustomEmulatorDefinition, Emulator } from "../../shared/interfaces";
+import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator } from "../../shared/interfaces";
 
 export const desktop: f.Device & { platformType: string } = {
 	category: "desktop",
@@ -20,6 +20,18 @@ export const webChrome: f.Device & { platformType: string } = {
 	ephemeral: false,
 	id: "chrome",
 	name: "Chrome",
+	platform: "web-javascript",
+	platformType: "web",
+	type: "device",
+};
+
+export const webServer: f.Device & { platformType: string } = {
+	category: "web",
+	emulator: false,
+	emulatorId: undefined,
+	ephemeral: false,
+	id: "web-server",
+	name: "Web Server",
 	platform: "web-javascript",
 	platformType: "web",
 	type: "device",
@@ -105,3 +117,14 @@ export const customEmulator2: CustomEmulatorDefinition = {
 };
 
 export const customEmulators = [customEmulator1, customEmulator2];
+
+export const customEmulator: CustomEmulator = {
+	...customEmulator1,
+	category: "custom",
+	type: "custom-emulator",
+};
+
+export const emulatorCreator: EmulatorCreator = {
+	platformType: "android",
+	type: "emulator-creator",
+};
