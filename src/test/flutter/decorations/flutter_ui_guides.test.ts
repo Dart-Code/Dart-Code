@@ -194,7 +194,19 @@ Widget build() {
 		assert.equal(remainingGuides.length, 2); // Column -> Padding and Padding -> Text
 
 		// Clean up by disabling UI guides and reloading so dispose() is called on FlutterUiGuideDecorations and WidgetGuideTracker.
+		const uiGuidesDisposeSpy = sb.spy(uiGuides, "dispose");
+		const trackerDisposeSpy = sb.spy(uiGuides.tracker, "dispose");
+		updatedGuidesSpy.resetHistory();
+
 		await setConfigForTest("dart", "previewFlutterUiGuides", false);
 		await vs.commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
+
+		assert.equal(uiGuidesDisposeSpy.calledOnce, true);
+		assert.equal(trackerDisposeSpy.calledOnce, true);
+		assert.equal(privateApi.flutterUiGuideDecorations, undefined);
+
+		// Verify subsequent edits do not trigger the disposed tracker or update guides.
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// post-dispose edit\n"));
+		assert.equal(updatedGuidesSpy.called, false);
 	});
 });
