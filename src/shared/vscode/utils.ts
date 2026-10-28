@@ -186,7 +186,7 @@ export async function getAllProjectFoldersAndExclusions(
 
 			allExcludedFolders = allExcludedFolders.concat(excludedFolders);
 		} catch (e) {
-			logger.error(`Failed to filter out analysis_options exclusions: ${e}`);
+			logger.error(`Failed to filter out analysis_options exclusions: ${String(e)}`);
 		}
 
 		const result = { projectFolders, excludedFolders: new Set(allExcludedFolders) };
@@ -308,14 +308,14 @@ class EnvUtils {
 			newScheme = mappedUri.scheme === "https" ? "wss" : "ws";
 
 		const mappedUrl = new URL(uriToString(mappedUri));
-		logger.info(`Mapped URL: ${mappedUrl}`);
+		logger.info(`Mapped URL: ${mappedUrl.toString()}`);
 
 		// Copy the important (mapped) parts back onto the original URL, preserving
 		// the path/querystring that was not messed with by VS Code's Uri class.
 		url.protocol = newScheme;
 		url.host = mappedUrl.host;
 		url.port = mappedUrl.port;
-		logger.info(`Final URL: ${url}`);
+		logger.info(`Final URL: ${url.toString()}`);
 
 		return url.toString();
 	}

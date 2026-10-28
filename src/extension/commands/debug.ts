@@ -779,7 +779,7 @@ export class DebugCommands implements IAmDisposable {
 				const exposedUrl = await envUtils.exposeUrl(originalUrl, this.logger);
 				await session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl });
 			} catch (e) {
-				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
+				this.logger.error(`Failed to expose URL ${originalUrl}: ${String(e)}`);
 				await session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
 			}
 		} else if (event === "flutter.forwardedEvent") {
@@ -819,7 +819,7 @@ export class DebugCommands implements IAmDisposable {
 						try {
 							await envUtils.openInBrowser(url, this.logger);
 						} catch (e) {
-							this.logger.error(`Failed to launch URL from Flutter app.warning event: ${url}: ${e}`);
+							this.logger.error(`Failed to launch URL from Flutter app.warning event: ${url}: ${String(e)}`);
 						}
 					} else if (userAction === doNotShowAgainAction) {
 						this.context.setAppWarningDoNotShow(warningId, true);
@@ -841,7 +841,7 @@ export class DebugCommands implements IAmDisposable {
 						try {
 							url = await envUtils.exposeUrl(originalUrl, this.logger);
 						} catch (e) {
-							this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
+							this.logger.error(`Failed to expose URL ${originalUrl}: ${String(e)}`);
 							url = originalUrl;
 						}
 						result = { url };
@@ -849,7 +849,7 @@ export class DebugCommands implements IAmDisposable {
 					}
 				}
 			} catch (e) {
-				error = `${e}`;
+				error = String(e);
 			}
 			void session.session.customRequest("flutter.sendForwardedRequestResponse", { id, result, error });
 		} else if (event === "dart.debuggerUris") {

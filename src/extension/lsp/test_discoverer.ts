@@ -105,7 +105,7 @@ export class TestDiscoverer implements IAmDisposable {
 					this.excludedFolders = projectFoldersAndExclusions.excludedFolders;
 					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder)));
 				} catch (e) {
-					this.logger.error(`Failed to discover tests: ${e}`);
+					this.logger.error(`Failed to discover tests: ${String(e)}`);
 				}
 			},
 		);

@@ -207,7 +207,7 @@ export class SdkUtils {
 			} catch (e) {
 				if (cancellationToken.isCancellationRequested)
 					return GitOperationResult.cancelled;
-				this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow: ${e}`);
+				this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow: ${String(e)}`);
 				return GitOperationResult.error;
 			}
 			return GitOperationResult.success;
@@ -296,7 +296,7 @@ export class SdkUtils {
 			} catch (e) {
 				if (cancellationToken.isCancellationRequested)
 					return GitOperationResult.cancelled;
-				this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow: ${e}`);
+				this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow: ${String(e)}`);
 				return GitOperationResult.error;
 			}
 		});
@@ -576,7 +576,7 @@ export class SdkUtils {
 			return { path: sdkPath };
 		} catch (e) {
 			void this.warnIfBadSDKCommandOutput(e, cmdWorkDirAbs, sdkConfigName, isWorkspaceSetting);
-			return { error: `${e}` };
+			return { error: String(e) };
 		}
 	}
 

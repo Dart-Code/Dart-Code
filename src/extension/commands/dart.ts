@@ -52,7 +52,7 @@ export class DartCommands extends BaseSdkCommands {
 		try {
 			templates = await creator.getTemplates();
 		} catch (e) {
-			void vs.window.showErrorMessage(`Unable to fetch project templates. ${e}`);
+			void vs.window.showErrorMessage(`Unable to fetch project templates. ${String(e)}`);
 			return;
 		}
 

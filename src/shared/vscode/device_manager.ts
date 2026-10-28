@@ -762,7 +762,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 				throw new Error("Emulator didn't connect within 60 seconds");
 			});
 		} catch (e) {
-			void vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
+			void vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${String(e)}`);
 			return false;
 		}
 		// Wait an additional second to try and void some possible races.
@@ -797,7 +797,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 				throw new Error("Emulator didn't connect within 60 seconds");
 			});
 		} catch (e) {
-			void vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
+			void vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${String(e)}`);
 			return false;
 		}
 		// Wait an additional second to try and void some possible races.

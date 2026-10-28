@@ -31,7 +31,7 @@ export async function ensureFlutterInitialized(logger: Logger, flutterScript: st
 		);
 		logger.info(`Flutter initialized!`);
 	} catch (e) {
-		logger.warn(`Flutter initialization failed, proceeding without! ${e}`);
+		logger.warn(`Flutter initialization failed, proceeding without! ${String(e)}`);
 	} finally {
 		cancellationTokenSource.dispose();
 	}

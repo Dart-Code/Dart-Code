@@ -263,7 +263,7 @@ export class Analytics implements IAmDisposable {
 			}
 			return false;
 		} catch (e) {
-			this.logger.warn(`Failed to check Dart/Flutter analytics file, disabling analytics: ${e}`);
+			this.logger.warn(`Failed to check Dart/Flutter analytics file, disabling analytics: ${String(e)}`);
 			return true;
 		}
 	}
@@ -350,7 +350,7 @@ export class Analytics implements IAmDisposable {
 
 	private handleError(e: unknown) {
 		this.disableAnalyticsForSession = true;
-		this.logger.info(`Failed to send analytics, disabling for session: ${e}`);
+		this.logger.info(`Failed to send analytics, disabling for session: ${String(e)}`);
 	}
 
 	private getDebuggerPreference(): string {

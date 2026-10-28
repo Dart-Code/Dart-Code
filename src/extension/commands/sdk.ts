@@ -196,7 +196,7 @@ export class SdkCommands extends BaseSdkCommands {
 			try {
 				return (await fs.promises.stat(versionFile)).mtime.getTime();
 			} catch (error) {
-				this.logger.warn(`Failed to check modification time on version file. ${error}`);
+				this.logger.warn(`Failed to check modification time on version file. ${String(error)}`);
 				return;
 			}
 		};

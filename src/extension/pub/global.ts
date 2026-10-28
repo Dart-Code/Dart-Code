@@ -118,7 +118,7 @@ export class PubGlobal {
 			} catch (e) {
 				// If we fail to call the API to check for a new version, then we can run
 				// with what we have.
-				this.logger.warn(`Failed to check for new version of ${packageID}: ${e}`, LogCategory.CommandProcesses);
+				this.logger.warn(`Failed to check for new version of ${packageID}: ${String(e)}`, LogCategory.CommandProcesses);
 				return VersionStatus.Valid;
 			}
 		}

@@ -792,7 +792,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				else if (!isDartCodeTestRun) // Suppress warning on test runs as they're fast and can launch before the server starts
 					this.logger.warn("DevTools server unavailable, not sending --devtools-server-address!");
 			} catch (e) {
-				this.logger.error(`Failed to get DevTools server address ${e}`);
+				this.logger.error(`Failed to get DevTools server address ${String(e)}`);
 			}
 		}
 

@@ -10,7 +10,7 @@ export class CoverageParser {
 			return this.parseLcovContent(lcovContent);
 
 		} catch (e) {
-			this.logger.error(`Failed to read expected coverage file "${lcovFilePath}": ${e}`);
+			this.logger.error(`Failed to read expected coverage file "${lcovFilePath}": ${String(e)}`);
 			return [];
 		}
 	}

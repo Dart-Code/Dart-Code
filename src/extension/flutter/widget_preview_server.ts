@@ -56,7 +56,7 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 				args.push("--devtools-server-address", devToolsServerUri);
 			this.createProcess(this.tempWorkingDirectory, flutterExecutable, args, { toolEnv: getToolEnv() });
 		} catch (e) {
-			this.logger.error(`Failed to start Widget Preview server: ${e}`);
+			this.logger.error(`Failed to start Widget Preview server: ${String(e)}`);
 		}
 	}
 

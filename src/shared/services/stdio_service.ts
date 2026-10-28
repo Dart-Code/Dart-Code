@@ -42,7 +42,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		try {
 			this.process = safeSpawn(workingDirectory, binPath, args, env);
 		} catch (e) {
-			this.logger.error(`Failed to spawn process! ${e}`);
+			this.logger.error(`Failed to spawn process! ${String(e)}`);
 			this.handleError(e);
 			this.handleExit(null, null);
 		}
@@ -93,7 +93,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected handleError(error: unknown) {
-		this.logTraffic(`Process errored! ${error}`);
+		this.logTraffic(`Process errored! ${String(error)}`);
 	}
 
 	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params?: TReq } {

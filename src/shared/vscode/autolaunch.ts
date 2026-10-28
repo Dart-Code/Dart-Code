@@ -81,15 +81,15 @@ export class AutoLaunch implements IAmDisposable {
 					const type = configuration.type;
 					const request = configuration.request;
 					if (!name) {
-						this.logger.warn(`[AutoLaunch] Ignoring configuration without name in autolaunch file ${uri}`);
+						this.logger.warn(`[AutoLaunch] Ignoring configuration without name in autolaunch file ${uri.toString()}`);
 						continue;
 					}
 					if (type !== "dart") {
-						this.logger.warn(`[AutoLaunch] Ignoring non-dart configuration in autolaunch file ${uri}`);
+						this.logger.warn(`[AutoLaunch] Ignoring non-dart configuration in autolaunch file ${uri.toString()}`);
 						continue;
 					}
 					if (request !== "launch" && request !== "attach") {
-						this.logger.warn(`[AutoLaunch] Ignoring configuration with invalid request (${request}) in autolaunch file ${uri}`);
+						this.logger.warn(`[AutoLaunch] Ignoring configuration with invalid request (${request}) in autolaunch file ${uri.toString()}`);
 						continue;
 					}
 
@@ -101,7 +101,7 @@ export class AutoLaunch implements IAmDisposable {
 				// File not found, silently ignore.
 				return;
 			}
-			this.logger.warn(`[AutoLaunch] Failed to process autolaunch file ${uri}: ${e}`);
+			this.logger.warn(`[AutoLaunch] Failed to process autolaunch file ${uri.toString()}: ${String(e)}`);
 		}
 	}
 
@@ -153,12 +153,12 @@ export class AutoLaunch implements IAmDisposable {
 				// Stop if we've hit the timeout.
 				const elapsedTime = Date.now() - startTime;
 				if (elapsedTime >= timeoutMs) {
-					this.logger.warn(`[AutoLaunch] Failed to connect to VM Service at ${vmServiceUri} after ${timeoutMs}ms: ${error}`);
+					this.logger.warn(`[AutoLaunch] Failed to connect to VM Service at ${vmServiceUri} after ${timeoutMs}ms: ${String(error)}`);
 					return false;
 				}
 
 				// Otherwise, retry.
-				this.logger.info(`[AutoLaunch] Failed to connect to VM Service, will retry: ${error}`);
+				this.logger.info(`[AutoLaunch] Failed to connect to VM Service, will retry: ${String(error)}`);
 				await new Promise((resolve) => setTimeout(resolve, retryDelayMs).unref());
 			}
 		}
