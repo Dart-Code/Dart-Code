@@ -239,16 +239,14 @@ export function pubspecContentReferencesFlutter(content: string): boolean {
 		return false;
 	try {
 		const yaml = YAML.parse(content) as Record<string, Record<string, unknown> | undefined> | undefined;
-		return !!(
-			yaml?.dependencies?.flutter
-			|| yaml?.dev_dependencies?.flutter
-			|| yaml?.dependencies?.sky_engine
-			|| yaml?.dev_dependencies?.sky_engine
-			|| yaml?.dependencies?.flutter_test
-			|| yaml?.dev_dependencies?.flutter_test
-			|| yaml?.dependencies?.flutter_goldens
-			|| yaml?.dev_dependencies?.flutter_goldens
-		);
+		return !!yaml?.dependencies?.flutter
+			|| !!yaml?.dev_dependencies?.flutter
+			|| !!yaml?.dependencies?.sky_engine
+			|| !!yaml?.dev_dependencies?.sky_engine
+			|| !!yaml?.dependencies?.flutter_test
+			|| !!yaml?.dev_dependencies?.flutter_test
+			|| !!yaml?.dependencies?.flutter_goldens
+			|| !!yaml?.dev_dependencies?.flutter_goldens;
 	} catch {
 		return false;
 	}
@@ -370,7 +368,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
 		exists: options?.requirePubspec
 			? await hasPubspecAsync(folder)
-			: options.onlyWorkspaceRoots || await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
+			: !!options.onlyWorkspaceRoots || await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
 		folder,
 	}));
 	const projectFoldersChecks = await Promise.all(projectFolderPromises);

@@ -133,8 +133,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	extensionThisSessionStart = Date.now();
 
 	// Ring logger is only set up once and persists over silent restarts.
-	if (!ringLogger)
-		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(800)));
+	ringLogger ??= logger.onLog((message) => ringLog.log(message.toLine(800)));
 
 	if (isDevExtension)
 		context.subscriptions.push(logToConsole(logger));
@@ -145,8 +144,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	void vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
-	if (!extensionLog)
-		extensionLog = setupLog(getExtensionLogPath(), LogCategory.General, false);
+	extensionLog ??= setupLog(getExtensionLogPath(), LogCategory.General, false);
 
 	const webClient = new WebClient(extensionVersion);
 

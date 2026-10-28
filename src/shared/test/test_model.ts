@@ -468,7 +468,7 @@ export class TestModel {
 		if (groupName && source === TestSource.Result)
 			parent = this.findMatchingDynamicNode(parent, groupName) ?? parent;
 
-		const groupNode = existingGroup || new GroupNode(suite, parent, groupName, groupPath, range);
+		const groupNode = existingGroup ?? new GroupNode(suite, parent, groupName, groupPath, range);
 
 		suite.storeGroup(dartCodeDebugSessionID, groupID, groupNode);
 
@@ -517,7 +517,7 @@ export class TestModel {
 		if (testName && source === TestSource.Result)
 			parent = this.findMatchingDynamicNode(parent, testName) ?? parent;
 
-		const testNode = existingTest || new TestNode(suite, parent, testName, testPath, range);
+		const testNode = existingTest ?? new TestNode(suite, parent, testName, testPath, range);
 
 		suite.storeTest(dartCodeDebugSessionID, testID, testNode);
 

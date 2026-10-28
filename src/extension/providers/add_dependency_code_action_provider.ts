@@ -40,7 +40,7 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 		middleware.provideCodeActions = async (document, range, context, token, next) => {
 			let res = await (previousProvideCodeActions
 				? previousProvideCodeActions(document, range, context, token, next)
-				: next(document, range, context, token)) || [];
+				: next(document, range, context, token)) ?? [];
 
 			if (token.isCancellationRequested)
 				return res;

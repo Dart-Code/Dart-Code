@@ -572,7 +572,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 			}
 
 			cmd = resolved.command;
-			args = resolved.arguments || [];
+			args = resolved.arguments ?? [];
 			const formAnswers = resolved.formAnswers;
 
 			if (formAnswers === undefined || formAnswers.length === 0) {
@@ -1105,9 +1105,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 			case 'string': {
 				const value = await vscode.window.showInputBox({
 					prompt: field.description,
-					value: prevAnswer !== undefined && prevAnswer !== null
-						? prevAnswer
-						: field.default,
+					value: prevAnswer ?? field.default,
 					placeHolder: field.description,
 					// Keep the input box open when focus is lost. This allows the
 					// user to  browse the workspace or inspect code (e.g., checking

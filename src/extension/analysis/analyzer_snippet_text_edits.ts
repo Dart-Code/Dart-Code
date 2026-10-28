@@ -81,7 +81,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 			const documentVersion = document.version;
 			const res = await (previousProvideCodeActions
 				? previousProvideCodeActions(document, range, context, token, next)
-				: next(document, range, context, token)) || [];
+				: next(document, range, context, token)) ?? [];
 
 			this.rewriteSnippetTextEditsToCommands(documentVersion, res);
 			return res;

@@ -60,8 +60,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	}
 
 	private async setUpPreview(): Promise<void> {
-		if (!this.setUpPreviewPromise)
-			this.setUpPreviewPromise = this.setUpPreviewImpl();
+		this.setUpPreviewPromise ??= this.setUpPreviewImpl();
 
 		return this.setUpPreviewPromise;
 	}

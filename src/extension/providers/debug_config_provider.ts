@@ -129,7 +129,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 				// Restart the app for clean state before the test run.
 				await app.session.customRequest("hotRestart");
-				debugConfig.env = debugConfig.env || {};
+				debugConfig.env ??= {};
 				debugConfig.env.VM_SERVICE_URL = app.vmServiceUri;
 			}
 		}
@@ -556,7 +556,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// Use the open file as a clue to find the best project root, then search from there.
-		const projectRoot = (openFile && locateBestProjectRoot(openFile)) || folder;
+		const projectRoot = (openFile ? locateBestProjectRoot(openFile) : undefined) ?? folder;
 		if (projectRoot) {
 			const projectFolderName = path.basename(projectRoot);
 			const commonLaunchPaths = [

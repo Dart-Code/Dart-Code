@@ -71,7 +71,7 @@ export class InteractiveRefactors implements IAmDisposable {
 		middleware.provideCodeActions = async (document, range, context, token, next) => {
 			const res = await (previousProvideCodeActions
 				? previousProvideCodeActions(document, range, context, token, next)
-				: next(document, range, context, token)) || [];
+				: next(document, range, context, token)) ?? [];
 
 			this.rewriteCommands(res);
 			return res;

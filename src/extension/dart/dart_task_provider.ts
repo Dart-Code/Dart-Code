@@ -82,7 +82,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 			definition,
 			// This should never be undefined, but the type allows it but the constructor
 			// arg does not.
-			task.scope || vs.TaskScope.Workspace,
+			task.scope ?? vs.TaskScope.Workspace,
 			task.name,
 			task.source,
 			await this.createTaskExecution(this.sdks, definition, cwd),

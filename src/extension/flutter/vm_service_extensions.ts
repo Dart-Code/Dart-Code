@@ -155,7 +155,7 @@ export class VmServiceExtensions {
 
 	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: Record<string, unknown>): Promise<any> {
 		if (!params?.isolateId) {
-			params = params || {};
+			params ??= {};
 			params.isolateId = this.loadedServiceExtensionIsolateIds.get(method);
 		}
 		return await session.customRequest("callService", { method, params });

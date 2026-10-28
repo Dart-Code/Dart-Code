@@ -32,7 +32,7 @@ export class EditCommands implements IAmDisposable {
 		// When navigating while using the inspector, we don't expect this file to replace
 		// the inspector tab, so we always target a column that's showing an editor.
 		const column = inOtherEditorColumn
-			? firstEditorColumn() || vs.ViewColumn.Beside
+			? firstEditorColumn() ?? vs.ViewColumn.Beside
 			: vs.ViewColumn.Active;
 
 		const doc = await vs.workspace.openTextDocument(uri);

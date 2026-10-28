@@ -45,9 +45,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	public handleDebugSessionStart(debugSessionID: string, dartCodeDebugSessionID: string | undefined, cwd: string | undefined) {
 		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
 
-		let lookup = this.debugSessionLookups[dartCodeDebugSessionID];
-		if (!lookup)
-			lookup = this.debugSessionLookups[dartCodeDebugSessionID] = { cwd, suiteForID: {}, suiteForTestID: {} };
+		const lookup = this.debugSessionLookups[dartCodeDebugSessionID] ??= { cwd, suiteForID: {}, suiteForTestID: {} };
 
 		if (cwd)
 			lookup.cwd = cwd;
@@ -129,8 +127,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private handleSuiteNotification(dartCodeDebugSessionID: string, evt: SuiteNotification) {
-		if (!this.debugSessionLookups[dartCodeDebugSessionID])
-			this.debugSessionLookups[dartCodeDebugSessionID] = { cwd: undefined, suiteForID: {}, suiteForTestID: {} };
+		this.debugSessionLookups[dartCodeDebugSessionID] ??= { cwd: undefined, suiteForID: {}, suiteForTestID: {} };
 
 		const suiteData = this.data.suiteDiscovered(dartCodeDebugSessionID, evt.suite.path);
 

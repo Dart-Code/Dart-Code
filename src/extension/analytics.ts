@@ -283,7 +283,7 @@ export class Analytics implements IAmDisposable {
 		return !this.telemetryLogger
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
-			|| this.workspaceContext?.config.disableAnalytics
+			|| !!this.workspaceContext?.config.disableAnalytics
 			|| !env.isTelemetryEnabled
 			|| isDartCodeTestRun;
 	}

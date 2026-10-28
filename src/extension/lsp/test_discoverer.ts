@@ -68,8 +68,7 @@ export class TestDiscoverer implements IAmDisposable {
 	/// Performs suite discovery if it has not already finished. If discovery
 	/// is started (or already in progress), waits for it to complete.
 	public async ensureSuitesDiscovered() {
-		if (!this.testDiscoveryPerformed)
-			this.testDiscoveryPerformed = this.performSuiteDiscovery();
+		this.testDiscoveryPerformed ??= this.performSuiteDiscovery();
 
 		// Wait for discovery to complete, however it started.
 		await this.testDiscoveryPerformed;

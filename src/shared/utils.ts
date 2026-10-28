@@ -197,7 +197,7 @@ export class BufferedLogger implements Logger {
 export type NullAsUndefined<T> = null extends T ? NonNullable<T> | undefined : T;
 
 export function nullToUndefined<T>(value: T): NullAsUndefined<T> {
-	return (value === null ? undefined : value) as NullAsUndefined<T>;
+	return (value ?? undefined) as NullAsUndefined<T>;
 }
 
 export function notUndefined<T>(x: T | undefined): x is T {
@@ -221,7 +221,7 @@ export function escapeDartString(input: string) {
 }
 
 export function isWebDevice(deviceId: string | undefined): boolean {
-	return !!(deviceId?.startsWith("web") || deviceId === "chrome" || deviceId === "edge");
+	return !!deviceId?.startsWith("web") || deviceId === "chrome" || deviceId === "edge";
 }
 
 /**
