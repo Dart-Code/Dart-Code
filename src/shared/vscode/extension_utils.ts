@@ -16,8 +16,8 @@ export function readJson(file: string): any {
 }
 
 function getExtensionVersion(): string {
-	const packageJson = readJson(path.join(extensionPath, "package.json"));
-	return packageJson.version as string;
+	const packageJson = readJson(path.join(extensionPath, "package.json")) as { version: string };
+	return packageJson.version;
 }
 
 

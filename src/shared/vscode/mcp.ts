@@ -25,7 +25,7 @@ export class McpTools implements IAmDisposable {
 
 		this.disposables.push(vs.lm.registerTool("dart_format", {
 			invoke: async (options) => {
-				const input = options.input as any;
+				const input = options.input as { filePath?: unknown } | undefined;
 				const filePath = input?.filePath;
 				if (typeof filePath !== "string")
 					throw new Error("The Dart format tool requires a string 'filePath' property.");
@@ -43,7 +43,7 @@ export class McpTools implements IAmDisposable {
 				return new vs.LanguageModelToolResult([new vs.LanguageModelTextPart(`Formatted '${filePath}'. You may need to re-read this file to get the latest content before making further changes.`)]);
 			},
 			prepareInvocation: (options) => {
-				const input = options.input as any;
+				const input = options.input as { filePath?: unknown } | undefined;
 				const filePath = input?.filePath;
 				return {
 					invocationMessage:
@@ -56,7 +56,7 @@ export class McpTools implements IAmDisposable {
 
 		this.disposables.push(vs.lm.registerTool("dart_fix", {
 			invoke: async (options) => {
-				const input = options.input as any;
+				const input = options.input as { filePath?: unknown } | undefined;
 				const filePath = input?.filePath;
 				if (filePath) {
 					if (typeof filePath !== "string")
@@ -81,7 +81,7 @@ export class McpTools implements IAmDisposable {
 
 			},
 			prepareInvocation: (options) => {
-				const input = options.input as any;
+				const input = options.input as { filePath?: unknown } | undefined;
 				const filePath = input?.filePath;
 				return {
 					invocationMessage:

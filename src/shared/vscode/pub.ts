@@ -94,7 +94,7 @@ function getWorkspaceFolderPaths(
 	pubspecContent: string,
 ): string[] {
 	try {
-		const yaml = YAML.parse(pubspecContent);
+		const yaml = YAML.parse(pubspecContent) as { workspace?: unknown };
 		const workspaceList = yaml.workspace;
 		if (Array.isArray(workspaceList) && workspaceList.every((s: unknown) => typeof s === "string")) {
 			return workspaceList.map((s) => path.join(folder, s));

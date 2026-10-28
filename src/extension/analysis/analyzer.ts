@@ -324,7 +324,7 @@ export class LspAnalyzer extends Analyzer {
 					if (Array.isArray(results)) {
 						for (let i = 0; i < results.length; i++) {
 							const requestedSection = params.items[i].section;
-							const result = results[i];
+							const result = results[i] as Record<string, unknown>;
 
 							// Only inject values into the Dart config. The server might ask for other values
 							// (such as "editor.formatOnSave") for diagnostic reports.
@@ -657,7 +657,7 @@ export class LspAnalyzer extends Analyzer {
 		const writer = new LoggingTransform(logger, "==>");
 		writer.pipe(process.stdin);
 
-		process.stderr.on("data", (data) => {
+		process.stderr.on("data", (data: Buffer | string) => {
 			const errorOutput = data.toString();
 
 			// Handle some well-known kinds of errors to help troubleshoot.

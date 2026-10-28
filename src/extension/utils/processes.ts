@@ -27,7 +27,7 @@ export function setFlutterRoot(root: string) {
 	flutterRoot = root;
 }
 
-export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnalytics: boolean, envOverrides?: any }) {
+export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnalytics: boolean, envOverrides?: object }) {
 	toolEnv = {};
 	globalFlutterArgs = [];
 

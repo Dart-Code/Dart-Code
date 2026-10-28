@@ -119,7 +119,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 					resp.on("end", () => {
 						const json = chunks.join("");
 						try {
-							const gaDebugResp = JSON.parse(json);
+							const gaDebugResp = JSON.parse(json) as { hitParsingResult?: Array<{ valid: boolean }> };
 							if (gaDebugResp?.hitParsingResult?.[0].valid === true)
 								this.logger.info("Sent OK!");
 							else if (gaDebugResp?.hitParsingResult?.[0].valid === false)
@@ -149,7 +149,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		const dataMap = data as Record<string, any>;
 		const userProperties: Record<string, any> = {};
 
-		function add(name: string, value: any) {
+		function add(name: string, value: unknown) {
 			if (value)
 				userProperties[name] = { value };
 		}
@@ -501,7 +501,7 @@ class DebugAdapterExceptionSettingTracker implements DebugAdapterTracker {
 	public lastExceptionOptions: string | undefined;
 	onWillReceiveMessage(message: any): void {
 		if (message.command === "setExceptionBreakpoints") {
-			const exceptionFilters = message.arguments?.filters ?? [];
+			const exceptionFilters = (message.arguments?.filters as string[] | undefined) ?? [];
 			this.lastExceptionOptions = exceptionFilters.slice().sort().join(", ");
 			if (!this.lastExceptionOptions)
 				this.lastExceptionOptions = "None";

@@ -108,7 +108,7 @@ class PackageConfigJsonPackageMap extends PackageMap {
 	private load() {
 		const json = fs.readFileSync(this.packageConfigPath, "utf8");
 		try {
-			this.config = JSON.parse(json);
+			this.config = JSON.parse(json) as PackageJsonConfig;
 		} catch (e) {
 			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${e}`);
 			this.map = {};

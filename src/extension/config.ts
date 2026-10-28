@@ -113,7 +113,6 @@ class Config {
 
 	get mcpServer(): boolean { return this.getConfig<boolean>("mcpServer", true); }
 	get mcpServerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("mcpServerLogFile", null)))); }
-	// eslint-disable-next-line camelcase
 	get mcpServerTools(): Record<string, boolean> { return this.getConfig<Record<string, boolean>>("mcpServerTools", {/* defaults from package.json */ }); }
 
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
@@ -259,8 +258,7 @@ class Config {
 class ResolvedConfig {
 	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
 
-	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
+	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get<Record<string, unknown>>("[dart]");
 
 	public getAppliedConfig<T>(section: string, key: string, isResourceScoped = true): T | undefined {
 		const dartValue = this.dartConfig ? this.dartConfig[`${section}.${key}`] : undefined;
