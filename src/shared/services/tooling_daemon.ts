@@ -11,7 +11,7 @@ import { disposeAll, PromiseCompleter, PromiseOr } from "../utils";
 import { attachPing } from "../utils/ws";
 import { UnknownNotification } from "./interfaces";
 import { ProcessExitCodes, StdIOService } from "./stdio_service";
-import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
+import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdError, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
@@ -145,7 +145,7 @@ export class DartToolingDaemon implements IAmDisposable {
 				delete this.completers[id];
 
 				if ("error" in response)
-					completer.reject(response.error);
+					completer.reject(new DtdError(response.error.code, response.error.message, response.error.data));
 				else
 					completer.resolve(response.result);
 			}
@@ -199,7 +199,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.editorNavigateToCode, params: NavigateToCodeParams): Promise<DtdResult & SuccessResult>;
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
 		if (!this.connection)
-			return Promise.reject(`Unable to call ${method}, DTD connection is unavailable`);
+			return Promise.reject(new Error(`Unable to call ${method}, DTD connection is unavailable`));
 
 		const id = `${this.nextId++}`;
 		const completer = new PromiseCompleter<DtdResult>();

@@ -1,12 +1,21 @@
 export interface DtdResult { type: string }
-interface DtdError {
+export class DtdError extends Error {
+	constructor(
+		public readonly code: number,
+		message: string,
+		public readonly data?: any,
+	) {
+		super(message);
+	}
+}
+interface DtdErrorData {
 	code: number,
 	message: string,
 	data?: any,
 }
 type DtdSuccess = DtdResult & { type: "Success" };
-export interface DtdMessage { jsonrpc: "2.0", id?: string, method?: string, result?: DtdResult, error?: DtdError, params?: unknown }
-export type DtdResponse = DtdMessage & ({ result: DtdResult } | { error: DtdError });
+export interface DtdMessage { jsonrpc: "2.0", id?: string, method?: string, result?: DtdResult, error?: DtdErrorData, params?: unknown }
+export type DtdResponse = Omit<DtdMessage, "result" | "error"> & ({ result: DtdResult } | { error: DtdErrorData });
 
 export interface DtdRequest {
 	jsonrpc: "2.0",

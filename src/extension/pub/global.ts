@@ -159,7 +159,7 @@ export class PubGlobal {
 				if (!code) {
 					resolve(stdout.join(""));
 				} else {
-					reject(`${packageName} exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`);
+					reject(new Error(`${packageName} exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`));
 				}
 			});
 		});

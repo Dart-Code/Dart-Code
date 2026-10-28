@@ -88,6 +88,6 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 		super.handleExit(code, signal);
 		// If it never started up, we'll need to signal it's broken to anyone
 		// waiting on this url.
-		this.previewUrlCompleter.reject(`Widget Preview server process terminated`);
+		this.previewUrlCompleter.reject(new Error(`Widget Preview server process terminated`));
 	}
 }
