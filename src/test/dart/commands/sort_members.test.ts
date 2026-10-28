@@ -1,4 +1,5 @@
-import { activate, ensureTestContent, executeSortMembersCodeAction, setTestContent } from "../../helpers";
+import * as vs from "vscode";
+import { activate, ensureTestContent, executeSortMembersCodeAction, setTestContent, waitForEditorChange } from "../../helpers";
 
 describe("sort members", () => {
 	beforeEach("activate", () => activate());
@@ -33,5 +34,13 @@ class Person {
   bb() {}
 }
 		`);
+	});
+
+	it("sorts members using command", async () => {
+		await setTestContent("int b;\nint a;\n");
+
+		await waitForEditorChange(() => vs.commands.executeCommand("dart.sortMembers"));
+
+		await ensureTestContent("int a;\nint b;\n");
 	});
 });
