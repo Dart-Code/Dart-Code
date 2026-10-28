@@ -709,7 +709,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
 		portToBind = config.devToolsPort  // Always config first
-			|| portToBind;                // Then try the last port we bound this session
+			?? portToBind;                // Then try the last port we bound this session
 
 		if (portToBind && !customDevTools?.path) {
 			binArgs.push("--port");
@@ -731,10 +731,10 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 	// TODO: Remove this if we fix the DevTools server (and rev min version) to not use method for
 	// the server.started event.
-	protected isNotification(msg: any): boolean { return !!(msg.event || msg.method === "server.started"); }
+	protected isNotification(msg: any): boolean { return !!msg.event || msg.method === "server.started"; }
 
 	protected async handleNotification(evt: UnknownNotification): Promise<void> {
-		switch ((evt as any).method || evt.event) {
+		switch ((evt as any).method ?? evt.event) {
 			case "server.started":
 				await this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
 				break;

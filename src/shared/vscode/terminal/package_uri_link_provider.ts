@@ -27,8 +27,7 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 	}
 
 	private async discoverPackageMaps(): Promise<void> {
-		if (!this.packageMapDiscovery)
-			this.packageMapDiscovery = this.discoverPackageMapsUncached();
+		this.packageMapDiscovery ??= this.discoverPackageMapsUncached();
 		return this.packageMapDiscovery;
 	}
 
