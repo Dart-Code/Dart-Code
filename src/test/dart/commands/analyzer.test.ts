@@ -183,7 +183,7 @@ describe("analyzer", () => {
 			const middleware = getMiddleware();
 			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
 			const pos = new vs.Position(0, 0);
-			const unknownObj = { other: 123 } as any;
+			const unknownObj = { other: 123 } as unknown as vs.MarkedString;
 			const hoverResult = await middleware.provideHover!(doc, pos, fakeCancellationToken, async () => ({
 				contents: [
 					"Hover string\n{@template s}\nS\n{@endtemplate}",
@@ -484,7 +484,7 @@ describe("analyzer", () => {
 								range: ls.Range.create(3, 0, 3, 5),
 								newText: "customSnippet($0)",
 								insertTextFormat: ls.InsertTextFormat.Snippet,
-							} as any,
+							} as unknown as ls.TextEdit,
 						],
 					},
 				],
@@ -638,7 +638,7 @@ describe("analyzer", () => {
 					const prefix = " with args ";
 					const idx = msg.indexOf(prefix);
 					if (idx !== -1) {
-						capturedArgs = JSON.parse(msg.substring(idx + prefix.length));
+						capturedArgs = JSON.parse(msg.substring(idx + prefix.length)) as string[];
 						throw new Error("STOP_BEFORE_SPAWN");
 					}
 				},
@@ -719,12 +719,12 @@ describe("analyzer", () => {
 		});
 
 		it("handleDisposeCleanup resolves immediately when process has already exited", async () => {
-			const analyzer = privateApi.analyzer as any;
+			const analyzer = privateApi.analyzer as unknown as { handleDisposeCleanup(proc: unknown): Promise<void> };
 			await analyzer.handleDisposeCleanup({ exitCode: 0, signalCode: null });
 		});
 
 		it("handleDisposeCleanup resolves when process exits before timeout", async () => {
-			const analyzer = privateApi.analyzer as any;
+			const analyzer = privateApi.analyzer as unknown as { handleDisposeCleanup(proc: unknown): Promise<void> };
 			let exitCb: (() => void) | undefined;
 			const exitingProc = {
 				exitCode: null,
@@ -733,14 +733,14 @@ describe("analyzer", () => {
 				kill: sb.spy(),
 			};
 
-			const p1 = analyzer.handleDisposeCleanup(exitingProc) as Promise<void>;
+			const p1 = analyzer.handleDisposeCleanup(exitingProc);
 			exitCb!();
 			await p1;
 			assert.ok(exitingProc.kill.notCalled);
 		});
 
 		it("handleDisposeCleanup kills process if it does not exit within timeout", async () => {
-			const analyzer = privateApi.analyzer as any;
+			const analyzer = privateApi.analyzer as unknown as { handleDisposeCleanup(proc: unknown): Promise<void> };
 			const clock = sb.useFakeTimers();
 			try {
 				const hungProc = {
@@ -749,7 +749,7 @@ describe("analyzer", () => {
 					once: () => undefined,
 					kill: sb.spy(),
 				};
-				const p2 = analyzer.handleDisposeCleanup(hungProc) as Promise<void>;
+				const p2 = analyzer.handleDisposeCleanup(hungProc);
 				clock.tick(3000);
 				await p2;
 				assert.ok(hungProc.kill.calledOnce);

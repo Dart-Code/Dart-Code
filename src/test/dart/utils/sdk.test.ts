@@ -758,7 +758,7 @@ describe("SdkUtils", () => {
 				if (!res)
 					return realSpawn(bin, args, opts);
 
-				const proc = new EventEmitter() as any;
+				const proc: any = new EventEmitter();
 				proc.pid = 12345;
 				proc.stdout = new EventEmitter();
 				proc.stdout.setEncoding = () => undefined;
@@ -1116,7 +1116,7 @@ describe("SdkUtils", () => {
 			sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
 				if (args?.includes("--help")) {
 					createFakeFlutterSdk(realFlutterSdk, { version: null, withDartSdk: true });
-					const proc = new EventEmitter() as any;
+					const proc: any = new EventEmitter();
 					proc.pid = 12345;
 					proc.stdout = new EventEmitter();
 					proc.stderr = new EventEmitter();
@@ -1170,7 +1170,7 @@ describe("SdkUtils", () => {
 			sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
 				if (args?.includes("--help")) {
 					createFakeDartSdk(path.join(flutterSdk, "bin", "cache", "dart-sdk"));
-					const proc = new EventEmitter() as any;
+					const proc: any = new EventEmitter();
 					proc.pid = 12345;
 					proc.stdout = new EventEmitter();
 					proc.stderr = new EventEmitter();

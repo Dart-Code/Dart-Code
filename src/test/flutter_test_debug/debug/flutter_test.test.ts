@@ -430,7 +430,7 @@ describe("flutter test debugger", () => {
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail two`)!);
 
 				const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest(testItems));
-				const launchText = configs.map((config) => [config.program, ...(config.args ?? []), ...(config.toolArgs ?? [])].join(" ")).join("\n");
+				const launchText = configs.map((config) => [config.program, ...(config.args as string[] | undefined ?? []), ...(config.toolArgs as string[] | undefined ?? [])].join(" ")).join("\n");
 
 				// One launch per file, and each requested test is identified either by name or line.
 				assert.equal(configs.length, 2);

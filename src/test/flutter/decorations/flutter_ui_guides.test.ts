@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
+import { FlutterOutline } from "../../../shared/analysis/lsp/custom_protocol";
 import { ExtensionRestartReason } from "../../../shared/constants";
 import { activate, currentEditor, flutterHelloWorldCounterAppFile, flutterHelloWorldMainFile, getExpectedFlutterOutline, openFile, privateApi, rangeOf, sb, setConfigForTest, setTestContent, waitForNextAnalysis, waitForResult } from "../../helpers";
 
@@ -14,8 +15,19 @@ describe("flutter_ui_guides_decorations", () => {
 		await activate();
 	}
 
+	function getUiGuides() {
+		return privateApi.flutterUiGuideDecorations as {
+			buildDecorations(): vs.DecorationOptions[];
+			buildFromOutline(editor: vs.TextEditor, outline: FlutterOutline): void;
+			buildFromUpdatedGuides(): void;
+			dispose(): void;
+			renderGuides(): void;
+			tracker: { dispose(): void };
+		} | undefined;
+	}
+
 	function spyBuildDecorations() {
-		const uiGuides = privateApi.flutterUiGuideDecorations;
+		const uiGuides = getUiGuides();
 		assert.ok(uiGuides);
 		const spy = sb.spy(uiGuides, "buildDecorations");
 		return () => spy.lastCall?.returnValue as vs.DecorationOptions[] | undefined;
@@ -158,9 +170,9 @@ Widget build() {
 		`.trim()));
 
 		const editor = currentEditor();
-		const outline = JSON.parse(JSON.stringify(await getExpectedFlutterOutline(editor.document)));
+		const outline = JSON.parse(JSON.stringify(await getExpectedFlutterOutline(editor.document))) as FlutterOutline;
 
-		const uiGuides = privateApi.flutterUiGuideDecorations;
+		const uiGuides = getUiGuides()!;
 		const spy = sb.spy(uiGuides, "renderGuides");
 
 		// Call buildFromOutline with an outline whose end offset does not match document length (smaller than document length).
@@ -218,7 +230,7 @@ Widget build() {
 		`.trim());
 
 		// Insert a newline at the top of the document and verify WidgetGuideTracker immediately shifts guides down by 1 line.
-		const uiGuides = privateApi.flutterUiGuideDecorations;
+		const uiGuides = getUiGuides()!;
 		const updatedGuidesSpy = sb.spy(uiGuides, "buildFromUpdatedGuides");
 
 		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// comment\n"));

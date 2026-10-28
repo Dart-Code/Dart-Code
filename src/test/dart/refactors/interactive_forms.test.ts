@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import { mock } from "node:test";
 import * as vscode from "vscode";
-import { ClientCapabilities, LanguageClient } from "vscode-languageclient/node";
+import { ClientCapabilities, LanguageClient, LanguageClientOptions, ServerCapabilities } from "vscode-languageclient/node";
 import { FileExistence, FileType, FormField, InteractiveFormsFeature, ValidationSeverity } from "../../../extension/analysis/form";
 
 describe("interactive forms", () => {
@@ -700,7 +700,7 @@ async function runInteractiveFormTest(params: {
 	// If testing lazy enum, the mock response to return from `interactive/listEnum`.
 	lazyEnumEntries?: Array<{ value: string; description: string }>;
 	// Server capabilities. If not supplied, we assume interactive forms are supported.
-	serverCapabilities?: any;
+	serverCapabilities?: ServerCapabilities;
 	// Whether `/resolve` should keep returning formFields indefinitely. If not set, will
 	// only return formFields on the first request.
 	returnFormFieldsIndefinitely?: boolean;
@@ -710,14 +710,14 @@ async function runInteractiveFormTest(params: {
 	commandArguments?: string[];
 }) {
 	// Options passed to the client. Our middleware gets installed here.
-	const clientOptions: any = {};
+	const clientOptions: LanguageClientOptions = {};
 
 	// How many times `/resolve` was called.
 	let resolveCallCount = 0;
 
 	// Capture the params send to the underlying execute command for test
 	// validation.
-	let executeCallRequestParams: any = null;
+	let executeCallRequestParams: Record<string, any> | null = null;
 
 	const serverCapabilities = params.serverCapabilities ?? {
 		experimental: {
@@ -732,7 +732,7 @@ async function runInteractiveFormTest(params: {
 		initializeResult: {
 			capabilities: serverCapabilities
 		},
-		sendRequest: async (method: string, requestParams: any) => {
+		sendRequest: async (method: string, requestParams: Record<string, unknown>) => {
 			if (method === "command/resolve") {
 				resolveCallCount++;
 				if (resolveCallCount === 1 || params.returnFormFieldsIndefinitely) {
@@ -775,14 +775,14 @@ async function runInteractiveFormTest(params: {
 		params.mockUserInteraction();
 
 	// Execute the middleware with a stub next function.
-	const executeCommand = clientOptions.middleware.executeCommand;
+	const executeCommand = clientOptions.middleware!.executeCommand!;
 	const nextMock = mock.fn();
-	const result = await executeCommand(params.command ?? "testCommand", params.commandArguments ?? ["testArg1"], nextMock);
+	const result = await executeCommand(params.command ?? "testCommand", params.commandArguments ?? ["testArg1"], nextMock) as unknown;
 
 	// Return anything that the test may require to verify against.
 	return {
 		result, // executeCommand response.
-		executeCallRequestParams, // params passed to the final executeCommand() after form completion.
+		executeCallRequestParams: executeCallRequestParams!, // params passed to the final executeCommand() after form completion.
 		nextMock, // Mock used as the next() implementation (called in middleware when not completing forms).
 		resolveCallCount, // The number of times `/resolve` was called.
 	};
