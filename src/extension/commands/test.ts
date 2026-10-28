@@ -280,7 +280,7 @@ export class TestCommands implements IAmDisposable {
 			return false;
 
 		const subs: IAmDisposable[] = [];
-		return new Promise<boolean>(async (resolve) => {
+		try {
 			const launchConfiguration = {
 				suppressPrompts,
 				...getLaunchConfig(
@@ -316,10 +316,12 @@ export class TestCommands implements IAmDisposable {
 					}
 				}));
 			}
-			subs.push(vs.debug.onDidTerminateDebugSession((e) => {
-				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
-					resolve(true);
-			}));
+			const terminatedPromise = new Promise<void>((resolve) => {
+				subs.push(vs.debug.onDidTerminateDebugSession((e) => {
+					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
+						resolve();
+				}));
+			});
 			const didStart = await vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(programUri),
 				launchConfiguration
@@ -328,12 +330,13 @@ export class TestCommands implements IAmDisposable {
 				// Failures to start will trigger their own messages (from debug_config_provider) so we
 				// should not reject() here, as VS Code will show an additional (less helpful) error
 				// message.
-				resolve(false);
-
+				return false;
 			}
-		}).finally(() => {
+			await terminatedPromise;
+			return true;
+		} finally {
 			disposeAll(subs);
-		});
+		}
 	}
 
 	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {

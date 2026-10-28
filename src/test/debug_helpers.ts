@@ -193,17 +193,13 @@ export async function captureTestDebugConfigurationForItems(fileUri: Uri, select
 export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array<Promise<any>>) {
 	let didCompleteSuccessfully = false;
 	return Promise.race([
-		new Promise<void>(async (resolve, reject) => {
+		(async () => {
 			await dc.waitForEvent("terminated", "waitAllThrowIfTerminates", 180000);
 			// Wait a small amount to allow other awaited tasks to complete.
-			setTimeout(() => {
-				if (didCompleteSuccessfully) {
-					resolve();
-					return;
-				}
-				reject(Error("Terminated while waiting for other promises!"));
-			}, 500);
-		}),
+			await delay(500);
+			if (!didCompleteSuccessfully)
+				throw Error("Terminated while waiting for other promises!");
+		})(),
 		Promise.all(promises).then(() => didCompleteSuccessfully = true),
 	]);
 }
