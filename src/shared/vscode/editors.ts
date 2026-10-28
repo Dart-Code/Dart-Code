@@ -22,7 +22,7 @@ export function getActiveRealFileEditor(): vs.TextEditor | undefined {
 	if (editor?.document.uri.scheme !== "file") {
 		const fileEditors = vs.window.visibleTextEditors.filter((e) => e.document.uri.scheme === "file");
 		if (fileEditors.length === 1) {
-			console.log(`Falling back from ${editor?.document.uri} to ${fileEditors[0].document.uri}`);
+			console.log(`Falling back from ${editor?.document.uri.toString()} to ${fileEditors[0].document.uri.toString()}`);
 			editor = fileEditors[0];
 		}
 	}

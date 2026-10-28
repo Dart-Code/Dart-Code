@@ -22,7 +22,7 @@ export function getDebugAdapterName(debuggerType: DebuggerType) {
 			debuggerName = "dart_test";
 			break;
 		default:
-			throw new Error(`Unknown debuggerType: ${debuggerType}`);
+			throw new Error(`Unknown debuggerType: ${String(debuggerType)}`);
 	}
 
 	return debuggerName;

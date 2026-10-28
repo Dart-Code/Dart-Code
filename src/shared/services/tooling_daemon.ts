@@ -180,7 +180,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		const serviceName = Service[service];
 		const resp = await this.callMethod(ServiceMethod.registerService, { service: serviceName, method, capabilities });
 		if (resp.type !== "Success") {
-			throw new Error(`Failed to register service ${serviceName}.${method}: ${resp.type}`);
+			throw new Error(`Failed to register service ${serviceName}.${method}: ${String(resp.type)}`);
 		}
 
 		this.serviceHandlers[`${serviceName}.${method}`] = f;

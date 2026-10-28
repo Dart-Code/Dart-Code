@@ -61,7 +61,6 @@ export default defineConfig([
 			"@typescript-eslint/prefer-nullish-coalescing": "off",
 			"@typescript-eslint/prefer-promise-reject-errors": "off",
 			"@typescript-eslint/require-await": "off",
-			"@typescript-eslint/restrict-template-expressions": "off",
 			// End temporary exclusions
 			"arrow-body-style": "error",
 			"arrow-parens": [
