@@ -28,7 +28,7 @@ void f(String name) {
 		} else if (assignVarAction.command) {
 			await vs.commands.executeCommand(
 				assignVarAction.command.command,
-				...assignVarAction.command.arguments || [], // eslint-disable-line @typescript-eslint/no-unsafe-argument
+				...assignVarAction.command.arguments ?? [], // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			);
 		} else {
 			// If there's no edit or command, skip the test. This happens very infrequently and appears to be a VS Code

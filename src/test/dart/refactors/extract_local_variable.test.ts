@@ -20,7 +20,7 @@ String name() {
 		const extractLocalAction = actions.find((r) => r.title.includes("Extract Local Variable"));
 		assert.ok(extractLocalAction, "Action was not found");
 
-		await (vs.commands.executeCommand(extractLocalAction.command!.command, ...extractLocalAction.command!.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+		await (vs.commands.executeCommand(extractLocalAction.command!.command, ...extractLocalAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		await ensureTestContent(`
 String name() {

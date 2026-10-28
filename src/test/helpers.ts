@@ -326,7 +326,7 @@ export async function getPackages(uri?: vs.Uri) {
 	}
 	// It's not guaranteed that this will trigger new analysis, because we might already have all packages
 	// up-to-date, so just wait a bit.
-	await vs.commands.executeCommand("dart.getPackages", uri || vs.workspace.workspaceFolders![0].uri);
+	await vs.commands.executeCommand("dart.getPackages", uri ?? vs.workspace.workspaceFolders![0].uri);
 	await delay(100);
 }
 
@@ -625,8 +625,7 @@ afterEach("run deferred functions", async function () {
 			await watchPromise(`afterEach->deferred->${description}`, callback(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
 			logger.error(`Error running deferred function ${description}: ${String(e)}`);
-			if (!firstError)
-				firstError = e instanceof Error ? e : new Error(String(e));
+			firstError ??= e instanceof Error ? e : new Error(String(e));
 		}
 		logger.info(`    done!`);
 	}
@@ -924,7 +923,7 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
-		&& (f.containerName || "") === (containerName || ""),
+		&& (f.containerName ?? "") === (containerName ?? ""),
 	);
 	assert.ok(
 		symbol,
@@ -950,7 +949,7 @@ export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent
 	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
-		&& (f.parent ? f.parent.name : "") === (parentName || ""),
+		&& (f.parent ? f.parent.name : "") === (parentName ?? ""),
 	);
 	assert.ok(
 		symbol,
@@ -1393,9 +1392,9 @@ export async function setConfigForTest(section: string, key: string, value: any)
 
 export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any[]) {
 	const launchConfig = vs.workspace.getConfiguration("launch", workspaceUri);
-	const originalConfigs = launchConfig.get<any[]>("configurations") || [];
+	const originalConfigs = launchConfig.get<any[]>("configurations") ?? [];
 	logger.info(`Adding ${configs?.length} launch configs to the ${originalConfigs?.length} that already existed!`);
-	const newConfigs = (originalConfigs || []).slice().concat(configs);
+	const newConfigs = originalConfigs.slice().concat(configs);
 	await launchConfig.update("configurations", newConfigs);
 	defer("Restore launch configs", async () => {
 		logger.info(`Resetting back to ${originalConfigs?.length} original launch configs`);
@@ -1569,7 +1568,7 @@ export async function makeTextTreeUsingCustomTree(parent: vs.TreeItem | vs.Uri |
 	const parentNode = parent instanceof vs.Uri ? undefined : parent;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
 
-	const items = await provider.getChildren(parentNode) || [];
+	const items = await provider.getChildren(parentNode) ?? [];
 
 	for (const item of items) {
 		const treeItem = await provider.getTreeItem(item);
