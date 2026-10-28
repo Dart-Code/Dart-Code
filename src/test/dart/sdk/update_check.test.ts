@@ -19,6 +19,7 @@ describe("update_check", () => {
 	let showWarningMessage: sinon.SinonStub;
 	let openInBrowser: sinon.SinonStub;
 	let setCheckForSdkUpdates: sinon.SinonStub;
+	let checkForSdkUpdatesValue: boolean;
 
 	beforeEach(() => {
 		logger = {
@@ -31,7 +32,8 @@ describe("update_check", () => {
 		showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(undefined);
 		openInBrowser = sb.stub(envUtils, "openInBrowser").resolves(true);
 		setCheckForSdkUpdates = sb.stub(config, "setCheckForSdkUpdates").resolves();
-		sb.stub(config, "checkForSdkUpdates").get(() => true);
+		checkForSdkUpdatesValue = true;
+		sb.stub(config, "checkForSdkUpdates").get(() => checkForSdkUpdatesValue);
 	});
 
 	function createWorkspaceContext({
@@ -83,7 +85,7 @@ describe("update_check", () => {
 
 	describe("checkForStandardDartSdkUpdates", () => {
 		it("does nothing when checkForSdkUpdates config is false", async () => {
-			sb.stub(config, "checkForSdkUpdates").get(() => false);
+			checkForSdkUpdatesValue = false;
 			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext(), webClient);
 			assert.equal(fetchStub.called, false);
 		});
