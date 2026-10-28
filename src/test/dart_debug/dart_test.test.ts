@@ -331,7 +331,7 @@ describe("dart test debugger", () => {
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
 		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 		if (!outline)
-			throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
+			throw new Error(`Did not get outline for ${helloWorldTestTreeFile.toString()}`);
 		visitor.visit(outline);
 		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 			// Run the test.
@@ -382,7 +382,7 @@ describe("dart test debugger", () => {
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
 		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 		if (!outline)
-			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
+			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile.toString()}`);
 		visitor.visit(outline);
 
 		// Re-run each test.

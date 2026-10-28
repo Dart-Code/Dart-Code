@@ -15,19 +15,19 @@ describe("cleanDartDoc", () => {
 <i class="material-icons md-36">try</i> &#x2014; material icon named "try".
 		`;
 		const expected = `
-![threesixty](${Uri.file(extensionPath)}/media/doc-icons/material/threesixty%402x.png|width=32,height=32)
+![threesixty](${Uri.file(extensionPath).toString()}/media/doc-icons/material/threesixty%402x.png|width=32,height=32)
 
 material icon named "360".
 
-![class_rounded](${Uri.file(extensionPath)}/media/doc-icons/material/class_rounded%402x.png|width=32,height=32)
+![class_rounded](${Uri.file(extensionPath).toString()}/media/doc-icons/material/class_rounded%402x.png|width=32,height=32)
 
 material icon named "class round".
 
-![class_sharp](${Uri.file(extensionPath)}/media/doc-icons/material/class_sharp%402x.png|width=32,height=32)
+![class_sharp](${Uri.file(extensionPath).toString()}/media/doc-icons/material/class_sharp%402x.png|width=32,height=32)
 
 material icon named "class sharp".
 
-![try_sms_star](${Uri.file(extensionPath)}/media/doc-icons/material/try_sms_star%402x.png|width=32,height=32)
+![try_sms_star](${Uri.file(extensionPath).toString()}/media/doc-icons/material/try_sms_star%402x.png|width=32,height=32)
 
 material icon named "try".
 		`;
@@ -44,19 +44,19 @@ material icon named "try".
 <i class='cupertino-icons md-36'>arrow_clockwise_circle_fill</i> &#x2014; Cupertino icon named "arrow clockwise circle fill".
 		`;
 		const expected = `
-![plus_circle](${Uri.file(extensionPath)}/media/doc-icons/cupertino/plus_circle%402x.png|width=32,height=32)
+![plus_circle](${Uri.file(extensionPath).toString()}/media/doc-icons/cupertino/plus_circle%402x.png|width=32,height=32)
 
 Cupertino icon named "plus circle".
 
-![ant_circle_fill](${Uri.file(extensionPath)}/media/doc-icons/cupertino/ant_circle_fill%402x.png|width=32,height=32)
+![ant_circle_fill](${Uri.file(extensionPath).toString()}/media/doc-icons/cupertino/ant_circle_fill%402x.png|width=32,height=32)
 
 Cupertino icon named "ant circle fill".
 
-![arrow_clockwise_circle](${Uri.file(extensionPath)}/media/doc-icons/cupertino/arrow_clockwise_circle%402x.png|width=32,height=32)
+![arrow_clockwise_circle](${Uri.file(extensionPath).toString()}/media/doc-icons/cupertino/arrow_clockwise_circle%402x.png|width=32,height=32)
 
 Cupertino icon named "arrow clockwise circle".
 
-![arrow_clockwise_circle_fill](${Uri.file(extensionPath)}/media/doc-icons/cupertino/arrow_clockwise_circle_fill%402x.png|width=32,height=32)
+![arrow_clockwise_circle_fill](${Uri.file(extensionPath).toString()}/media/doc-icons/cupertino/arrow_clockwise_circle_fill%402x.png|width=32,height=32)
 
 Cupertino icon named "arrow clockwise circle fill".
 		`;

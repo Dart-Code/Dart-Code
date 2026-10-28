@@ -150,11 +150,11 @@ export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (t
 	const visitor = new TestOutlineVisitor(logger, fsPath(fileUri));
 	const outline = privateApi.fileTracker.getOutlineFor(fileUri);
 	if (!outline)
-		throw new Error(`Did not get outline for ${fileUri}`);
+		throw new Error(`Did not get outline for ${fileUri.toString()}`);
 	visitor.visit(outline);
 	const test = visitor.tests.find(selectTest);
 	if (!test)
-		throw new Error(`Did not find a matching test in ${fileUri}`);
+		throw new Error(`Did not find a matching test in ${fileUri.toString()}`);
 
 	const configs = await captureStartDebuggingConfigs(() => commands.executeCommand("_dart.startWithoutDebuggingTestFromOutline", test, undefined));
 	assert.equal(configs.length, 1);
@@ -182,7 +182,7 @@ export async function captureTestDebugConfigurationForItems(fileUri: Uri, select
 
 	const suiteNode = findSuiteNode(fsPath(fileUri));
 	if (!suiteNode)
-		throw new Error(`Unable to find suite node for ${fileUri}`);
+		throw new Error(`Unable to find suite node for ${fileUri.toString()}`);
 
 	const configs = await captureTestDebugConfigurations(() => new TestRunRequest(selectItems(suiteNode)), debug);
 	assert.equal(configs.length, 1);

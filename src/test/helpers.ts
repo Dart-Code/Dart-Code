@@ -174,7 +174,7 @@ export function currentEditor(): vs.TextEditor {
 	if (editor?.document.uri.scheme !== "file") {
 		const firstEditor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file");
 		if (firstEditor)
-			logger.info(`Current active editor is not a file (${editor ? editor.document.uri : "none"}) so using first visible editor (${firstEditor.document.uri})`);
+			logger.info(`Current active editor is not a file (${editor ? editor.document.uri.toString() : "none"}) so using first visible editor (${firstEditor.document.uri.toString()})`);
 		editor = firstEditor;
 	}
 
@@ -333,7 +333,7 @@ function logOpenEditors() {
 	logger.info(`Current open editors are:`);
 	if (vs.window.visibleTextEditors?.length) {
 		for (const editor of vs.window.visibleTextEditors) {
-			logger.info(`  - ${editor.document.uri}`);
+			logger.info(`  - ${editor.document.uri.toString()}`);
 		}
 	} else {
 		logger.info(`  - (no open editors)`);
@@ -572,7 +572,7 @@ export function tryDelete(item: string | vs.Uri) {
 				retryDelay: 500
 			});
 	} catch (e) {
-		console.warn(`Failed to clean up folder ${item}: ${e}`);
+		console.warn(`Failed to clean up folder ${item}: ${String(e)}`);
 	}
 }
 
@@ -623,9 +623,9 @@ afterEach("run deferred functions", async function () {
 		try {
 			await watchPromise(`afterEach->deferred->${description}`, callback(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
-			logger.error(`Error running deferred function ${description}: ${e}`);
+			logger.error(`Error running deferred function ${description}: ${String(e)}`);
 			if (!firstError)
-				firstError = e instanceof Error ? e : new Error(`${e}`);
+				firstError = e instanceof Error ? e : new Error(String(e));
 		}
 		logger.info(`    done!`);
 	}
@@ -678,7 +678,7 @@ export async function setTestContent(content: string): Promise<void> {
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),
 	);
-	logger.info(`Replacing content for file ${doc.uri} with ${content.length} characters`);
+	logger.info(`Replacing content for file ${doc.uri.toString()} with ${content.length} characters`);
 	// TODO: May be able to replace this with
 	// return editor.edit((eb) => eb.replace(all, content));
 	// once the fix for https://github.com/dart-lang/sdk/issues/32914
@@ -764,7 +764,7 @@ export function positionOf(searchText: string, doc?: vs.TextDocument): vs.Positi
 	// source file is \r\n!
 	searchText = searchText.replace(/\r/g, "").replace(/\n/g, documentEol);
 	doc ??= currentDoc();
-	logger.info(`Searching for "${searchText}" in ${doc.uri}`);
+	logger.info(`Searching for "${searchText}" in ${doc.uri.toString()}`);
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
 	const docText = doc.getText();
@@ -957,8 +957,8 @@ export function ensureLocation(locations: vs.Location[] | undefined, uri: vs.Uri
 	);
 	assert.ok(
 		location,
-		`Couldn't find location for ${uri}/${rangeString(range)} in\n`
-		+ locations.map((l) => `        ${l.uri}/${rangeString(l.range)}`).join("\n"),
+		`Couldn't find location for ${uri.toString()}/${rangeString(range)} in\n`
+		+ locations.map((l) => `        ${l.uri.toString()}/${rangeString(l.range)}`).join("\n"),
 	);
 }
 
@@ -969,7 +969,7 @@ export function ensureNoLocation(locations: vs.Location[], uri: vs.Uri, range: v
 	);
 	assert.ok(
 		!location,
-		`Unexpectedly found location for ${uri}/${rangeString(range)}`,
+		`Unexpectedly found location for ${uri.toString()}/${rangeString(range)}`,
 	);
 }
 

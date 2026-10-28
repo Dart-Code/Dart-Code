@@ -14,7 +14,7 @@ describe("test_outline_visitor", () => {
 	it("reads the correct groups and tests", () => {
 		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile);
 		if (!outline)
-			throw new Error(`Did not get outline for ${helloWorldTestMainFile}`);
+			throw new Error(`Did not get outline for ${helloWorldTestMainFile.toString()}`);
 
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestMainFile));
 		visitor.visit(outline);
