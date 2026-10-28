@@ -347,7 +347,7 @@ export class DartDebugClient extends DebugClient {
 					}
 				} catch (e) {
 					this.removeListener(type, handler);
-					reject(e);
+					reject(e instanceof Error ? e : new Error(String(e)));
 				}
 			};
 			this.on(type, handler);

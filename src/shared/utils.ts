@@ -28,7 +28,7 @@ export function escapeRegExp(input: string): string {
 export class PromiseCompleter<T> {
 	public promise: Promise<T>;
 	public resolve!: (value: T | PromiseLike<T>) => void;
-	public reject!: (error?: any, stackTrace?: string) => void;
+	public reject!: (error: Error) => void;
 
 	private _isComplete = false;
 	public get isComplete() { return this._isComplete; }
@@ -283,7 +283,7 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 				clearTimeout(timeoutTimer);
 				resolve(result);
 			},
-			(e) => {
+			(e: Error) => {
 				clearTimeout(timeoutTimer);
 				reject(e);
 			},

@@ -593,7 +593,7 @@ export class DevToolsManager implements IAmDisposable {
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}.`;
 					this.logger.error(errorMessage);
 
-					reject(errorMessage);
+					reject(new Error(errorMessage));
 				}
 			});
 		});
