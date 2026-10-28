@@ -220,7 +220,13 @@ export async function activateWithoutAnalysis(file?: vs.Uri | null): Promise<voi
 	if (hasOtherOpenFiles)
 		await closeAllOpenFiles();
 	if (file) {
-		await openFile(file);
+		const editor = await openFile(file);
+		// If closeAllOpenFiles was skipped because this file was already the only open file,
+		// ensure any unsaved changes from a previous test are still reverted.
+		if (editor.document.isDirty) {
+			logger.info(`Reverting current editor...`);
+			await vs.commands.executeCommand("workbench.action.files.revert");
+		}
 	} else {
 		logger.info(`Not opening any file`);
 	}
@@ -643,9 +649,31 @@ afterEach("destroy sinon sandbox", () => {
 	sb.restore();
 });
 
+// Track files that have already registered a restore handler during the current test
+// so multiple setTestContent calls on the same file only capture the initial content once.
+const modifiedFiles = new Set<string>();
 export async function setTestContent(content: string): Promise<void> {
 	const editor = currentEditor();
 	const doc = editor.document;
+	const filePath = fsPath(doc.uri);
+	if (doc.uri.scheme === "file" && !modifiedFiles.has(filePath)) {
+		modifiedFiles.add(filePath);
+		const originalContent = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : undefined;
+		defer("Revert modified file", async () => {
+			modifiedFiles.delete(filePath);
+			// If the test saved the document, restore the original content on disk first.
+			const diskModified = originalContent !== undefined && fs.existsSync(filePath) && fs.readFileSync(filePath, "utf8") !== originalContent;
+			if (diskModified)
+				fs.writeFileSync(filePath, originalContent);
+			// Revert the editor buffer if it has unsaved changes or if the underlying disk content was restored.
+			if (doc.isDirty || diskModified) {
+				if (vs.window.activeTextEditor?.document !== doc)
+					await openFile(doc.uri);
+				logger.info(`Reverting current editor...`);
+				await vs.commands.executeCommand("workbench.action.files.revert");
+			}
+		});
+	}
 	const all = new vs.Range(
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),

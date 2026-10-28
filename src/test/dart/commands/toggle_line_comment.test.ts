@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { activate, ensureTestContent, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
+import { activate, closeAllOpenFiles, ensureTestContent, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
 
 describe("toggle dartdoc comment", () => {
 	beforeEach("activate", () => activate());
@@ -106,6 +106,65 @@ foo() {
 bar() {
   // print('bar');
 }
+		`);
+	});
+
+	it("does nothing when there is no active editor", async () => {
+		await closeAllOpenFiles();
+		await vs.commands.executeCommand("dart.toggleLineComment");
+	});
+
+	it("handles blank lines, mixed comment prefixes, and multiple selections on the same line", async () => {
+		await setTestContent(`
+  // foo() {
+
+  print('foo');
+  // }
+		`);
+		select(
+			rangeOf(`|// foo() {
+
+  print('foo');
+  // }|`),
+			rangeOf(`|print|`),
+		);
+
+		await waitForEditorChange(() => vs.commands.executeCommand("dart.toggleLineComment"));
+		await ensureTestContent(`
+  // // foo() {
+
+  // print('foo');
+  // // }
+		`);
+
+		select(
+			rangeOf(`|// // foo() {
+
+  // print('foo');
+  // // }|`),
+			rangeOf(`|print|`),
+		);
+		await waitForEditorChange(() => vs.commands.executeCommand("dart.toggleLineComment"));
+		await ensureTestContent(`
+  /// // foo() {
+
+  /// print('foo');
+  /// // }
+		`);
+
+		select(
+			rangeOf(`|/// // foo() {
+
+  /// print('foo');
+  /// // }|`),
+			rangeOf(`|print|`),
+		);
+		await waitForEditorChange(() => vs.commands.executeCommand("dart.toggleLineComment"));
+		await ensureTestContent(`
+  // foo() {
+
+  print('foo');
+  // }
 		`);
 	});
 });
