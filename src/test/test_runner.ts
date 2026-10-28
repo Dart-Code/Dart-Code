@@ -57,32 +57,26 @@ module.exports = {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		require("source-map-support").install();
 
-		return new Promise(async (resolve, reject) => {
-			try {
-				const testFilter = process.env.DART_CODE_TEST_FILTER;
-				const filters: string[] | undefined = testFilter ? JSON.parse(testFilter) : undefined;
-				const files = await getTestSuites(testsRoot, filters);
+		const testFilter = process.env.DART_CODE_TEST_FILTER;
+		const filters: string[] | undefined = testFilter ? JSON.parse(testFilter) : undefined;
+		const files = await getTestSuites(testsRoot, filters);
 
-				// Add files to the test suite
-				files.forEach((f) => mocha.addFile(f));
+		// Add files to the test suite
+		files.forEach((f) => mocha.addFile(f));
 
-				if (files.length === 0) {
-					console.log(`No test files found.`);
+		if (files.length === 0) {
+			console.log(`No test files found.`);
+			return;
+		}
+
+		// Run the mocha test
+		return new Promise((resolve, reject) => {
+			mocha.run((failures) => {
+				if (failures > 0)
+					reject(new Error(`${failures} tests failed.`));
+				else
 					resolve();
-					return;
-				}
-
-				// Run the mocha test
-				mocha.run((failures) => {
-					if (failures > 0) {
-						reject(new Error(`${failures} tests failed.`));
-					} else {
-						resolve();
-					}
-				});
-			} catch (err) {
-				return reject(err);
-			}
+			});
 		});
 	},
 };

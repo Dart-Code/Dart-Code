@@ -537,21 +537,21 @@ export class DevToolsManager implements IAmDisposable {
 	}
 
 	/// Starts the devtools server and returns the URL of the running app.
-	private startServer(): Promise<string> {
-		return new Promise<string>(async (resolve, reject) => {
-			if (this.service) {
-				try {
-					await this.service.dispose();
-					this.service = undefined;
-					this.devtoolsUrl = undefined;
-				} catch (e) {
-					this.logger.error(e);
-				}
+	private async startServer(): Promise<string> {
+		if (this.service) {
+			try {
+				await this.service.dispose();
+				this.service = undefined;
+				this.devtoolsUrl = undefined;
+			} catch (e) {
+				this.logger.error(e);
 			}
-			const service = this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.toolingDaemon, this.dartCapabilities);
-			this.disposables.push(service);
-			await service.connect();
+		}
+		const service = this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.toolingDaemon, this.dartCapabilities);
+		this.disposables.push(service);
+		await service.connect();
 
+		return new Promise<string>((resolve, reject) => {
 			service.registerForServerStarted((n) => {
 				// When a new debug session starts, we need to wait for its VM
 				// Service, then register it with this server.

@@ -27,16 +27,16 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 	}
 
 	private async discoverPackageMaps(): Promise<void> {
-		if (this.packageMapDiscovery)
-			return this.packageMapDiscovery;
-		this.packageMapDiscovery = new Promise(async (resolve) => {
-			const projectFolders = await getAllProjectFolders(this.logger, this.getExcludedFolders, { requirePubspec: true, searchDepth: this.projectSearchDepth });
-			this.packageMaps = {};
-			for (const projectFolder of projectFolders)
-				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);
-			resolve();
-		});
+		if (!this.packageMapDiscovery)
+			this.packageMapDiscovery = this.discoverPackageMapsUncached();
 		return this.packageMapDiscovery;
+	}
+
+	private async discoverPackageMapsUncached(): Promise<void> {
+		const projectFolders = await getAllProjectFolders(this.logger, this.getExcludedFolders, { requirePubspec: true, searchDepth: this.projectSearchDepth });
+		this.packageMaps = {};
+		for (const projectFolder of projectFolders)
+			this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);
 	}
 
 	private isKnownPackage(packageName: string): boolean {

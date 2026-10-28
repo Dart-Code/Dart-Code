@@ -489,32 +489,33 @@ export class FlutterDeviceManager implements IAmDisposable {
 			return this.shortCacheForSupportedPlatforms;
 		}
 
-		this.shortCacheForSupportedPlatforms = new Promise(async (resolve) => {
-			// An internal workspace that we assume to be Flutter will not generate project folders, but the daemon will respond to an empty path.
-			const projectFolders = this.workspaceContext.config.forceFlutterWorkspace ? [""] : await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
-			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
-
-
-			const tryGet = (folder: string) => this.tryGetSupportedPlatformTypes(folder);
-			const getPlatformPromises = projectFolders.map(async (folder: string): Promise<f.PlatformType[]> => {
-				try {
-					const platforms = await tryGet(folder);
-					return platforms ?? [];
-				} catch (e) {
-					this.logger.error(e);
-					return [];
-				}
-			});
-			const resps = await Promise.all(getPlatformPromises);
-
-			const supportedTypes = unique(flatMap(resps, (r) => r));
-			this.logger.info(`Supported platforms for the workspace are ${supportedTypes.map((t) => `"${t}"`).join(", ")}.`);
-
-			resolve(supportedTypes);
-			setTimeout(() => this.shortCacheForSupportedPlatforms = undefined, 10000).unref();
-		});
-
+		this.shortCacheForSupportedPlatforms = this.getSupportedPlatformsForWorkspaceUncached();
 		return this.shortCacheForSupportedPlatforms;
+	}
+
+	private async getSupportedPlatformsForWorkspaceUncached(): Promise<f.PlatformType[]> {
+		// An internal workspace that we assume to be Flutter will not generate project folders, but the daemon will respond to an empty path.
+		const projectFolders = this.workspaceContext.config.forceFlutterWorkspace ? [""] : await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
+		this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
+
+
+		const tryGet = (folder: string) => this.tryGetSupportedPlatformTypes(folder);
+		const getPlatformPromises = projectFolders.map(async (folder: string): Promise<f.PlatformType[]> => {
+			try {
+				const platforms = await tryGet(folder);
+				return platforms ?? [];
+			} catch (e) {
+				this.logger.error(e);
+				return [];
+			}
+		});
+		const resps = await Promise.all(getPlatformPromises);
+
+		const supportedTypes = unique(flatMap(resps, (r) => r));
+		this.logger.info(`Supported platforms for the workspace are ${supportedTypes.map((t) => `"${t}"`).join(", ")}.`);
+
+		setTimeout(() => this.shortCacheForSupportedPlatforms = undefined, 10000).unref();
+		return supportedTypes;
 	}
 
 	public labelForDevice(device: f.Device, { withIcon = false }: { withIcon?: boolean } = {}) {
