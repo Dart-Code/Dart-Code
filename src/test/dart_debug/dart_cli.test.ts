@@ -1477,7 +1477,7 @@ insp=<inspected variable>
 		it("to a Dart script launched externally using --write-service-info and can unpause to run it to completion", async () => {
 			const tempVmServiceInfoFile = path.join(os.tmpdir(), `dart-vm-service-${getRandomInt(0x1000, 0x10000).toString(16)}.json`);
 			const vmArgs = [
-				`--write-service-info=${vs.Uri.file(tempVmServiceInfoFile)}`,
+				`--write-service-info=${vs.Uri.file(tempVmServiceInfoFile).toString()}`,
 			];
 			spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 

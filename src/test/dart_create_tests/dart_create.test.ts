@@ -26,7 +26,7 @@ describe("dart", () => {
 
 		const contents = fs.readFileSync(mainFile);
 		if (contents.indexOf(expectedString) === -1)
-			assert.fail(`Did not find "${expectedString}'" in the templated file:\n\n${contents}`);
+			assert.fail(`Did not find "${expectedString}'" in the templated file:\n\n${contents.toString()}`);
 
 		// Ensure we fetched packages too.
 		await waitForResult(() => fs.existsSync(packagesFile), ".dart_tool/package_config.json did not exist", 10000);

@@ -63,7 +63,7 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 				if (currentAttempt >= maxAttempts)
 					throw e;
 
-				console.warn(`Failed to download VS Code, will retry: ${e}`);
+				console.warn(`Failed to download VS Code, will retry: ${String(e)}`);
 				currentAttempt++;
 			}
 		}

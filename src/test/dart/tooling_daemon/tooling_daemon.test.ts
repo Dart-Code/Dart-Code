@@ -76,7 +76,7 @@ describe("dart tooling daemon", () => {
 
 		try {
 			const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri: flutterHelloWorldMainFile.toString() });
-			assert.fail(`DTD returned content outside of workspace: (${flutterHelloWorldMainFile} / ${result.content.length} bytes)`);
+			assert.fail(`DTD returned content outside of workspace: (${flutterHelloWorldMainFile.toString()} / ${result.content.length} bytes)`);
 		} catch (e: any) {
 			assert.equal(e.code, 142);
 			assert.equal(e.message, "Permission denied");
