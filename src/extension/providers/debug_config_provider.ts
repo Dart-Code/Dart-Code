@@ -275,7 +275,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartLaunchArgs): Promise<Device | undefined | "UNABLE_TO_LAUNCH"> {
+	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartVsCodeLaunchArgs): Promise<Device | undefined | "UNABLE_TO_LAUNCH"> {
 		if (!this.deviceManager)
 			return;
 
@@ -356,7 +356,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return false;
 	}
 
-	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs & { debuggerType?: DebuggerType | string }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): { debuggerType: DebuggerType, projectRoot: string | undefined } {
+	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartVsCodeLaunchArgs & { debuggerType?: DebuggerType | string }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): { debuggerType: DebuggerType, projectRoot: string | undefined } {
 		if (debugConfig.debuggerType !== undefined) {
 			// User can specify the numbers or the names.
 			const specifiedDebuggerType = typeof debugConfig.debuggerType === "string"
@@ -373,7 +373,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		let debuggerType = DebuggerType.Dart;
 		let firstPathSegment: string | undefined;
-		const projectRoot: string | undefined = debugConfig.projectRootPath ?? debugConfig.cwd;
+		const projectRoot = debugConfig.projectRootPath ?? debugConfig.cwd;
 		if (projectRoot && debugConfig.program && isWithinPath(debugConfig.program, projectRoot)) {
 			const relativePath = debugConfig.program ? path.relative(projectRoot, debugConfig.program) : undefined;
 			firstPathSegment = relativePath?.split(path.sep)[0];

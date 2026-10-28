@@ -34,8 +34,8 @@ export class TestCommands implements IAmDisposable {
 
 	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly dartCapabilities: DartCapabilities, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
-			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
+			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: Record<string, unknown> | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: Record<string, unknown> | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: RunnableTreeNode[], suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: RunnableTreeNode[], suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
 			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean, token?: vs.CancellationToken) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, includeCoverage, testRun, isRunningAll, token)),
@@ -295,7 +295,7 @@ export class TestCommands implements IAmDisposable {
 					dartTestCapabilities,
 					workspacePackageNames,
 				),
-				name: launchTemplate?.name ?? `${path.basename(programPath)} tests`,
+				name: (launchTemplate?.name as string | undefined) ?? `${path.basename(programPath)} tests`,
 			};
 
 			// Ensure we have a unique ID for this session so we can track when it completes.
@@ -339,7 +339,7 @@ export class TestCommands implements IAmDisposable {
 		}
 	}
 
-	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
+	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: Record<string, unknown> | undefined) {
 		const isFlutter = isInsideFlutterProject(vs.Uri.file(test.file));
 
 		return this.runTests({
@@ -514,7 +514,7 @@ interface TestLaunchInfo {
 	testSelection: TestSelection[] | undefined;
 	shouldRunSkippedTests: boolean;
 	suppressPrompts: boolean;
-	launchTemplate: any | undefined;
+	launchTemplate: Record<string, unknown> | undefined;
 	useLaunchJsonTestTemplate?: boolean;
 	testRun: vs.TestRun | undefined;
 	token: vs.CancellationToken | undefined;

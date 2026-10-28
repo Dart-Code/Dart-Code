@@ -29,10 +29,7 @@ export default defineConfig([
 			},
 		},
 		linterOptions: {
-			// Temporarily ignore disable comments for rules that don't trigger.
-			// We have a bunch of ignores for things like "no-unsafe-assignment" but
-			// the rule is currently disabled below.
-			reportUnusedDisableDirectives: false,
+			reportUnusedDisableDirectives: true,
 		},
 		rules: {
 			"no-restricted-properties": [
@@ -55,7 +52,6 @@ export default defineConfig([
 			}],
 			// Temporary exclusions after tslint -> eslint migration
 			"@typescript-eslint/no-explicit-any": "off",
-			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/no-unsafe-member-access": "off",
 			"@typescript-eslint/require-await": "off",

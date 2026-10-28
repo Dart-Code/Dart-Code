@@ -307,12 +307,12 @@ export class DebugCommands implements IAmDisposable {
 			this.onWillHotRestartEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotRestart", args)));
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", async (arg: vs.Uri | { resource: vs.Uri, launchTemplate?: any | undefined }) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", async (arg: vs.Uri | { resource: vs.Uri, launchTemplate?: Record<string, unknown> }) => {
 			const resource = "resource" in arg ? arg.resource : arg;
 			let launchTemplate = "launchTemplate" in arg ? arg.launchTemplate : undefined;
 			launchTemplate ??= getLaunchConfigDefaultTemplate(resource, true);
 
-			const launchConfig = Object.assign(
+			const launchConfig: vs.DebugConfiguration = Object.assign(
 				{
 					name: dynamicDebugSessionName,
 					noDebug: false,
@@ -324,14 +324,14 @@ export class DebugCommands implements IAmDisposable {
 					program: fsPath(resource),
 				},
 			);
-			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
+			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", async (arg: vs.Uri | { resource: vs.Uri, launchTemplate?: any | undefined }) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", async (arg: vs.Uri | { resource: vs.Uri, launchTemplate?: Record<string, unknown> }) => {
 			const resource = "resource" in arg ? arg.resource : arg;
 			let launchTemplate = "launchTemplate" in arg ? arg.launchTemplate : undefined;
 			launchTemplate ??= getLaunchConfigDefaultTemplate(resource, false);
 
-			const launchConfig = Object.assign(
+			const launchConfig: vs.DebugConfiguration = Object.assign(
 				{
 					name: dynamicDebugSessionName,
 					noDebug: true,
@@ -343,7 +343,7 @@ export class DebugCommands implements IAmDisposable {
 					program: fsPath(resource),
 				},
 			);
-			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
+			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("dart.rerunLastDebugSession", async () => {
@@ -512,7 +512,7 @@ export class DebugCommands implements IAmDisposable {
 
 			const sessions = debugSessions.map((s) => ({
 				description: s.session.workspaceFolder ? s.session.workspaceFolder.name : undefined,
-				detail: s.session.configuration.deviceName ?? `Started ${s.sessionStart.toLocaleTimeString()}`,
+				detail: s.configuration.deviceName ?? `Started ${s.sessionStart.toLocaleTimeString()}`,
 				label: s.session.name,
 				session: s,
 			}));
@@ -597,10 +597,10 @@ export class DebugCommands implements IAmDisposable {
 		debugSessionStartedEmitter.fire(session);
 		debugSessionsChangedEmitter.fire();
 
-		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.Web) {
+		if (session.debuggerType === DebuggerType.Flutter || session.debuggerType === DebuggerType.Web) {
 			// TODO(dantup): Can these use session.flutterMode in preference?
-			const isProfileMode = s.configuration.toolArgs?.includes("--profile");
-			const isReleaseMode = s.configuration.toolArgs?.includes("--release");
+			const isProfileMode = session.configuration.toolArgs?.includes("--profile");
+			const isReleaseMode = session.configuration.toolArgs?.includes("--release");
 
 			if (isReleaseMode) {
 				void vs.commands.executeCommand("setContext", isInFlutterReleaseModeDebugSessionContext, true);
@@ -611,7 +611,7 @@ export class DebugCommands implements IAmDisposable {
 				isInFlutterDebugModeDebugSession = true;
 				void vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
 			}
-		} else if (s.configuration.debuggerType === DebuggerType.Dart) {
+		} else if (session.debuggerType === DebuggerType.Dart) {
 			void vs.commands.executeCommand("setContext", isInDartDebugSessionContext, true);
 		}
 
@@ -683,9 +683,9 @@ export class DebugCommands implements IAmDisposable {
 
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
 		const event = e.event;
-		const body = e.body;
+		const body = e.body as Record<string, any>;
 		if (event === "dart.log") {
-			const message: LogMessage = e.body;
+			const message = body as LogMessage;
 			const logMessage = `[${e.session.name}] ${message.message}`;
 			const category = message.category ?? logMessage.includes("[VM]") ? LogCategory.VmService : LogCategory.DAP;
 			switch (message.severity) {
@@ -709,19 +709,19 @@ export class DebugCommands implements IAmDisposable {
 			// in the command).
 			this.onWillHotReloadEmitter.fire();
 		} else if (event === "dart.debugMetrics") {
-			const memory = body.memory;
+			const memory = body.memory as { current: number, total: number };
 			const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
 			this.debugMetrics.text = message;
 			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 			this.debugMetrics.show();
 		} else if (event === "dart.toolEvent") {
-			const kind = body.kind;
-			const data = body.data;
+			const kind = body.kind as string;
+			const data = body.data as Record<string, any>;
 			switch (kind) {
 				case "navigate": {
-					const uri: string | undefined = data.resolvedFileUri ?? data.resolvedUri ?? data.fileUri ?? data.uri ?? data.file;
-					const line: string | undefined = data.line;
-					const col: string | undefined = data.column;
+					const uri = (data.resolvedFileUri ?? data.resolvedUri ?? data.fileUri ?? data.uri ?? data.file) as string | undefined;
+					const line = data.line as number | undefined;
+					const col = data.column as number | undefined;
 					const isFlutterInspectorNavigation = data.source === "flutter.inspector";
 					if (uri && uri.startsWith("file://") && line && col) {
 						// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
@@ -762,7 +762,7 @@ export class DebugCommands implements IAmDisposable {
 			.catch((e) => this.logger.error(e));
 
 		const event = e.event;
-		const body = e.body;
+		const body = e.body as Record<string, any>;
 
 		if (event === "dart.webLaunchUrl") {
 			const launched = !!body.launched;
@@ -783,8 +783,8 @@ export class DebugCommands implements IAmDisposable {
 				await session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
 			}
 		} else if (event === "flutter.forwardedEvent") {
-			const event = body.event;
-			const params = body.params;
+			const event = body.event as string;
+			const params = body.params as Record<string, any>;
 			switch (event) {
 				case "app.webLaunchUrl": {
 					const url = params.url as string;
@@ -828,9 +828,9 @@ export class DebugCommands implements IAmDisposable {
 				}
 			}
 		} else if (event === "flutter.forwardedRequest") {
-			const id = body.id;
-			const method = body.method;
-			const params = body.params;
+			const id = body.id as unknown;
+			const method = body.method as string;
+			const params = body.params as Record<string, any>;
 			let result;
 			let error;
 			try {
@@ -853,18 +853,18 @@ export class DebugCommands implements IAmDisposable {
 			}
 			void session.session.customRequest("flutter.sendForwardedRequestResponse", { id, result, error });
 		} else if (event === "dart.debuggerUris") {
-			session.observatoryUri = body.observatoryUri;
-			session.vmServiceUri = body.vmServiceUri;
-			session.clientVmServiceUri = body.clientVmServiceUri;
+			session.observatoryUri = body.observatoryUri as string | undefined;
+			session.vmServiceUri = body.vmServiceUri as string | undefined;
+			session.clientVmServiceUri = body.clientVmServiceUri as string | undefined;
 			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
 			debugSessionChangedEmitter.fire(session);
 			debugSessionsChangedEmitter.fire();
 
 			// Open or prompt for DevTools when appropriate.
-			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
+			const debuggerType = session.debuggerType;
 			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.Web) {
 				if (session.session.configuration.openDevTools) {
-					const pageId = session.session.configuration.openDevTools;
+					const pageId = session.session.configuration.openDevTools as string;
 					if (pageId) {
 						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, pageId, commandSource: CommandSource.launchConfiguration });
 					} else {
@@ -944,7 +944,7 @@ export class DebugCommands implements IAmDisposable {
 				// https://github.com/Dart-Code/Dart-Code/issues/2597
 				// If this is changed back, ensure the waiting-for-debug-extension notification
 				// is still displayed with additional description.
-				{ location: progressLocation, title: body.title },
+				{ location: progressLocation, title: body.title as string | undefined },
 				(progress) => {
 					// Build a new progress and store it in the session.
 					const completer = new PromiseCompleter<void>();
@@ -1039,9 +1039,9 @@ export class DebugCommands implements IAmDisposable {
 			if (session.supportsHotReload)
 				this.vmServices.handleServiceRegistered(VmService.HotReload, VmService.HotReload);
 		} else if (event === "flutter.appStart") {
-			session.flutterMode = body?.mode;
-			session.flutterDeviceId = body?.deviceId;
-			session.supportsHotReload = body?.supportsRestart;
+			session.flutterMode = body?.mode as string | undefined;
+			session.flutterDeviceId = body?.deviceId as string | undefined;
+			session.supportsHotReload = body?.supportsRestart as boolean | undefined;
 			debugSessionChangedEmitter.fire(session);
 			debugSessionsChangedEmitter.fire();
 		}
