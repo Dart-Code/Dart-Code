@@ -113,6 +113,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 
 		await new Promise<void>((resolve, reject) => {
 			const req = https.request(options, (resp) => {
+				resp.on("error", reject);
 				if (debugMode) {
 					const chunks: string[] = [];
 					resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
@@ -130,6 +131,8 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 							this.logger.warn(`Error in GA debug response: ${e?.message ?? e} ${json}`);
 						}
 					});
+				} else {
+					resp.resume();
 				}
 
 				if (!resp?.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
@@ -137,10 +140,10 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 				}
 				resolve();
 			});
-			req.write(JSON.stringify(analyticsData));
 			req.on("error", (e) => {
 				reject(e);
 			});
+			req.write(JSON.stringify(analyticsData));
 			req.end();
 		});
 	}

@@ -1,11 +1,11 @@
 import * as fs from "fs";
-import * as https from "https";
 import { minimatch } from "minimatch";
 import * as os from "os";
 import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { ExtensionRestartReason, showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debugging/interfaces";
+import { WebClient } from "../shared/fetch";
 import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
 import { existsAndIsDirectorySync, existsAndIsFileSync, fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
@@ -182,31 +182,13 @@ export function isValidEntryFile(file: string | undefined) {
 		|| file.endsWith(`lib${path.sep}main.dart`);
 }
 
-export function getLatestSdkVersion(): Promise<string> {
-	return new Promise<string>((resolve, reject) => {
-		const options: https.RequestOptions = {
-			hostname: "storage.googleapis.com",
-			method: "GET",
-			path: "/dart-archive/channels/stable/release/latest/VERSION",
-			port: 443,
-		};
-
-		const req = https.request(options, (resp) => {
-			if (!resp?.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-				reject({ message: `Failed to get Dart SDK Version ${resp?.statusCode}: ${resp?.statusMessage}` });
-			} else {
-				resp.on("data", (d: Buffer | string) => {
-					try {
-						const latestVersion = JSON.parse(d.toString()).version as string;
-						resolve(latestVersion);
-					} catch {
-						reject({ message: `Failed to parse latest Dart SDK Version from JSON: ${d.toString()}` });
-					}
-				});
-			}
-		});
-		req.end();
-	});
+export async function getLatestSdkVersion(webClient: WebClient): Promise<string> {
+	const resp = await webClient.fetch("https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION");
+	try {
+		return JSON.parse(resp).version as string;
+	} catch {
+		throw new Error(`Failed to parse latest Dart SDK Version from JSON: ${resp}`);
+	}
 }
 
 export async function promptToReloadExtension(
