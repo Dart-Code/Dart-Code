@@ -10,15 +10,14 @@ export class WebClient {
 		this.userAgent = `Dart-Code/${extensionVersion} (https://dartcode.org/)`;
 	}
 
-	// TODO: Move over things over to this...
-	public fetch(urlString: string, headers?: http.OutgoingHttpHeaders) {
+	public fetch(urlString: string, headers?: http.OutgoingHttpHeaders): Promise<string> {
 		const u = url.parse(urlString);
 		if (u.protocol === "https:" && u.hostname)
 			return this.fetchHttps(u.hostname, u.port || "443", u.path || "", headers);
 		else if (u.protocol === "http:" && u.hostname)
 			return this.fetchHttp(u.hostname, u.port || "80", u.path || "", headers);
 		else
-			throw new Error(`Cannot fetch URL ${urlString}`);
+			return Promise.reject(new Error(`Cannot fetch URL ${urlString}`));
 	}
 
 	private fetchHttps(hostname: string | undefined, port: string | undefined, path: string | undefined, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
@@ -35,14 +34,18 @@ export class WebClient {
 			};
 
 			const req = https.request(options, (res) => this.handleResponse(headers, res, resolve, reject, path));
+			req.on("error", reject);
 			req.end();
 		});
 	}
 
 	private handleResponse(headers: http.OutgoingHttpHeaders, resp: http.IncomingMessage, resolve: (value: string | PromiseLike<string>) => void, reject: (reason?: any) => void, path: string | undefined): void {
+		resp.on("error", reject);
 		if (!resp?.statusCode) {
+			resp.resume();
 			reject({ message: `Failed to get ${path}: ${resp?.statusMessage}` });
 		} else if (resp.statusCode >= 301 && resp.statusCode <= 302) {
+			resp.resume();
 			const newLocation = resp.headers.location;
 			if (!newLocation) {
 				reject({ message: `Redirect with no 'location' header for ${path}: ${resp?.statusCode}: ${resp?.statusMessage}` });
@@ -50,6 +53,7 @@ export class WebClient {
 				resolve(this.fetch(newLocation, headers));
 			}
 		} else if (resp.statusCode < 200 || resp.statusCode > 300) {
+			resp.resume();
 			reject({ message: `Bad status code for ${path}: ${resp?.statusCode}: ${resp?.statusMessage}` });
 		} else {
 			const chunks: any[] = [];
@@ -86,6 +90,7 @@ export class WebClient {
 			};
 
 			const req = http.request(options, (res) => this.handleResponse(headers, res, resolve, reject, path));
+			req.on("error", reject);
 			req.end();
 		});
 	}

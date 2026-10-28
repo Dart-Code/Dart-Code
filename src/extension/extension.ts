@@ -243,7 +243,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
-		void checkForStandardDartSdkUpdates(logger, workspaceContext);
+		void checkForStandardDartSdkUpdates(logger, workspaceContext, webClient);
 	}
 
 	if (sdks.flutterVersion) {

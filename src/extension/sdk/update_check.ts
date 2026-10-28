@@ -1,5 +1,6 @@
 import { window } from "vscode";
 import { DART_DOWNLOAD_URL } from "../../shared/constants";
+import { WebClient } from "../../shared/fetch";
 import { Logger } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -7,7 +8,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { getLatestSdkVersion } from "../utils";
 
-export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceContext: WorkspaceContext): Promise<void> {
+export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceContext: WorkspaceContext, webClient: WebClient): Promise<void> {
 	if (!config.checkForSdkUpdates || workspaceContext.config.disableSdkUpdateChecks)
 		return;
 
@@ -18,7 +19,7 @@ export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceCo
 
 	const dartSdkVersion = workspaceContext.sdks.dartVersion;
 	try {
-		const version = await getLatestSdkVersion();
+		const version = await getLatestSdkVersion(webClient);
 		if (!dartSdkVersion || versionIsAtLeast(dartSdkVersion, version))
 			return;
 
