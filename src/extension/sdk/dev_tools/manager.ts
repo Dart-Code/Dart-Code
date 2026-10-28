@@ -137,7 +137,7 @@ export class DevToolsManager implements IAmDisposable {
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
 				this.logger.error(e);
-				void vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
+				void vs.window.showErrorMessage(`Failed to start DevTools: ${String(e)}`);
 			}
 		}
 	}
@@ -581,7 +581,7 @@ export class DevToolsManager implements IAmDisposable {
 						await this.promptForExtensionRecommendations();
 					} catch (e) {
 						// This can fail if we're restarting/shutting down before it fires.
-						const message = `Failed to check for extension recommendations: ${e}`;
+						const message = `Failed to check for extension recommendations: ${String(e)}`;
 						console.error(message);
 						this.logger.error(message);
 					}

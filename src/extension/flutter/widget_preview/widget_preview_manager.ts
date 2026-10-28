@@ -105,7 +105,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			if (this.isDisposed)
 				return;
 
-			const message = `Flutter Widget Preview: ${e}`;
+			const message = `Flutter Widget Preview: ${String(e)}`;
 			this.logger.error(message);
 			vs.window.showWarningMessage(message);
 		}

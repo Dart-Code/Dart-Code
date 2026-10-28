@@ -60,7 +60,7 @@ export class DiagnosticReport implements IAmDisposable {
 				await this.appendFlutterCommandOutput("flutter doctor", ["doctor", "-v"]);
 			}
 		} catch (e) {
-			this.append(`Failed to generate log: ${e}`);
+			this.append(`Failed to generate log: ${String(e)}`);
 		}
 
 		if (token.isCancellationRequested) return;

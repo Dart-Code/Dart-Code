@@ -74,7 +74,7 @@ export function getPackageTestCapabilitiesForDartProject(logger: Logger, workspa
 
 		return capabilities;
 	} catch (e) {
-		logger.error(`Failed to get package:test capabilities: ${e}`);
+		logger.error(`Failed to get package:test capabilities: ${String(e)}`);
 
 		return DartTestCapabilities.empty;
 	}

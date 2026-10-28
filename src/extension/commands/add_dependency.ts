@@ -54,9 +54,9 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			const bytes = await vs.workspace.fs.readFile(this.packageNameCacheUri);
 			const contents = new TextDecoder().decode(bytes);
 			this.cache = PackageCacheData.fromJson(contents.toString());
-			this.logger.info(`Loaded ${this.cache?.packageNames.length} package names from ${this.packageNameCacheUri}`);
+			this.logger.info(`Loaded ${this.cache?.packageNames.length} package names from ${this.packageNameCacheUri.toString()}`);
 		} catch (e) {
-			this.logger.info(`Failed to read package cache file: ${e}`);
+			this.logger.info(`Failed to read package cache file: ${String(e)}`);
 		}
 	}
 
@@ -71,9 +71,9 @@ export class AddDependencyCommand extends BaseSdkCommands {
 				const bytes = new TextEncoder().encode(json);
 				await vs.workspace.fs.writeFile(this.packageNameCacheUri, bytes);
 			}
-			this.logger.info(`Saved ${this.cache?.packageNames.length} in ${this.packageNameCacheUri}`);
+			this.logger.info(`Saved ${this.cache?.packageNames.length} in ${this.packageNameCacheUri.toString()}`);
 		} catch (e) {
-			this.logger.error(`Failed to save package cache file: ${e}`);
+			this.logger.error(`Failed to save package cache file: ${String(e)}`);
 		}
 	}
 
@@ -89,14 +89,14 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		try {
 			results = await this.pubApi.getPackageNames();
 		} catch (e) {
-			this.logger.error(`Failed to fetch Pub package names: ${e}`);
+			this.logger.error(`Failed to fetch Pub package names: ${String(e)}`);
 		}
 		if (results?.packages) {
 			try {
 				this.cache = PackageCacheData.fromPackageNames(results.packages);
 				await this.savePackageCache();
 			} catch (e) {
-				this.logger.error(`Failed to cache Pub package names: ${e}`);
+				this.logger.error(`Failed to cache Pub package names: ${String(e)}`);
 			}
 		} else {
 			this.logger.error(`Pub package name results were invalid`);

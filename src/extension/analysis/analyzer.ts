@@ -98,7 +98,7 @@ export class LspAnalyzer extends Analyzer {
 						void envUtils.openInBrowser(uri.toString());
 						break;
 					default:
-						this.logger.error(`Unable to open URI ${uri} as requested by LSP server. Unknown scheme.`);
+						this.logger.error(`Unable to open URI ${uri.toString()} as requested by LSP server. Unknown scheme.`);
 
 				}
 			});
@@ -120,7 +120,7 @@ export class LspAnalyzer extends Analyzer {
 				if (dtdUri)
 					await this.client.sendRequest(ConnectToDtdRequest.type, { uri: dtdUri, registerExperimentalHandlers });
 			} catch (e) {
-				this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${e}`);
+				this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${String(e)}`);
 			}
 		}
 	}
@@ -263,7 +263,7 @@ export class LspAnalyzer extends Analyzer {
 				const parameterHintsEnabled = !!vs.workspace.getConfiguration("editor").get("parameterHints.enabled");
 				for (const item of items) {
 					if (!item?.label) {
-						console.warn(`Got completion item with no label: ${JSON.stringify(item)}\n\nItem count: ${items.length}\nDocument: ${document.uri}\nPosition: ${position.line}:${position.character}`);
+						console.warn(`Got completion item with no label: ${JSON.stringify(item)}\n\nItem count: ${items.length}\nDocument: ${document.uri.toString()}\nPosition: ${position.line}:${position.character}`);
 					}
 
 					if (shouldTriggerCompletionAgain(item)) {
@@ -296,7 +296,7 @@ export class LspAnalyzer extends Analyzer {
 						}
 
 						if (!isValid)
-							console.warn(`Got invalid InlayHint from server: ${document.uri}, ${viewPort.start.line}:${viewPort.start.character}-${viewPort.end.line}:${viewPort.end.character} ${JSON.stringify(hint)}`);
+							console.warn(`Got invalid InlayHint from server: ${document.uri.toString()}, ${viewPort.start.line}:${viewPort.start.character}-${viewPort.end.line}:${viewPort.end.character} ${JSON.stringify(hint)}`);
 					}
 				}
 
@@ -483,7 +483,7 @@ export class LspAnalyzer extends Analyzer {
 						}),
 					};
 				} catch (e) {
-					vs.window.showErrorMessage(`Unable to start the Dart Analysis Server. Please verify your SDK. ${e}`);
+					vs.window.showErrorMessage(`Unable to start the Dart Analysis Server. Please verify your SDK. ${String(e)}`);
 					throw e;
 				}
 			},

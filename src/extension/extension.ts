@@ -975,8 +975,8 @@ async function tryCleanup(f: () => void | Promise<void> | Thenable<void>): Promi
 		await f();
 	} catch (e) {
 		try {
-			console.error(`Error cleaning up during extension shutdown: ${e}`);
-			logger.error(`Error cleaning up during extension shutdown: ${e}`);
+			console.error(`Error cleaning up during extension shutdown: ${String(e)}`);
+			logger.error(`Error cleaning up during extension shutdown: ${String(e)}`);
 		} catch { }
 	}
 }

@@ -151,7 +151,7 @@ export class PubDeps {
 
 			return JSON.parse(json) as PubDepsJson;
 		} catch (e) {
-			this.logger.error(`"pub deps --json" returned invalid JSON ${e}:\n${json}`);
+			this.logger.error(`"pub deps --json" returned invalid JSON ${String(e)}:\n${json}`);
 			return undefined;
 		}
 	}

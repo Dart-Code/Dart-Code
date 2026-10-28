@@ -76,7 +76,7 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 			};
 			return await this.client.sendRequest(UpdateDiagnosticInformationRequest.type, diagnosticInfo);
 		} catch (error) {
-			this.logger.warn(`Failed to update diagnostic information on the server: ${error}`);
+			this.logger.warn(`Failed to update diagnostic information on the server: ${String(error)}`);
 		}
 	}
 

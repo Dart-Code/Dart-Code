@@ -29,7 +29,7 @@ export abstract class PackageMap {
 				? this.load(logger, packagesFile)
 				: new MissingPackageMap();
 		} catch (e) {
-			logger.warn(`Failed to load package map at ${packagesFile}, continuing as if package map does not exist: ${e}`);
+			logger.warn(`Failed to load package map at ${packagesFile}, continuing as if package map does not exist: ${String(e)}`);
 			return new MissingPackageMap();
 		}
 	}
@@ -110,7 +110,7 @@ class PackageConfigJsonPackageMap extends PackageMap {
 		try {
 			this.config = JSON.parse(json);
 		} catch (e) {
-			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${e}`);
+			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${String(e)}`);
 			this.map = {};
 			return;
 		}
@@ -145,7 +145,7 @@ class PackageConfigJsonPackageMap extends PackageMap {
 			// https://github.com/Dart-Code/Dart-Code/issues/5909
 			// This only happens on Windows because the Linux paths with no drive letters are invalid
 			// for Windows, however the opposite is not true (`file:///C:/foo` parses fine on Linux).
-			this.logger.warn(`Failed to extract path from URI: ${uri}: ${e}`);
+			this.logger.warn(`Failed to extract path from URI: ${uri}: ${String(e)}`);
 			return undefined;
 		}
 	}

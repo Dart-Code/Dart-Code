@@ -52,7 +52,7 @@ export class DartApi implements IAmDisposable {
 			}
 		} catch (e) {
 			if (message.id !== undefined) {
-				this.postMessage({ id: message.id, error: `${e}` });
+				this.postMessage({ id: message.id, error: String(e) });
 			}
 		}
 	}

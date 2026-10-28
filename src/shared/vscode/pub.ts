@@ -179,7 +179,7 @@ function getPubPackageStatus(
 	// Helpers for Date/Paths so that output is complete for production, but simplified for tests.
 	const tryMtimeSync = (f: string) => { try { return mtimeSync(f); } catch { return undefined; } };
 	const maybeDate = includeDatesAndFullPaths
-		? (d: Date) => ` (${d})`
+		? (d: Date) => ` (${d.toString()})`
 		: (_: Date) => "";
 	const displayPath = includeDatesAndFullPaths
 		? (p: string) => p

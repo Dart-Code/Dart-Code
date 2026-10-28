@@ -399,7 +399,7 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 		try {
 			versionData = JSON.parse(jsonVersionFileContent);
 		} catch (e) {
-			logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON (${e}): ${jsonVersionFileContent}, falling back to legacy file`);
+			logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON (${String(e)}): ${jsonVersionFileContent}, falling back to legacy file`);
 		}
 
 		if (versionData) {

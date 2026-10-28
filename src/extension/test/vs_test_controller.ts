@@ -107,7 +107,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				run.addCoverage(coverage);
 			}
 		} catch (e) {
-			this.logger.error(`Failed to read expected coverage file "${coverageFilePath}": ${e}`);
+			this.logger.error(`Failed to read expected coverage file "${coverageFilePath}": ${String(e)}`);
 		}
 	}
 
