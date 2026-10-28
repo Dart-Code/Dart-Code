@@ -181,12 +181,12 @@ export class SdkUtils {
 				// First try to find git from VS Code. It searches both PATH and some other well-known
 				// locations.
 				try {
-					const gitExtension = extensions.getExtension("vscode.git");
+					const gitExtension = extensions.getExtension<{ getAPI(version: number): { git?: { path?: string } } }>("vscode.git");
 					// If the extension isn't already activated, probably it's disabled or the user isn't
 					// using it.
 					if (gitExtension?.isActive) {
 						const gitApi = gitExtension.exports.getAPI(1);
-						const gitApiPath = gitApi?.git.path;
+						const gitApiPath = gitApi?.git?.path;
 						if (gitApiPath)
 							gitExecutable = gitApiPath;
 					}

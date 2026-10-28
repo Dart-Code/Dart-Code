@@ -1,4 +1,4 @@
-export function sortBy<T>(items: T[], f: (item: T) => any): T[] {
+export function sortBy<T>(items: T[], f: (item: T) => number | string): T[] {
 	return items.sort((item1, item2) => {
 		const r1 = f(item1);
 		const r2 = f(item2);

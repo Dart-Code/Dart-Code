@@ -7,9 +7,8 @@
 /* eslint-disable object-shorthand */
 /* eslint-disable quotes */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/prefer-function-type */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /* ---------------------------------------------------------
  * Copyright 2025 The Go Authors. All rights reserved.
