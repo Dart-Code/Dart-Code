@@ -48,8 +48,8 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		const stopProgress =
 			command === "launch"
 			|| event === "output"
-			|| event?.startsWith("dart.progress")
-			|| (event?.startsWith("dart.testNotification") && body && typeof body === "object" && "test" in body);
+			|| !!event?.startsWith("dart.progress")
+			|| (!!event?.startsWith("dart.testNotification") && body && typeof body === "object" && "test" in body);
 
 		if (stopProgress)
 			this.endProgress();

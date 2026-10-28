@@ -11,7 +11,7 @@ const debugTypeTokenRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
 /// Tries to get the most specific config first (eg. using an explicit `noDebug` flag) and otherwise falls back to
 /// a generic (no `noDebug` specified) one, injecting the value of `debug` inverted as `noDebug`.
 export function getLaunchConfigDefaultTemplate(documentUri: Uri, debug: boolean): TemplatedLaunchConfig | undefined {
-	const runConfigs = workspace.getConfiguration("launch", documentUri).get<TemplatedLaunchConfig[]>("configurations") || [];
+	const runConfigs = workspace.getConfiguration("launch", documentUri).get<TemplatedLaunchConfig[]>("configurations") ?? [];
 	const filePath = fsPath(documentUri);
 	const workspaceUri = workspace.getWorkspaceFolder(documentUri)?.uri;
 	const workspacePath = workspaceUri ? fsPath(workspaceUri) : undefined;
@@ -32,7 +32,7 @@ export function getLaunchConfigDefaultTemplate(documentUri: Uri, debug: boolean)
 }
 
 export function getTemplatedLaunchConfigs(documentUri: Uri, fileType: string): TemplatedLaunchConfig[] {
-	const runConfigs = workspace.getConfiguration("launch", documentUri).get<TemplatedLaunchConfig[]>("configurations") || [];
+	const runConfigs = workspace.getConfiguration("launch", documentUri).get<TemplatedLaunchConfig[]>("configurations") ?? [];
 	const wantedTemplateTypes = [`run-${fileType}`, `debug-${fileType}`];
 	const filePath = fsPath(documentUri);
 	const workspaceUri = workspace.getWorkspaceFolder(documentUri)?.uri;

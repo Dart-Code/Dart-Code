@@ -680,7 +680,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 		const create = this.daemon.createEmulator(name);
 		void vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
-			title: `${`Creating emulator ${name ? name : ""}`.trim()}...`,
+			title: `${`Creating emulator ${name ?? ""}`.trim()}...`,
 		}, () => create);
 		const res = await create;
 		if (res.success) {
@@ -777,7 +777,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 			}, async (progress) => {
 				progress.report({ message: `Launching ${emulator.name}...` });
 				const binPath = resolveTildePaths(emulator.executable);
-				const args = emulator.args || [];
+				const args = emulator.args ?? [];
 				const env = emulator.env;
 
 				const customEmulatorProc = safeSpawn(undefined, binPath, args, env);

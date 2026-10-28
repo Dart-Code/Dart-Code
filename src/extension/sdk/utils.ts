@@ -305,8 +305,8 @@ export class SdkUtils {
 	public async scanWorkspace(): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
 
-		const pathOverride = process.env.DART_PATH_OVERRIDE || "";
-		const normalPath = process.env.PATH || "";
+		const pathOverride = process.env.DART_PATH_OVERRIDE ?? "";
+		const normalPath = process.env.PATH ?? "";
 		const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
 
 		// Some paths to search after PATH as a final resort.
@@ -364,8 +364,8 @@ export class SdkUtils {
 			this.logger.info(`Found ${kind} project at ${folder} (Pubspec? ${hasPubspecFile}, Mobile? ${refsFlutter}, Create Trigger? ${hasFlutterCreateProjectTriggerFile}, Flutter Repo? ${isFlutterRepo})`);
 
 			// Track the first Dart and Flutter projects.
-			firstDartProject = firstDartProject || ((isSomethingFlutter || hasPubspecFile) ? folder : undefined);
-			firstFlutterProject = firstFlutterProject || (isSomethingFlutter ? folder : undefined);
+			firstDartProject ??= (isSomethingFlutter || hasPubspecFile) ? folder : undefined;
+			firstFlutterProject ??= isSomethingFlutter ? folder : undefined;
 
 			// Set some flags we'll use to construct the workspace, so we know what things we need to light up.
 			hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
@@ -721,8 +721,7 @@ export class SdkUtils {
 		this.logger.info("    Candidate paths to be post-filtered:");
 		for (const p of sdkPaths)
 			this.logger.info(`        ${this.sdkDisplayString(p)}`);
-		if (!postFilter)
-			postFilter = ((_: string) => true);
+		postFilter ??= (_: string) => true;
 		const sdkPath = sdkPaths.find((pathInfo) => postFilter(pathInfo.sdkPath));
 
 		if (sdkPath)

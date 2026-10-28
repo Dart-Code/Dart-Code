@@ -36,8 +36,7 @@ export class FlutterIconDecorations implements IAmDisposable {
 		if (!this.activeEditor)
 			return;
 
-		if (!outline)
-			outline = this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri);
+		outline ??= this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri);
 
 		if (!outline)
 			return;

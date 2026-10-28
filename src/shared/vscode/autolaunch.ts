@@ -89,7 +89,7 @@ export class AutoLaunch implements IAmDisposable {
 						continue;
 					}
 					if (request !== "launch" && request !== "attach") {
-						this.logger.warn(`[AutoLaunch] Ignoring configuration with invalid request (${request}) in autolaunch file ${uri.toString()}`);
+						this.logger.warn(`[AutoLaunch] Ignoring configuration with invalid request (${String(request)}) in autolaunch file ${uri.toString()}`);
 						continue;
 					}
 

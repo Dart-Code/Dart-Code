@@ -194,5 +194,5 @@ export function extractTestNameFromOutline(elementName: string): string | undefi
 }
 
 export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
-	return !!((testName?.startsWith("(setUp") || testName?.startsWith("(tearDown")) && testName?.endsWith(")"));
+	return !!(testName && (testName.startsWith("(setUp") || testName.startsWith("(tearDown")) && testName.endsWith(")"));
 }

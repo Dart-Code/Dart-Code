@@ -30,7 +30,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const isDartTest = debuggerType === DebuggerType.DartTest;
 		const isFlutterTest = debuggerType === DebuggerType.FlutterTest;
 
-		const useSdkDap = this.workspaceContext.config.forceFlutterWorkspace || isDartOrDartTest || isFlutterOrFlutterTest;
+		const useSdkDap = !!this.workspaceContext.config.forceFlutterWorkspace || isDartOrDartTest || isFlutterOrFlutterTest;
 		this.logger.info(`SDK DAP setting is ${useSdkDap} for debugger ${debuggerType}`);
 
 		const analytics = this.analytics;

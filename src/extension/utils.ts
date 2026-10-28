@@ -65,7 +65,7 @@ export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?
 	const extName = path.extname(fsPath(file.uri));
 	const extension = extName ? extName.substr(1) : undefined;
 
-	return (file.languageId && analyzableLanguages.includes(file.languageId))
+	return !!(file.languageId && analyzableLanguages.includes(file.languageId))
 		|| analyzableFilenames.includes(path.basename(fsPath(file.uri)))
 		|| (extension !== undefined && analyzableFileExtensions.includes(extension));
 }
@@ -241,8 +241,7 @@ export const logTime = (taskFinished?: string) => {
 };
 
 export async function openLogContents(logType = `txt`, logContents: string, tempPath?: string) {
-	if (!tempPath)
-		tempPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.${logType}`);
+	tempPath ??= path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.${logType}`);
 	fs.writeFileSync(tempPath, logContents);
 	await workspace.openTextDocument(tempPath).then(window.showTextDocument);
 }

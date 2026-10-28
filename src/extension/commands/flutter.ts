@@ -184,7 +184,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		const templateAllowsPlatform = template === undefined || flutterCreateTemplatesSupportingPlatforms.includes(template);
 		const defaultPlatforms = config.flutterCreatePlatforms;
 		// Use "--empty" if either the user selected the empty option, or are we enabling a platform.
-		const useEmpty = (template && triggerData?.empty) || (templateAllowsPlatform && platform);
+		const useEmpty = !!(template && triggerData?.empty) || !!(templateAllowsPlatform && platform);
 
 		const args = ["create"];
 		if (config.flutterCreateOffline || config.offline) {

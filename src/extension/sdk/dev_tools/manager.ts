@@ -97,9 +97,7 @@ export class DevToolsManager implements IAmDisposable {
 		// Pre-populate pages for the sidebar pages so they don't show up as infinite spinners.
 		for (const page of devToolsPages) {
 			if (this.getDevToolsLocation(page.id) === "sidebar") {
-				let views = devToolsEmbeddedViews[page.id];
-				if (!views)
-					views = devToolsEmbeddedViews[page.id] = [];
+				const views = devToolsEmbeddedViews[page.id] ??= [];
 
 				if (!views.length) {
 					views.push(new SidebarDevTools(page, this, this.dartCapabilities, logger));
@@ -222,10 +220,8 @@ export class DevToolsManager implements IAmDisposable {
 		if (!url)
 			return;
 
-		if (options.location === undefined)
-			options.location = this.getDevToolsLocation(options.pageId);
-		if (options.reuseWindows === undefined)
-			options.reuseWindows = config.devToolsReuseWindows;
+		options.location ??= this.getDevToolsLocation(options.pageId);
+		options.reuseWindows ??= config.devToolsReuseWindows;
 
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
@@ -471,10 +467,7 @@ export class DevToolsManager implements IAmDisposable {
 		const pageId = page.id;
 		const pageTitle = page.title;
 
-		let views = devToolsEmbeddedViews[pageId];
-		if (!views) {
-			views = devToolsEmbeddedViews[pageId] = [];
-		}
+		const views = devToolsEmbeddedViews[pageId] ??= [];
 		// Look through any open DevTools frames for this page, to see if any are already our session, or
 		// are for a session that has been stopped.
 		let frame = views.find((dtev) => {
