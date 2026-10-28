@@ -11,10 +11,12 @@ import * as processes from "../../shared/processes";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
 import * as vsUtils from "../../shared/vscode/utils";
-import { activateWithoutAnalysis, delay, logger, privateApi, sb } from "../helpers";
+import { activateWithoutAnalysis, defer, delay, logger, privateApi, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../mocks/fake_stdio_service";
 import { androidBogusEmulatorId, androidBogusEmulatorName, androidEmulator, androidEmulatorToOverride, customEmulator, customEmulator1, customEmulator2, customEmulators, desktop, emulatedAndroidMobile, emulatediOSMobile, emulatorCreator, physicalAndroidMobile, webChrome, webServer } from "./flutter_test_devices";
 
+// Workaround for @types/sinon being pinned at 5.0.5 (which predates tickAsync) while sinon is ^21.0.1.
+// See https://github.com/Dart-Code/Dart-Code/issues/6295.
 declare module "sinon" {
 	interface SinonFakeTimers {
 		tickAsync(ms: number | string): Promise<number>;
@@ -46,7 +48,6 @@ describe("device_manager", () => {
 	});
 
 	afterEach(async () => {
-		sb.restore();
 		dm.dispose();
 		await daemon.dispose();
 	});
@@ -365,57 +366,56 @@ describe("device_manager", () => {
 		assert.equal((await dm.findBestEmulator("Exact-Match"))?.id, matchNameContains.id);
 	});
 
-	it("invokes runIfNoDevices after timeout only when no devices are connected", async () => {
+	it("invokes runIfNoDevices after timeout when no devices are connected", () => {
 		const clock = sb.useFakeTimers({ toFake: ["setTimeout"] });
-		try {
-			let runIfNoDevicesCalled = 0;
-			const dmWithCallback = new FlutterDeviceManager(
-				logger,
-				daemon,
-				{
-					flutterCustomEmulators: [],
-					flutterRememberSelectedDevice: true,
-					flutterSelectDeviceWhenConnected: true,
-					flutterShowEmulators: "local",
-					projectSearchDepth: 3,
-				},
-				privateApi.workspaceContext,
-				privateApi.context,
-				() => runIfNoDevicesCalled++,
-			);
-			try {
-				// Advance the 10-second timer registered in the constructor when no devices exist.
-				await clock.tickAsync(10000);
-				assert.equal(runIfNoDevicesCalled, 1);
-			} finally {
-				dmWithCallback.dispose();
-			}
+		defer("Restore fake timers", () => clock.restore());
 
-			// Create another instance and connect a device before the 10-second timer fires.
-			const dmWithDevice = new FlutterDeviceManager(
-				logger,
-				daemon,
-				{
-					flutterCustomEmulators: [],
-					flutterRememberSelectedDevice: true,
-					flutterSelectDeviceWhenConnected: true,
-					flutterShowEmulators: "local",
-					projectSearchDepth: 3,
-				},
-				privateApi.workspaceContext,
-				privateApi.context,
-				() => runIfNoDevicesCalled++,
-			);
-			try {
-				await daemon.connect(physicalAndroidMobile, true);
-				await clock.tickAsync(10000);
-				assert.equal(runIfNoDevicesCalled, 1);
-			} finally {
-				dmWithDevice.dispose();
-			}
-		} finally {
-			clock.restore();
-		}
+		let runIfNoDevicesCalled = 0;
+		const dmWithCallback = new FlutterDeviceManager(
+			logger,
+			daemon,
+			{
+				flutterCustomEmulators: [],
+				flutterRememberSelectedDevice: true,
+				flutterSelectDeviceWhenConnected: true,
+				flutterShowEmulators: "local",
+				projectSearchDepth: 3,
+			},
+			privateApi.workspaceContext,
+			privateApi.context,
+			() => runIfNoDevicesCalled++,
+		);
+		defer("Dispose dmWithCallback", () => dmWithCallback.dispose());
+
+		// Advance the 10-second timer registered in the constructor when no devices exist.
+		clock.tick(10000);
+		assert.equal(runIfNoDevicesCalled, 1);
+	});
+
+	it("does not invoke runIfNoDevices after timeout when a device is connected", async () => {
+		const clock = sb.useFakeTimers({ toFake: ["setTimeout"] });
+		defer("Restore fake timers", () => clock.restore());
+
+		let runIfNoDevicesCalled = 0;
+		const dmWithDevice = new FlutterDeviceManager(
+			logger,
+			daemon,
+			{
+				flutterCustomEmulators: [],
+				flutterRememberSelectedDevice: true,
+				flutterSelectDeviceWhenConnected: true,
+				flutterShowEmulators: "local",
+				projectSearchDepth: 3,
+			},
+			privateApi.workspaceContext,
+			privateApi.context,
+			() => runIfNoDevicesCalled++,
+		);
+		defer("Dispose dmWithDevice", () => dmWithDevice.dispose());
+
+		await daemon.connect(physicalAndroidMobile, true);
+		clock.tick(10000);
+		assert.equal(runIfNoDevicesCalled, 0);
 	});
 
 	it("does not auto-select a newly connected device when current device is preferred", async () => {
@@ -470,13 +470,11 @@ describe("device_manager", () => {
 			privateApi.workspaceContext,
 			privateApi.context,
 		);
-		try {
-			assert.deepStrictEqual(await dmNever.getPickableEmulators(true), []);
-			await dmNever.selectDevice({ device: physicalAndroidMobile, label: physicalAndroidMobile.name });
-			assert.equal(privateApi.context.workspaceLastFlutterDeviceId, undefined);
-		} finally {
-			dmNever.dispose();
-		}
+		defer("Dispose dmNever", () => dmNever.dispose());
+
+		assert.deepStrictEqual(await dmNever.getPickableEmulators(true), []);
+		await dmNever.selectDevice({ device: physicalAndroidMobile, label: physicalAndroidMobile.name });
+		assert.equal(privateApi.context.workspaceLastFlutterDeviceId, undefined);
 
 		// When flutterShowEmulators is "local" and isRunningLocally is false, returns [].
 		sb.stub(vsUtils, "isRunningLocally").value(false);
@@ -486,7 +484,11 @@ describe("device_manager", () => {
 		sb.stub(vsUtils, "isRunningLocally").value(true);
 		daemon.capabilities = new DaemonCapabilities("0.4.0"); // Supports canCreateEmulators.
 		daemon.emulators = [
+			// Empty name and category test falling back to the emulator ID for the label and "mobile" for the category description,
+			// and "ios" tests using "simulator" instead of "emulator".
 			{ id: "fallback_id_only", name: "", category: "", platformType: "ios" },
+			// "WARN |" and "ERR |" prefixes (like "INFO |" in https://github.com/Dart-Code/Dart-Code/issues/5052) are bogus log
+			// messages from the Android emulator tool that should be filtered out.
 			{ id: "warn_bogus", name: "WARN | bogus warning", category: "mobile", platformType: "android" },
 			{ id: "err_bogus", name: "ERR | bogus error", category: "mobile", platformType: "android" },
 		];
@@ -504,6 +506,8 @@ describe("device_manager", () => {
 	it("getPickableDevices builds Available Devices, Offline Emulators (filtering running), and Other Available Platforms", async () => {
 		await daemon.connect({ ...physicalAndroidMobile, category: undefined, platform: "" }, true);
 		await daemon.connect({ ...emulatedAndroidMobile, category: undefined }, true);
+		// Connect the mocked desktop device (platformType: "macos") without marking its platform as supported
+		// so it appears under "Other Available Platforms" regardless of the host OS running the test.
 		await daemon.connect(desktop, false);
 
 		const offlineEmulatorPickable: PickableDevice = {
@@ -529,7 +533,7 @@ describe("device_manager", () => {
 			"Offline Emulators",
 			"Start Offline Emulator",
 			"Other Available Platforms",
-			"Enable macos for this project",
+			`Enable ${desktop.platformType} for this project`,
 		]);
 
 		const currentPickable = items[1] as PickableDevice;
@@ -703,46 +707,43 @@ describe("device_manager", () => {
 		let devicesChangedCount = 0;
 		const sub1 = dm.onDeviceChanged((d) => changedDevices.push(d));
 		const sub2 = dm.onDevicesChanged(() => devicesChangedCount++);
-		try {
-			const resSkip = await dm.enablePlatformType("macos", "/path/to/pkg");
-			assert.equal(resSkip, true);
-			assert.deepStrictEqual(changedDevices, [desktop]);
-			assert.equal(devicesChangedCount, 1);
-		} finally {
+		defer("Dispose subscriptions", () => {
 			sub1.dispose();
 			sub2.dispose();
-		}
+		});
+		const resSkip = await dm.enablePlatformType("macos", "/path/to/pkg");
+		assert.equal(resSkip, true);
+		assert.deepStrictEqual(changedDevices, [desktop]);
+		assert.equal(devicesChangedCount, 1);
 	});
 
 	it("waitForBestDevice returns immediately when present or polls until connected or timeout", async () => {
 		const clock = sb.useFakeTimers({ toFake: ["setTimeout"] });
-		try {
-			const findBestDeviceSpy = sb.spy(dm, "findBestDevice");
+		defer("Restore fake timers", () => clock.restore());
 
-			// Not yet connected -> polls every 100ms until connected.
-			const waitPromise = dm.waitForBestDevice(physicalAndroidMobile.id, 500);
-			// Advance one 100ms poll interval, then connect the device.
-			await clock.tickAsync(100);
-			await daemon.connect(physicalAndroidMobile, true);
-			// Advance the next 100ms poll interval so waitForBestDevice sees the newly connected device.
-			await clock.tickAsync(100);
-			const foundAfterPoll = await waitPromise;
-			assert.deepStrictEqual(foundAfterPoll, physicalAndroidMobile);
+		const findBestDeviceSpy = sb.spy(dm, "findBestDevice");
 
-			// Already connected -> returns immediately without polling.
-			findBestDeviceSpy.resetHistory();
-			const foundImmediately = await dm.waitForBestDevice(physicalAndroidMobile.id, 500);
-			assert.deepStrictEqual(foundImmediately, physicalAndroidMobile);
-			assert.equal(findBestDeviceSpy.callCount, 1);
+		// Not yet connected -> polls every 100ms until connected.
+		const waitPromise = dm.waitForBestDevice(physicalAndroidMobile.id, 500);
+		// Advance one 100ms poll interval, then connect the device.
+		await clock.tickAsync(100);
+		await daemon.connect(physicalAndroidMobile, true);
+		// Advance the next 100ms poll interval so waitForBestDevice sees the newly connected device.
+		await clock.tickAsync(100);
+		const foundAfterPoll = await waitPromise;
+		assert.deepStrictEqual(foundAfterPoll, physicalAndroidMobile);
 
-			// Never connects -> returns undefined after the full 200ms timeout (2 * 100ms poll intervals).
-			const notFoundPromise = dm.waitForBestDevice("never-connects", 200);
-			await clock.tickAsync(200);
-			const notFound = await notFoundPromise;
-			assert.equal(notFound, undefined);
-		} finally {
-			clock.restore();
-		}
+		// Already connected -> returns immediately without polling.
+		findBestDeviceSpy.resetHistory();
+		const foundImmediately = await dm.waitForBestDevice(physicalAndroidMobile.id, 500);
+		assert.deepStrictEqual(foundImmediately, physicalAndroidMobile);
+		assert.equal(findBestDeviceSpy.callCount, 1);
+
+		// Never connects -> returns undefined after the full 200ms timeout (2 * 100ms poll intervals).
+		const notFoundPromise = dm.waitForBestDevice("never-connects", 200);
+		await clock.tickAsync(200);
+		const notFound = await notFoundPromise;
+		assert.equal(notFound, undefined);
 	});
 
 	it("sorts devices by name and by current device, and gets valid devices for project", async () => {
@@ -774,35 +775,33 @@ describe("device_manager", () => {
 
 	it("handles forceFlutterWorkspace, tryGetSupportedPlatformTypes errors, and cache expiry in getSupportedPlatformsForWorkspace", async () => {
 		const clock = sb.useFakeTimers({ toFake: ["setTimeout"] });
-		try {
-			// Test legacy platforms array and empty response in tryGetSupportedPlatformTypes.
-			const getSupportedStub = sb.stub(daemon, "getSupportedPlatforms");
-			getSupportedStub.resolves({ platforms: ["linux"], platformTypes: undefined });
-			assert.deepStrictEqual(await dm.tryGetSupportedPlatformTypes("fake"), ["linux"]);
-			getSupportedStub.resolves({ platformTypes: undefined });
-			assert.deepStrictEqual(await dm.tryGetSupportedPlatformTypes("fake"), []);
+		defer("Restore fake timers", () => clock.restore());
 
-			// Test forceFlutterWorkspace = true and error handling when tryGetSupportedPlatformTypes rejects.
-			sb.stub(privateApi.workspaceContext, "config").value({ ...privateApi.workspaceContext.config, forceFlutterWorkspace: true });
-			const tryGetStub = sb.stub(dm, "tryGetSupportedPlatformTypes");
-			tryGetStub.rejects(new Error("unexpected failure"));
+		// Test legacy platforms array and empty response in tryGetSupportedPlatformTypes.
+		const getSupportedStub = sb.stub(daemon, "getSupportedPlatforms");
+		getSupportedStub.resolves({ platforms: ["linux"], platformTypes: undefined });
+		assert.deepStrictEqual(await dm.tryGetSupportedPlatformTypes("fake"), ["linux"]);
+		getSupportedStub.resolves({ platformTypes: undefined });
+		assert.deepStrictEqual(await dm.tryGetSupportedPlatformTypes("fake"), []);
 
-			dm.shortCacheForSupportedPlatforms = undefined;
-			const platformsOnError = await dm.getSupportedPlatformsForWorkspace();
-			assert.deepStrictEqual(platformsOnError, []);
-			assert.notEqual(dm.shortCacheForSupportedPlatforms, undefined);
+		// Test forceFlutterWorkspace = true and error handling when tryGetSupportedPlatformTypes rejects.
+		sb.stub(privateApi.workspaceContext, "config").value({ ...privateApi.workspaceContext.config, forceFlutterWorkspace: true });
+		const tryGetStub = sb.stub(dm, "tryGetSupportedPlatformTypes");
+		tryGetStub.rejects(new Error("unexpected failure"));
 
-			// Advance the 10-second cache expiration timer and verify it clears the cache.
-			await clock.tickAsync(10000);
-			assert.equal(dm.shortCacheForSupportedPlatforms, undefined);
+		dm.shortCacheForSupportedPlatforms = undefined;
+		const platformsOnError = await dm.getSupportedPlatformsForWorkspace();
+		assert.deepStrictEqual(platformsOnError, []);
+		assert.notEqual(dm.shortCacheForSupportedPlatforms, undefined);
 
-			// Also test when tryGetSupportedPlatformTypes returns undefined.
-			tryGetStub.resolves(undefined);
-			const platformsOnUndefined = await dm.getSupportedPlatformsForWorkspace();
-			assert.deepStrictEqual(platformsOnUndefined, []);
-		} finally {
-			clock.restore();
-		}
+		// Advance the 10-second cache expiration timer and verify it clears the cache.
+		clock.tick(10000);
+		assert.equal(dm.shortCacheForSupportedPlatforms, undefined);
+
+		// Also test when tryGetSupportedPlatformTypes returns undefined.
+		tryGetStub.resolves(undefined);
+		const platformsOnUndefined = await dm.getSupportedPlatformsForWorkspace();
+		assert.deepStrictEqual(platformsOnUndefined, []);
 	});
 
 	it("updates statusBarItem text and tooltip for various device and support counts", async () => {
@@ -902,76 +901,72 @@ describe("device_manager", () => {
 
 	it("launchEmulator waits for emulator device to connect or shows error on timeout", async () => {
 		const clock = sb.useFakeTimers({ toFake: ["setTimeout"] });
-		try {
-			const launchDaemonStub = sb.stub(daemon, "launchEmulator").resolves();
-			const showErrorStub = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
+		defer("Restore fake timers", () => clock.restore());
 
-			// Start launching the emulator (which polls every 500ms up to 120 times, then waits 1000ms after connecting).
-			const launchPromise = dm.launchEmulator(androidEmulator, true);
-			// Advance one 500ms poll interval while no device is connected.
-			await clock.tickAsync(500);
-			// Connect the emulator device, then advance the next 500ms poll interval plus the 1000ms post-connect delay.
-			await daemon.connect(emulatedAndroidMobile, true);
-			await clock.tickAsync(500 + 1000);
-			const launched = await launchPromise;
-			assert.equal(launched, true);
-			assert.equal(launchDaemonStub.calledOnceWithExactly(androidEmulator.id, true), true);
-			assert.deepStrictEqual(dm.currentDevice, emulatedAndroidMobile);
+		const launchDaemonStub = sb.stub(daemon, "launchEmulator").resolves();
+		const showErrorStub = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
 
-			// Disconnect and verify that if the emulator never connects within 60s (120 * 500ms), an error is shown.
-			await daemon.disconnect(emulatedAndroidMobile);
-			const timeoutPromise = dm.launchEmulator(androidEmulator, false);
-			await clock.tickAsync(120 * 500);
-			const timedOut = await timeoutPromise;
-			assert.equal(timedOut, false);
-			assert.equal(showErrorStub.calledOnce, true);
-			assert.equal((showErrorStub.firstCall.args[0] as string).includes("Emulator didn't connect within 60 seconds"), true);
-		} finally {
-			clock.restore();
-		}
+		// Start launching the emulator (which polls every 500ms up to 120 times, then waits 1000ms after connecting).
+		const launchPromise = dm.launchEmulator(androidEmulator, true);
+		// Advance one 500ms poll interval while no device is connected.
+		await clock.tickAsync(500);
+		// Connect the emulator device, then advance the next 500ms poll interval plus the 1000ms post-connect delay.
+		await daemon.connect(emulatedAndroidMobile, true);
+		await clock.tickAsync(500 + 1000);
+		const launched = await launchPromise;
+		assert.equal(launched, true);
+		assert.equal(launchDaemonStub.calledOnceWithExactly(androidEmulator.id, true), true);
+		assert.deepStrictEqual(dm.currentDevice, emulatedAndroidMobile);
+
+		// Disconnect and verify that if the emulator never connects within 60s (120 * 500ms), an error is shown.
+		await daemon.disconnect(emulatedAndroidMobile);
+		const timeoutPromise = dm.launchEmulator(androidEmulator, false);
+		await clock.tickAsync(120 * 500);
+		const timedOut = await timeoutPromise;
+		assert.equal(timedOut, false);
+		assert.equal(showErrorStub.calledOnce, true);
+		assert.equal((showErrorStub.firstCall.args[0] as string).includes("Emulator didn't connect within 60 seconds"), true);
 	});
 
 	it("launchCustomEmulator handles device connection, non-zero exit code, and timeout", async () => {
 		const clock = sb.useFakeTimers({ toFake: ["setTimeout"] });
-		try {
-			const createFakeProc = (exitCode: number | null = null) => Object.assign(new EventEmitter(), {
-				exitCode,
-				pid: 12345,
-				stderr: new EventEmitter(),
-				stdout: new EventEmitter(),
-			}) as ChildProcess;
+		defer("Restore fake timers", () => clock.restore());
 
-			const safeSpawnStub = sb.stub(processes, "safeSpawn");
-			const showErrorStub = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
+		const createFakeProc = (exitCode: number | null = null) => Object.assign(new EventEmitter(), {
+			exitCode,
+			pid: 12345,
+			stderr: new EventEmitter(),
+			stdout: new EventEmitter(),
+		}) as ChildProcess;
 
-			// 1. Device connects while polling (500ms poll interval + 1000ms post-connect delay) -> returns true.
-			safeSpawnStub.onFirstCall().returns(createFakeProc(null));
-			const customEmuNoArgs = { ...customEmulator, args: undefined, executable: "~/bin/emu" };
-			const connectPromise = dm.launchCustomEmulator(customEmuNoArgs);
-			await daemon.connect(emulatedAndroidMobile, true);
-			await clock.tickAsync(500 + 1000);
-			const resConnected = await connectPromise;
-			assert.equal(resConnected, true);
+		const safeSpawnStub = sb.stub(processes, "safeSpawn");
+		const showErrorStub = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
 
-			// 2. Process exits with non-zero code on first 500ms poll -> shows error and returns false.
-			await daemon.disconnect(emulatedAndroidMobile);
-			safeSpawnStub.onSecondCall().returns(createFakeProc(42));
-			const exitErrorPromise = dm.launchCustomEmulator(customEmuNoArgs);
-			await clock.tickAsync(500);
-			const resExitError = await exitErrorPromise;
-			assert.equal(resExitError, false);
-			assert.equal((showErrorStub.firstCall.args[0] as string).includes("Exit code 42"), true);
+		// 1. Device connects while polling (500ms poll interval + 1000ms post-connect delay) -> returns true.
+		safeSpawnStub.onFirstCall().returns(createFakeProc(null));
+		const customEmuNoArgs = { ...customEmulator, args: undefined, executable: "~/bin/emu" };
+		const connectPromise = dm.launchCustomEmulator(customEmuNoArgs);
+		await daemon.connect(emulatedAndroidMobile, true);
+		await clock.tickAsync(500 + 1000);
+		const resConnected = await connectPromise;
+		assert.equal(resConnected, true);
 
-			// 3. Process exits with 0 but device never connects within 60s (120 * 500ms) -> times out and returns false.
-			safeSpawnStub.onThirdCall().returns(createFakeProc(0));
-			const timeoutPromise = dm.launchCustomEmulator(customEmulator);
-			await clock.tickAsync(120 * 500);
-			const resTimeout = await timeoutPromise;
-			assert.equal(resTimeout, false);
-			assert.equal((showErrorStub.secondCall.args[0] as string).includes("Emulator didn't connect within 60 seconds"), true);
-		} finally {
-			clock.restore();
-		}
+		// 2. Process exits with non-zero code on first 500ms poll -> shows error and returns false.
+		await daemon.disconnect(emulatedAndroidMobile);
+		safeSpawnStub.onSecondCall().returns(createFakeProc(42));
+		const exitErrorPromise = dm.launchCustomEmulator(customEmuNoArgs);
+		await clock.tickAsync(500);
+		const resExitError = await exitErrorPromise;
+		assert.equal(resExitError, false);
+		assert.equal((showErrorStub.firstCall.args[0] as string).includes("Exit code 42"), true);
+
+		// 3. Process exits with 0 but device never connects within 60s (120 * 500ms) -> times out and returns false.
+		safeSpawnStub.onThirdCall().returns(createFakeProc(0));
+		const timeoutPromise = dm.launchCustomEmulator(customEmulator);
+		await clock.tickAsync(120 * 500);
+		const resTimeout = await timeoutPromise;
+		assert.equal(resTimeout, false);
+		assert.equal((showErrorStub.secondCall.args[0] as string).includes("Emulator didn't connect within 60 seconds"), true);
 	});
 });
 
