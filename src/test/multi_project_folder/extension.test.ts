@@ -6,7 +6,7 @@ import { activate, helloWorldFolder, helloWorldMainFile, privateApi } from "../h
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
-		const wfs = vs.workspace.workspaceFolders || [];
+		const wfs = vs.workspace.workspaceFolders ?? [];
 		assert.equal(wfs.length, 1);
 		assert.ok(
 			fsPath(wfs[0].uri).endsWith(path.sep + "test_projects"),

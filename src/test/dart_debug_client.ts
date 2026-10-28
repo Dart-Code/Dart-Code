@@ -26,7 +26,7 @@ export class DartDebugClient extends DebugClient {
 	public hasTerminated = false;
 
 	constructor(public readonly debuggerType: DebuggerType, daArgs: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
-		const useShell = daArgs.runtime?.endsWith(".sh") || daArgs.runtime?.endsWith(".bat");
+		const useShell = !!daArgs.runtime?.endsWith(".sh") || !!daArgs.runtime?.endsWith(".bat");
 		const runtime = useShell ? `"${daArgs.runtime}"` : daArgs.runtime;
 		const executable = useShell ? `"${daArgs.executable}"` : daArgs.executable;
 		const args = useShell ? daArgs.args?.map((a) => `"${a}"`) : daArgs.args;

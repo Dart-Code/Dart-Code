@@ -21,7 +21,7 @@ describe("fix_code_action_provider", () => {
 		if (createMethodFix.edit)
 			await vs.workspace.applyEdit(createMethodFix.edit);
 		if (createMethodFix.command)
-			await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+			await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		const fileA = await openFile(helloWorldCreateMethodClassAFile);
 		const fileB = await openFile(helloWorldCreateMethodClassBFile);
@@ -44,7 +44,7 @@ describe("fix_code_action_provider", () => {
 		if (createFileFix.edit)
 			await vs.workspace.applyEdit(createFileFix.edit);
 		if (createFileFix.command)
-			await (vs.commands.executeCommand(createFileFix.command.command, ...createFileFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+			await (vs.commands.executeCommand(createFileFix.command.command, ...createFileFix.command.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		assert.ok(fs.existsSync(fsPath(missingFile)));
 	});
@@ -69,7 +69,7 @@ main() {
 		} else if (createFunctionFix.command) {
 			await vs.commands.executeCommand(
 				createFunctionFix.command.command,
-				...createFunctionFix.command.arguments || [], // eslint-disable-line @typescript-eslint/no-unsafe-argument
+				...createFunctionFix.command.arguments ?? [], // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			);
 		} else {
 			// If there's no edit or command, skip the test. This happens very infrequently and appears to be a VS Code

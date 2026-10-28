@@ -8,7 +8,7 @@ import { activateWithoutAnalysis, ext, flutterBazelRoot, logger, privateApi } fr
 
 describe("test environment", () => {
 	it("has opened the correct folders", () => {
-		const wfs = vs.workspace.workspaceFolders || [];
+		const wfs = vs.workspace.workspaceFolders ?? [];
 		assert.equal(wfs.length, 2);
 		assert.ok(
 			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_hello_world_bazel"),
