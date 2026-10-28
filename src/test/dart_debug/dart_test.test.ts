@@ -12,7 +12,7 @@ import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
-import { captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations, createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { captureStartDebuggingConfigs, captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations, createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
@@ -36,11 +36,13 @@ describe("dart test debugger", () => {
 		return editor;
 	}
 
-	it("runs a Dart test script to completion", async () => {
+	it("runs a Dart test script to completion and receives expected events", async () => {
 		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(dc, helloWorldTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
+			dc.assertOutputContains("console", `String .split() splits the string on the delimiter`),
+			dc.assertPassingTest("String .split() splits the string on the delimiter"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
@@ -87,18 +89,6 @@ describe("dart test debugger", () => {
 		ensureHasRunWithArgsStarting(root, hasRunFile, `-j2 -r json`);
 	});
 
-	it("receives the expected events from a Dart test script", async () => {
-		await openFile(helloWorldTestMainFile);
-		const config = await startDebugger(dc, helloWorldTestMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.assertOutputContains("console", `✓ String .split() splits the string on the delimiter`),
-			dc.assertPassingTest("String .split() splits the string on the delimiter"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		);
-	});
-
 	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(dc, helloWorldTestMainFile);
@@ -108,32 +98,7 @@ describe("dart test debugger", () => {
 		});
 	});
 
-	it("stops on exception", async () => {
-		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(dc, helloWorldTestBrokenFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.assertStoppedLocation("exception", {}),
-			dc.launch(config),
-		);
-	});
-
-	it.skip("stops at the correct location on exception", async () => {
-		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
-		// as deemphasized.
-		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(dc, helloWorldTestBrokenFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.assertStoppedLocation("exception", {
-				line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(helloWorldTestBrokenFile),
-			}),
-			dc.launch(config),
-		);
-	});
-
-	it("provides exception details when stopped on exception", async () => {
+	it("stops on exception and provides exception details", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(dc, helloWorldTestBrokenFile);
 		await waitAllThrowIfTerminates(dc,
@@ -154,6 +119,21 @@ describe("dart test debugger", () => {
 			`+ expected - actual\n` +
 			`+ ${JSON.stringify(expectedStart)}\n` +
 			`- ${JSON.stringify(v.value)}\n`,
+		);
+	});
+
+	it.skip("stops at the correct location on exception", async () => {
+		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
+		// as deemphasized.
+		await openFile(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(helloWorldTestBrokenFile),
+			}),
+			dc.launch(config),
 		);
 	});
 
@@ -488,21 +468,21 @@ hello_world
 				const search = `test^("without quotes List<String>`;
 				const testName = "greater than without quotes List<String>";
 
-				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
+				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName, { captureConfigOnly: runByLine });
 			});
 
 			it("can run tests from codelens with greater than after quote", async () => {
 				const search = `test^('with quotes ">= foo`;
 				const testName = `greater than with quotes ">= foo"`;
 
-				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
+				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName, { captureConfigOnly: runByLine });
 			});
 
 			it("can run tests from codelens with backticks", async () => {
 				const search = `test^('\`with backticks`;
 				const testName = "`with backticks`";
 
-				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
+				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName, { captureConfigOnly: runByLine });
 			});
 
 			it("warns if multiple tests run when one was expected", async function () {
@@ -568,7 +548,7 @@ hello_world
 					for (const issueNumber of issues) {
 						it(`DartCode issue ${issueNumber}`, async () => {
 							const issueText = `^https://github.com/Dart-Code/Dart-Code/issues/${issueNumber}`;
-							await checkRunSingleTestFromCodeLens(helloWorldTestDynamicFile, issueText, undefined, 1); // delta +1 because comment is on line before the test
+							await checkRunSingleTestFromCodeLens(helloWorldTestDynamicFile, issueText, undefined, { lineDelta: 1 }); // delta +1 because comment is on line before the test
 						});
 					}
 				});
@@ -720,46 +700,46 @@ test/empty_test.dart
 			assert.ok(coverage.statementCoverage.total > 0);
 		});
 
-		it("and includes dependencies", async function () {
+		it("and includes dependencies and excludes configured paths", async function () {
 			const testCapabilities = getPackageTestCapabilitiesForDartProject(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
 			if (!testCapabilities.supportsCoveragePackage)
 				this.skip();
 
-			// Discover tests.
-			await openFile(helloWorldExampleSubFolderProjectTestFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
+			let terminatedSession: vs.DebugSession | undefined;
+			const endSub = vs.debug.onDidTerminateDebugSession((s) => terminatedSession = s);
+			try {
+				// Discover tests.
+				await openFile(helloWorldExampleSubFolderProjectTestFile);
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
-			const controller = privateApi.testController!;
-			const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
-			const testRequest = new vs.TestRunRequest([suiteNode]);
+				const controller = privateApi.testController!;
+				const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
+				const testRequest = new vs.TestRunRequest([suiteNode]);
 
-			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+				await controller.runTests(false, true, testRequest, fakeCancellationToken);
 
-			assert(addCoverageStub?.called);
-			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
-			assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldExampleSubFolderPrinterFile), fsPath(helloWorldPrinterFile)]);
-		});
+				assert(addCoverageStub?.called);
+				const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+				assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldExampleSubFolderPrinterFile), fsPath(helloWorldPrinterFile)]);
 
-		it("and excludes configured paths", async function () {
-			const testCapabilities = getPackageTestCapabilitiesForDartProject(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
-			if (!testCapabilities.supportsCoveragePackage)
-				this.skip();
+				// Re-parse the generated coverage with an exclude pattern without re-running `dart test`.
+				assert.ok(terminatedSession);
+				addCoverageStub.resetHistory();
+				await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
+				const run = controller.controller.createTestRun(testRequest);
+				try {
+					controller.registerTestRun(terminatedSession.configuration.dartCodeDebugSessionID as string, run, { wasStartedByTestRunner: true });
+					controller.handleDebugSessionEnd(terminatedSession);
+				} finally {
+					run.end();
+				}
 
-			await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
-
-			// Discover tests.
-			await openFile(helloWorldExampleSubFolderProjectTestFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
-
-			const controller = privateApi.testController!;
-			const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
-			const testRequest = new vs.TestRunRequest([suiteNode]);
-
-			await controller.runTests(false, true, testRequest, fakeCancellationToken);
-
-			assert(addCoverageStub?.called);
-			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
-			assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldPrinterFile)]);
+				assert(addCoverageStub?.called);
+				const filteredCoverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+				assert.deepStrictEqual(filteredCoverageFiles, [fsPath(helloWorldPrinterFile)]);
+			} finally {
+				endSub.dispose();
+			}
 		});
 
 		it("uses correct regex for --coverage-package", async function () {
@@ -811,7 +791,7 @@ test/empty_test.dart
 		return lines.join("\n").trim();
 	}
 
-	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, lineDelta = 0) {
+	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, { lineDelta = 0, captureConfigOnly = false }: { lineDelta?: number; captureConfigOnly?: boolean } = {}) {
 		const editor = await openFile(fileUri);
 		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
 
@@ -833,6 +813,13 @@ test/empty_test.dart
 		if (testName) {
 			assert.equal(runAction.command!.arguments![0].fullName, testName);
 			assert.equal(runAction.command!.arguments![0].isGroup, false);
+		}
+
+		if (captureConfigOnly) {
+			const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+			assert.equal(configs.length, 1);
+			assert.ok((configs[0].program as string).endsWith(`?line=${testPos.line + lineDelta + 1}`), configs[0].program as string);
+			return;
 		}
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {
