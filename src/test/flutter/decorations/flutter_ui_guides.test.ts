@@ -23,8 +23,7 @@ describe("flutter_ui_guides_decorations", () => {
 
 	/**
 	 * Renders a visual representation of the document with UI guide decorations
-	 * overlaid (replacing whitespace) and `~` representing non-breaking spaces (`\xa0`)
-	 * in the decoration string after the anchor point (`^` if empty).
+	 * overlaid at their visual positions.
 	 */
 	function renderDocumentWithGuides(doc: vs.TextDocument, decorations: vs.DecorationOptions[], tabSize = 1): string {
 		const guidesByLine = new Map<number, { anchor: number, text: string }>();
@@ -54,8 +53,7 @@ describe("flutter_ui_guides_decorations", () => {
 				if (guideChar !== "\xa0")
 					chars[visualAnchor + i] = guideChar;
 			}
-			const renderedGuideText = guide.text ? guide.text.replace(/\xa0/g, "~") : "^";
-			lines.push(`${chars.join("")} // @${guide.anchor}: ${renderedGuideText}`);
+			lines.push(chars.join("").trimEnd());
 		}
 		return lines.join("\n");
 	}
@@ -92,16 +90,16 @@ Widget build() {
 import 'package:flutter/material.dart';
 
 Widget build() {
-  return Column( // @2: ~~~~
-  │ children: [ // @2: │~~~
-  ├───Padding( // @2: ├───~~
-  │   │ padding: const EdgeInsets.all(8.0), // @2: │~~~│~
-  │   ╰─child: Text('First'), // @2: │~~~╰─~
-  │   ), // @2: │~~~
-  │    // @0: ~~│~~~
-  ╰───Container( // @2: ╰───~
-        child: // @6: ^
-      Text('Outdented'), // @6: ~
+  return Column(
+  │ children: [
+  ├───Padding(
+  │   │ padding: const EdgeInsets.all(8.0),
+  │   ╰─child: Text('First'),
+  │   ),
+  │
+  ╰───Container(
+        child:
+      Text('Outdented'),
       ),
     ],
   );
@@ -136,10 +134,10 @@ Widget build() {
 import 'package:flutter/material.dart';
 
 Widget build() {
-    return Column( // @1: ~~
-    │   children: [ // @1: │~~~~
-    ├───────Text('A'), // @1: ├───────~
-    ╰───────Text('B'), // @1: ╰───────~
+    return Column(
+    │   children: [
+    ├───────Text('A'),
+    ╰───────Text('B'),
         ],
     );
 }
@@ -208,13 +206,13 @@ Widget build() {
 import 'package:flutter/material.dart';
 
 Widget build() {
-  return Column( // @2: ~~~~
-  │ children: [ // @2: │~~~
-  ├───Padding( // @2: ├───~~
-  │   │ padding: const EdgeInsets.all(8.0), // @2: │~~~│~
-  │   ╰─child: Text('First'), // @2: │~~~╰─~
-  │   ), // @2: │~~~
-  ╰───Text('Second'), // @2: ╰───~
+  return Column(
+  │ children: [
+  ├───Padding(
+  │   │ padding: const EdgeInsets.all(8.0),
+  │   ╰─child: Text('First'),
+  │   ),
+  ╰───Text('Second'),
     ],
   );
 }
@@ -232,13 +230,13 @@ Widget build() {
 import 'package:flutter/material.dart';
 
 Widget build() {
-  return Column( // @2: ~~~~
-  │ children: [ // @2: │~~~
-  ├───Padding( // @2: ├───~~
-  │   │ padding: const EdgeInsets.all(8.0), // @2: │~~~│~
-  │   ╰─child: Text('First'), // @2: │~~~╰─~
-  │   ), // @2: │~~~
-  ╰───Text('Second'), // @2: ╰───~
+  return Column(
+  │ children: [
+  ├───Padding(
+  │   │ padding: const EdgeInsets.all(8.0),
+  │   ╰─child: Text('First'),
+  │   ),
+  ╰───Text('Second'),
     ],
   );
 }
@@ -253,11 +251,11 @@ Widget build() {
 import 'package:flutter/material.dart';
 
 Widget build() {
-  return Column( // @2: ~~~~
-  │ children: [ // @2: │~~~
-  ╰───Padding( // @2: ╰───~~
-      │ padding: const EdgeInsets.all(8.0), // @6: │~
-      ╰─child: Text('First'), // @6: ╰─~
+  return Column(
+  │ children: [
+  ╰───Padding(
+      │ padding: const EdgeInsets.all(8.0),
+      ╰─child: Text('First'),
       ),
     ],
   );
