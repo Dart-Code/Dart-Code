@@ -708,8 +708,9 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		const binEnv = executionInfo.env;
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
-		portToBind = config.devToolsPort  // Always config first
-			?? portToBind;                // Then try the last port we bound this session
+		// Always try config first, then the last port we bound this session. Use || so that 0 in settings
+		// (meaning bind any free port) still falls back to portToBind on restart.
+		portToBind = config.devToolsPort || portToBind; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 
 		if (portToBind && !customDevTools?.path) {
 			binArgs.push("--port");
