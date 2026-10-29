@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { ExtensionRestartReason } from "../../../shared/constants";
-import { activate, currentEditor, flutterHelloWorldCounterAppFile, flutterHelloWorldMainFile, openFile, privateApi, rangeOf, sb, setConfigForTest, setTestContent, waitForNextAnalysis, waitForResult } from "../../helpers";
+import { activate, currentEditor, flutterHelloWorldCounterAppFile, flutterHelloWorldMainFile, getExpectedFlutterOutline, openFile, privateApi, rangeOf, sb, setConfigForTest, setTestContent, waitForNextAnalysis, waitForResult } from "../../helpers";
 
 describe("flutter_ui_guides_decorations", () => {
 	beforeEach("activate", () => activate());
@@ -158,8 +158,7 @@ Widget build() {
 		`.trim()));
 
 		const editor = currentEditor();
-		const outline = JSON.parse(JSON.stringify(await privateApi.fileTracker.waitForFlutterOutlineWithLength!(editor.document, editor.document.getText().length)));
-		assert.ok(outline);
+		const outline = JSON.parse(JSON.stringify(await getExpectedFlutterOutline(editor.document)));
 
 		const uiGuides = privateApi.flutterUiGuideDecorations;
 		const spy = sb.spy(uiGuides, "renderGuides");

@@ -148,8 +148,8 @@ export interface InternalExtensionApi {
 	fileTracker: {
 		getOutlineFor(uri: Uri): lsp.Outline | undefined;
 		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
-		waitForOutlineWithLength(document: TextDocument, length: number, token?: CancellationToken): Promise<lsp.Outline | undefined>;
-		waitForFlutterOutlineWithLength?: (document: TextDocument, length: number, token?: CancellationToken) => Promise<lsp.FlutterOutline | undefined>;
+		waitForOutlineWithLength(document: TextDocument, token?: CancellationToken): Promise<lsp.Outline | undefined>;
+		waitForFlutterOutlineWithLength?: (document: TextDocument, token?: CancellationToken) => Promise<lsp.FlutterOutline | undefined>;
 	};
 	flutterCapabilities: FlutterCapabilities;
 	flutterCommands: FlutterCommandHandler;

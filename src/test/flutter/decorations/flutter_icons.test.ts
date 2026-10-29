@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { IconRangeComputerLsp } from "../../../shared/vscode/icon_range_computer";
-import { activate, currentDoc, privateApi, rangeOf, setTestContent, waitForNextAnalysis } from "../../helpers";
+import { activate, getExpectedFlutterOutline, privateApi, rangeOf, setTestContent, waitForNextAnalysis } from "../../helpers";
 
 describe("flutter_icon_decorations", () => {
 	beforeEach("activate", () => activate());
@@ -23,9 +23,7 @@ var btn2 = RaisedButton.icon(
 );
 		`));
 
-		const doc = currentDoc();
-		const outline = await privateApi.fileTracker.waitForFlutterOutlineWithLength!(doc, doc.getText().length);
-		assert.ok(outline);
+		const outline = await getExpectedFlutterOutline();
 		const results = new IconRangeComputerLsp(privateApi.logger).compute(outline);
 
 		assert.ok(results);

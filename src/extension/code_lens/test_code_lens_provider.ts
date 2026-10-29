@@ -40,8 +40,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 
 		// Without version numbers, the best we have to tell if an outline is likely correct or stale is
 		// if its length matches the document exactly.
-		const expectedLength = document.getText().length;
-		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document, expectedLength, token);
+		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document, token);
 		if (!outline?.children?.length)
 			return;
 

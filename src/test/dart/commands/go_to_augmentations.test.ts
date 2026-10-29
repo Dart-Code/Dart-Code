@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, mkDirRecursive } from "../../../shared/utils/fs";
-import { activate, checkCurrentEditorSelectionIsPosition, currentEditor, helloWorldFolder, helloWorldPubspec, openFile, privateApi, rangeOf, waitForResult } from "../../helpers";
+import { activate, checkCurrentEditorSelectionIsPosition, currentEditor, getExpectedOutline, helloWorldFolder, helloWorldPubspec, openFile, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const libFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib.dart"));
 const augmentationFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib_augmentation.dart"));
@@ -43,7 +43,7 @@ describe("go to", () => {
 	describe("augmentation", () => {
 		beforeEach("wait for outline", async () => {
 			await openFile(libFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(libFile));
+			await getExpectedOutline();
 		});
 
 		it("navigates to augmented class", async () => {
@@ -90,7 +90,7 @@ describe("go to", () => {
 	describe("augmented", () => {
 		beforeEach("wait for outline", async () => {
 			await openFile(augmentationFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(augmentationFile));
+			await getExpectedOutline();
 		});
 
 		it("navigates to augmented class", async () => {

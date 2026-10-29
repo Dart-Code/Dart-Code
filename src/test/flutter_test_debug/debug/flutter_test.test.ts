@@ -10,7 +10,7 @@ import { getLaunchConfig } from "../../../shared/utils/test";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { captureStartDebuggingConfigs, captureTestDebugConfigurations, createDebugClient, flutterTestDeviceId, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, fakeCancellationToken, findSuiteNode, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getLaunchConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, fakeCancellationToken, findSuiteNode, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedOutline, getExpectedResults, getLaunchConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activateWithoutAnalysis(flutterTestMainFile));
@@ -298,7 +298,7 @@ describe("flutter test debugger", () => {
 
 			it("can run tests from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
+				await getExpectedOutline();
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const testPos = positionOf(`test^Widgets('Hello world test`);
@@ -339,7 +339,7 @@ describe("flutter test debugger", () => {
 
 			it("can run test with multiline name from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
+				await getExpectedOutline();
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const testPos = positionOf(`test^Widgets('''multi`);
@@ -371,7 +371,7 @@ describe("flutter test debugger", () => {
 
 			it("can run skipped tests from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
+				await getExpectedOutline();
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const testPos = positionOf(`test^Widgets('Skipped test`);
@@ -416,10 +416,8 @@ describe("flutter test debugger", () => {
 				// Discover tests in these files.
 				const editor1 = await openFile(flutterTestSelective1File);
 				const editor2 = await openFile(flutterTestSelective2File);
-				await privateApi.fileTracker.waitForOutlineWithLength(editor1.document, editor1.document.getText().length);
-				await privateApi.fileTracker.waitForOutlineWithLength(editor2.document, editor2.document.getText().length);
-				privateApi.testDiscoverer?.forceUpdate(flutterTestSelective1File);
-				privateApi.testDiscoverer?.forceUpdate(flutterTestSelective2File);
+				await getExpectedOutline(editor1.document);
+				await getExpectedOutline(editor2.document);
 
 				const testItems: vs.TestItem[] = [];
 
@@ -462,9 +460,8 @@ describe("flutter test debugger", () => {
 
 		it("for a basic test", async () => {
 			// Discover tests.
-			const editor = await openFile(flutterTestMainFile);
-			await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
-			privateApi.testDiscoverer?.forceUpdate(flutterTestMainFile);
+			await openFile(flutterTestMainFile);
+			await getExpectedOutline();
 			const controller = privateApi.testController!;
 
 			const suiteNode = findSuiteNode(fsPath(flutterTestMainFile));
@@ -484,9 +481,8 @@ describe("flutter test debugger", () => {
 			const endSub = vs.debug.onDidTerminateDebugSession((s) => terminatedSession = s);
 			try {
 				// Discover tests.
-				const editor = await openFile(flutterHelloWorldExampleTestFile);
-				await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
-				privateApi.testDiscoverer?.forceUpdate(flutterHelloWorldExampleTestFile);
+				await openFile(flutterHelloWorldExampleTestFile);
+				await getExpectedOutline();
 
 				const controller = privateApi.testController!;
 				const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));

@@ -6,6 +6,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
+import { FlutterOutline, Outline } from "../shared/analysis/lsp/custom_protocol";
 import { dartCodeExtensionIdentifier, isDartCodeTestRun, isWin } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debugging/interfaces";
 import { LogCategory, TestStatus } from "../shared/enums";
@@ -722,6 +723,18 @@ export function getExpectedResults(doc = currentDoc()) {
 		.filter((l) => l.startsWith("// ") && !l.startsWith("// #")) // Allow "comment" lines within the comment
 		.map((l) => l.substr(3))
 		.join("\n");
+}
+
+export async function getExpectedOutline(doc = currentDoc()): Promise<Outline> {
+	const outline = await privateApi.fileTracker.waitForOutlineWithLength(doc);
+	assert.ok(outline, `Did not get outline for ${doc.uri.toString()}`);
+	return outline;
+}
+
+export async function getExpectedFlutterOutline(doc = currentDoc()): Promise<FlutterOutline> {
+	const outline = await privateApi.fileTracker.waitForFlutterOutlineWithLength!(doc);
+	assert.ok(outline, `Did not get Flutter outline for ${doc.uri.toString()}`);
+	return outline;
 }
 
 export function select(...ranges: vs.Range[]) {

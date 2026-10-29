@@ -12,7 +12,7 @@ import { withTimeout } from "../shared/utils";
 import { fsPath } from "../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../shared/utils/outline";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getLaunchConfiguration, logger, openFile, privateApi, sb, watchPromise } from "./helpers";
+import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getExpectedOutline, getLaunchConfiguration, logger, openFile, privateApi, sb, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -145,12 +145,9 @@ export async function captureStartDebuggingConfigs(start: () => Thenable<unknown
  */
 export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (test: TestOutlineInfo) => boolean): Promise<DebugConfiguration> {
 	const editor = await openFile(fileUri);
-	await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
+	const outline = await getExpectedOutline(editor.document);
 
 	const visitor = new TestOutlineVisitor(logger, fsPath(fileUri));
-	const outline = privateApi.fileTracker.getOutlineFor(fileUri);
-	if (!outline)
-		throw new Error(`Did not get outline for ${fileUri.toString()}`);
 	visitor.visit(outline);
 	const test = visitor.tests.find(selectTest);
 	if (!test)
@@ -176,7 +173,7 @@ export async function captureTestDebugConfigurations(createRequest: () => TestRu
  */
 export async function captureTestDebugConfigurationForItems(fileUri: Uri, selectItems: (suiteNode: TestItem) => TestItem[], debug = false): Promise<DebugConfiguration> {
 	const editor = await openFile(fileUri);
-	await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
+	await getExpectedOutline(editor.document);
 	// The test tree is cleared between tests, so rebuild the suite from the cached outline.
 	privateApi.testDiscoverer?.forceUpdate(fileUri);
 
