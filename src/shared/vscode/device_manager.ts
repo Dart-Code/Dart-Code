@@ -428,6 +428,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 					label: "Available Devices",
 				},
 				...supportedDevices.map((d) => ({
+					// Use || so an empty category or platform string still falls back.
 					description: `${d.id} - ${d.category || d.platform || ""}`, // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 					detail: d === this.currentDevice ? "Current Device" : undefined,
 					device: d,
@@ -715,6 +716,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 			const pickableEmulator = {
 				alwaysShow: false,
 				coldBoot: false,
+				// Use || so an empty category or platformType string still falls back.
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined, // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 				device: e,
 				label: showAsEmulators ? "$(play) " + `Start ${e.name}` : e.name,

@@ -737,6 +737,7 @@ class LoggingTransform extends stream.Transform {
 }
 
 function getAnalyzerArgs(logger: Logger) {
+	// Use || so an empty string in settings still falls back to "language-server".
 	const analyzerPath = config.analyzerPath || "language-server"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer

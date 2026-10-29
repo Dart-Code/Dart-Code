@@ -4,6 +4,7 @@ export class PubApi {
 	public readonly pubUrlBase: string;
 
 	constructor(private readonly webClient: WebClient) {
+		// Use || so an empty PUB_HOSTED_URL environment variable still falls back to pub.dev.
 		this.pubUrlBase = process.env.PUB_HOSTED_URL || "https://pub.dev"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 	}
 

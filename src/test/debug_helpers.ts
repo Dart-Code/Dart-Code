@@ -14,6 +14,7 @@ import { TestOutlineInfo, TestOutlineVisitor } from "../shared/utils/outline";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getExpectedOutline, getLaunchConfiguration, logger, openFile, privateApi, sb, watchPromise } from "./helpers";
 
+// Use || so an empty FLUTTER_TEST_DEVICE_ID environment variable still falls back to "flutter-tester".
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
 
