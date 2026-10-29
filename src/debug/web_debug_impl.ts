@@ -5,7 +5,7 @@ import { DartLaunchArgs } from "../shared/debugging/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger, SpawnedProcess } from "../shared/interfaces";
 import { getPubExecutionInfo } from "../shared/processes";
-import { errorString, usingCustomScript } from "../shared/utils";
+import { errorMessage, errorMessageWithStack, usingCustomScript } from "../shared/utils";
 import { AppProgress } from "./daemon_interfaces";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
@@ -227,12 +227,12 @@ export class WebDebugSession extends DartDebugSession {
 					break;
 			}
 		} catch (e: any) {
-			const error = errorString(e);
+			const error = errorMessage(e);
 			const message = `Error handling '${request}' custom request: ${error}`;
 
 			if (!this.isTerminating)
 				this.sendEvent(new OutputEvent(`${message}\n`, "stderr"));
-			this.logger.error(message);
+			this.logger.error(errorMessageWithStack(e));
 			this.errorResponse(response, message);
 		}
 	}

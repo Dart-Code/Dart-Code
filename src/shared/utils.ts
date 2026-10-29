@@ -140,17 +140,22 @@ export function usingCustomScript(binPath: string, binArgs: string[], customScri
 	return { executable: binPath, args: binArgs };
 }
 
-export function errorString(error: any): string {
+export function errorMessage(error: any): string {
 	if (!error)
 		return "<empty error>";
 	else if (error instanceof Error)
-		return error.message + (error.stack ? `\n${error.stack}` : "");
+		return error.message;
 	else if (error.message)
 		return error.message as string;
 	else if (typeof error === "string")
 		return error;
 	else
 		return `${error}`;
+}
+
+export function errorMessageWithStack(error: any): string {
+	return errorMessage(error)
+		+ (error instanceof Error && error.stack ? `\n${error.stack}` : "");
 }
 
 type BufferedLogMessage =

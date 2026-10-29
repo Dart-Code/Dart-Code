@@ -8,7 +8,7 @@ import { DartLaunchArgs } from "../shared/debugging/interfaces";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
-import { PromiseCompleter, errorString, notUndefined, uniq, uriToFilePath } from "../shared/utils";
+import { PromiseCompleter, errorMessage, errorMessageWithStack, notUndefined, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, faint } from "./colors";
 import { vmServiceListeningBannerPattern } from "./constants";
@@ -386,14 +386,14 @@ export abstract class DartDebugSession extends DebugSession {
 			await this.vmService.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
 				// For web, the protocol version says this is supported, but it throws.
 				// TODO: Remove this catch block if/when the stable release does not throw.
-				this.logger.info(errorString(e));
+				this.logger.info(errorMessageWithStack(e));
 			});
 		}
 
 		// We don't know for certain we have a connected DDS that supports custom streams, so wrap in try/catch
 		try {
 			await this.vmService.on("ToolEvent", (event: VMEvent) => this.handleToolEvent(event)).catch((e) => {
-				this.logger.info(errorString(e));
+				this.logger.info(errorMessageWithStack(e));
 			});
 		} catch (e) { }
 
@@ -401,7 +401,7 @@ export abstract class DartDebugSession extends DebugSession {
 			await this.vmService.on("Stdout", (event: VMWriteEvent) => this.handleStdoutEvent(event)).catch((e) => {
 				// Some embedders may not provide Stdout and it's not clear if they will throw, so
 				// just catch/log errors here.
-				this.logger.info(errorString(e));
+				this.logger.info(errorMessageWithStack(e));
 			});
 		}
 	}
@@ -514,7 +514,7 @@ export abstract class DartDebugSession extends DebugSession {
 			await this.terminate(false);
 		} catch (e: any) {
 			this.logger.error(e);
-			this.logToUser(errorString(e));
+			this.logToUser(errorMessage(e));
 		}
 	}
 
@@ -1041,7 +1041,7 @@ export abstract class DartDebugSession extends DebugSession {
 	}
 
 	private errorAsDisplayValue(error: any) {
-		const message = errorString(error);
+		const message = errorMessage(error);
 		return `<${message.split("\n")[0].trim()}>`;
 	}
 
@@ -1267,7 +1267,7 @@ export abstract class DartDebugSession extends DebugSession {
 			else if (e && e.data && e.data.details)
 				this.errorResponse(response, `${e.data.details}`);
 			else
-				this.errorResponse(response, errorString(e));
+				this.errorResponse(response, errorMessage(e));
 		}
 	}
 
@@ -1371,7 +1371,7 @@ export abstract class DartDebugSession extends DebugSession {
 			}
 		} catch (e: any) {
 			this.logger.error(`Error handling '${request}' custom request: ${e}`);
-			this.errorResponse(response, errorString(e));
+			this.errorResponse(response, errorMessage(e));
 		}
 	}
 
