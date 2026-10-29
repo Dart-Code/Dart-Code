@@ -264,33 +264,26 @@ describe("flutter test debugger", () => {
 		};
 
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
-
 		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized")
-				.then(() => Promise.all([
-					dc.setBreakpointsRequest({
-						breakpoints: [{ line: appBreakpoint.line }],
-						lines: [appBreakpoint.line],
-						source: { path: appBreakpoint.path },
-					}),
-					dc.setBreakpointsRequest({
-						breakpoints: [{ line: testBreakpoint.line }],
-						lines: [testBreakpoint.line],
-						source: { path: testBreakpoint.path },
-					}),
-				]))
-				.then(() => dc.configurationDoneRequest()),
-			dc.assertStoppedLocation("breakpoint", testBreakpoint)
-				.then(() => dc.resume())
-				.then(() => dc.assertStoppedLocation("breakpoint", appBreakpoint))
-				.then(() => dc.setBreakpointsRequest({
-					breakpoints: [],
-					lines: [],
-					source: { path: appBreakpoint.path },
-				}))
-				.then(() => dc.resume()),
+			dc.hitBreakpoint(config, testBreakpoint),
+		);
+
+		await dc.setBreakpointsRequest({
+			breakpoints: [appBreakpoint],
+			source: { path: appBreakpoint.path },
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.assertStoppedLocation("breakpoint", appBreakpoint),
+			dc.resume(),
+		);
+
+		await dc.setBreakpointsRequest({
+			breakpoints: [],
+			source: { path: appBreakpoint.path },
+		});
+		await waitAllThrowIfTerminates(dc,
 			dc.assertPassingTest(`Counter App increments the counter`),
-			dc.launch(config),
+			dc.resume(),
 		);
 	});
 
