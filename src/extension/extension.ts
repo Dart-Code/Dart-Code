@@ -706,6 +706,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	context.subscriptions.push(workspaceContext.events.onPackageMapChange.listen(() => clearCaches()));
 
+	// Use || so an empty environment variable still falls back to defaultDartCodeConfigurationPath.
 	const dartCodeConfigurationPath = process.env[dartCodeConfigurationPathEnvironmentVariableName] || defaultDartCodeConfigurationPath; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 	context.subscriptions.push(new AutoLaunch(dartCodeConfigurationPath, logger, deviceManager));
 

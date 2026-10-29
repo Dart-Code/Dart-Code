@@ -7,6 +7,7 @@ import { config } from "../config";
 
 let extensionLogPath: string;
 export function getExtensionLogPath() {
+	// Use || so an empty string in extensionLogFile or DC_TEST_LOGS still falls back to the default path.
 	extensionLogPath = extensionLogPath || config.extensionLogFile || path.join(process.env.DC_TEST_LOGS || os.tmpdir(), `dart-code-startup-log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 	return extensionLogPath;
 }
