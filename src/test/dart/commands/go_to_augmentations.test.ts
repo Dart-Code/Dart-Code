@@ -90,7 +90,7 @@ describe("go to", () => {
 	describe("augmented", () => {
 		beforeEach("wait for outline", async () => {
 			await openFile(augmentationFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(libFile));
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(augmentationFile));
 		});
 
 		it("navigates to augmented class", async () => {

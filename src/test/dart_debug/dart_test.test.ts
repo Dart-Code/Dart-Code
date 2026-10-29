@@ -32,6 +32,8 @@ describe("dart test debugger", () => {
 	/// nodes to verify trees.
 	async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 		const editor = await openFileBasic(file);
+		if (editor.document.getText().length > 0)
+			await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
 		privateApi.testDiscoverer?.forceUpdate(file);
 		return editor;
 	}
@@ -371,13 +373,9 @@ describe("dart test debugger", () => {
 		});
 
 		// Insert new lines and save to shift the line numbers on disk and in the outline.
-		const originalOutline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 		await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
 		await doc.save();
-		await waitForResult(() => {
-			const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
-			return !!outline && outline !== originalOutline;
-		});
+		await privateApi.fileTracker.waitForOutlineWithLength(doc, doc.getText().length);
 
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
 		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
@@ -612,6 +610,7 @@ void t() {
 	it("keeps test model updated as documents change", async () => {
 		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
 		await openFile(helloWorldTestEmptyFile);
+		const doc = currentEditor().document;
 		await setTestContent(`
 import 'package:test/test.dart';
 import 'package:test_reflective_loader/test_reflective_loader.dart';
@@ -635,7 +634,8 @@ class MyTest {
   }
 }
 		`.trim());
-		await currentEditor().document.save();
+		await doc.save();
+		await privateApi.fileTracker.waitForOutlineWithLength(doc, doc.getText().length);
 
 
 		// Initial locations.
@@ -655,7 +655,7 @@ test/empty_test.dart
 
 		// Insert a line at the start of the doc and ensure everything updates.
 		await currentEditor().edit((eb) => eb.insert(new vs.Position(0, 0), "// new first line\n"));
-		await delay(50);
+		await privateApi.fileTracker.waitForOutlineWithLength(doc, doc.getText().length);
 		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
 		assert.equal(
 			getTestRanges(helloWorldTestEmptyFile),

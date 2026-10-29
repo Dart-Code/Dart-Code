@@ -1,4 +1,4 @@
-import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, StatusBarItem, TestController, TestItem, TestRun, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, StatusBarItem, TestController, TestItem, TestRun, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
@@ -148,6 +148,8 @@ export interface InternalExtensionApi {
 	fileTracker: {
 		getOutlineFor(uri: Uri): lsp.Outline | undefined;
 		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
+		waitForOutlineWithLength(document: TextDocument, length: number, token?: CancellationToken): Promise<lsp.Outline | undefined>;
+		waitForFlutterOutlineWithLength?: (document: TextDocument, length: number, token?: CancellationToken) => Promise<lsp.FlutterOutline | undefined>;
 	};
 	flutterCapabilities: FlutterCapabilities;
 	flutterCommands: FlutterCommandHandler;
