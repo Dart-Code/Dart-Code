@@ -649,24 +649,15 @@ afterEach("destroy sinon sandbox", () => {
 	sb.restore();
 });
 
-// Track files that have already registered a restore handler during the current test
-// so multiple setTestContent calls on the same file only capture the initial content once.
-const modifiedFiles = new Set<string>();
 export async function setTestContent(content: string): Promise<void> {
 	const editor = currentEditor();
 	const doc = editor.document;
-	const filePath = fsPath(doc.uri);
-	if (doc.uri.scheme === "file" && !modifiedFiles.has(filePath)) {
-		modifiedFiles.add(filePath);
-		const originalContent = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : undefined;
+	if (!doc.isDirty) {
+		// Revert any unsaved changes at the end of the test so dirty buffers do not leak
+		// into subsequent tests (without rewriting saved files on disk, which can conflict
+		// with VS Code's file stat tracking or trigger file-save watchers after the test ends).
 		defer("Revert modified file", async () => {
-			modifiedFiles.delete(filePath);
-			// If the test saved the document, restore the original content on disk first.
-			const diskModified = originalContent !== undefined && fs.existsSync(filePath) && fs.readFileSync(filePath, "utf8") !== originalContent;
-			if (diskModified)
-				fs.writeFileSync(filePath, originalContent);
-			// Revert the editor buffer if it has unsaved changes or if the underlying disk content was restored.
-			if (doc.isDirty || diskModified) {
+			if (doc.isDirty) {
 				if (vs.window.activeTextEditor?.document !== doc)
 					await openFile(doc.uri);
 				logger.info(`Reverting current editor...`);
