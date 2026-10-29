@@ -250,38 +250,47 @@ describe("flutter test debugger", () => {
 		);
 	});
 
-	it("can run integration_test tests", async () => {
+	it("can run integration_test tests and stop at breakpoints in test and app code", async () => {
+		await openFile(flutterIntegrationTestFile);
+		const testBreakpoint = {
+			line: positionOf("^// BREAKPOINT1").line,
+			path: fsPath(flutterIntegrationTestFile),
+		};
+
+		await openFile(flutterHelloWorldCounterAppFile);
+		const appBreakpoint = {
+			line: positionOf("^// BREAKPOINT1").line,
+			path: fsPath(flutterHelloWorldCounterAppFile),
+		};
+
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
-		config.noDebug = true;
 
 		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
+			dc.waitForEvent("initialized")
+				.then(() => Promise.all([
+					dc.setBreakpointsRequest({
+						breakpoints: [{ line: appBreakpoint.line }],
+						lines: [appBreakpoint.line],
+						source: { path: appBreakpoint.path },
+					}),
+					dc.setBreakpointsRequest({
+						breakpoints: [{ line: testBreakpoint.line }],
+						lines: [testBreakpoint.line],
+						source: { path: testBreakpoint.path },
+					}),
+				]))
+				.then(() => dc.configurationDoneRequest()),
+			dc.assertStoppedLocation("breakpoint", testBreakpoint)
+				.then(() => dc.resume())
+				.then(() => dc.assertStoppedLocation("breakpoint", appBreakpoint))
+				.then(() => dc.setBreakpointsRequest({
+					breakpoints: [],
+					lines: [],
+					source: { path: appBreakpoint.path },
+				}))
+				.then(() => dc.resume()),
 			dc.assertPassingTest(`Counter App increments the counter`),
 			dc.launch(config),
-		);
-	});
-
-	it("stops at a breakpoint in test code in integration_test tests", async () => {
-		await openFile(flutterIntegrationTestFile);
-		const config = await startDebugger(dc, flutterIntegrationTestFile);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line,
-				path: fsPath(flutterIntegrationTestFile),
-			}),
-		);
-	});
-
-	it("stops at a breakpoint in app code in integration_test tests", async () => {
-		await openFile(flutterHelloWorldCounterAppFile);
-		const config = await startDebugger(dc, flutterIntegrationTestFile);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line,
-				path: fsPath(flutterHelloWorldCounterAppFile),
-			}),
 		);
 	});
 
