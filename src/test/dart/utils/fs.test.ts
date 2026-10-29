@@ -4,7 +4,7 @@ import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
 import { nullLogger } from "../../../shared/logging";
-import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
+import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getPackageName, hasPackageMapFile, hasPubspec, isInsideHiddenOrBuildFolder, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
 import { createTempPubPackage, defer, fakeCancellationToken, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, testProjectsFolder, tryDelete } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
@@ -372,5 +372,38 @@ describe("findProjectFolders", () => {
 		// - level3 searches 5 levels deep from itself (level3 -> level4 -> level5 -> level6 -> level7), finding both level5 and level7.
 		const projects = await findProjectFolders(logger, [level1, level3], [], { requirePubspec: true, searchDepth: 5 }, fakeCancellationToken);
 		assert.deepStrictEqual(projects, [level5, level7]);
+	});
+});
+
+describe("isInsideHiddenOrBuildFolder", () => {
+	// A workspace folder below a hidden ancestor directory, like a worktree
+	// checked out below ".gemini" (https://github.com/Dart-Code/Dart-Code/issues/6299).
+	const workspaceFolder = path.join("hidden-parent", ".hidden", "workspace");
+
+	it("does not treat hidden ancestors of the workspace folder as ignored", () => {
+		assert.equal(isInsideHiddenOrBuildFolder(path.join(workspaceFolder, "pubspec.yaml"), workspaceFolder), false);
+	});
+
+	it("ignores files inside hidden folders in the workspace", () => {
+		assert.equal(isInsideHiddenOrBuildFolder(path.join(workspaceFolder, ".dart_tool", "pubspec.yaml"), workspaceFolder), true);
+		assert.equal(isInsideHiddenOrBuildFolder(path.join(workspaceFolder, "nested", ".config", "pubspec.yaml"), workspaceFolder), true);
+	});
+
+	it("ignores files inside build folders in the workspace when includeBuild is set", () => {
+		assert.equal(isInsideHiddenOrBuildFolder(path.join(workspaceFolder, "build", "pubspec.yaml"), workspaceFolder), true);
+		assert.equal(isInsideHiddenOrBuildFolder(path.join(workspaceFolder, "build", "pubspec.yaml"), workspaceFolder, { includeBuild: false }), false);
+	});
+
+	it("does not ignore folders whose names merely contain build", () => {
+		assert.equal(isInsideHiddenOrBuildFolder(path.join(workspaceFolder, "build_tools", "pubspec.yaml"), workspaceFolder), false);
+	});
+
+	it("checks only the basename when there is no root path", () => {
+		assert.equal(isInsideHiddenOrBuildFolder(path.join("anything", ".hidden", "pubspec.yaml"), undefined), false);
+		assert.equal(isInsideHiddenOrBuildFolder(path.join("anything", ".pubspec.yaml"), undefined), true);
+	});
+
+	it("treats paths outside the root folder as ignored", () => {
+		assert.equal(isInsideHiddenOrBuildFolder(path.join("other", "pubspec.yaml"), workspaceFolder), true);
 	});
 });

@@ -23,11 +23,16 @@ export async function getTestSuites(testsRoot: string, filters: string[] | undef
 	if (!filters?.length)
 		return allFiles;
 
-	// If there are filters, return those that match any of them.
+	// If there are filters, return those that match any of them. Filters match
+	// absolute paths so that repository-relative filters like
+	// "src/test/dart/utils/fs.test.ts" keep working; dot: true ensures hidden
+	// folders in ancestors of testsRoot do not prevent "**" from matching
+	// (files inside hidden folders below testsRoot are already excluded by the
+	// glob call above).
 	const files = new Set<string>();
 	for (let filter of filters.map(normalizeTestFilter)) {
 		filter = `**/*${filter}*`;
-		allFiles.filter((file) => minimatch(file, filter)).forEach((f) => files.add(f));
+		allFiles.filter((file) => minimatch(file, filter, { dot: true })).forEach((f) => files.add(f));
 	}
 	return [...files].sort();
 }

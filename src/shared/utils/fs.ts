@@ -104,6 +104,19 @@ export function isWithinPathOrEqual(file: string, folder: string) {
 	return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
+/// Returns whether [filePath] is inside a folder that should be ignored,
+/// relative to [rootPath]: any folder with a name starting with `.`, or a
+/// `build` folder when [includeBuild] is true.
+///
+/// If [rootPath] is undefined, only the basename of [filePath] is checked.
+export function isInsideHiddenOrBuildFolder(filePath: string, rootPath: string | undefined, { includeBuild = true }: { includeBuild?: boolean; } = {}): boolean {
+	const relativePath = rootPath ? path.relative(rootPath, filePath) : path.basename(filePath);
+	const segments = relativePath.split(path.sep);
+	if (segments.some((s) => s.startsWith(".")))
+		return true;
+	return includeBuild && segments.includes("build");
+}
+
 export function findCommonAncestorFolder(folderPaths: string[]): string | undefined {
 	if (!folderPaths.length)
 		return undefined;
