@@ -2,7 +2,7 @@ import { Thread, ThreadEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
-import { PromiseCompleter, errorString } from "../shared/utils";
+import { PromiseCompleter, errorMessageWithStack } from "../shared/utils";
 import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef, VmExceptionMode } from "./dart_debug_protocol";
 
@@ -135,11 +135,11 @@ export class ThreadManager {
 		try {
 			await setLibrary(firstLib);
 		} catch (e) {
-			this.logger.info(errorString(e));
+			this.logger.info(errorMessageWithStack(e));
 			return;
 		}
 		// Do all.
-		await Promise.all(validDebugLibraries.map(setLibrary)).catch((e) => this.logger.info(errorString(e)));
+		await Promise.all(validDebugLibraries.map(setLibrary)).catch((e) => this.logger.info(errorMessageWithStack(e)));
 	}
 
 	// Just resends existing breakpoints for a single thread.
