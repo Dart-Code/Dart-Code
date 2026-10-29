@@ -725,12 +725,20 @@ export function getExpectedResults(doc = currentDoc()) {
 		.join("\n");
 }
 
+/**
+ * Waits for an Outline for `doc` (defaulting to `currentDoc()`) whose length matches
+ * the current document text, asserts that one was received, and returns it.
+ */
 export async function getExpectedOutline(doc = currentDoc()): Promise<Outline> {
 	const outline = await privateApi.fileTracker.waitForOutlineWithLength(doc);
 	assert.ok(outline, `Did not get outline for ${doc.uri.toString()}`);
 	return outline;
 }
 
+/**
+ * Waits for a FlutterOutline for `doc` (defaulting to `currentDoc()`) whose length matches
+ * the current document text, asserts that one was received, and returns it.
+ */
 export async function getExpectedFlutterOutline(doc = currentDoc()): Promise<FlutterOutline> {
 	const outline = await privateApi.fileTracker.waitForFlutterOutlineWithLength!(doc);
 	assert.ok(outline, `Did not get Flutter outline for ${doc.uri.toString()}`);
