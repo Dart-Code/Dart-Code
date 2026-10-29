@@ -1,20 +1,15 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
-import { activate, getPackages, helloWorldTestMainFile, logger, privateApi, waitForResult } from "../../helpers";
+import { activate, getExpectedOutline, getPackages, helloWorldTestMainFile, logger } from "../../helpers";
 
 describe("test_outline_visitor", () => {
 
 	before("get packages", () => getPackages());
-	beforeEach("activate and wait for outline", async () => {
-		await activate(helloWorldTestMainFile);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
-	});
+	beforeEach("activate", () => activate(helloWorldTestMainFile));
 
-	it("reads the correct groups and tests", () => {
-		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile);
-		if (!outline)
-			throw new Error(`Did not get outline for ${helloWorldTestMainFile.toString()}`);
+	it("reads the correct groups and tests", async () => {
+		const outline = await getExpectedOutline();
 
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestMainFile));
 		visitor.visit(outline);

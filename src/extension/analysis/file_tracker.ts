@@ -49,7 +49,8 @@ export class FileTracker implements IAmDisposable {
 	}
 
 	// TODO: Change this to withVersion when server sends versions.
-	public async waitForOutlineWithLength(document: TextDocument, length: number, token?: CancellationToken): Promise<Outline | undefined> {
+	public async waitForOutlineWithLength(document: TextDocument, token?: CancellationToken): Promise<Outline | undefined> {
+		const length = document.getText().length;
 		return waitFor(() => {
 			const outline = this.outlines.get(document.uri);
 			return outline && document.offsetAt(lspToPosition(outline.range.end)) === length ? outline : undefined;
@@ -61,7 +62,8 @@ export class FileTracker implements IAmDisposable {
 	}
 
 	// TODO: Change this to withVersion when server sends versions.
-	public async waitForFlutterOutlineWithLength(document: TextDocument, length: number, token?: CancellationToken): Promise<FlutterOutline | undefined> {
+	public async waitForFlutterOutlineWithLength(document: TextDocument, token?: CancellationToken): Promise<FlutterOutline | undefined> {
+		const length = document.getText().length;
 		return waitFor(() => {
 			const outline = this.flutterOutlines.get(document.uri);
 			return outline && document.offsetAt(lspToPosition(outline.range.end)) === length ? outline : undefined;

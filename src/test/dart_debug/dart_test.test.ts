@@ -13,7 +13,7 @@ import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { captureStartDebuggingConfigs, captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations, createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedOutline, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -33,7 +33,7 @@ describe("dart test debugger", () => {
 	async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 		const editor = await openFileBasic(file);
 		if (editor.document.getText().length > 0)
-			await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
+			await getExpectedOutline(editor.document);
 		privateApi.testDiscoverer?.forceUpdate(file);
 		return editor;
 	}
@@ -331,9 +331,7 @@ describe("dart test debugger", () => {
 		let numRuns = 1;
 		await checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
-		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
-		if (!outline)
-			throw new Error(`Did not get outline for ${helloWorldTestTreeFile.toString()}`);
+		const outline = await getExpectedOutline();
 		visitor.visit(outline);
 		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 			// Run the test.
@@ -375,12 +373,9 @@ describe("dart test debugger", () => {
 		// Insert new lines and save to shift the line numbers on disk and in the outline.
 		await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
 		await doc.save();
-		await privateApi.fileTracker.waitForOutlineWithLength(doc, doc.getText().length);
 
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
-		const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
-		if (!outline)
-			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile.toString()}`);
+		const outline = await getExpectedOutline(doc);
 		visitor.visit(outline);
 
 		// Re-run each test.
@@ -515,8 +510,6 @@ hello_world
 				// Discover tests in these files.
 				await openFile(helloWorldTestSelective1File);
 				await openFile(helloWorldTestSelective2File);
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective1File));
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective2File));
 
 				const testItems: vs.TestItem[] = [];
 
@@ -610,7 +603,6 @@ void t() {
 	it("keeps test model updated as documents change", async () => {
 		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
 		await openFile(helloWorldTestEmptyFile);
-		const doc = currentEditor().document;
 		await setTestContent(`
 import 'package:test/test.dart';
 import 'package:test_reflective_loader/test_reflective_loader.dart';
@@ -634,8 +626,8 @@ class MyTest {
   }
 }
 		`.trim());
-		await doc.save();
-		await privateApi.fileTracker.waitForOutlineWithLength(doc, doc.getText().length);
+		await currentEditor().document.save();
+		await getExpectedOutline();
 
 
 		// Initial locations.
@@ -655,7 +647,7 @@ test/empty_test.dart
 
 		// Insert a line at the start of the doc and ensure everything updates.
 		await currentEditor().edit((eb) => eb.insert(new vs.Position(0, 0), "// new first line\n"));
-		await privateApi.fileTracker.waitForOutlineWithLength(doc, doc.getText().length);
+		await getExpectedOutline();
 		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
 		assert.equal(
 			getTestRanges(helloWorldTestEmptyFile),
@@ -685,7 +677,6 @@ test/empty_test.dart
 		it("for a basic test", async () => {
 			// Discover tests.
 			await openFile(helloWorldTestMainFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 			const controller = privateApi.testController!;
 
 			const suiteNode = findSuiteNode(fsPath(helloWorldTestMainFile));
@@ -710,7 +701,6 @@ test/empty_test.dart
 			try {
 				// Discover tests.
 				await openFile(helloWorldExampleSubFolderProjectTestFile);
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
 				const controller = privateApi.testController!;
 				const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
@@ -793,7 +783,6 @@ test/empty_test.dart
 
 	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, { lineDelta = 0, captureConfigOnly = false }: { lineDelta?: number; captureConfigOnly?: boolean } = {}) {
 		const editor = await openFile(fileUri);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(search);
