@@ -12,7 +12,7 @@ import { withTimeout } from "../shared/utils";
 import { fsPath } from "../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../shared/utils/outline";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getLaunchConfiguration, logger, openFile, privateApi, sb, waitForResult, watchPromise } from "./helpers";
+import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getLaunchConfiguration, logger, openFile, privateApi, sb, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -144,8 +144,8 @@ export async function captureStartDebuggingConfigs(start: () => Thenable<unknown
  * configuration that would have been started.
  */
 export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (test: TestOutlineInfo) => boolean): Promise<DebugConfiguration> {
-	await openFile(fileUri);
-	await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
+	const editor = await openFile(fileUri);
+	await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
 
 	const visitor = new TestOutlineVisitor(logger, fsPath(fileUri));
 	const outline = privateApi.fileTracker.getOutlineFor(fileUri);
@@ -175,8 +175,8 @@ export async function captureTestDebugConfigurations(createRequest: () => TestRu
  * single launch configuration that would have been started.
  */
 export async function captureTestDebugConfigurationForItems(fileUri: Uri, selectItems: (suiteNode: TestItem) => TestItem[], debug = false): Promise<DebugConfiguration> {
-	await openFile(fileUri);
-	await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
+	const editor = await openFile(fileUri);
+	await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
 	// The test tree is cleared between tests, so rebuild the suite from the cached outline.
 	privateApi.testDiscoverer?.forceUpdate(fileUri);
 

@@ -24,7 +24,8 @@ var btn2 = RaisedButton.icon(
 		`));
 
 		const doc = currentDoc();
-		const outline = privateApi.fileTracker.getFlutterOutlineFor!(doc.uri)!;
+		const outline = await privateApi.fileTracker.waitForFlutterOutlineWithLength!(doc, doc.getText().length);
+		assert.ok(outline);
 		const results = new IconRangeComputerLsp(privateApi.logger).compute(outline);
 
 		assert.ok(results);

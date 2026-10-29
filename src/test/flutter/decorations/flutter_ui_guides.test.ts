@@ -158,13 +158,13 @@ Widget build() {
 		`.trim()));
 
 		const editor = currentEditor();
-		await waitForResult(() => !!privateApi.fileTracker.getFlutterOutlineFor!(editor.document.uri), "Wait for Flutter outline");
+		const outline = JSON.parse(JSON.stringify(await privateApi.fileTracker.waitForFlutterOutlineWithLength!(editor.document, editor.document.getText().length)));
+		assert.ok(outline);
 
 		const uiGuides = privateApi.flutterUiGuideDecorations;
 		const spy = sb.spy(uiGuides, "renderGuides");
 
 		// Call buildFromOutline with an outline whose end offset does not match document length (smaller than document length).
-		const outline = JSON.parse(JSON.stringify(privateApi.fileTracker.getFlutterOutlineFor!(editor.document.uri)!));
 		outline.range.end.line = 1;
 		outline.range.end.character = 0;
 		uiGuides.buildFromOutline(editor, outline);

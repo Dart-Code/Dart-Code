@@ -414,10 +414,12 @@ describe("flutter test debugger", () => {
 
 			it("can run a selection of tests across multiple files", async () => {
 				// Discover tests in these files.
-				await openFile(flutterTestSelective1File);
-				await openFile(flutterTestSelective2File);
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective1File));
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective2File));
+				const editor1 = await openFile(flutterTestSelective1File);
+				const editor2 = await openFile(flutterTestSelective2File);
+				await privateApi.fileTracker.waitForOutlineWithLength(editor1.document, editor1.document.getText().length);
+				await privateApi.fileTracker.waitForOutlineWithLength(editor2.document, editor2.document.getText().length);
+				privateApi.testDiscoverer?.forceUpdate(flutterTestSelective1File);
+				privateApi.testDiscoverer?.forceUpdate(flutterTestSelective2File);
 
 				const testItems: vs.TestItem[] = [];
 
@@ -460,8 +462,9 @@ describe("flutter test debugger", () => {
 
 		it("for a basic test", async () => {
 			// Discover tests.
-			await openFile(flutterTestMainFile);
-			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile));
+			const editor = await openFile(flutterTestMainFile);
+			await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
+			privateApi.testDiscoverer?.forceUpdate(flutterTestMainFile);
 			const controller = privateApi.testController!;
 
 			const suiteNode = findSuiteNode(fsPath(flutterTestMainFile));
@@ -481,8 +484,9 @@ describe("flutter test debugger", () => {
 			const endSub = vs.debug.onDidTerminateDebugSession((s) => terminatedSession = s);
 			try {
 				// Discover tests.
-				await openFile(flutterHelloWorldExampleTestFile);
-				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
+				const editor = await openFile(flutterHelloWorldExampleTestFile);
+				await privateApi.fileTracker.waitForOutlineWithLength(editor.document, editor.document.getText().length);
+				privateApi.testDiscoverer?.forceUpdate(flutterHelloWorldExampleTestFile);
 
 				const controller = privateApi.testController!;
 				const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
