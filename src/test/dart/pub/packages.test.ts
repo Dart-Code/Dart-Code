@@ -2,13 +2,15 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
+import * as url from "url";
 import * as vs from "vscode";
 import { getFolderToRunCommandIn } from "../../../extension/utils/vscode/projects";
 import { isWin } from "../../../shared/constants";
+import { MissingPackageMap, PackageMap, PackageMapLoader } from "../../../shared/pub/package_map";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
 import { getPubWorkspaceOrPackageFolderInfo, getPubWorkspaceStatus, promptToRunPubGet, promptToRunPubUpgrade, PubPackageStatus } from "../../../shared/vscode/pub";
 import * as sharedVscodeUtils from "../../../shared/vscode/utils";
-import { activate, activateWithoutAnalysis, defer, helloWorldExampleSubFolder, helloWorldFolder, privateApi, sb, tryDelete } from "../../helpers";
+import { activate, activateWithoutAnalysis, defer, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, privateApi, sb, tryDelete } from "../../helpers";
 
 describe("pub package status", () => {
 	before("activate", () => activate());
@@ -714,6 +716,248 @@ describe("pub package commands", () => {
 				showInformationMessage.firstCall.args[0],
 				"Your SDK has been updated since you last fetched packages for package:hello_world_example (example) (+ 2 others), would you like to fetch updated packages?",
 			);
+		});
+	});
+});
+
+describe("package map", () => {
+	before("activate", () => activate());
+
+	let tempFolder: string;
+	let packageConfigPath: string;
+
+	beforeEach("create temp folder", () => {
+		tempFolder = getRandomTempFolder();
+		defer("clean up temp folder", () => tryDelete(tempFolder));
+		packageConfigPath = path.join(tempFolder, ".dart_tool", "package_config.json");
+	});
+
+	function writePackageConfig(content: string | object) {
+		fs.mkdirSync(path.dirname(packageConfigPath), { recursive: true });
+		fs.writeFileSync(
+			packageConfigPath,
+			typeof content === "string" ? content : JSON.stringify(content),
+		);
+	}
+
+	describe("findPackagesFile", () => {
+		it("returns undefined for empty or undefined entryPoint", () => {
+			assert.equal(PackageMap.findPackagesFile(undefined), undefined);
+			assert.equal(PackageMap.findPackagesFile(""), undefined);
+		});
+
+		it("returns undefined when no package_config.json exists in ancestors", () => {
+			assert.equal(PackageMap.findPackagesFile(tempFolder), undefined);
+		});
+
+		it("finds package_config.json in project root or ancestor", () => {
+			writePackageConfig({ configVersion: 2, packages: [] });
+			const subFolder = path.join(tempFolder, "lib", "src");
+			fs.mkdirSync(subFolder, { recursive: true });
+
+			assert.equal(PackageMap.findPackagesFile(tempFolder), packageConfigPath);
+			assert.equal(PackageMap.findPackagesFile(subFolder), packageConfigPath);
+		});
+	});
+
+	describe("MissingPackageMap", () => {
+		it("returns empty packages, undefined paths/URIs, and no-op reload", () => {
+			const map = new MissingPackageMap();
+			assert.deepStrictEqual(map.packages, {});
+			assert.equal(map.getPackagePath("foo"), undefined);
+			assert.equal(map.resolvePackageUri("package:foo/bar.dart"), undefined);
+			assert.equal(map.flutterRootPath, undefined);
+			map.reload();
+			assert.deepStrictEqual(map.packages, {});
+		});
+
+		it("is returned by load when file is undefined or cannot be read", () => {
+			const undefinedMap = PackageMap.load(privateApi.logger, undefined);
+			assert.deepStrictEqual(undefinedMap.packages, {});
+			assert.equal(undefinedMap.getPackagePath("foo"), undefined);
+
+			const errorSpy = sb.spy(privateApi.logger, "error");
+			const missingFileMap = PackageMap.load(privateApi.logger, path.join(tempFolder, "non_existent.json"));
+			assert.ok(errorSpy.calledOnce);
+			assert.deepStrictEqual(missingFileMap.packages, {});
+			assert.equal(missingFileMap.resolvePackageUri("package:foo/bar.dart"), undefined);
+		});
+
+		it("is returned by loadForProject when no package_config.json exists or when load throws", () => {
+			const loader = new PackageMapLoader(privateApi.logger);
+			const missingMap = loader.loadForProject(tempFolder);
+			assert.deepStrictEqual(missingMap.packages, {});
+			assert.equal(missingMap.getPackagePath("foo"), undefined);
+
+			writePackageConfig({ configVersion: 2, packages: [] });
+			const warnSpy = sb.spy(privateApi.logger, "warn");
+			sb.stub(PackageMap, "load").throws(new Error("simulated load failure"));
+
+			const errorMap = PackageMap.loadForProject(privateApi.logger, tempFolder);
+			assert.ok(warnSpy.calledOnce);
+			assert.ok(String(warnSpy.firstCall.args[0]).includes("Failed to load package map"));
+			assert.deepStrictEqual(errorMap.packages, {});
+		});
+	});
+
+	describe("resolvePackageUri and getPackagePath", () => {
+		it("resolves package:foo/bar.dart and foo/bar.dart to the file path on disk", () => {
+			const fooLibDir = path.join(tempFolder, "packages", "foo", "lib");
+			writePackageConfig({
+				configVersion: 2,
+				packages: [
+					{
+						name: "foo",
+						packageUri: "lib/",
+						rootUri: url.pathToFileURL(path.join(tempFolder, "packages", "foo")).toString(),
+					},
+				],
+			});
+
+			const loader = new PackageMapLoader(privateApi.logger);
+			const map = loader.loadForProject(tempFolder);
+
+			assert.equal(map.getPackagePath("foo"), fooLibDir);
+			assert.equal(map.getPackagePath("unknown"), undefined);
+			assert.equal(map.resolvePackageUri("package:foo/bar.dart"), path.join(fooLibDir, "bar.dart"));
+			assert.equal(map.resolvePackageUri("foo/bar.dart"), path.join(fooLibDir, "bar.dart"));
+			assert.equal(map.resolvePackageUri("package:foo/src/nested/baz.dart"), path.join(fooLibDir, "src", "nested", "baz.dart"));
+			assert.equal(PackageMap.prototype.getPackagePath.call(map, "foo"), fooLibDir);
+			assert.equal(PackageMap.prototype.getPackagePath.call(map, "unknown"), undefined);
+		});
+
+		it("returns undefined for empty strings, URIs without slash, or unknown packages", () => {
+			writePackageConfig({
+				configVersion: 2,
+				packages: [
+					{
+						name: "foo",
+						packageUri: "lib/",
+						rootUri: "../foo",
+					},
+				],
+			});
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+
+			assert.equal(map.resolvePackageUri(""), undefined);
+			assert.equal(map.resolvePackageUri("package:foo"), undefined);
+			assert.equal(map.resolvePackageUri("foo"), undefined);
+			assert.equal(map.resolvePackageUri("package:unknown/bar.dart"), undefined);
+			assert.equal(map.resolvePackageUri("unknown/bar.dart"), undefined);
+		});
+	});
+
+	describe("PackageConfigJsonPackageMap edge cases", () => {
+		it("logs a warning and initializes an empty map on malformed JSON without throwing", () => {
+			writePackageConfig("{ malformed json");
+			const warnSpy = sb.spy(privateApi.logger, "warn");
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+
+			assert.ok(warnSpy.calledOnce);
+			assert.ok(String(warnSpy.firstCall.args[0]).includes("Failed to load package map"));
+			assert.deepStrictEqual(map.packages, {});
+			assert.equal(map.getPackagePath("foo"), undefined);
+			assert.equal(map.flutterRootPath, undefined);
+		});
+
+		it("re-reads package_config.json on reload()", () => {
+			const fooDir = path.join(tempFolder, "foo");
+			const barDir = path.join(tempFolder, "bar");
+			writePackageConfig({
+				configVersion: 2,
+				packages: [
+					{
+						name: "foo",
+						packageUri: "lib/",
+						rootUri: url.pathToFileURL(fooDir).toString(),
+					},
+				],
+			});
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+			assert.deepStrictEqual(map.packages, { foo: path.join(fooDir, "lib") });
+
+			writePackageConfig({
+				configVersion: 2,
+				packages: [
+					{
+						name: "bar",
+						packageUri: "lib/",
+						rootUri: url.pathToFileURL(barDir).toString(),
+					},
+				],
+			});
+			map.reload();
+
+			assert.deepStrictEqual(map.packages, { bar: path.join(barDir, "lib") });
+			assert.equal(map.getPackagePath("foo"), undefined);
+			assert.equal(map.getPackagePath("bar"), path.join(barDir, "lib"));
+		});
+
+		it("extracts and normalizes flutterRoot when present, or returns undefined when absent", () => {
+			writePackageConfig({
+				configVersion: 2,
+				packages: [],
+			});
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+			assert.equal(map.flutterRootPath, undefined);
+
+			const flutterSdkDir = path.join(tempFolder, "flutter_sdk");
+			writePackageConfig({
+				configVersion: 2,
+				flutterRoot: url.pathToFileURL(flutterSdkDir).toString(),
+				packages: [],
+			});
+			map.reload();
+
+			assert.equal(map.flutterRootPath, `${flutterSdkDir}${path.sep}`);
+		});
+
+		it("handles file:// URIs, relative percent-encoded URIs, and invalid file:// URIs", () => {
+			const filePkgDir = path.join(tempFolder, "file_pkg");
+			const warnSpy = sb.spy(privateApi.logger, "warn");
+			const errorSpy = sb.spy(privateApi.logger, "error");
+
+			writePackageConfig({
+				configVersion: 2,
+				packages: [
+					{
+						name: "file_pkg",
+						packageUri: "lib",
+						rootUri: `${url.pathToFileURL(filePkgDir).toString()}/`,
+					},
+					{
+						name: "relative_encoded_pkg",
+						packageUri: "src%20dir/",
+						rootUri: "../my%20pkg",
+					},
+					{
+						name: "empty_pkg_uri",
+						packageUri: "",
+						rootUri: "../root_only",
+					},
+					{
+						name: "invalid_file_uri_pkg",
+						packageUri: "lib/",
+						rootUri: "file://:invalid",
+					},
+				],
+			});
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+
+			assert.equal(map.getPackagePath("file_pkg"), path.join(filePkgDir, "lib"));
+			assert.equal(map.getPackagePath("relative_encoded_pkg"), path.join(tempFolder, "my pkg", "src dir"));
+			assert.equal(map.getPackagePath("empty_pkg_uri"), path.join(tempFolder, "root_only"));
+			assert.equal(map.getPackagePath("invalid_file_uri_pkg"), undefined);
+
+			assert.ok(warnSpy.calledOnce);
+			assert.ok(String(warnSpy.firstCall.args[0]).includes("Failed to extract path from URI: file://:invalid"));
+			assert.ok(errorSpy.calledOnce);
+			assert.ok(String(errorSpy.firstCall.args[0]).includes("Failed to resolve path for package invalid_file_uri_pkg"));
 		});
 	});
 });
