@@ -126,10 +126,11 @@ describe("DevTools", () => {
 			assert.equal(privateApi.devTools.routeIdForPage(null), undefined);
 			assert.equal(privateApi.devTools.routeIdForPage(cpuProfilerPage), "cpu-profiler");
 
-			sb.stub(privateApi.flutterCapabilities, "version").get(() => "3.0.0");
+			const versionStub = sb.stub(privateApi.flutterCapabilities, "version");
+			versionStub.get(() => "3.0.0");
 			assert.equal(privateApi.devTools.routeIdForPage(performancePage), "performance");
 
-			sb.stub(privateApi.flutterCapabilities, "version").get(() => "2.0.0");
+			versionStub.get(() => "2.0.0");
 			assert.equal(privateApi.devTools.routeIdForPage(performancePage), "legacy-performance");
 		});
 
