@@ -862,6 +862,36 @@ describe("package map", () => {
 			assert.equal(map.flutterRootPath, undefined);
 		});
 
+		it("clears packages and flutterRootPath when reload() encounters malformed JSON", () => {
+			const fooDir = path.join(tempFolder, "foo");
+			const flutterSdkDir = path.join(tempFolder, "flutter_sdk");
+			writePackageConfig({
+				configVersion: 2,
+				flutterRoot: url.pathToFileURL(flutterSdkDir).toString(),
+				packages: [
+					{
+						name: "foo",
+						packageUri: "lib/",
+						rootUri: url.pathToFileURL(fooDir).toString(),
+					},
+				],
+			});
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+			assert.deepStrictEqual(map.packages, { foo: path.join(fooDir, "lib") });
+			assert.equal(map.flutterRootPath, `${flutterSdkDir}${path.sep}`);
+
+			const warnSpy = sb.spy(privateApi.logger, "warn");
+			writePackageConfig("{ malformed json");
+			map.reload();
+
+			assert.ok(warnSpy.calledOnce);
+			assert.ok(String(warnSpy.firstCall.args[0]).includes("Failed to load package map"));
+			assert.deepStrictEqual(map.packages, {});
+			assert.equal(map.getPackagePath("foo"), undefined);
+			assert.equal(map.flutterRootPath, undefined);
+		});
+
 		it("re-reads package_config.json on reload()", () => {
 			const fooDir = path.join(tempFolder, "foo");
 			const barDir = path.join(tempFolder, "bar");
