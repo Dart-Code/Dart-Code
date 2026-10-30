@@ -26,7 +26,7 @@ import { PublicDartExtensionApi } from "../extension/api/interfaces";
 import { extensionVersion } from "../shared/vscode/extension_utils";
 import { locateBestProjectRoot } from "../shared/vscode/project";
 
-export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
+export const ext = vs.extensions.getExtension<PublicDartExtensionApi & { [internalApiSymbol]: InternalExtensionApi }>(dartCodeExtensionIdentifier)!;
 export let privateApi: InternalExtensionApi;
 export let extApi: PublicDartExtensionApi;
 export let logger: Logger = new BufferedLogger();
@@ -201,8 +201,8 @@ export async function activateWithoutAnalysis(file?: vs.Uri | null): Promise<voi
 	if (!ext.isActive)
 		await ext.activate();
 	if (ext.exports) {
-		privateApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
-		extApi = ext.exports as PublicDartExtensionApi;
+		privateApi = ext.exports[internalApiSymbol];
+		extApi = ext.exports;
 		setupTestLogging();
 	} else {
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
@@ -251,12 +251,11 @@ export function attachLoggingWhenExtensionAvailable(attempt = 1) {
 }
 
 function setupTestLogging(): boolean {
-	const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 	if (!ext.isActive || !ext.exports)
 		return false;
 
-	privateApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
-	extApi = ext.exports as PublicDartExtensionApi;
+	privateApi = ext.exports[internalApiSymbol];
+	extApi = ext.exports;
 	const emittingLogger = privateApi.logger;
 
 	if (fileSafeCurrentTestName) {

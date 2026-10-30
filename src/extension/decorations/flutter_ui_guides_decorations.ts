@@ -16,7 +16,7 @@ const middleCorner = "├";
 
 export class FlutterUiGuideDecorations implements IAmDisposable {
 	protected disposables: IAmDisposable[] = [];
-	protected tracker: WidgetGuideTracker | undefined;
+	public tracker: WidgetGuideTracker | undefined;
 
 	private readonly borderDecoration = vs.window.createTextEditorDecorationType({
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
@@ -47,12 +47,12 @@ export class FlutterUiGuideDecorations implements IAmDisposable {
 		}));
 	}
 
-	private buildFromUpdatedGuides(doc: vs.TextDocument, guides: WidgetGuide[]) {
+	public buildFromUpdatedGuides(doc: vs.TextDocument, guides: WidgetGuide[]) {
 		if (vs.window.activeTextEditor?.document === doc)
 			this.renderGuides(vs.window.activeTextEditor, guides);
 	}
 
-	protected renderGuides(editor: vs.TextEditor, guides: WidgetGuide[]) {
+	public renderGuides(editor: vs.TextEditor, guides: WidgetGuide[]) {
 		const color = new vs.ThemeColor("dart.flutterUiGuides");
 		const guidesByLine: Record<number, WidgetGuide[]> = {};
 		for (const guide of guides) {
@@ -65,7 +65,7 @@ export class FlutterUiGuideDecorations implements IAmDisposable {
 		editor.setDecorations(this.borderDecoration, decorations);
 	}
 
-	private buildDecorations(doc: vs.TextDocument, tabSize: number, guidesByLine: Record<number, WidgetGuide[]>, color: vs.ThemeColor): vs.DecorationOptions[] {
+	public buildDecorations(doc: vs.TextDocument, tabSize: number, guidesByLine: Record<number, WidgetGuide[]>, color: vs.ThemeColor): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
 			const lineInfo = doc.lineAt(line);
@@ -151,7 +151,7 @@ export class FlutterUiGuideDecorations implements IAmDisposable {
 			this.buildFromOutline(editor, this.analyzer.fileTracker.getFlutterOutlineFor(editor.document.uri));
 	}
 
-	private buildFromOutline(editor: vs.TextEditor, outline: lsp.FlutterOutline | undefined): void {
+	public buildFromOutline(editor: vs.TextEditor, outline: lsp.FlutterOutline | undefined): void {
 		if (this.tracker)
 			this.tracker.clear();
 		if (!editor?.document || !outline)

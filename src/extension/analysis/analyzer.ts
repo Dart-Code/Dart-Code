@@ -637,7 +637,7 @@ export class LspAnalyzer extends Analyzer {
 		}
 	}
 
-	private spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo> {
+	public spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo> {
 		// TODO: Replace with constructing an Analyzer that passes LSP flag (but still reads config
 		// from paths etc) and provide it's process.
 		const vmPath = path.join(sdks.dart, dartVMPath);
@@ -704,7 +704,7 @@ export class LspAnalyzer extends Analyzer {
 	 * Returns a promise that resolves when either the process exits or the
 	 * 3s kill occurs. Shutdown should await this.
 	 */
-	private handleDisposeCleanup(process: SpawnedProcess): Promise<void> {
+	public handleDisposeCleanup(process: SpawnedProcess): Promise<void> {
 		if (process.exitCode !== null || process.signalCode !== null) {
 			return Promise.resolve(); // Already exited, so exit won't fire.
 		}
