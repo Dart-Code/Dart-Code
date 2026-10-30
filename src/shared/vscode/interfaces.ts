@@ -1,4 +1,4 @@
-import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, StatusBarItem, TestController, TestItem, TestRun, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DecorationOptions, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, StatusBarItem, TestController, TestItem, TestRun, TestRunRequest, TextDocument, TextEditor, ThemeColor, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
@@ -153,7 +153,14 @@ export interface InternalExtensionApi {
 	};
 	flutterCapabilities: FlutterCapabilities;
 	flutterCommands: FlutterCommandHandler;
-	flutterUiGuideDecorations?: any;
+	flutterUiGuideDecorations?: {
+		buildDecorations(doc: TextDocument, tabSize: number, guidesByLine: Record<number, Array<{ start: { line: number; character: number }; end: { line: number; character: number } }>>, color: ThemeColor): DecorationOptions[];
+		buildFromOutline(editor: TextEditor, outline: lsp.FlutterOutline | undefined): void;
+		buildFromUpdatedGuides(doc: TextDocument, guides: Array<{ start: { line: number; character: number }; end: { line: number; character: number } }>): void;
+		dispose(): void;
+		renderGuides(editor: TextEditor, guides: Array<{ start: { line: number; character: number }; end: { line: number; character: number } }>): void;
+		tracker: { dispose(): void } | undefined;
+	};
 	getLogHeader: () => string;
 	getOutputChannel: (name: string) => OutputChannel;
 	getOutputChannelNames: () => string[];

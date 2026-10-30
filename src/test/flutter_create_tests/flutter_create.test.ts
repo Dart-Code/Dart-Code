@@ -2,12 +2,10 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { internalApiSymbol } from "../../shared/symbols";
 import { fsPath } from "../../shared/utils/fs";
-import { InternalExtensionApi } from "../../shared/vscode/interfaces";
-import { activate, activateWithoutAnalysis, logger, privateApi, waitForResult } from "../helpers";
+import { activate, activateWithoutAnalysis, ext, logger, privateApi, waitForResult } from "../helpers";
 
 describe("flutter", () => {
 	beforeEach("activate", () => activate());
@@ -48,11 +46,9 @@ describe("flutter", () => {
 	});
 
 	it("triggered Flutter mode", async () => {
-		const ext = vs.extensions.getExtension<{ [internalApiSymbol]: InternalExtensionApi }>(dartCodeExtensionIdentifier);
-		assert.ok(ext);
 		await waitForResult(() => ext.isActive, "Extension did not activate!", 10000);
 
-		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
+		const api = ext.exports[internalApiSymbol];
 		assert.equal(api.workspaceContext.hasAnyFlutterProjects, true);
 	});
 
