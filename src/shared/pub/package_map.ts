@@ -94,7 +94,7 @@ export class MissingPackageMap extends PackageMap {
 
 class PackageConfigJsonPackageMap extends PackageMap {
 	private map: Record<string, string> = {};
-	private config!: PackageJsonConfig;
+	private config?: PackageJsonConfig;
 
 	constructor(private readonly logger: Logger, private readonly packageConfigPath: string) {
 		super();
@@ -106,16 +106,17 @@ class PackageConfigJsonPackageMap extends PackageMap {
 	}
 
 	private load() {
+		this.config = undefined;
+		this.map = {};
+
 		const json = fs.readFileSync(this.packageConfigPath, "utf8");
 		try {
 			this.config = JSON.parse(json) as PackageJsonConfig;
 		} catch (e) {
 			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${String(e)}`);
-			this.map = {};
 			return;
 		}
 
-		this.map = {};
 		for (const pkg of this.config.packages) {
 			const packageConfigFolderPath = path.dirname(this.packageConfigPath);
 			const packageRootPath = this.getPathForUri(pkg.rootUri);
