@@ -85,15 +85,18 @@ describe("DartPackageUriTerminalLinkProvider", () => {
 				return fakePackageMap({ foo: fsPath(helloWorldFolder) }, () => file1);
 			return fakePackageMap({}, () => undefined);
 		});
+		const helloWorldLoadCalls = () => loadForProject.withArgs(sinon.match.any, fsPath(helloWorldFolder)).callCount;
 
 		// Trigger two concurrent calls while packageMaps is uninitialized; both should share the in-flight discovery promise.
 		const promise1 = provider.provideTerminalLinks(terminalLinkContext("package:foo/main.dart:1:2 and package:unknown/main.dart:3:4"), fakeCancellationToken);
+		const firstDiscoveryPromise = provider.packageMapDiscovery;
+		assert.ok(firstDiscoveryPromise);
+
 		const promise2 = provider.provideTerminalLinks(terminalLinkContext("package:foo/other.dart:5:6"), fakeCancellationToken);
-		assert.ok(provider.packageMapDiscovery);
+		assert.strictEqual(provider.packageMapDiscovery, firstDiscoveryPromise);
 
 		const [links1, links2] = await Promise.all([promise1, promise2]);
-		const discoveryCallsPerLoad = loadForProject.callCount;
-		assert.ok(discoveryCallsPerLoad >= 1);
+		assert.equal(helloWorldLoadCalls(), 1);
 
 		assert.equal(links1.length, 1);
 		assert.equal(links1[0].packageName, "foo");
@@ -109,7 +112,7 @@ describe("DartPackageUriTerminalLinkProvider", () => {
 
 		// Subsequent call uses cached packageMaps without re-running discovery.
 		await provider.provideTerminalLinks(terminalLinkContext("package:foo/main.dart"), fakeCancellationToken);
-		assert.equal(loadForProject.callCount, discoveryCallsPerLoad);
+		assert.equal(helloWorldLoadCalls(), 1);
 
 		// Firing onPackageMapChange clears the cache so the next call re-discovers package maps.
 		workspaceContext.events.onPackageMapChange.fire();
@@ -117,7 +120,20 @@ describe("DartPackageUriTerminalLinkProvider", () => {
 		assert.equal(provider.packageMapDiscovery, undefined);
 
 		await provider.provideTerminalLinks(terminalLinkContext("package:foo/main.dart"), fakeCancellationToken);
-		assert.equal(loadForProject.callCount, discoveryCallsPerLoad * 2);
+		assert.equal(helloWorldLoadCalls(), 2);
+
+		// Firing onPackageMapChange while discovery is in-flight clears packageMapDiscovery so a concurrent call starts fresh discovery.
+		workspaceContext.events.onPackageMapChange.fire();
+		const inFlight1 = provider.provideTerminalLinks(terminalLinkContext("package:foo/main.dart"), fakeCancellationToken);
+		const invalidatedDiscoveryPromise = provider.packageMapDiscovery;
+		assert.ok(invalidatedDiscoveryPromise);
+		workspaceContext.events.onPackageMapChange.fire();
+		assert.equal(provider.packageMapDiscovery, undefined);
+		const inFlight2 = provider.provideTerminalLinks(terminalLinkContext("package:foo/main.dart"), fakeCancellationToken);
+		assert.ok(provider.packageMapDiscovery);
+		assert.notStrictEqual(provider.packageMapDiscovery, invalidatedDiscoveryPromise);
+		await Promise.all([inFlight1, inFlight2]);
+		assert.equal(helloWorldLoadCalls(), 4);
 	});
 
 	it("shows an error message when no results", () => {
@@ -195,9 +211,15 @@ describe("DartPackageUriTerminalLinkProvider", () => {
 			};
 			assert.deepStrictEqual(await provider.provideDocumentLinks(dartDoc, fakeCancellationToken), []);
 
-			// Also returns empty array if packageMaps is invalidated while discovery is in-flight.
+			// Also returns empty array if onPackageMapChange invalidates packageMaps during discovery.
+			bestProjectRoot = fsPath(helloWorldFolder);
 			provider.packageMaps = undefined;
-			provider.packageMapDiscovery = Promise.resolve();
+			provider.packageMapDiscovery = undefined;
+			sb.stub(PackageMap, "loadForProject").callsFake((_logger, projectFolder) => {
+				if (projectFolder.endsWith("nested_flutter_example"))
+					workspaceContext.events.onPackageMapChange.fire();
+				return fakePackageMap({ foo: "/foo" }, () => file1);
+			});
 			assert.deepStrictEqual(await provider.provideDocumentLinks(dartDoc, fakeCancellationToken), []);
 		});
 
