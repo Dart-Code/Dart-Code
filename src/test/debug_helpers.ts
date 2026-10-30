@@ -1,5 +1,6 @@
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
+import * as fs from "fs";
 import * as path from "path";
 import { CancellationToken, commands, debug, DebugAdapterExecutable, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, TestItem, TestRunRequest, Uri } from "vscode";
 import { vmServiceListeningBannerPattern } from "../debug/constants";
@@ -8,11 +9,11 @@ import { DartVsCodeLaunchArgs } from "../shared/debugging/interfaces";
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
-import { withTimeout } from "../shared/utils";
+import { escapeRegExp, withTimeout } from "../shared/utils";
 import { fsPath } from "../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../shared/utils/outline";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getExpectedOutline, getLaunchConfiguration, logger, openFile, privateApi, sb, watchPromise } from "./helpers";
+import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, getExpectedOutline, getLaunchConfiguration, logger, openFile, privateApi, sb, testProjectsFolder, watchPromise } from "./helpers";
 
 // Use || so an empty FLUTTER_TEST_DEVICE_ID environment variable still falls back to "flutter-tester".
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
@@ -390,7 +391,7 @@ export async function killFlutterTester(): Promise<void> {
 	await new Promise<void>((resolve) => {
 		const proc = isWin
 			? privateApi.safeToolSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
-			: privateApi.safeToolSpawn(undefined, "pkill", ["flutter_tester"]);
+			: privateApi.safeToolSpawn(undefined, "pkill", ["-f", `[f]lutter_tester.*${escapeRegExp(fs.realpathSync(testProjectsFolder))}`]);
 		proc.on("exit", (code: number) => {
 			if (isWin ? code !== 128 : code === 0) {
 				logger.warn(`flutter_tester process(s) remained after test (${currentTestName}). These have been terminated to avoid affecting future tests, ` +
