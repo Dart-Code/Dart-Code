@@ -81,12 +81,13 @@ describe(`flutter run debugger (only test device)`, () => {
 		});
 	});
 
-	it("can override platform/brightness and re-sends theme on hot restart only if set by us", async () => {
+	it("can override platform/brightness, re-sends theme on hot restart only if set by us, and can launch DevTools externally", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
+			watchPromise("assertOutputContains", dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`)),
+			watchPromise("configurationSequence", dc.configurationSequence()),
+			watchPromise("launch", dc.launch(config)),
 		);
 
 		// Can override platform
@@ -139,6 +140,23 @@ describe(`flutter run debugger (only test device)`, () => {
 			// Ensure the current value has reverted (since it was the other tools job to re-send it, but in
 			// this case that other tool is fake and did not).
 			await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+		}
+
+		// Can launch DevTools externally.
+		{
+			await setConfigForTest("dart", "devToolsLocation", "external");
+			const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").resolves();
+
+			const devTools: { url: string, dispose: () => void } = await watchPromise("executeCommand", await vs.commands.executeCommand("dart.openDevTools"));
+			assert.ok(openBrowserCommand.calledOnce);
+			assert.ok(devTools);
+			// Clean up DevTools if it wasn't being eagerly spawned.
+			if (!privateApi.workspaceContext.config.startDevToolsServerEagerly)
+				defer("Dispose DevTools", devTools.dispose);
+			assert.ok(devTools.url);
+
+			const serverResponse = await watchPromise("fetch", privateApi.webClient.fetch(devTools.url));
+			assert.notEqual(serverResponse.indexOf("flutter_bootstrap.js"), -1, `Expected response to contain "flutter_bootstrap.js" but was ${serverResponse}`);
 		}
 
 		await waitAllThrowIfTerminates(dc,
@@ -233,35 +251,6 @@ describe(`flutter run debugger (only test device)`, () => {
 	it("automatically spawns DevTools at startup", async () => {
 		assert.ok(privateApi.devTools.devtoolsUrl);
 		assert.ok((await privateApi.devTools.devtoolsUrl).startsWith("http://"));
-	});
-
-	it("can launch DevTools externally", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			watchPromise("assertOutputContains", dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`)),
-			watchPromise("configurationSequence", dc.configurationSequence()),
-			watchPromise("launch", dc.launch(config)),
-		);
-
-		await setConfigForTest("dart", "devToolsLocation", "external");
-		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").resolves();
-
-		const devTools: { url: string, dispose: () => void } = await watchPromise("executeCommand", await vs.commands.executeCommand("dart.openDevTools"));
-		assert.ok(openBrowserCommand.calledOnce);
-		assert.ok(devTools);
-		// Clean up DevTools if it wasn't being eagerly spawned.
-		if (!privateApi.workspaceContext.config.startDevToolsServerEagerly)
-			defer("Dispose DevTools", devTools.dispose);
-		assert.ok(devTools.url);
-
-		const serverResponse = await watchPromise("fetch", privateApi.webClient.fetch(devTools.url));
-		assert.notEqual(serverResponse.indexOf("flutter_bootstrap.js"), -1, `Expected response to contain "flutter_bootstrap.js" but was ${serverResponse}`);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
 	});
 
 	it("passes custom tool in the launch config", async () => {
