@@ -46,28 +46,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	/// If we restart too fast, things fail :-/
 	const delayBeforeRestart = () => delay(500);
 
-	it("runs, collects expected output, and remains active until told to quit", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
-			dc.assertOutputContains("stdout", "Hello, world!"),
-			dc.assertOutputContains("console", "Logging from dart:developer!"),
-			dc.assertOutputContains("console", "<<end_of_long_line>>"),
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
-		// Ensure we're still responsive after 1 second.
-		await delay(1000);
-		await dc.threadsRequest();
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
 	it("does not stop at breakpoints and exposes only expected services in noDebug mode", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
@@ -105,9 +83,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
 
-	it("expected debugger services/extensions are available in debug mode and after a hot restart", async () => {
+	it("runs, collects expected output, and exposes expected debugger services/extensions in debug mode and after a hot restart", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.assertOutputContains("stdout", "Hello, world!"),
+			dc.assertOutputContains("console", "Logging from dart:developer!"),
+			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.flutterAppStarted(),
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -126,6 +108,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered 2");
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded 2");
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded 2");
+
+		// Ensure we're still responsive after 1 second.
+		await delay(1000);
+		await dc.threadsRequest();
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
