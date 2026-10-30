@@ -48,6 +48,7 @@ export class DevToolsManager implements IAmDisposable {
 	private readonly statusBarItem = getLanguageStatusItem("dart.devTools", ANALYSIS_FILTERS);
 	private service?: DevToolsService;
 	public debugCommands: DebugCommands | undefined;
+	public readonly devToolsEmbeddedViews = devToolsEmbeddedViews;
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
@@ -70,29 +71,7 @@ export class DevToolsManager implements IAmDisposable {
 
 		void this.handleEagerActivationAndStartup(context.workspaceContext);
 
-		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => {
-			for (const pageId of Object.keys(devToolsEmbeddedViews)) {
-				const panels = devToolsEmbeddedViews[pageId];
-				if (!panels)
-					continue;
-
-				// If there are disconnected panels for this page, trigger a launch
-				// of the page to reuse it.
-				const sessionPanels = panels
-					.filter((p) => p.session?.session.id === session.id);
-
-				for (const panel of sessionPanels) {
-					if (panel instanceof SidebarDevTools) {
-						panel.unload();
-					} else {
-						const shouldClose = (config.closeDevTools !== "never" && panel.openedAutomatically) || config.closeDevTools === "always";
-						if (shouldClose)
-							panel.dispose();
-					}
-
-				}
-			}
-		}));
+		this.disposables.push(vs.debug.onDidTerminateDebugSession(this.handleDebugSessionEnd.bind(this)));
 
 		// Pre-populate pages for the sidebar pages so they don't show up as infinite spinners.
 		for (const page of devToolsPages) {
@@ -102,6 +81,30 @@ export class DevToolsManager implements IAmDisposable {
 				if (!views.length) {
 					views.push(new SidebarDevTools(page, this, this.dartCapabilities, logger));
 				}
+			}
+		}
+	}
+
+	public handleDebugSessionEnd(session: vs.DebugSession): void {
+		for (const pageId of Object.keys(devToolsEmbeddedViews)) {
+			const panels = devToolsEmbeddedViews[pageId];
+			if (!panels)
+				continue;
+
+			// If there are disconnected panels for this page, trigger a launch
+			// of the page to reuse it.
+			const sessionPanels = panels
+				.filter((p) => p.session?.session.id === session.id);
+
+			for (const panel of sessionPanels) {
+				if (panel instanceof SidebarDevTools) {
+					panel.unload();
+				} else {
+					const shouldClose = (config.closeDevTools !== "never" && panel.openedAutomatically) || config.closeDevTools === "always";
+					if (shouldClose)
+						panel.dispose();
+				}
+
 			}
 		}
 	}
@@ -128,7 +131,7 @@ export class DevToolsManager implements IAmDisposable {
 		};
 	}
 
-	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
+	public async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
 				await this.start(true);
@@ -151,7 +154,7 @@ export class DevToolsManager implements IAmDisposable {
 		return true;
 	}
 
-	private routeIdForPage(page: DevToolsPage | undefined | null): string | undefined {
+	public routeIdForPage(page: DevToolsPage | undefined | null): string | undefined {
 		if (!page)
 			return undefined;
 

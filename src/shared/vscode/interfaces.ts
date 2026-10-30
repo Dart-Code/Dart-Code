@@ -7,7 +7,7 @@ import { DartVsCodeLaunchArgs } from "../debugging/interfaces";
 import { DebuggerType, DebugOption, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { SdkTypeString } from "../constants";
-import { CustomScript, DartWorkspaceContext, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, SdkSearchResults, SpawnedProcess } from "../interfaces";
+import { CustomScript, DartWorkspaceContext, DevToolsPage, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, SdkSearchResults, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { RunProcessResult } from "../processes";
 import { PubDeps } from "../pub/deps";
@@ -130,10 +130,25 @@ export interface InternalExtensionApi {
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;
 	devTools: {
-		start(): Promise<string | undefined>;
+		start(silent?: boolean): Promise<string | undefined>;
 		devtoolsUrl: Thenable<string> | undefined;
+		devToolsEmbeddedViews: Record<string, Array<{
+			session: DartDebugSessionInformation | undefined;
+			openedAutomatically: boolean;
+			reload(): void;
+			unload?(): void;
+			dispose(): void;
+		}> | undefined>;
+		getDevToolsLocation(pageId: string | undefined | null): "beside" | "active" | "external" | "sidebar";
+		handleDebugSessionEnd(session: DebugSession): void;
+		handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext): Promise<void>;
+		isPageAvailable(hasSession: boolean, page: DevToolsPage): boolean;
 		promptForExtensionRecommendations(): Promise<void>;
+		reconnectDisconnectedEmbeddedViews(session: DartDebugSessionInformation & { vmServiceUri: string }): Promise<void>;
+		reloadEmbeddedViews(): void;
+		routeIdForPage(page: DevToolsPage | undefined | null): string | undefined;
 		spawn(session: (DartDebugSessionInformation & { vmServiceUri: string }) | undefined, options: Record<string, unknown>, forceShow: boolean): Promise<{ url: string; dispose: () => void } | undefined>;
+		urlFor(page: string): Promise<string | undefined>;
 	};
 	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
