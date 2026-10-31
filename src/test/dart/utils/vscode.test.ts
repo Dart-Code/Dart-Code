@@ -159,13 +159,6 @@ describe("isInHiddenFolder", () => {
 	// checked out below ".gemini" (https://github.com/Dart-Code/Dart-Code/issues/6299).
 	const workspaceFolder = fixPath("/projects/.hidden/workspace");
 
-	function stubWorkspaceFolders(folders: string[]) {
-		sb.stub(vs.workspace, "getWorkspaceFolder").callsFake((uri: vs.Uri) => {
-			const folder = folders.find((f) => isWithinPathOrEqual(fsPath(uri), f));
-			return folder ? { index: 0, name: path.basename(folder), uri: vs.Uri.file(folder) } : undefined;
-		});
-	}
-
 	it("returns false for undefined", () => {
 		assert.equal(isInHiddenFolder(undefined), false);
 	});
@@ -233,12 +226,7 @@ describe("isInsideFolderNamed", () => {
 	const workspaceFolder = fixPath("/projects/.hidden/workspace");
 
 	beforeEach(() => {
-		sb.stub(vs.workspace, "getWorkspaceFolder").callsFake((uri: vs.Uri) => {
-			const folderPath = fsPath(uri);
-			return isWithinPathOrEqual(folderPath, workspaceFolder)
-				? { index: 0, name: path.basename(workspaceFolder), uri: vs.Uri.file(workspaceFolder) }
-				: undefined;
-		});
+		stubWorkspaceFolders([workspaceFolder]);
 	});
 
 	it("returns false for undefined", () => {
@@ -258,3 +246,10 @@ describe("isInsideFolderNamed", () => {
 		assert.equal(isInsideFolderNamed(path.join(fixPath("/projects/other"), "build", "pubspec.yaml"), "build"), false);
 	});
 });
+
+function stubWorkspaceFolders(folders: string[]) {
+	sb.stub(vs.workspace, "getWorkspaceFolder").callsFake((uri: vs.Uri) => {
+		const folder = folders.find((f) => isWithinPathOrEqual(fsPath(uri), f));
+		return folder ? { index: 0, name: path.basename(folder), uri: vs.Uri.file(folder) } : undefined;
+	});
+}

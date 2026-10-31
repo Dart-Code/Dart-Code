@@ -1,7 +1,6 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as os from "os";
-import { tmpdir } from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
@@ -1152,7 +1151,7 @@ export function delay(milliseconds: number): Promise<void> {
 
 export function getRandomTempFolder(): string {
 	const r = Math.floor(Math.random() * 100000);
-	const base = path.join(tmpdir(), "dart-code-tests");
+	const base = path.join(os.tmpdir(), "dart-code-tests");
 	if (!fs.existsSync(base))
 		fs.mkdirSync(base);
 	const tmpPath = path.join(base, r.toString());
