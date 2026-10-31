@@ -10,7 +10,7 @@ import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
 import { existsAndIsDirectorySync, existsAndIsFileSync, fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
 import { isWithinWorkspace, locateBestProjectRoot } from "../shared/vscode/project";
-import { isDartWorkspaceFolder } from "../shared/vscode/utils";
+import { isDartWorkspaceFolder, isInsideFolderNamed } from "../shared/vscode/utils";
 import { config } from "./config";
 import { ringLog } from "./extension";
 
@@ -134,40 +134,6 @@ export function projectCanUsePackageTest(folder: string, config: WorkspaceConfig
 
 export function isDartFile(file: string): boolean {
 	return !!file && path.extname(file).toLowerCase() === ".dart" && existsAndIsFileSync(file);
-}
-
-export function isInsideFolderNamed(file: string | undefined, folderName: string): boolean {
-	if (!file)
-		return false;
-
-	const ws = workspace.getWorkspaceFolder(Uri.file(file));
-
-	if (!ws)
-		return false;
-
-	const relPath = path.relative(fsPath(ws.uri).toLowerCase(), file.toLowerCase());
-	const segments = relPath.split(path.sep);
-
-	return segments.includes(folderName.toLowerCase());
-}
-
-/// Returns whether [file] is inside a hidden folder (a folder whose name
-/// starts with `.`), relative to its containing workspace folder.
-export function isInHiddenFolder(file: string | undefined): boolean {
-	if (!file)
-		return false;
-
-	const ws = workspace.getWorkspaceFolder(Uri.file(file));
-
-	// If no workspace folder was found, just check the filename itself.
-	const relPath = ws
-		? path.relative(fsPath(ws.uri).toLowerCase(), file.toLowerCase())
-		: path.basename(file);
-	const segments = relPath.split(path.sep);
-
-	// `..` segments (eg. for files outside the workspace folder) are not
-	// hidden folders.
-	return segments.some((segment) => segment !== ".." && segment.startsWith("."));
 }
 
 export function hasTestFilter(args: string[]) {

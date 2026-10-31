@@ -1,8 +1,10 @@
 import { strict as assert } from "assert";
+import * as path from "path";
 import * as vs from "vscode";
 import { nullLogger } from "../../../shared/logging";
-import { buildHostKind, envUtils } from "../../../shared/vscode/utils";
-import { sb } from "../../helpers";
+import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
+import { buildHostKind, envUtils, isInHiddenFolder, isInsideFolderNamed } from "../../../shared/vscode/utils";
+import { fixPath, sb } from "../../helpers";
 
 describe("buildHostKind", () => {
 	function verify(appName: string | undefined, appHost: string | undefined, remoteName: string | undefined, expected: string | undefined) {
@@ -151,3 +153,108 @@ async function testMap(url: string, expected: string): Promise<void> {
 	const mappedUri = await envUtils.exposeUrl(url, nullLogger);
 	assert.equal(mappedUri, expected);
 }
+
+describe("isInHiddenFolder", () => {
+	// A workspace folder below a hidden ancestor directory, like a worktree
+	// checked out below ".gemini" (https://github.com/Dart-Code/Dart-Code/issues/6299).
+	const workspaceFolder = fixPath("/projects/.hidden/workspace");
+
+	function stubWorkspaceFolders(folders: string[]) {
+		sb.stub(vs.workspace, "getWorkspaceFolder").callsFake((uri: vs.Uri) => {
+			const folder = folders.find((f) => isWithinPathOrEqual(fsPath(uri), f));
+			return folder ? { index: 0, name: path.basename(folder), uri: vs.Uri.file(folder) } : undefined;
+		});
+	}
+
+	it("returns false for undefined", () => {
+		assert.equal(isInHiddenFolder(undefined), false);
+	});
+
+	it("does not treat hidden ancestors of the workspace folder as hidden", () => {
+		stubWorkspaceFolders([workspaceFolder]);
+
+		assert.equal(isInHiddenFolder(path.join(workspaceFolder, "pubspec.yaml")), false);
+		assert.equal(isInHiddenFolder(vs.Uri.file(path.join(workspaceFolder, "pubspec.yaml"))), false);
+	});
+
+	it("ignores files inside hidden folders in the workspace", () => {
+		stubWorkspaceFolders([workspaceFolder]);
+
+		assert.equal(isInHiddenFolder(path.join(workspaceFolder, ".dart_tool", "pubspec.yaml")), true);
+		assert.equal(isInHiddenFolder(vs.Uri.file(path.join(workspaceFolder, ".dart_tool", "pubspec.yaml"))), true);
+		assert.equal(isInHiddenFolder(path.join(workspaceFolder, "nested", ".config", "pubspec.yaml")), true);
+	});
+
+	it("ignores files whose own names start with a dot", () => {
+		stubWorkspaceFolders([workspaceFolder]);
+
+		assert.equal(isInHiddenFolder(path.join(workspaceFolder, ".pubspec.yaml")), true);
+	});
+
+	it("does not treat .. segments as hidden folders", () => {
+		// Simulate getWorkspaceFolder returning a folder the file is not actually
+		// inside (eg. due to casing differences), producing `..` segments.
+		sb.stub(vs.workspace, "getWorkspaceFolder").returns({ index: 0, name: "workspace", uri: vs.Uri.file(workspaceFolder) });
+
+		assert.equal(isInHiddenFolder(path.join(fixPath("/projects/.hidden/other"), "sub", "pubspec.yaml")), false);
+	});
+
+	it("still finds hidden folders below .. segments", () => {
+		sb.stub(vs.workspace, "getWorkspaceFolder").returns({ index: 0, name: "workspace", uri: vs.Uri.file(workspaceFolder) });
+
+		assert.equal(isInHiddenFolder(path.join(fixPath("/projects/.hidden/other"), ".config", "pubspec.yaml")), true);
+	});
+
+	it("handles multiple workspace folders", () => {
+		const otherWorkspaceFolder = fixPath("/projects/other_workspace");
+		stubWorkspaceFolders([workspaceFolder, otherWorkspaceFolder]);
+
+		assert.equal(isInHiddenFolder(path.join(otherWorkspaceFolder, "pubspec.yaml")), false);
+		assert.equal(isInHiddenFolder(path.join(otherWorkspaceFolder, ".dart_tool", "pubspec.yaml")), true);
+	});
+
+	it("is not confused by path case differences", () => {
+		stubWorkspaceFolders([workspaceFolder]);
+
+		// Without case normalization, path.relative() can produce `..` segments
+		// for what is actually the same folder.
+		assert.equal(isInHiddenFolder(path.join(workspaceFolder.replace("projects", "PROJECTS").replace("hidden", "HIDDEN"), "pubspec.yaml")), false);
+	});
+
+	it("checks only the basename when there is no workspace folder", () => {
+		stubWorkspaceFolders([]);
+
+		assert.equal(isInHiddenFolder(path.join(fixPath("/anything"), ".hidden", "pubspec.yaml")), false);
+		assert.equal(isInHiddenFolder(path.join(fixPath("/anything"), ".pubspec.yaml")), true);
+	});
+});
+
+describe("isInsideFolderNamed", () => {
+	const workspaceFolder = fixPath("/projects/.hidden/workspace");
+
+	beforeEach(() => {
+		sb.stub(vs.workspace, "getWorkspaceFolder").callsFake((uri: vs.Uri) => {
+			const folderPath = fsPath(uri);
+			return isWithinPathOrEqual(folderPath, workspaceFolder)
+				? { index: 0, name: path.basename(workspaceFolder), uri: vs.Uri.file(workspaceFolder) }
+				: undefined;
+		});
+	});
+
+	it("returns false for undefined", () => {
+		assert.equal(isInsideFolderNamed(undefined, "build"), false);
+	});
+
+	it("matches a build folder inside the workspace", () => {
+		assert.equal(isInsideFolderNamed(path.join(workspaceFolder, "build", "pubspec.yaml"), "build"), true);
+		assert.equal(isInsideFolderNamed(vs.Uri.file(path.join(workspaceFolder, "build", "pubspec.yaml")), "build"), true);
+	});
+
+	it("does not match folders whose names merely contain the name", () => {
+		assert.equal(isInsideFolderNamed(path.join(workspaceFolder, "build_tools", "pubspec.yaml"), "build"), false);
+	});
+
+	it("does not match folders outside the workspace folder", () => {
+		assert.equal(isInsideFolderNamed(path.join(fixPath("/projects/other"), "build", "pubspec.yaml"), "build"), false);
+	});
+});

@@ -1604,3 +1604,10 @@ export function validateExpectedEnv(e: Record<string, string | number | null>) {
 	assert.match(String(e.DASH__IDE_VERSION), /^\d+\.\d+\.\d/);
 	assert.match(String(e.DASH__PLUGIN_VERSION), /^3\.\d+\.\d/);
 }
+
+/**
+ * Rewrite paths for Windows because we convert to/from URIs and VS Code's URI class always assumes the current platform.
+ */
+export function fixPath(p: string) {
+	return isWin ? `Z:${p.replaceAll("/", "\\")}` : p;
+}
