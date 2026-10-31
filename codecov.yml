@@ -2,12 +2,23 @@ coverage:
   status:
     project:
       default:
+        # Allow up to a 2% drop from current overall coverage.
         target: auto
         threshold: 2
         paths:
           - "src/extension"
           - "src/shared"
-        branches:
-          - master
+        # Only report on PRs, as master commits are merge queue groups.
+        only_pulls: true
+        if_ci_failed: success
+    patch:
+      default:
+        # Allow up to 10% below current coverage for this patch.
+        target: auto
+        threshold: 10
+        paths:
+          - "src/extension"
+          - "src/shared"
+        # Only report on PRs, as master commits are merge queue groups.
         only_pulls: true
         if_ci_failed: success
