@@ -61,6 +61,11 @@ jobs:
         bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, flutter_snap, misc, dart-antigravity, dart_debug-antigravity]
         exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
 
+    env:
+      RUN_TESTS: ${{ github.event_name != 'merge_group' }}
+      NEEDS_DART: ${{ github.event_name != 'merge_group' && (startsWith(matrix.bot, 'dart') || matrix.bot == 'misc') }}
+      NEEDS_FLUTTER: ${{ github.event_name != 'merge_group' && matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart') }}
+
     steps:
 
       - uses: actions/checkout@v7
@@ -70,8 +75,7 @@ jobs:
       # ensure these folders exist so that if the build/lint fails we don't
       # get additional failures reported on the artifact uploads that make
       # it less clear what the failure is.
-      - if: github.event_name != 'merge_group'
-        run: |
+      - run: |
           mkdir -p .crash_dumps
           mkdir -p .dart_code_test_logs
           mkdir -p .test_results
@@ -79,7 +83,7 @@ jobs:
         shell: pwsh
 
       - name: Set up XVFB
-        if: github.event_name != 'merge_group' && matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Set up Node v${{ matrix.node-version }}
@@ -118,13 +122,13 @@ jobs:
 
       - name: Set up Flutter ${{ matrix.build-version }}
         id: flutter
-        if: github.event_name != 'merge_group' && matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
+        if: env.NEEDS_FLUTTER == 'true'
         uses: DanTup/gh-actions/setup-flutter@27c44eb7d43bced080fc5c9b6c3e4cfdd4cdcc41
         with:
           channel: ${{ matrix.build-version }}
 
       - name: Set up Dart ${{ matrix.build-version }}
-        if: github.event_name != 'merge_group' && (startsWith(matrix.bot, 'dart') || matrix.bot == 'misc')
+        if: env.NEEDS_DART == 'true'
         uses: dart-lang/setup-dart@6e0ff0bc3a029a9532ae6a86b1ea4906038921bc
         with:
           sdk: ${{ matrix.build-version }}
@@ -136,24 +140,24 @@ jobs:
         if: matrix.bot == 'flutter_snap'
 
       - run: dart --disable-analytics
-        if: github.event_name != 'merge_group' && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_DART == 'true' || env.NEEDS_FLUTTER == 'true'
 
       - run: flutter config --no-analytics
-        if: github.event_name != 'merge_group' && matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
+        if: env.NEEDS_FLUTTER == 'true'
 
       - run: flutter update-packages
         if: matrix.bot == 'flutter_repo'
 
       - name: Print Dart version
-        if: github.event_name != 'merge_group' && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_DART == 'true' || env.NEEDS_FLUTTER == 'true'
         run: dart --version
 
       - name: Print Flutter version
-        if: github.event_name != 'merge_group' && matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
+        if: env.NEEDS_FLUTTER == 'true'
         run: flutter --version
 
       - name: Enable Flutter web support
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
         run: flutter config --enable-web
 
       - name: Flutter precache
@@ -167,7 +171,7 @@ jobs:
           dart pub global activate --no-executables meta 1.7.0
           dart pub global activate --no-executables lints 1.0.0
           dart pub global activate --no-executables json_annotation 4.0.1
-        if: github.event_name != 'merge_group' && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_DART == 'true' || env.NEEDS_FLUTTER == 'true'
         shell: pwsh
 
       - name: npm install
@@ -180,7 +184,7 @@ jobs:
         run: npm run build
 
       - name: npm build-tests
-        if: github.event_name == 'merge_group'
+        if: env.RUN_TESTS != 'true'
         run: npm run build-tests
 
       - name: dart pub get (hello_world)
@@ -194,12 +198,12 @@ jobs:
         working-directory: src/test/test_projects/hello_world/example
 
       - name: dart pub get (dart_nested)
-        if: github.event_name != 'merge_group' && matrix.bot == 'misc'
+        if: env.NEEDS_DART == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested
 
       - name: dart pub get (dart_nested/nested1)
-        if: github.event_name != 'merge_group' && matrix.bot == 'misc'
+        if: env.NEEDS_DART == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested/nested1
 
@@ -214,46 +218,46 @@ jobs:
         working-directory: src/test/test_projects/web/broken
 
       - name: dart pub get (dart_nested/nested1/nested2)
-        if: github.event_name != 'merge_group' && matrix.bot == 'misc'
+        if: env.NEEDS_DART == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested/nested1/nested2
 
       - name: flutter pub get (dart_nested_flutter/nested_flutter_example)
-        if: github.event_name != 'merge_group' && matrix.bot == 'misc'
+        if: env.NEEDS_FLUTTER == 'true' && matrix.bot == 'misc'
         run: flutter pub get
         working-directory: src/test/test_projects/dart_nested_flutter/nested_flutter_example
 
       - name: flutter pub get (dart_nested_flutter2/nested_flutter_example)
-        if: github.event_name != 'merge_group' && matrix.bot == 'misc'
+        if: env.NEEDS_FLUTTER == 'true' && matrix.bot == 'misc'
         run: flutter pub get
         working-directory: src/test/test_projects/dart_nested_flutter2/nested_flutter_example
 
       - name: flutter create (flutter_hello_world)
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
         run: flutter create .
         working-directory: src/test/test_projects/flutter_hello_world
 
       - name: flutter create (flutter_hello_world_bazel)
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
         run: flutter create .
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
 
       - name: flutter pub get (flutter_hello_world)
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
         run: flutter packages get
         working-directory: src/test/test_projects/flutter_hello_world
 
       - name: flutter pub get (flutter_hello_world_bazel)
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
+        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
         run: flutter packages get
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
 
       - name: ps -x (before)
-        if: github.event_name != 'merge_group' && matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest'
         run: ps -x
 
       - name: npm test
-        if: github.event_name != 'merge_group'
+        if: env.RUN_TESTS == 'true'
         run: npm test
         env:
           CI: true
@@ -269,12 +273,12 @@ jobs:
         run: npm run test-grammar
 
       - name: ps -x (after)
-        if: github.event_name != 'merge_group' && matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest'
         run: ps -x
 
       - name: Store logs
         uses: actions/upload-artifact@v7
-        if: always() && github.event_name != 'merge_group'
+        if: always()
         with:
           name: test-logs-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .dart_code_test_logs
@@ -283,7 +287,7 @@ jobs:
 
       - name: Store test results
         uses: actions/upload-artifact@v7
-        if: always() && github.event_name != 'merge_group'
+        if: always()
         with:
           name: test-results-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .test_results
@@ -292,7 +296,7 @@ jobs:
 
       - name: Store coverage
         uses: actions/upload-artifact@v7
-        if: success() && github.event_name != 'merge_group' && matrix.build-version == 'stable'
+        if: success() && matrix.build-version == 'stable'
         with:
           name: coverage-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: coverage
@@ -300,7 +304,7 @@ jobs:
 
       - name: Store CPU profiles
         uses: actions/upload-artifact@v7
-        if: always() && github.event_name != 'merge_group'
+        if: always()
         with:
           name: cpu-profiles-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: |
@@ -313,7 +317,7 @@ jobs:
 
       - name: Store crash dumps
         uses: actions/upload-artifact@v7
-        if: always() && github.event_name != 'merge_group'
+        if: always()
         with:
           name: crash-dumps-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .crash_dumps
