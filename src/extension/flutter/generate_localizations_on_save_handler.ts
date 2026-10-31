@@ -4,6 +4,7 @@ import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { isWithinWorkspace } from "../../shared/vscode/project";
+import { isInsideFolderNamed } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { isInsideFlutterProject } from "../utils";
 
@@ -64,7 +65,7 @@ export class GenerateLocalizationsOnSaveHandler implements IAmDisposable {
 
 	private isGeneratableFile(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
 		// Never do anything for files inside .dart_tool folders.
-		if (fsPath(file.uri).includes(`${path.sep}.dart_tool${path.sep}`))
+		if (isInsideFolderNamed(file.uri, ".dart_tool"))
 			return false;
 
 		// Bail out if we're in an external file, or not Dart.
