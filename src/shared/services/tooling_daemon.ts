@@ -42,7 +42,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		workingDirectory: string | undefined,
 		additionalArgs: string[],
 		maxLogLineLength: number | undefined,
-		getToolEnv: () => any,
+		getToolEnv: () => Record<string, string>,
 		private readonly promptToReloadExtension: (logger: Logger, options: { prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; restartReason: ExtensionRestartReason }) => Promise<void>,
 	) {
 		this.logger = new CategoryLogger(logger, LogCategory.DartToolingDaemon);
@@ -242,16 +242,13 @@ export class DartToolingDaemon implements IAmDisposable {
 	}
 
 	private asDtdError(error: unknown): { code: number; message: string } {
-		let code = (error as any)?.code;
-		let message = (error as any)?.message;
+		const code = (error as { code?: unknown } | undefined)?.code;
+		const message = (error as { message?: unknown } | undefined)?.message;
 
-		if (typeof code !== "number")
-			code = -32000;
-
-		if (typeof message !== "string")
-			message = error?.toString() ?? "Unknown error";
-
-		return { code, message };
+		return {
+			code: typeof code === "number" ? code : -32000,
+			message: typeof message === "string" ? message : error?.toString() ?? "Unknown error",
+		};
 	}
 
 	private send(json: DtdMessage): void {
@@ -342,7 +339,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return this.dtdSecretCompleter.promise;
 	}
 
-	constructor(logger: Logger, private readonly sdks: DartSdks, workingDirectory: string | undefined, additionalArgs: string[], maxLogLineLength: number | undefined, getToolEnv: () => any) {
+	constructor(logger: Logger, private readonly sdks: DartSdks, workingDirectory: string | undefined, additionalArgs: string[], maxLogLineLength: number | undefined, getToolEnv: () => Record<string, string>) {
 		super(logger, maxLogLineLength, true, true);
 
 		const executable = path.join(this.sdks.dart, dartVMPath);
@@ -376,10 +373,10 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		message = message.trim();
 		if (!this.hasReceivedConnectionInfo && message.startsWith("{") && message.endsWith("}")) {
 			try {
-				const json = JSON.parse(message);
+				const json = JSON.parse(message) as { tooling_daemon_details?: { uri?: string; trusted_client_secret?: string } } | undefined;
 				if (json?.tooling_daemon_details?.uri && json?.tooling_daemon_details?.trusted_client_secret) {
-					this.dtdUriCompleter.resolve(json?.tooling_daemon_details?.uri as string);
-					this.dtdSecretCompleter.resolve(json?.tooling_daemon_details?.trusted_client_secret as string);
+					this.dtdUriCompleter.resolve(json.tooling_daemon_details.uri);
+					this.dtdSecretCompleter.resolve(json.tooling_daemon_details.trusted_client_secret);
 					this.hasReceivedConnectionInfo = true;
 				}
 			} catch { }

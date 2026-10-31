@@ -1,7 +1,7 @@
 import * as ls from "vscode-languageclient";
-import { LanguageClient } from "vscode-languageclient/node";
+import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { EventEmitter } from "./events";
-import { IAmDisposableAsync, Logger } from "./interfaces";
+import { DartSdks, IAmDisposableAsync, Logger, SpawnedProcess } from "./interfaces";
 import { DartToolingDaemon } from "./services/tooling_daemon";
 import { PromiseCompleter, disposeAllAsync } from "./utils";
 import { resolvedPromise } from "./utils/promises";
@@ -33,6 +33,8 @@ export abstract class Analyzer implements IAmDisposableAsync {
 	public abstract getImports(params: ls.TextDocumentPositionParams): Promise<ls.Location[] | null>;
 	public abstract getAugmented(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
 	public abstract getAugmentation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
+	public abstract spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo>;
+	public abstract handleDisposeCleanup(process: SpawnedProcess): Promise<void>;
 
 	constructor(protected readonly logger: Logger) {
 		this.disposables.push(this.onAnalysisStatusChangeEmitter);

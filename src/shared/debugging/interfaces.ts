@@ -50,6 +50,7 @@ export interface DartVsCodeLaunchArgs extends DartLaunchArgs {
 	projectRootPath?: string;
 	deviceId?: string;
 	deviceName?: string;
+	emulatorId?: string;
 	enableAsserts?: boolean;
 	flutterMode?: "debug" | "profile" | "release";
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";

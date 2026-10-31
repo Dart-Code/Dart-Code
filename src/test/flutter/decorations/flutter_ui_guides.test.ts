@@ -15,19 +15,8 @@ describe("flutter_ui_guides_decorations", () => {
 		await activate();
 	}
 
-	function getUiGuides() {
-		return privateApi.flutterUiGuideDecorations as {
-			buildDecorations(): vs.DecorationOptions[];
-			buildFromOutline(editor: vs.TextEditor, outline: FlutterOutline): void;
-			buildFromUpdatedGuides(): void;
-			dispose(): void;
-			renderGuides(): void;
-			tracker: { dispose(): void };
-		} | undefined;
-	}
-
 	function spyBuildDecorations() {
-		const uiGuides = getUiGuides();
+		const uiGuides = privateApi.flutterUiGuideDecorations;
 		assert.ok(uiGuides);
 		const spy = sb.spy(uiGuides, "buildDecorations");
 		return () => spy.lastCall?.returnValue as vs.DecorationOptions[] | undefined;
@@ -172,7 +161,7 @@ Widget build() {
 		const editor = currentEditor();
 		const outline = JSON.parse(JSON.stringify(await getExpectedFlutterOutline(editor.document))) as FlutterOutline;
 
-		const uiGuides = getUiGuides()!;
+		const uiGuides = privateApi.flutterUiGuideDecorations!;
 		const spy = sb.spy(uiGuides, "renderGuides");
 
 		// Call buildFromOutline with an outline whose end offset does not match document length (smaller than document length).
@@ -230,7 +219,7 @@ Widget build() {
 		`.trim());
 
 		// Insert a newline at the top of the document and verify WidgetGuideTracker immediately shifts guides down by 1 line.
-		const uiGuides = getUiGuides()!;
+		const uiGuides = privateApi.flutterUiGuideDecorations!;
 		const updatedGuidesSpy = sb.spy(uiGuides, "buildFromUpdatedGuides");
 
 		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// comment\n"));
@@ -275,7 +264,7 @@ Widget build() {
 
 		// Clean up by disabling UI guides and reloading so dispose() is called on FlutterUiGuideDecorations and WidgetGuideTracker.
 		const uiGuidesDisposeSpy = sb.spy(uiGuides, "dispose");
-		const trackerDisposeSpy = sb.spy(uiGuides.tracker, "dispose");
+		const trackerDisposeSpy = sb.spy(uiGuides.tracker!, "dispose");
 		updatedGuidesSpy.resetHistory();
 
 		await setConfigForTest("dart", "previewFlutterUiGuides", false);

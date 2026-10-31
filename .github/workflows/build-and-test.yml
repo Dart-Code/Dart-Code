@@ -2,7 +2,12 @@ name: Run Tests
 
 on:
   push:
+    tags:
+      - '**'
   pull_request:
+  # Run on merge queue groups.
+  merge_group:
+    types: [ checks_requested ]
   schedule:
      - cron: '0 6 * * 1' # 6am Monday
   workflow_dispatch:
@@ -11,10 +16,6 @@ jobs:
 
 
   build_exclusions:
-
-    # We want to run on external PRs, but not on our own internal PRs as they'll be run
-    # by the push to the branch.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
 
     permissions:
       contents: none
@@ -310,7 +311,6 @@ jobs:
   link_check:
     name: Check Links (Lychee)
     runs-on: ubuntu-latest
-    needs: build_exclusions
 
     permissions:
       contents: read
@@ -331,6 +331,23 @@ jobs:
             ./*.md
             ./**/*.license
             package.json
+
+  # A single action based on the test outcome that can be used
+  # as a required status check.
+  merge-guard:
+    permissions:
+      contents: none
+    name: Merge Guard
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      # Fail if the build check did not pass.
+      - name: Check results
+        if: needs.build.result != 'success'
+        run: |
+          echo "::error title=Merge Guard::One or more build jobs did not succeed (${{ needs.build.result }})."
+          exit 1
 
   merge_artifacts:
 
@@ -424,7 +441,7 @@ jobs:
       contents: none
     name: Notify Discord of Failure
     needs: build
-    if: failure() && (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/master' && github.repository == 'Dart-Code/Dart-Code'
+    if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.ref == 'refs/heads/master' || github.event.merge_group.base_ref == 'refs/heads/master') && github.repository == 'Dart-Code/Dart-Code'
     runs-on: ubuntu-latest
 
     steps:

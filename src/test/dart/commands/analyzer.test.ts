@@ -5,6 +5,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { AugmentationRequest, AugmentedRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../../shared/analysis/lsp/custom_protocol";
+import { SpawnedProcess } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { fsPath } from "../../../shared/utils/fs";
 import { activate, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest } from "../../helpers";
@@ -610,7 +611,7 @@ describe("analyzer", () => {
 			const expectedMessage = `Could not find a Dart Analysis Server at ${missingPath}`;
 
 			assert.throws(
-				() => (privateApi.analyzer as any).spawnServer(fakeLogger, privateApi.workspaceContext.sdks) as unknown,
+				() => privateApi.analyzer.spawnServer(fakeLogger, privateApi.workspaceContext.sdks),
 				new RegExp(`^Error: Could not find a Dart Analysis Server at ${missingPath.replace(/\\/g, "\\\\")}$`),
 			);
 			assert.ok(showErrorMessage.calledOnceWithExactly(expectedMessage));
@@ -646,7 +647,7 @@ describe("analyzer", () => {
 			};
 
 			assert.throws(
-				() => (privateApi.analyzer as any).spawnServer(fakeLogger, privateApi.workspaceContext.sdks) as unknown,
+				() => privateApi.analyzer.spawnServer(fakeLogger, privateApi.workspaceContext.sdks),
 				/STOP_BEFORE_SPAWN/,
 			);
 
@@ -719,12 +720,10 @@ describe("analyzer", () => {
 		});
 
 		it("handleDisposeCleanup resolves immediately when process has already exited", async () => {
-			const analyzer = privateApi.analyzer as unknown as { handleDisposeCleanup(proc: unknown): Promise<void> };
-			await analyzer.handleDisposeCleanup({ exitCode: 0, signalCode: null });
+			await privateApi.analyzer.handleDisposeCleanup({ exitCode: 0, signalCode: null } as SpawnedProcess);
 		});
 
 		it("handleDisposeCleanup resolves when process exits before timeout", async () => {
-			const analyzer = privateApi.analyzer as unknown as { handleDisposeCleanup(proc: unknown): Promise<void> };
 			let exitCb: (() => void) | undefined;
 			const exitingProc = {
 				exitCode: null,
@@ -733,14 +732,13 @@ describe("analyzer", () => {
 				kill: sb.spy(),
 			};
 
-			const p1 = analyzer.handleDisposeCleanup(exitingProc);
+			const p1 = privateApi.analyzer.handleDisposeCleanup(exitingProc as unknown as SpawnedProcess);
 			exitCb!();
 			await p1;
 			assert.ok(exitingProc.kill.notCalled);
 		});
 
 		it("handleDisposeCleanup kills process if it does not exit within timeout", async () => {
-			const analyzer = privateApi.analyzer as unknown as { handleDisposeCleanup(proc: unknown): Promise<void> };
 			const clock = sb.useFakeTimers();
 			try {
 				const hungProc = {
@@ -749,7 +747,7 @@ describe("analyzer", () => {
 					once: () => undefined,
 					kill: sb.spy(),
 				};
-				const p2 = analyzer.handleDisposeCleanup(hungProc);
+				const p2 = privateApi.analyzer.handleDisposeCleanup(hungProc as unknown as SpawnedProcess);
 				clock.tick(3000);
 				await p2;
 				assert.ok(hungProc.kill.calledOnce);

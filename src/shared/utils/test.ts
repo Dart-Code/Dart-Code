@@ -9,7 +9,7 @@ import { escapeRegExp } from "../utils";
 import { fsPath, getRandomInt } from "./fs";
 import { TestOutlineInfo } from "./outline";
 
-export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFlutter: boolean, programPath: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests: boolean | undefined, template: any | undefined, dartTestCapabilities: DartTestCapabilities | undefined, workspacePackageNames?: string[]): { program: string } & BasicDebugConfiguration {
+export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFlutter: boolean, programPath: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests: boolean | undefined, template: Record<string, unknown> | undefined, dartTestCapabilities: DartTestCapabilities | undefined, workspacePackageNames?: string[]): { program: string } & BasicDebugConfiguration {
 	let programString = programPath;
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
@@ -57,7 +57,7 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 			program: programString,
 			toolArgs,
 		},
-	) as { program: string } & BasicDebugConfiguration;
+	);
 }
 
 export interface TestSelection {

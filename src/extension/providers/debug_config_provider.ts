@@ -5,7 +5,7 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { fiveSecondsInMs, isDartCodeTestRun, runAnywayAction, showErrorsAction } from "../../shared/constants";
 import { HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG } from "../../shared/constants.contexts";
-import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debugging/interfaces";
+import { DartVsCodeLaunchArgs } from "../../shared/debugging/interfaces";
 import { DebuggerType, debuggerTypeFromString, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRenderer } from "../../shared/flutter/utils";
@@ -58,7 +58,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return matches ? matches[0] : undefined;
 	}
 
-	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartLaunchArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartVsCodeLaunchArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
 		ensureDebugLaunchUniqueId(debugConfig);
 		const isAttachRequest = debugConfig.request === "attach";
 		const logger = this.logger;
@@ -275,7 +275,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartLaunchArgs): Promise<Device | undefined | "UNABLE_TO_LAUNCH"> {
+	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartVsCodeLaunchArgs): Promise<Device | undefined | "UNABLE_TO_LAUNCH"> {
 		if (!this.deviceManager)
 			return;
 
@@ -313,7 +313,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return deviceToLaunchOn;
 	}
 
-	private async checkIfProjectHasErrors(debugConfig: vs.DebugConfiguration & DartLaunchArgs) {
+	private async checkIfProjectHasErrors(debugConfig: vs.DebugConfiguration & DartVsCodeLaunchArgs) {
 		const logger = this.logger;
 		logger.info("Checking for errors before launching");
 
@@ -356,7 +356,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return false;
 	}
 
-	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs & { debuggerType?: DebuggerType | string }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): { debuggerType: DebuggerType, projectRoot: string | undefined } {
+	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartVsCodeLaunchArgs & { debuggerType?: DebuggerType | string }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): { debuggerType: DebuggerType, projectRoot: string | undefined } {
 		if (debugConfig.debuggerType !== undefined) {
 			// User can specify the numbers or the names.
 			const specifiedDebuggerType = typeof debugConfig.debuggerType === "string"
@@ -373,7 +373,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		let debuggerType = DebuggerType.Dart;
 		let firstPathSegment: string | undefined;
-		const projectRoot: string | undefined = debugConfig.projectRootPath ?? debugConfig.cwd;
+		const projectRoot = debugConfig.projectRootPath ?? debugConfig.cwd;
 		if (projectRoot && debugConfig.program && isWithinPath(debugConfig.program, projectRoot)) {
 			const relativePath = debugConfig.program ? path.relative(projectRoot, debugConfig.program) : undefined;
 			firstPathSegment = relativePath?.split(path.sep)[0];
@@ -673,7 +673,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	/// All arguments built here should be things that user the recognises based on the app they are trying to launch
 	/// or settings they have configured. It should not include things that are specifically required by the debugger
 	/// (for example, enabling the VM Service or starting paused). Those items should be handled inside the Debug Adapter.
-	protected async buildToolArgs(debuggerType: DebuggerType, debugConfig: DartLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+	protected async buildToolArgs(debuggerType: DebuggerType, debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
 		let args: string[] = [];
 		args = args.concat(debugConfig.toolArgs ?? []);
 
