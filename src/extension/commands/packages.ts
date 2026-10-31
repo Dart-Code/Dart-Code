@@ -5,14 +5,14 @@ import { isDartCodeTestRun, iUnderstandAction, tenSecondsInMs } from "../../shar
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { RunProcessResult } from "../../shared/processes";
 import { uniq } from "../../shared/utils";
-import { fsPath, isInsideHiddenOrBuildFolder, touchFile } from "../../shared/utils/fs";
+import { fsPath, touchFile } from "../../shared/utils/fs";
 import { OperationProgress } from "../../shared/vscode/interfaces";
 import { getPubWorkspaceFolderOrPackageFolderPath, getPubWorkspaceFolderOrPackageFolderUri, getPubWorkspaceOrPackageFolderUris, getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 import * as util from "../utils";
-import { getExcludedFolders } from "../utils";
+import { getExcludedFolders, isInHiddenFolder, isInsideFolderNamed } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
 import { BaseSdkCommands, commandState } from "./sdk";
@@ -250,8 +250,7 @@ export class PackageCommands extends BaseSdkCommands {
 		// Never do anything for files inside hidden or build folders. Check the
 		// path relative to the containing workspace folder so that hidden folders
 		// in ancestors of the workspace folder don't ignore the whole workspace.
-		const workspaceFolder = vs.workspace.getWorkspaceFolder(uri);
-		if (isInsideHiddenOrBuildFolder(filePath, workspaceFolder ? fsPath(workspaceFolder.uri) : undefined, { includeBuild: !isManualSave })) {
+		if (isInHiddenFolder(filePath) || (!isManualSave && isInsideFolderNamed(filePath, "build"))) {
 			this.logger.info(`Skipping pubspec change for ignored folder ${filePath}`);
 			return;
 		}
