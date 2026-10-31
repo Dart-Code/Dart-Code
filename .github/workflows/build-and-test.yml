@@ -2,11 +2,6 @@ name: Run Tests
 
 on:
   push:
-    # Ignore pushes to master and merge queue temporary branches, as they are handled by the merge queue.
-    branches-ignore:
-      - master
-      - 'gh-readonly-queue/**'
-     # Defining branches-ignore excludes tag pushes by default, so add them back so all bots run on a tag.
     tags:
       - '**'
   pull_request:
@@ -21,10 +16,6 @@ jobs:
 
 
   build_exclusions:
-
-    # We want to run on external PRs, but not on our own internal PRs as they'll be run
-    # by the push to the branch.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
 
     permissions:
       contents: none
@@ -320,7 +311,6 @@ jobs:
   link_check:
     name: Check Links (Lychee)
     runs-on: ubuntu-latest
-    needs: build_exclusions
 
     permissions:
       contents: read
@@ -341,6 +331,23 @@ jobs:
             ./*.md
             ./**/*.license
             package.json
+
+  # A single action based on the test outcome that can be used
+  # as a required status check.
+  merge-guard:
+    permissions:
+      contents: none
+    name: Merge Guard
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      # Fail if the build check did not pass.
+      - name: Check results
+        if: needs.build.result != 'success'
+        run: |
+          echo "::error title=Merge Guard::One or more build jobs did not succeed (${{ needs.build.result }})."
+          exit 1
 
   merge_artifacts:
 
