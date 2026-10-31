@@ -968,7 +968,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * Returns `undefined` if an input is cancelled.
 	 * Returns `null` if an answer was skipped/no answer (for example an empty input).
 	 */
-	private async promptForField(field: FormField, prevAnswer: any | undefined): Promise<any | undefined> {
+	private async promptForField(field: FormField, prevAnswer: any): Promise<any> {
 		const fieldType = field.type;
 
 		switch (fieldType.kind) {

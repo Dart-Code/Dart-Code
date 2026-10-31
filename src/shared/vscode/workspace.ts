@@ -55,7 +55,7 @@ export class Context {
 	public update(key: string, value: any): Thenable<void> {
 		return this.context.globalState.update(key, value);
 	}
-	public get(key: string): unknown | undefined {
+	public get(key: string): unknown {
 		return this.context.globalState.get(key);
 	}
 

@@ -1,4 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type PlatformType = "android" | "ios" | "linux" | "macos" | "fuchsia" | "windows" | "web" | string;
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type Category = "mobile" | "web" | "desktop" | string;
 
 export interface Device {

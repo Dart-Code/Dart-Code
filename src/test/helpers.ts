@@ -14,7 +14,7 @@ import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestDoneNotification } from "../shared/test_protocol";
-import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
+import { BufferedLogger, filenameSafe, flatMap, PromiseOr, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
 import { createFolderForFile, fsPath, getRandomInt } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
@@ -607,7 +607,7 @@ afterEach("wait for any debug sessions to end", async () => {
 });
 
 interface DeferredFunction {
-	callback: (result?: "failed" | "passed" | "pending") => Promise<any> | any;
+	callback: (result?: "failed" | "passed" | "pending") => PromiseOr<any>;
 	description: string;
 }
 
@@ -635,10 +635,10 @@ afterEach("run deferred functions", async function () {
 		throw firstError;
 	logger.info(`Done running deferred functions!`);
 });
-export function defer(description: string, callback: (result?: "failed" | "passed" | "pending") => Promise<any> | any): void {
+export function defer(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<any>): void {
 	deferredItems.push({ description: `${description} (${currentTestName})`, callback });
 }
-export function deferUntilLast(description: string, callback: (result?: "failed" | "passed" | "pending") => Promise<any> | any): void {
+export function deferUntilLast(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<any>): void {
 	deferredToLastItems.push({ description: `${description} (${currentTestName})`, callback });
 }
 

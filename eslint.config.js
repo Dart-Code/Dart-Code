@@ -206,7 +206,6 @@ export default defineConfig([
 					"checksVoidReturn": false
 				}
 			],
-			"@typescript-eslint/no-redundant-type-constituents": "off",
 			"@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
 			"@typescript-eslint/prefer-for-of": "error",
 			"@typescript-eslint/prefer-function-type": "error",
