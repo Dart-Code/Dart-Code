@@ -1,5 +1,7 @@
-export type PlatformType = "android" | "ios" | "linux" | "macos" | "fuchsia" | "windows" | "web" | (string & {});
-export type Category = "mobile" | "web" | "desktop" | "custom" | (string & {});
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+export type PlatformType = "android" | "ios" | "linux" | "macos" | "fuchsia" | "windows" | "web" | string;
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+export type Category = "mobile" | "web" | "desktop" | string;
 
 export interface Device {
 	category: Category | undefined | null;
@@ -45,7 +47,7 @@ export interface ShowMessage {
 
 export interface SupportedPlatformsResponse {
 	platforms?: PlatformType[]; // Legacy, removed in https://github.com/flutter/flutter/issues/140473
-	platformTypes: Partial<Record<PlatformType, { isSupported: boolean }>> | undefined; // Supported since 2023
+	platformTypes: Record<PlatformType, { isSupported: boolean }> | undefined; // Supported since 2023
 }
 
 export interface ServeDevToolsResponse {

@@ -176,7 +176,8 @@ export type Emulator = (f.FlutterEmulator & { type: "emulator" }) | CustomEmulat
 export interface CustomEmulator {
 	id: string;
 	type: "custom-emulator";
-	category: f.Category;
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+	category: "custom" | f.Category;
 	platformType?: undefined | f.PlatformType;
 	name: string;
 	executable: string;
