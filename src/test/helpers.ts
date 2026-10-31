@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as os from "os";
+import { tmpdir } from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
@@ -24,7 +25,6 @@ import { Context } from "../shared/vscode/workspace";
 import { PublicDartExtensionApi } from "../extension/api/interfaces";
 import { extensionVersion } from "../shared/vscode/extension_utils";
 import { locateBestProjectRoot } from "../shared/vscode/project";
-import { getRandomTempFolder, tryDelete } from "./temp_utils";
 
 export const ext = vs.extensions.getExtension<PublicDartExtensionApi & { [internalApiSymbol]: InternalExtensionApi }>(dartCodeExtensionIdentifier)!;
 export let privateApi: InternalExtensionApi;
@@ -555,7 +555,26 @@ export async function openFile(file: vs.Uri, column?: vs.ViewColumn): Promise<vs
 	}
 }
 
-export { getRandomTempFolder, tryDelete };
+export function tryDelete(item: string | URI) {
+	if (typeof item !== "string") {
+		if (item.scheme !== "file")
+			return;
+		else
+			item = fsPath(item);
+	}
+	try {
+		fs.rmSync(item,
+			{
+				force: true,
+				recursive: true,
+				// Sometimes Windows can take a while to let us delete.
+				maxRetries: 10,
+				retryDelay: 500
+			});
+	} catch (e) {
+		console.warn(`Failed to clean up folder ${item}: ${String(e)}`);
+	}
+}
 
 export let currentTestName = "unknown";
 export let fileSafeCurrentTestName = "unknown";
@@ -1129,6 +1148,17 @@ export function checkTreeNodeResults(actual: string, expected: string, descripti
 
 export function delay(milliseconds: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+export function getRandomTempFolder(): string {
+	const r = Math.floor(Math.random() * 100000);
+	const base = path.join(tmpdir(), "dart-code-tests");
+	if (!fs.existsSync(base))
+		fs.mkdirSync(base);
+	const tmpPath = path.join(base, r.toString());
+	if (!fs.existsSync(tmpPath))
+		fs.mkdirSync(tmpPath);
+	return tmpPath;
 }
 
 export function createTempPubPackage(packageName: string, folderName = "temp_package"): string {
