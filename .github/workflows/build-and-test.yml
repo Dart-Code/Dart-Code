@@ -2,6 +2,8 @@ name: Run Tests
 
 on:
   push:
+    branches:
+      - master
     tags:
       - '**'
   pull_request:
@@ -22,20 +24,29 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       excludes: ${{ join(steps.*.outputs.excludes) }}
+      run_tests: ${{ github.event_name != 'merge_group' }}
+      check_links: ${{ github.event_name != 'merge_group' }}
     steps:
       - id: no_exclude
         name: Run all builds
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-        # We only exclude beta versions of "other IDEs" that don't have insiders versions.
-        run: echo 'excludes=[{"build-version":"beta","bot":"dart-antigravity"},{"build-version":"beta","bot":"dart_debug-antigravity"}]' >> $GITHUB_OUTPUT
+        # We only exclude:
+        # - beta versions of "other IDEs" that don't have insiders versions
+        # - non-Linux / beta versions of flutter_snap
+        run: echo 'excludes=[{"build-version":"beta","bot":"dart-antigravity"},{"build-version":"beta","bot":"dart_debug-antigravity"},{"build-version":"beta","bot":"flutter_snap"},{"os":"windows-latest","bot":"flutter_snap"},{"os":"macos-latest","bot":"flutter_snap"}]' >> $GITHUB_OUTPUT
       - id: exclude
         name: Exclude some builds if not running on schedule
-        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
+        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/') && github.event_name != 'merge_group'
         # Exclude:
         # - all betas
         # - windows
         # - macOS
         run: echo 'excludes=[{"build-version":"beta"},{"os":"windows-latest"},{"os":"macos-latest"}]' >> $GITHUB_OUTPUT
+      - id: exclude_merge_group
+        name: Exclude all builds except misc if running on merge queue
+        if: github.event_name == 'merge_group'
+        # Exclude everything except misc (stable, ubuntu-latest), which will just run lint/build.
+        run: echo 'excludes=[{"build-version":"beta"},{"os":"windows-latest"},{"os":"macos-latest"},{"bot":"flutter_debug"},{"bot":"flutter_debug_chrome"},{"bot":"flutter_test_debug"},{"bot":"dart_web_debug"},{"bot":"flutter_repo"},{"bot":"dart_debug"},{"bot":"dart"},{"bot":"flutter"},{"bot":"flutter_snap"},{"bot":"dart-antigravity"},{"bot":"dart_debug-antigravity"}]' >> $GITHUB_OUTPUT
 
   build:
 
@@ -46,14 +57,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [22]
         build-version: [stable, beta]
-        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc, dart-antigravity, dart_debug-antigravity]
-        include:
-          - os: ubuntu-latest
-            bot: flutter_snap
+        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, flutter_snap, misc, dart-antigravity, dart_debug-antigravity]
         exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
+
+    env:
+      RUN_TESTS: ${{ needs.build_exclusions.outputs.run_tests }}
+      # Both dart* and misc bots need the standalone Dart SDK.
+      NEEDS_DART: ${{ needs.build_exclusions.outputs.run_tests == 'true' && (startsWith(matrix.bot, 'dart') || matrix.bot == 'misc') }}
+      # Both flutter* (except flutter_snap, which installs via snap) and misc bots need the Flutter SDK.
+      NEEDS_FLUTTER: ${{ needs.build_exclusions.outputs.run_tests == 'true' && ((startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap') || matrix.bot == 'misc') }}
 
     steps:
 
@@ -91,7 +106,7 @@ jobs:
         shell: bash
 
       - name: Install Antigravity (macOS)
-        if: endsWith(matrix.bot, '-antigravity') && matrix.os == 'macOS-latest'
+        if: endsWith(matrix.bot, '-antigravity') && matrix.os == 'macos-latest'
         run: |
           brew install --cask antigravity-ide
           echo "ANTIGRAVITY_EXE=/Applications/Antigravity IDE.app/Contents/MacOS/Electron" >> "$GITHUB_ENV"
@@ -111,13 +126,13 @@ jobs:
 
       - name: Set up Flutter ${{ matrix.build-version }}
         id: flutter
-        if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
+        if: env.NEEDS_FLUTTER == 'true'
         uses: DanTup/gh-actions/setup-flutter@27c44eb7d43bced080fc5c9b6c3e4cfdd4cdcc41
         with:
           channel: ${{ matrix.build-version }}
 
       - name: Set up Dart ${{ matrix.build-version }}
-        if: startsWith(matrix.bot, 'dart') || matrix.bot == 'misc'
+        if: env.NEEDS_DART == 'true'
         uses: dart-lang/setup-dart@6e0ff0bc3a029a9532ae6a86b1ea4906038921bc
         with:
           sdk: ${{ matrix.build-version }}
@@ -129,25 +144,21 @@ jobs:
         if: matrix.bot == 'flutter_snap'
 
       - run: dart --disable-analytics
-        if: matrix.bot != 'flutter_snap'
+        if: env.NEEDS_DART == 'true' || env.NEEDS_FLUTTER == 'true'
 
       - run: flutter config --no-analytics
-        if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
+        if: env.NEEDS_FLUTTER == 'true'
 
       - run: flutter update-packages
         if: matrix.bot == 'flutter_repo'
 
       - name: Print Dart version
-        if: matrix.bot != 'flutter_snap'
+        if: env.NEEDS_DART == 'true' || env.NEEDS_FLUTTER == 'true'
         run: dart --version
 
       - name: Print Flutter version
-        if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
+        if: env.NEEDS_FLUTTER == 'true'
         run: flutter --version
-
-      - name: Enable Flutter web support
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
-        run: flutter config --enable-web
 
       - name: Flutter precache
         if: matrix.bot == 'flutter_debug_chrome'
@@ -160,7 +171,7 @@ jobs:
           dart pub global activate --no-executables meta 1.7.0
           dart pub global activate --no-executables lints 1.0.0
           dart pub global activate --no-executables json_annotation 4.0.1
-        if: matrix.bot != 'flutter_snap'
+        if: env.NEEDS_DART == 'true' || env.NEEDS_FLUTTER == 'true'
         shell: pwsh
 
       - name: npm install
@@ -171,6 +182,10 @@ jobs:
 
       - name: npm build
         run: npm run build
+
+      - name: npm build-tests
+        if: env.RUN_TESTS != 'true'
+        run: npm run build-tests
 
       - name: dart pub get (hello_world)
         if: startsWith(matrix.bot, 'dart')
@@ -183,12 +198,12 @@ jobs:
         working-directory: src/test/test_projects/hello_world/example
 
       - name: dart pub get (dart_nested)
-        if: matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested
 
       - name: dart pub get (dart_nested/nested1)
-        if: matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested/nested1
 
@@ -203,17 +218,17 @@ jobs:
         working-directory: src/test/test_projects/web/broken
 
       - name: dart pub get (dart_nested/nested1/nested2)
-        if: matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested/nested1/nested2
 
       - name: flutter pub get (dart_nested_flutter/nested_flutter_example)
-        if: matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: flutter pub get
         working-directory: src/test/test_projects/dart_nested_flutter/nested_flutter_example
 
       - name: flutter pub get (dart_nested_flutter2/nested_flutter_example)
-        if: matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: flutter pub get
         working-directory: src/test/test_projects/dart_nested_flutter2/nested_flutter_example
 
@@ -242,6 +257,7 @@ jobs:
         run: ps -x
 
       - name: npm test
+        if: env.RUN_TESTS == 'true'
         run: npm test
         env:
           CI: true
@@ -310,6 +326,8 @@ jobs:
 
   link_check:
     name: Check Links (Lychee)
+    needs: build_exclusions
+    if: needs.build_exclusions.outputs.check_links == 'true'
     runs-on: ubuntu-latest
 
     permissions:
@@ -352,10 +370,10 @@ jobs:
   merge_artifacts:
 
     name: Merge Artifacts
-    needs: build
+    needs: [build_exclusions, build]
     # Using always() (to run on failure) will cause us to also run regardless of whether "build" ran, so
     # explicitly check that ran and passed or failed (and was not skipped/cancelled).
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'failure')
+    if: always() && needs.build_exclusions.outputs.run_tests == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure')
     runs-on: ubuntu-latest
     outputs:
       has_coverage: ${{ steps.merge_coverage.outcome == 'success' }}
