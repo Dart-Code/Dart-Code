@@ -5,7 +5,7 @@ import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
 import { nullLogger } from "../../../shared/logging";
 import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
-import { createTempPubPackage, defer, fakeCancellationToken, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, testProjectsFolder, tryDelete } from "../../helpers";
+import { createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, testProjectsFolder, tryDelete } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
 	it("handles empty array", () => {
@@ -38,7 +38,7 @@ describe("findCommonAncestorFolder", () => {
 				fsPath(helloWorldFolder),
 				fsPath(helloWorldTestFolder),
 				fsPath(flutterHelloWorldFolder),
-				isWin ? "Z:\\foo\\bar" : "/foo/bar",
+				fixPath("/foo/bar"),
 			]),
 			undefined,
 		);

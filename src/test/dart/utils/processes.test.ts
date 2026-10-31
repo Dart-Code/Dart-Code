@@ -5,7 +5,7 @@ import { isWin } from "../../../shared/constants";
 import { nullLogger } from "../../../shared/logging";
 import { runProcess, safeSpawn } from "../../../shared/processes";
 import { mkDirRecursive } from "../../../shared/utils/fs";
-import { getRandomTempFolder } from "../../helpers";
+import { customScriptExt, getRandomTempFolder } from "../../helpers";
 
 const tempFolder = getRandomTempFolder();
 
@@ -19,9 +19,8 @@ describe("safeSpawn", () => {
 
 function testExecution(filename: string) {
 	it(`can run shell scripts with names like ${filename}`, async () => {
-		const shellExtension = isWin ? "bat" : "sh";
 		mkDirRecursive(path.join(tempFolder, filename));
-		const fullPath = path.join(tempFolder, filename, `${filename}.${shellExtension}`);
+		const fullPath = path.join(tempFolder, filename, `${filename}.${customScriptExt}`);
 		const contents = isWin
 			? `
 				@ECHO OFF
