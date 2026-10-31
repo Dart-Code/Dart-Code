@@ -1,5 +1,6 @@
 import * as vstest from "@vscode/test-electron";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as readline from "readline";
 import { PassThrough, Writable } from "stream";
@@ -78,6 +79,14 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 
 	const stdout = process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stdout);
 	const stderr = process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stderr);
+	// On Linux and macOS, VS Code creates its IPC socket inside user-data-dir
+	// (defaulting to "<cwd>/.vscode-test/user-data/<version>-main.sock"), which
+	// fails with EINVAL when the path exceeds the Unix domain socket limit
+	// (103-107 chars). Use a short temp directory when cwd is long.
+	const tempDir = os.tmpdir();
+	const tempUserDataDir = process.platform !== "win32" && cwd.length > 50 && tempDir.length < cwd.length
+		? fs.mkdtempSync(path.join(tempDir, "dcud-"))
+		: undefined;
 	try {
 		const res = await vstest.runTests({
 			vscodeExecutablePath: ideOverride,
@@ -88,6 +97,7 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 				path.isAbsolute(workspaceFolder)
 					? workspaceFolder
 					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
+				...(tempUserDataDir ? ["--user-data-dir", tempUserDataDir] : []),
 				"--profile-temp",
 				"--crash-reporter-directory",
 				path.join(cwd, ".crash_dumps", testFolderName),
@@ -120,6 +130,21 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 	} finally {
 		await stdout?.endAndWait();
 		await stderr?.endAndWait();
+		if (tempUserDataDir) {
+			try {
+				fs.rmSync(
+					tempUserDataDir,
+					{
+						force: true,
+						recursive: true,
+						maxRetries: 10,
+						retryDelay: 500,
+					},
+				);
+			} catch (e) {
+				console.warn(`Failed to clean up folder ${tempUserDataDir}: ${String(e)}`);
+			}
+		}
 	}
 }
 
