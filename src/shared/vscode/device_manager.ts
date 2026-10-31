@@ -409,7 +409,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 			"The daemon did not respond to getSupportedPlatforms",
 			this.unresponsiveTimeoutPeriodSeconds,
 		).then(
-			(result) => result.platforms ?? Object.entries(result.platformTypes ?? {}).filter(([, details]) => details.isSupported).map(([platform]) => platform),
+			(result) => result.platforms ?? Object.entries(result.platformTypes ?? {}).filter(([, details]) => details?.isSupported).map(([platform]) => platform),
 			() => undefined,
 		);
 	}
