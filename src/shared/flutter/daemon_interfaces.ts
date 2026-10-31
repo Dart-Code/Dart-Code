@@ -1,5 +1,5 @@
-export type PlatformType = "android" | "ios" | "linux" | "macos" | "fuchsia" | "windows" | "web" | string;
-export type Category = "mobile" | "web" | "desktop" | string;
+export type PlatformType = string;
+export type Category = string;
 
 export interface Device {
 	category: Category | undefined | null;

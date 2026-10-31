@@ -409,7 +409,7 @@ export class LspAnalyzer extends Analyzer {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
 			errorHandler: new DartErrorHandler(logger),
-			initializationFailedHandler: (error: ls.ResponseError<ls.InitializeError> | Error | any) => {
+			initializationFailedHandler: (error: ls.ResponseError<ls.InitializeError> | Error | undefined) => {
 				logger.warn(`Failed to initialize LSP server: ${error}`);
 				return false; // Let client handle reinitialization.
 			},

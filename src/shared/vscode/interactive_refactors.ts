@@ -132,7 +132,7 @@ export class InteractiveRefactors implements IAmDisposable {
 	/// If the user cancels, returns `undefined`.
 	///
 	/// If the type of `parameter` is not supported, its default value.
-	private async promptUser(parameter: Parameter): Promise<unknown | undefined> {
+	private async promptUser(parameter: Parameter): Promise<unknown> {
 		if (isSaveUriParameter(parameter)) {
 			return (await this.promptUserSaveUri(parameter))?.toString();
 		} else {

@@ -31,7 +31,7 @@ export interface DtdNotification {
 	params: {
 		streamId: string,
 		eventKind: string,
-		eventData: ServiceRegisteredEventData | ServiceUnregisteredEventData | any,
+		eventData: ServiceRegisteredEventData | ServiceUnregisteredEventData | Record<string, unknown>,
 	};
 }
 
