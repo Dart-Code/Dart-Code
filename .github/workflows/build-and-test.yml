@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       excludes: ${{ join(steps.*.outputs.excludes) }}
+      run_tests: ${{ github.event_name != 'merge_group' }}
+      check_links: ${{ github.event_name != 'merge_group' }}
     steps:
       - id: no_exclude
         name: Run all builds
@@ -62,9 +64,11 @@ jobs:
         exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
 
     env:
-      RUN_TESTS: ${{ github.event_name != 'merge_group' }}
-      NEEDS_DART: ${{ github.event_name != 'merge_group' && (startsWith(matrix.bot, 'dart') || matrix.bot == 'misc') }}
-      NEEDS_FLUTTER: ${{ github.event_name != 'merge_group' && matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart') }}
+      RUN_TESTS: ${{ needs.build_exclusions.outputs.run_tests }}
+      # Both dart* and misc bots need the standalone Dart SDK.
+      NEEDS_DART: ${{ needs.build_exclusions.outputs.run_tests == 'true' && (startsWith(matrix.bot, 'dart') || matrix.bot == 'misc') }}
+      # Both flutter* (except flutter_snap, which installs via snap) and misc bots need the Flutter SDK.
+      NEEDS_FLUTTER: ${{ needs.build_exclusions.outputs.run_tests == 'true' && ((startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap') || matrix.bot == 'misc') }}
 
     steps:
 
@@ -156,10 +160,6 @@ jobs:
         if: env.NEEDS_FLUTTER == 'true'
         run: flutter --version
 
-      - name: Enable Flutter web support
-        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
-        run: flutter config --enable-web
-
       - name: Flutter precache
         if: matrix.bot == 'flutter_debug_chrome'
         run: flutter precache --web
@@ -198,12 +198,12 @@ jobs:
         working-directory: src/test/test_projects/hello_world/example
 
       - name: dart pub get (dart_nested)
-        if: env.NEEDS_DART == 'true' && matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested
 
       - name: dart pub get (dart_nested/nested1)
-        if: env.NEEDS_DART == 'true' && matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested/nested1
 
@@ -218,37 +218,37 @@ jobs:
         working-directory: src/test/test_projects/web/broken
 
       - name: dart pub get (dart_nested/nested1/nested2)
-        if: env.NEEDS_DART == 'true' && matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested/nested1/nested2
 
       - name: flutter pub get (dart_nested_flutter/nested_flutter_example)
-        if: env.NEEDS_FLUTTER == 'true' && matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: flutter pub get
         working-directory: src/test/test_projects/dart_nested_flutter/nested_flutter_example
 
       - name: flutter pub get (dart_nested_flutter2/nested_flutter_example)
-        if: env.NEEDS_FLUTTER == 'true' && matrix.bot == 'misc'
+        if: env.RUN_TESTS == 'true' && matrix.bot == 'misc'
         run: flutter pub get
         working-directory: src/test/test_projects/dart_nested_flutter2/nested_flutter_example
 
       - name: flutter create (flutter_hello_world)
-        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
+        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter create .
         working-directory: src/test/test_projects/flutter_hello_world
 
       - name: flutter create (flutter_hello_world_bazel)
-        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
+        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter create .
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
 
       - name: flutter pub get (flutter_hello_world)
-        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
+        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter packages get
         working-directory: src/test/test_projects/flutter_hello_world
 
       - name: flutter pub get (flutter_hello_world_bazel)
-        if: env.NEEDS_FLUTTER == 'true' && startsWith(matrix.bot, 'flutter')
+        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter packages get
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
 
@@ -326,7 +326,8 @@ jobs:
 
   link_check:
     name: Check Links (Lychee)
-    if: github.event_name != 'merge_group'
+    needs: build_exclusions
+    if: needs.build_exclusions.outputs.check_links == 'true'
     runs-on: ubuntu-latest
 
     permissions:
@@ -369,10 +370,10 @@ jobs:
   merge_artifacts:
 
     name: Merge Artifacts
-    needs: build
+    needs: [build_exclusions, build]
     # Using always() (to run on failure) will cause us to also run regardless of whether "build" ran, so
     # explicitly check that ran and passed or failed (and was not skipped/cancelled).
-    if: always() && github.event_name != 'merge_group' && (needs.build.result == 'success' || needs.build.result == 'failure')
+    if: always() && needs.build_exclusions.outputs.run_tests == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure')
     runs-on: ubuntu-latest
     outputs:
       has_coverage: ${{ steps.merge_coverage.outcome == 'success' }}
