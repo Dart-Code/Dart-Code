@@ -1102,8 +1102,7 @@ void printSomething() {
 				? "The getter 'ye' isn't defined for the type 'DateTime'."
 				: "Class 'DateTime' has no instance getter 'ye'.";
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-			const error = await dc.evaluateForFrame("DateTime.now().ye", { context: "repl" }).catch((e) => e);
+			const error = await dc.evaluateForFrame("DateTime.now().ye", { context: "repl" }).catch((e: Error) => e) as Error;
 			assert.notEqual(error.message.indexOf(expectedError), -1);
 
 			await dc.terminateRequest();
@@ -1127,8 +1126,7 @@ void printSomething() {
 				}),
 			);
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-			const error = await dc.evaluateForFrame("DateTime.now().ye", { context: "watch" }).catch((e) => e);
+			const error = await dc.evaluateForFrame("DateTime.now().ye", { context: "watch" }).catch((e: Error) => e) as Error;
 			assert.equal(error.message, expectedError);
 
 			await dc.terminateRequest();
@@ -1236,8 +1234,7 @@ void printSomething() {
 				? "The getter 'ye' isn't defined for the type 'DateTime'."
 				: "Class 'DateTime' has no instance getter 'ye'.";
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "repl" }).catch((e) => e);
+			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "repl" }).catch((e: Error) => e) as Error;
 			assert.notEqual(error.message.indexOf(expectedError), -1);
 
 			await dc.terminateRequest();
@@ -1262,8 +1259,7 @@ void printSomething() {
 
 			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
+			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e: Error) => e) as Error;
 			assert.equal(error.message, expectedError);
 
 			await dc.terminateRequest();

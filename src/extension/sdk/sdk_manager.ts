@@ -56,7 +56,7 @@ abstract class SdkManager {
 				version,
 			};
 		})
-			.sort((a, b) => versionIsAtLeast(a.version || "0.0.0", b.version || "0.0.0") ? 1 : -1);
+			.sort((a, b) => versionIsAtLeast(a.version ?? "0.0.0", b.version ?? "0.0.0") ? 1 : -1);
 
 		if (sdkItems.length === 0)
 			return;

@@ -7,7 +7,7 @@ import { Device } from "../../shared/flutter/daemon_interfaces";
 import { DartSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { ProcessExitCodes } from "../../shared/processes";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
-import { ActiveLocation, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream, SuccessResult } from "../../shared/services/tooling_daemon_services";
+import { ActiveLocation, DtdError, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream, SuccessResult } from "../../shared/services/tooling_daemon_services";
 import { disposeAll, nullToUndefined, PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercaseInUriString, uriComparisonString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
@@ -398,9 +398,7 @@ class EditorServices implements IAmDisposable {
 	private async navigateToCode(params: NavigateToCodeParams): Promise<SuccessResult> {
 		const uri = Uri.parse(params.uri);
 		if (uri.scheme !== "file") {
-			const error = new Error(`Unsupported URI scheme: ${uri.scheme}`) as Error & { code?: number; };
-			error.code = 144;
-			throw error;
+			throw new DtdError(144, `Unsupported URI scheme: ${uri.scheme}`);
 		}
 
 		await commands.executeCommand("_dart.jumpToLineColInUri", uri, params.line, params.column);

@@ -1,4 +1,5 @@
 import * as http from "http";
+import { AddressInfo } from "net";
 import * as ws from "ws";
 import { attachPing } from "../../../shared/utils/ws";
 
@@ -20,7 +21,7 @@ describe("attachPing", () => {
 	it("sends pings", async () => {
 		const serverReceivedPingPromise = new Promise((resolve) => wss.once("connection", (c) => c.once("ping", resolve)));
 
-		const port = (server.address() as any).port;
+		const port = (server.address() as AddressInfo).port;
 		const socket = new ws.WebSocket(`ws://localhost:${port}`);
 		attachPing(socket, 10); // 10ms interval to avoid test taking long.
 

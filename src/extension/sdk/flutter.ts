@@ -68,7 +68,7 @@ function runFlutterHelp(logger: Logger, flutterScript: string, cancellationToken
 				if (chosenAction === showLogAction)
 					void openLogContents(undefined, ringLogContents);
 			});
-			reject();
+			reject(new Error(message));
 		} else {
 			resolve();
 		}

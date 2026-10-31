@@ -495,8 +495,9 @@ export class FlutterCommands extends BaseSdkCommands {
 	public getCurrentFlutterCreateSettingsEditMetadata(): PickableSetting[] {
 		return [
 			{
-				currentValue: config.flutterCreateOrganization || "com.example",
-				description: config.flutterCreateOrganization || "com.example",
+				// Use || so an empty string in settings still falls back to "com.example".
+				currentValue: config.flutterCreateOrganization || "com.example", // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+				description: config.flutterCreateOrganization || "com.example", // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 				detail: "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier.",
 				label: "Organization",
 				setValue: (newValue: string | undefined) => config.setFlutterCreateOrganization(newValue),

@@ -39,7 +39,7 @@ export class DartDebugClient extends DebugClient {
 		const me = (this as unknown as { dispatch(body: string): void });
 		const oldDispatch = me.dispatch.bind(this);
 		me.dispatch = (body: string) => {
-			const rawData = JSON.parse(body);
+			const rawData = JSON.parse(body) as DebugProtocol.ProtocolMessage;
 			for (const tracker of this.currentTrackers) {
 				if (tracker.onDidSendMessage)
 					tracker.onDidSendMessage(rawData);
@@ -103,7 +103,7 @@ export class DartDebugClient extends DebugClient {
 		}
 	}
 
-	public send(command: string, args?: any): Promise<any> {
+	public send(command: string, args?: unknown): Promise<any> {
 		for (const tracker of this.currentTrackers) {
 			if (tracker.onWillReceiveMessage)
 				tracker.onWillReceiveMessage({ command, arguments: args });
@@ -118,7 +118,7 @@ export class DartDebugClient extends DebugClient {
 		return super.start();
 	}
 
-	private sendResponse(request: DebugProtocol.Request, body: any): void {
+	private sendResponse(request: DebugProtocol.Request, body: unknown): void {
 		// Hack: Underlying class doesn't have response support.
 		const me = (this as unknown as { outputStream: Writable, sequence: number });
 
@@ -138,7 +138,7 @@ export class DartDebugClient extends DebugClient {
 
 	private handleCustomEvent(e: DebugSessionCustomEvent) {
 		this.debugCommands.handleDebugSessionCustomEvent({
-			body: e.body,
+			body: e.body as unknown,
 			event: e.event,
 			session: this.currentSession!,
 		});
@@ -347,7 +347,7 @@ export class DartDebugClient extends DebugClient {
 					}
 				} catch (e) {
 					this.removeListener(type, handler);
-					reject(e);
+					reject(e instanceof Error ? e : new Error(String(e)));
 				}
 			};
 			this.on(type, handler);

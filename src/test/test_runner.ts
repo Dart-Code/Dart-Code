@@ -63,7 +63,7 @@ module.exports = {
 		require("source-map-support").install();
 
 		const testFilter = process.env.DART_CODE_TEST_FILTER;
-		const filters: string[] | undefined = testFilter ? JSON.parse(testFilter) : undefined;
+		const filters = testFilter ? JSON.parse(testFilter) as string[] : undefined;
 		const files = await getTestSuites(testsRoot, filters);
 
 		// Add files to the test suite

@@ -92,7 +92,7 @@ export class BaseSdkCommands implements IAmDisposable {
 	}
 
 	protected async runCommandInFolder(packageOrFolderDisplayName: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
-		packageOrFolderDisplayName = packageOrFolderDisplayName || path.basename(folder);
+		packageOrFolderDisplayName ??= path.basename(folder);
 		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
 		const channelName =

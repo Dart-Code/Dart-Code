@@ -28,7 +28,7 @@ export function escapeRegExp(input: string): string {
 export class PromiseCompleter<T> {
 	public promise: Promise<T>;
 	public resolve!: (value: T | PromiseLike<T>) => void;
-	public reject!: (error?: any, stackTrace?: string) => void;
+	public reject!: (error: Error) => void;
 
 	private _isComplete = false;
 	public get isComplete() { return this._isComplete; }
@@ -140,17 +140,22 @@ export function usingCustomScript(binPath: string, binArgs: string[], customScri
 	return { executable: binPath, args: binArgs };
 }
 
-export function errorString(error: any): string {
+export function errorMessage(error: any): string {
 	if (!error)
 		return "<empty error>";
 	else if (error instanceof Error)
-		return error.message + (error.stack ? `\n${error.stack}` : "");
+		return error.message;
 	else if (error.message)
 		return error.message as string;
 	else if (typeof error === "string")
 		return error;
 	else
 		return `${error}`;
+}
+
+export function errorMessageWithStack(error: any): string {
+	return errorMessage(error)
+		+ (error instanceof Error && error.stack ? `\n${error.stack}` : "");
 }
 
 type BufferedLogMessage =
@@ -283,7 +288,7 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 				clearTimeout(timeoutTimer);
 				resolve(result);
 			},
-			(e) => {
+			(e: Error) => {
 				clearTimeout(timeoutTimer);
 				reject(e);
 			},

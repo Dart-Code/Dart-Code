@@ -5,7 +5,7 @@ import * as path from "path";
 import { platformEol } from "./constants";
 import { LogCategory, LogSeverity } from "./enums";
 import { IAmDisposable, IAmDisposableAsync, LogMessage, Logger, SpawnedProcess } from "./interfaces";
-import { errorString } from "./utils";
+import { errorMessageWithStack } from "./utils";
 import { createFolderForFile } from "./utils/fs";
 
 class LogEmitter extends EventEmitter {
@@ -32,10 +32,10 @@ export class EmittingLogger implements Logger, IAmDisposable {
 		this.log(message, LogSeverity.Info, category);
 	}
 	public warn(errorOrMessage: any, category?: LogCategory): void {
-		this.log(errorString(errorOrMessage), LogSeverity.Warn, category);
+		this.log(errorMessageWithStack(errorOrMessage), LogSeverity.Warn, category);
 	}
 	public error(errorOrMessage: any, category?: LogCategory): void {
-		this.log(errorString(errorOrMessage), LogSeverity.Error, category);
+		this.log(errorMessageWithStack(errorOrMessage), LogSeverity.Error, category);
 	}
 
 	public dispose(): void {

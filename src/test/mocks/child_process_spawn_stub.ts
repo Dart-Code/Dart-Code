@@ -44,7 +44,7 @@ export class ChildProcessSpawnStub {
 
 			this.fakedCalls.push({ cwd: opts?.cwd?.toString(), bin, args });
 
-			const proc = new EventEmitter() as any;
+			const proc: any = new EventEmitter();
 			proc.pid = 12345;
 			proc.stdout = new EventEmitter();
 			proc.stdout.setEncoding = () => undefined;

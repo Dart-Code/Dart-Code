@@ -48,7 +48,8 @@ export function getTemplatedLaunchConfigs(documentUri: Uri, fileType: string): T
 		for (const launchConfig of relevantLaunchConfigs) {
 			runFileTemplates.push({
 				...launchConfig,
-				name: (launchConfig.codeLens?.title || launchConfig.name || "${debugType}").replace(debugTypeTokenRegex, templateType.startsWith("run-") ? "Run" : "Debug"),
+				// Use || so an empty title or name in launch.json still falls back to "${debugType}".
+				name: (launchConfig.codeLens?.title || launchConfig.name || "${debugType}").replace(debugTypeTokenRegex, templateType.startsWith("run-") ? "Run" : "Debug"), // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 				noDebug: templateType.startsWith("run-"),
 			});
 		}

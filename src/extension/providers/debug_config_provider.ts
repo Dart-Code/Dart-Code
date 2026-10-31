@@ -154,7 +154,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isAttachRequest && !debugConfig.vmServiceInfoFile) {
 			// For attaching, the VM service address must be specified. If it's not provided already, prompt for it.
 			if (!isFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
-				debugConfig.vmServiceUri = await this.getFullVmServiceUri(debugConfig.vmServiceUri || debugConfig.observatoryUri);
+				// Use || so an empty vmServiceUri in launch.json still falls back to observatoryUri.
+				debugConfig.vmServiceUri = await this.getFullVmServiceUri(debugConfig.vmServiceUri || debugConfig.observatoryUri); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 			}
 
 			if (!debugConfig.vmServiceUri && !isFlutter) {
@@ -488,20 +489,20 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			this.logger.info(`Converted cwd to absolute path: ${debugConfig.cwd}`);
 		}
 		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
-			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder!.uri), debugConfig.program);
+			// Use || so an empty cwd in launch.json still falls back to the workspace folder path.
+			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder!.uri), debugConfig.program); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 			this.logger.info(`Converted program to absolute path: ${debugConfig.program}`);
 		}
 
 		if (!isAttachRequest) {
 			// If there's no program set, try to guess one.
 			if (!debugConfig.program) {
-				const preferredFolder = debugConfig.cwd
-					? debugConfig.cwd
-					: defaultCwd;
+				// Use || so an empty cwd in launch.json still falls back to defaultCwd.
+				const preferredFolder = debugConfig.cwd || defaultCwd; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 
 				// If we have a folder specified, we should only consider open files if it's inside it.
 				const preferredFile = !preferredFolder || (!!openFile && isWithinPath(openFile, preferredFolder)) ? openFile : undefined;
-				debugConfig.program = debugConfig.program || this.guessBestEntryPoint(preferredFile, preferredFolder);
+				debugConfig.program = this.guessBestEntryPoint(preferredFile, preferredFolder);
 			}
 		}
 
@@ -586,7 +587,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private async getFullVmServiceUri(vmServiceUriOrPort: string | undefined): Promise<string | undefined> {
-		vmServiceUriOrPort = vmServiceUriOrPort || await vs.commands.executeCommand("dart.promptForVmService");
+		// Use ||= so an empty string still prompts the user for a VM Service URI.
+		vmServiceUriOrPort ||= await vs.commands.executeCommand("dart.promptForVmService"); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 		vmServiceUriOrPort = vmServiceUriOrPort?.trim();
 
 		// If the input is just a number, treat is as a localhost port.
@@ -625,21 +627,19 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.sendLogsToClient = isLogging || isDartCodeTestRun;
 		debugConfig.sendCustomProgressEvents = true;
 		debugConfig.allowAnsiColorOutput = true;
-		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
-		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
-		debugConfig.args = debugConfig.args || [];
-		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
+		// Use || so an empty cwd still falls back to the workspace folder path.
+		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri)); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+		debugConfig.additionalProjectPaths ??= vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
+		debugConfig.args ??= [];
+		debugConfig.vmAdditionalArgs ??= conf.vmAdditionalArgs;
 		debugConfig.toolArgs = await this.buildToolArgs(debuggerType, debugConfig, conf);
 		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
-		debugConfig.webDaemonLogFile = insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
+		// Use || so an empty webDaemonLogFile in launch.json still falls back to the setting.
+		debugConfig.webDaemonLogFile = insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
-		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
-			? debugConfig.debugSdkLibraries
-			: !!config.debugSdkLibraries;
-		debugConfig.debugExternalPackageLibraries = debugConfig.debugExternalPackageLibraries !== undefined && debugConfig.debugExternalPackageLibraries !== null
-			? debugConfig.debugExternalPackageLibraries
-			: config.debugExternalPackageLibraries;
+		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries ?? !!config.debugSdkLibraries;
+		debugConfig.debugExternalPackageLibraries = debugConfig.debugExternalPackageLibraries ?? config.debugExternalPackageLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.showGettersInDebugViews = debugConfig.showGettersInDebugViews || conf.showGettersInDebugViews;

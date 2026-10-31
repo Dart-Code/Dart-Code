@@ -22,7 +22,6 @@ import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
-// eslint-disable-next-line no-restricted-imports
 import { PublicDartExtensionApi } from "../extension/api/interfaces";
 import { extensionVersion } from "../shared/vscode/extension_utils";
 import { locateBestProjectRoot } from "../shared/vscode/project";
@@ -261,7 +260,8 @@ function setupTestLogging(): boolean {
 	const emittingLogger = privateApi.logger;
 
 	if (fileSafeCurrentTestName) {
-		const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
+		// Use || so an empty DC_TEST_LOGS environment variable still falls back to the default path.
+		const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs"); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 		if (!fs.existsSync(logFolder))
 			fs.mkdirSync(logFolder);
 		const logFile = fileSafeCurrentTestName + ".txt";
@@ -1422,7 +1422,7 @@ export function ensurePackageTreeNode(items: vs.TreeItem[] | undefined | null, n
 }
 
 export function renderedItemLabel(item: vs.TreeItem): string {
-	return treeLabel(item) || path.basename(fsPath(item.resourceUri!));
+	return treeLabel(item) ?? path.basename(fsPath(item.resourceUri!));
 }
 
 /// Gets the source line for a TestItem.

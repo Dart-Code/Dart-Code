@@ -383,7 +383,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 					clearTimeout(hangTimeoutTimer);
 					resolve(result);
 				},
-				(e) => {
+				(e: Error) => {
 					clearTimeout(defaultTimer);
 					clearTimeout(hangTimeoutTimer);
 					reject(e);

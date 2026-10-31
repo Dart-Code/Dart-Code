@@ -593,7 +593,7 @@ export class DevToolsManager implements IAmDisposable {
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}.`;
 					this.logger.error(errorMessage);
 
-					reject(errorMessage);
+					reject(new Error(errorMessage));
 				}
 			});
 		});
@@ -708,8 +708,9 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		const binEnv = executionInfo.env;
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
-		portToBind = config.devToolsPort  // Always config first
-			|| portToBind;                // Then try the last port we bound this session
+		// Always try config first, then the last port we bound this session. Use || so that 0 in settings
+		// (meaning bind any free port) still falls back to portToBind on restart.
+		portToBind = config.devToolsPort || portToBind; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 
 		if (portToBind && !customDevTools?.path) {
 			binArgs.push("--port");
@@ -731,10 +732,10 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 	// TODO: Remove this if we fix the DevTools server (and rev min version) to not use method for
 	// the server.started event.
-	protected isNotification(msg: any): boolean { return !!(msg.event || msg.method === "server.started"); }
+	protected isNotification(msg: any): boolean { return !!msg.event || msg.method === "server.started"; }
 
 	protected async handleNotification(evt: UnknownNotification): Promise<void> {
-		switch ((evt as any).method || evt.event) {
+		switch ((evt as any).method ?? evt.event) {
 			case "server.started":
 				await this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
 				break;

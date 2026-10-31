@@ -40,7 +40,7 @@ describe("dart", () => {
 	});
 
 	it("did not trigger Flutter mode", async () => {
-		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+		const ext = vs.extensions.getExtension<{ [internalApiSymbol]: InternalExtensionApi }>(dartCodeExtensionIdentifier);
 		assert.ok(ext);
 		await waitForResult(() => ext.isActive, "Extension did not activate!", 10000);
 		const api: InternalExtensionApi = ext.exports[internalApiSymbol];

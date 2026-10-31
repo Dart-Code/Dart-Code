@@ -42,7 +42,7 @@ export class DartCreate {
 				if (!code) {
 					resolve(stdout.join(""));
 				} else {
-					reject(`'dart create' exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`);
+					reject(new Error(`'dart create' exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`));
 				}
 			});
 		});

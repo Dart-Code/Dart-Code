@@ -3740,7 +3740,7 @@
 		"lint:fix": "eslint --fix",
 		"find-duplicates": "jscpd src/extension src/shared --similarity 0.80 --min-lines 10 --min-tokens 70 --no-tips",
 		"pretest": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument",
-		"test": "xvfb-maybe node ./out/src/test/test_all.js",
+		"test": "xvfb-maybe -a -- node ./out/src/test/test_all.js",
 		"posttest": "npm run report_lcov && npm run report_screen",
 		"test-grammar": "vscode-tmgrammar-snap --expandDiff src/test/test_projects/grammar_testing/**/*.dart",
 		"test-all": "npm run test && npm run test-grammar",

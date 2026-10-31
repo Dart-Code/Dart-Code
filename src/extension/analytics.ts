@@ -506,9 +506,9 @@ class DebugAdapterExceptionSettingTracker implements DebugAdapterTracker {
 	onWillReceiveMessage(message: any): void {
 		if (message.command === "setExceptionBreakpoints") {
 			const exceptionFilters = (message.arguments?.filters as string[] | undefined) ?? [];
-			this.lastExceptionOptions = exceptionFilters.slice().sort().join(", ");
-			if (!this.lastExceptionOptions)
-				this.lastExceptionOptions = "None";
+			this.lastExceptionOptions = exceptionFilters.length
+				? exceptionFilters.slice().sort().join(", ")
+				: "None";
 		}
 	}
 }
