@@ -8,11 +8,11 @@ import { uniq } from "../../shared/utils";
 import { fsPath, touchFile } from "../../shared/utils/fs";
 import { OperationProgress } from "../../shared/vscode/interfaces";
 import { getPubWorkspaceFolderOrPackageFolderPath, getPubWorkspaceFolderOrPackageFolderUri, getPubWorkspaceOrPackageFolderUris, getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
-import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { getAllProjectFolders, isInHiddenFolder, isInsideFolderNamed } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 import * as util from "../utils";
-import { getExcludedFolders, isInHiddenFolder, isInsideFolderNamed } from "../utils";
+import { getExcludedFolders } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
 import { BaseSdkCommands, commandState } from "./sdk";
@@ -250,7 +250,7 @@ export class PackageCommands extends BaseSdkCommands {
 		// Never do anything for files inside hidden or build folders. Check the
 		// path relative to the containing workspace folder so that hidden folders
 		// in ancestors of the workspace folder don't ignore the whole workspace.
-		if (isInHiddenFolder(filePath) || (!isManualSave && isInsideFolderNamed(filePath, "build"))) {
+		if (isInHiddenFolder(uri) || (!isManualSave && isInsideFolderNamed(uri, "build"))) {
 			this.logger.info(`Skipping pubspec change for ignored folder ${filePath}`);
 			return;
 		}
