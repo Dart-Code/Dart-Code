@@ -2,6 +2,8 @@ name: Run Tests
 
 on:
   push:
+    branches:
+      - master
     tags:
       - '**'
   pull_request:
@@ -16,6 +18,10 @@ jobs:
 
 
   build_exclusions:
+
+    # Don't run the full test matrix for merge queue groups, as they will be
+    # tested as a batch once merged to master.
+    if: github.event_name != 'merge_group'
 
     permissions:
       contents: none
@@ -310,6 +316,7 @@ jobs:
 
   link_check:
     name: Check Links (Lychee)
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
 
     permissions:
@@ -336,18 +343,49 @@ jobs:
   # as a required status check.
   merge-guard:
     permissions:
-      contents: none
+      contents: read
     name: Merge Guard
     needs: build
     if: always()
     runs-on: ubuntu-latest
     steps:
-      # Fail if the build check did not pass.
+      # Fail if the build check did not pass (except on merge_group where build is skipped).
       - name: Check results
-        if: needs.build.result != 'success'
+        if: github.event_name != 'merge_group' && needs.build.result != 'success'
         run: |
           echo "::error title=Merge Guard::One or more build jobs did not succeed (${{ needs.build.result }})."
           exit 1
+
+      # On merge_group, we skip the full test matrix (which runs on master once the
+      # batch lands) and just verify the combined changes compile and lint cleanly.
+      - uses: actions/checkout@v7
+        if: github.event_name == 'merge_group'
+
+      - name: Set up Node v22
+        if: github.event_name == 'merge_group'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: npm install
+        if: github.event_name == 'merge_group'
+        run: npm install
+
+      - name: npm lint
+        if: github.event_name == 'merge_group'
+        run: npm run lint
+
+      - name: npm build
+        if: github.event_name == 'merge_group'
+        run: npm run build
+
+      - name: npm build-tests
+        if: github.event_name == 'merge_group'
+        run: npm run build-tests
+
+      - name: npm run test-grammar
+        if: github.event_name == 'merge_group'
+        run: npm run test-grammar
 
   merge_artifacts:
 
@@ -440,7 +478,7 @@ jobs:
     permissions:
       contents: none
     name: Notify Discord of Failure
-    needs: build
+    needs: [build, merge-guard]
     if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.ref == 'refs/heads/master' || github.event.merge_group.base_ref == 'refs/heads/master') && github.repository == 'Dart-Code/Dart-Code'
     runs-on: ubuntu-latest
 
