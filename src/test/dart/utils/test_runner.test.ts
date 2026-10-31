@@ -31,10 +31,12 @@ describe("getTestSuites", () => {
 
 		hiddenTestsRoot = path.join(tempDir, ".hidden", "tests");
 		fs.mkdirSync(path.join(hiddenTestsRoot, "sub"), { recursive: true });
+		fs.mkdirSync(path.join(hiddenTestsRoot, ".hidden_sub"), { recursive: true });
 		appleFile = path.resolve(hiddenTestsRoot, "apple.test.js");
 		bananaFile = path.resolve(hiddenTestsRoot, "sub", "banana.test.js");
 		fs.writeFileSync(appleFile, "");
 		fs.writeFileSync(bananaFile, "");
+		fs.writeFileSync(path.join(hiddenTestsRoot, ".hidden_sub", "apple.test.js"), "");
 
 		const hiddenOutTestRoot = path.join(tempDir, ".hidden", "out", "src", "test");
 		hiddenDartRoot = path.join(hiddenOutTestRoot, "dart");
@@ -58,6 +60,11 @@ describe("getTestSuites", () => {
 
 	it("returns all files when there are no filters", async () => {
 		assert.deepStrictEqual(await getTestSuites(hiddenTestsRoot, undefined), [appleFile, bananaFile]);
+	});
+
+	it("excludes files inside hidden subdirectories below testsRoot even when matching a filter", async () => {
+		assert.deepStrictEqual(await getTestSuites(hiddenTestsRoot, ["apple"]), [appleFile]);
+		assert.deepStrictEqual(await getTestSuites(hiddenTestsRoot, [".hidden_sub"]), []);
 	});
 
 	it("matches file filters below a hidden ancestor directory", async () => {
