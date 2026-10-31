@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
-import { getRandomTempFolder, tryDelete } from "../../temp_utils";
+import { getRandomTempFolder, tryDelete } from "../../helpers";
 import { getTestSuites } from "../../test_runner";
 
 describe("getTestSuites", () => {
