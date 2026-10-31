@@ -17,11 +17,11 @@ import { TestSelection, createTestFileAction, defaultTestFileContents, getLaunch
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { getActiveRealFileEditor, isDartDocument } from "../../shared/vscode/editors";
 import { locateBestProjectRoot } from "../../shared/vscode/project";
-import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { getAllProjectFolders, isInsideFolderNamed } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { VsCodeTestController } from "../test/vs_test_controller";
-import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isInsideFolderNamed, isPathInsideFlutterProject, isTestFile } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isPathInsideFlutterProject, isTestFile } from "../utils";
 
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
 // HACK: Used for testing since we can't read contexts?

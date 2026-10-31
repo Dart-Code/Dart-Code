@@ -216,6 +216,43 @@ export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return true;
 }
 
+export function isInsideFolderNamed(fileOrUri: Uri | string | undefined, folderName: string): boolean {
+	if (!fileOrUri)
+		return false;
+
+	const uri = typeof fileOrUri === "string" ? Uri.file(fileOrUri) : fileOrUri;
+	const filePath = typeof fileOrUri === "string" ? fileOrUri : fsPath(fileOrUri);
+	const ws = workspace.getWorkspaceFolder(uri);
+	if (!ws)
+		return false;
+
+	const relPath = path.relative(fsPath(ws.uri).toLowerCase(), filePath.toLowerCase());
+	const segments = relPath.split(path.sep);
+
+	return segments.includes(folderName.toLowerCase());
+}
+
+/// Returns whether [fileOrUri] is inside a hidden folder (a folder whose name
+/// starts with `.`), relative to its containing workspace folder.
+export function isInHiddenFolder(fileOrUri: Uri | string | undefined): boolean {
+	if (!fileOrUri)
+		return false;
+
+	const uri = typeof fileOrUri === "string" ? Uri.file(fileOrUri) : fileOrUri;
+	const filePath = typeof fileOrUri === "string" ? fileOrUri : fsPath(fileOrUri);
+	const ws = workspace.getWorkspaceFolder(uri);
+
+	// If no workspace folder was found, just check the filename itself.
+	const relPath = ws
+		? path.relative(fsPath(ws.uri).toLowerCase(), filePath.toLowerCase())
+		: path.basename(filePath);
+	const segments = relPath.split(path.sep);
+
+	// `..` segments (eg. for files outside the workspace folder) are not
+	// hidden folders.
+	return segments.some((segment) => segment !== ".." && segment.startsWith("."));
+}
+
 export function toRange(document: TextDocument, offset: number, length: number): Range {
 	return new Range(document.positionAt(offset), document.positionAt(offset + length));
 }
