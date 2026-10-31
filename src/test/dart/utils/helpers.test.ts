@@ -9,6 +9,8 @@ describe("helpers", () => {
 	beforeEach("activate emptyFile", () => activate());
 
 	it("closeFile forces VS Code to run onDidCloseTextDocument", async () => {
+		// Fail the build to test that the merge guard works.
+		assert.equal(1, 2);
 		// Ensure there are no existing docs that could interfere with our numbers, since
 		// we check for an exact count.
 		await closeAllOpenFiles();
