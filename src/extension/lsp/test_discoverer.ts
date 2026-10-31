@@ -9,7 +9,7 @@ import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { OutlineVisitor } from "../../shared/utils/outline";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
-import { getAllProjectFoldersAndExclusions } from "../../shared/vscode/utils";
+import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../shared/vscode/utils";
 import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
 import { getExcludedFolders, isTestFile } from "../utils";
@@ -79,9 +79,7 @@ export class TestDiscoverer implements IAmDisposable {
 		// when traversing directories in discoverTestSuites), but the file watcher may fire directly
 		// for files or folders created inside them. Check the path relative to the workspace folder
 		// so that a '.' in an ancestor of the workspace folder does not exclude the whole workspace.
-		const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(fileOrFolderPath));
-		const relativePath = ws ? path.relative(fsPath(ws.uri), fileOrFolderPath) : path.basename(fileOrFolderPath);
-		if (relativePath.split(path.sep).some((s) => s.startsWith(".")))
+		if (isInHiddenFolder(fileOrFolderPath))
 			return true;
 
 		return this.excludedFolders

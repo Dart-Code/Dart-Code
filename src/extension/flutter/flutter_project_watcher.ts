@@ -4,6 +4,7 @@ import { ExtensionRestartReason } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath, projectReferencesFlutter } from "../../shared/utils/fs";
+import { isInHiddenFolder, isInsideFolderNamed } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { promptToReloadExtension } from "../utils";
 
@@ -39,7 +40,7 @@ export class FlutterProjectWatcher implements IAmDisposable {
 
 		const filePath = fsPath(uri);
 
-		if (filePath.includes(`${path.sep}.`) || filePath.includes(`${path.sep}build${path.sep}`)) {
+		if (isInHiddenFolder(uri) || isInsideFolderNamed(uri, "build")) {
 			this.logger.info(`[FlutterWatcher] Skipping pubspec change for ignored folder ${filePath}`);
 			return;
 		}

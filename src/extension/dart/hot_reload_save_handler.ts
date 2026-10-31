@@ -1,4 +1,3 @@
-import * as path from "path";
 import { commands, DiagnosticSeverity, languages, TextDocumentSaveReason, Uri, workspace } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { restartReasonSave } from "../../shared/constants";
@@ -6,6 +5,7 @@ import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { isWithinWorkspace } from "../../shared/vscode/project";
+import { isInsideFolderNamed } from "../../shared/vscode/utils";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
 import { shouldHotReloadFor } from "../utils";
@@ -78,7 +78,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 
 	private isReloadableFile(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
 		// Never do anything for files inside .dart_tool folders.
-		if (fsPath(file.uri).includes(`${path.sep}.dart_tool${path.sep}`))
+		if (isInsideFolderNamed(file.uri, ".dart_tool"))
 			return false;
 
 		// Bail out if we're in an external file, or not Dart.
