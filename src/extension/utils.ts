@@ -151,6 +151,25 @@ export function isInsideFolderNamed(file: string | undefined, folderName: string
 	return segments.includes(folderName.toLowerCase());
 }
 
+/// Returns whether [file] is inside a hidden folder (a folder whose name
+/// starts with `.`), relative to its containing workspace folder.
+export function isInHiddenFolder(file: string | undefined): boolean {
+	if (!file)
+		return false;
+
+	const ws = workspace.getWorkspaceFolder(Uri.file(file));
+
+	// If no workspace folder was found, just check the filename itself.
+	const relPath = ws
+		? path.relative(fsPath(ws.uri).toLowerCase(), file.toLowerCase())
+		: path.basename(file);
+	const segments = relPath.split(path.sep);
+
+	// `..` segments (eg. for files outside the workspace folder) are not
+	// hidden folders.
+	return segments.some((segment) => segment !== ".." && segment.startsWith("."));
+}
+
 export function hasTestFilter(args: string[]) {
 	return args.includes("--name") || args.includes("--pname");
 }

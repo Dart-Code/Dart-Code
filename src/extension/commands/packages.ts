@@ -12,7 +12,7 @@ import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 import * as util from "../utils";
-import { getExcludedFolders } from "../utils";
+import { getExcludedFolders, isInHiddenFolder, isInsideFolderNamed } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
 import { BaseSdkCommands, commandState } from "./sdk";
@@ -247,8 +247,10 @@ export class PackageCommands extends BaseSdkCommands {
 		const isManualSave = !!lastPubspecSaveReason;
 		const filePath = fsPath(uri);
 
-		// Never do anything for files inside hidden or build folders.
-		if (filePath.includes(`${path.sep}.`) || (!isManualSave && filePath.includes(`${path.sep}build${path.sep}`))) {
+		// Never do anything for files inside hidden or build folders. Check the
+		// path relative to the containing workspace folder so that hidden folders
+		// in ancestors of the workspace folder don't ignore the whole workspace.
+		if (isInHiddenFolder(filePath) || (!isManualSave && isInsideFolderNamed(filePath, "build"))) {
 			this.logger.info(`Skipping pubspec change for ignored folder ${filePath}`);
 			return;
 		}
