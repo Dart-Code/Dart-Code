@@ -64,7 +64,7 @@ describe("DevTools", () => {
 
 		// Verify an attempt was made to open the correct URI.
 		assert.equal(openBrowserCommand.calledOnce, true);
-		const openedUri = openBrowserCommand.args[0][0] as string; // First invocation, first arg.
+		const openedUri = openBrowserCommand.args[0][0]; // First invocation, first arg.
 		assertDevToolsUriWithVmService(openedUri, debuggerUrisEvent.vmServiceUri);
 	});
 
@@ -88,7 +88,7 @@ describe("DevTools", () => {
 
 		// Verify an attempt was made to open the correct URI.
 		assert.equal(openBrowserCommand.calledOnce, true);
-		const openedUri = openBrowserCommand.args[0][0] as string; // First invocation, first arg.
+		const openedUri = openBrowserCommand.args[0][0]; // First invocation, first arg.
 		assertDevToolsUriWithVmService(openedUri, debuggerUrisEvent.clientVmServiceUri);
 	});
 
@@ -248,7 +248,7 @@ describe("DevTools", () => {
 
 			assert.ok(res?.url);
 			assert.equal(openInBrowser.calledOnce, true);
-			assertDevToolsUriWithVmService(openInBrowser.firstCall.args[0] as string, dartSession.vmServiceUri);
+			assertDevToolsUriWithVmService(openInBrowser.firstCall.args[0], dartSession.vmServiceUri);
 		});
 
 		it("opens embedded view for the selected page when user picks a DevTools page", async () => {

@@ -362,7 +362,10 @@ export function stubCreateInputBox(valueToReturn: string) {
 
 		// Capture the onDidAccept method to capture the callback.
 		let acceptCallback: () => void;
-		sb.stub(input, "onDidAccept").callsFake((func: () => void) => acceptCallback = func);
+		sb.stub(input, "onDidAccept").callsFake((func: () => void) => {
+			acceptCallback = func;
+			return { dispose: () => undefined };
+		});
 
 		// Capture the show method to then call that callback with our fake answer.
 		// Also stash the original value so we can check it was pre-populated correctly.
@@ -448,7 +451,7 @@ export function stubCreateQuickPickActions(actions: QuickPickAction[]): void {
 			title: undefined as string | undefined,
 		};
 
-		return quickPick;
+		return quickPick as unknown as vs.QuickPick<vs.QuickPickItem>;
 	});
 }
 
@@ -588,7 +591,51 @@ beforeEach("stash current test name", function () {
 	deferUntilLast("Reset current test name", () => fileSafeCurrentTestName = "unknown");
 });
 
-export let sb: sinon.SinonSandbox;
+// SinonStubbedFunction<T> uses `infer` on a single call signature, which for overloaded
+// functions (such as vs.window.showInformationMessage) only infers from the last overload
+// and rejects valid arguments/return types from earlier overloads. Fall back to untyped
+// SinonStub/SinonSpy for multi-overload functions while keeping strict types for single-signature methods.
+type IsMultiOverload<T> =
+	T extends {
+		(...args: infer A1): infer R1;
+		(...args: infer A2): infer R2;
+	}
+		? [A1, R1] extends [A2, R2]
+			? [A2, R2] extends [A1, R1]
+				? false
+				: true
+			: true
+		: false;
+
+type StubbedFunction<T> = IsMultiOverload<T> extends true
+	? sinon.SinonStub
+	: sinon.SinonStubbedFunction<T>;
+
+type SpiedFunction<T> = IsMultiOverload<T> extends true
+	? sinon.SinonSpy
+	: T extends (...args: infer TArgs) => infer TReturnValue
+		? sinon.SinonSpy<TArgs, TReturnValue>
+		: sinon.SinonSpy;
+
+type Sandbox = Omit<sinon.SinonSandbox, "stub" | "spy"> & {
+	stub: {
+		<TArgs extends readonly any[] = any[], R = any>(): sinon.SinonStub<TArgs, R>;
+		<T>(obj: T): sinon.SinonStubbedInstance<T>;
+		<T, K extends keyof T>(obj: T, method: K): StubbedFunction<T[K]>;
+	};
+	spy: {
+		(): sinon.SinonSpy;
+		<F extends (...args: any[]) => any>(func: F): sinon.SinonSpy<Parameters<F>, ReturnType<F>>;
+		<T>(obj: T): sinon.SinonSpiedInstance<T>;
+		<T, K extends keyof T>(obj: T, method: K): SpiedFunction<T[K]>;
+		<T, K extends keyof T>(obj: T, method: K, types: Array<"get" | "set">): PropertyDescriptor & {
+			get: sinon.SinonSpy<[], T[K]>;
+			set: sinon.SinonSpy<[T[K]], void>;
+		};
+	};
+};
+
+export let sb: Sandbox;
 beforeEach("create sinon sandbox", () => {
 	if (logger)
 		logger.info(`Creating sinon sandbox`);

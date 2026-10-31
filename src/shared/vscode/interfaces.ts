@@ -7,7 +7,7 @@ import { DartVsCodeLaunchArgs } from "../debugging/interfaces";
 import { DebuggerType, DebugOption, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { SdkTypeString } from "../constants";
-import { CustomScript, DartWorkspaceContext, DevToolsPage, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, SdkSearchResults, SpawnedProcess } from "../interfaces";
+import { CustomScript, DartWorkspaceContext, DevToolsPage, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResults, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { RunProcessResult } from "../processes";
 import { PubDeps } from "../pub/deps";
@@ -157,7 +157,7 @@ export interface InternalExtensionApi {
 	debugSessions: DartDebugSessionInformation[];
 	deviceManager: FlutterDeviceManager | undefined;
 	envUtils: {
-		openInBrowser(url: string): Promise<boolean>;
+		openInBrowser(url: string, logger?: Logger): Promise<boolean>;
 		exposeUrl(urlString: string, logger?: unknown): Promise<string>;
 	};
 	fileTracker: {

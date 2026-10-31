@@ -1,12 +1,11 @@
 import { strict as assert } from "assert";
-import { ChildProcess } from "child_process";
 import { EventEmitter } from "events";
 import * as vs from "vscode";
 import { commands } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
 import { ExtensionRestartReason, skipAction } from "../../shared/constants";
 import * as f from "../../shared/flutter/daemon_interfaces";
-import { IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
+import { IAmDisposable, IFlutterDaemon, SpawnedProcess } from "../../shared/interfaces";
 import * as processes from "../../shared/processes";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
@@ -14,14 +13,6 @@ import * as vsUtils from "../../shared/vscode/utils";
 import { activateWithoutAnalysis, defer, delay, logger, privateApi, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../mocks/fake_stdio_service";
 import { androidBogusEmulatorId, androidBogusEmulatorName, androidEmulator, androidEmulatorToOverride, customEmulator, customEmulator1, customEmulator2, customEmulators, desktop, emulatedAndroidMobile, emulatediOSMobile, emulatorCreator, physicalAndroidMobile, webChrome, webServer } from "./flutter_test_devices";
-
-// Workaround for @types/sinon being pinned at 5.0.5 (which predates tickAsync) while sinon is ^21.0.1.
-// See https://github.com/Dart-Code/Dart-Code/issues/6295.
-declare module "sinon" {
-	interface SinonFakeTimers {
-		tickAsync(ms: number | string): Promise<number>;
-	}
-}
 
 describe("device_manager", () => {
 	let dm: FlutterDeviceManager;
@@ -937,7 +928,7 @@ describe("device_manager", () => {
 			pid: 12345,
 			stderr: new EventEmitter(),
 			stdout: new EventEmitter(),
-		}) as ChildProcess;
+		}) as unknown as SpawnedProcess;
 
 		const safeSpawnStub = sb.stub(processes, "safeSpawn");
 		const showErrorStub = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
@@ -1016,7 +1007,7 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
 		return this.emulators;
 	}
-	public launchEmulator(_emulatorId: string): Thenable<void> {
+	public launchEmulator(_emulatorId: string, _coldBoot?: boolean): Thenable<void> {
 		throw new Error("Method not implemented.");
 	}
 	public createEmulator(_name?: string): Thenable<{ success: boolean; emulatorName: string; error: string; }> {

@@ -669,7 +669,7 @@ test/empty_test.dart
 			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
 			createTestRunStub.callsFake((request: vs.TestRunRequest) => {
 				const originalResult = createTestRunOriginal(request);
-				addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
+				addCoverageStub = sb.stub(originalResult, "addCoverage");
 				return originalResult;
 			});
 		});

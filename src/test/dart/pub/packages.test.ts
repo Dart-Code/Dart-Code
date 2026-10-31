@@ -469,7 +469,7 @@ describe("pub package commands", () => {
 
 			assert.ok(packageCommandForUriCall.called);
 			const actualPaths = packageCommandForUriCall.getCalls()
-				.map((call) => fsPath(call.args[0] as vs.Uri))
+				.map((call) => fsPath(call.args[0]))
 				// Filter out entries outside of our test project, because "Get for all" will also trigger the
 				// main workspace.
 				.filter((p) => p.startsWith(tempRoot));

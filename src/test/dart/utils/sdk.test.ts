@@ -798,7 +798,7 @@ describe("SdkUtils", () => {
 			sb.stub(vs.extensions, "getExtension").withArgs("vscode.git").returns({
 				exports: { getAPI: () => ({ git: { path: "/custom/git" } }) },
 				isActive: true,
-			} as any);
+			} as unknown as vs.Extension<unknown>);
 
 			let gitResult: { exitCode?: number; stderr?: string; error?: Error } = { exitCode: 1, stderr: "git not found" };
 			const spawnedBins: string[] = [];
