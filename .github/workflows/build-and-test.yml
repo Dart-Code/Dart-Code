@@ -2,7 +2,17 @@ name: Run Tests
 
 on:
   push:
+    # Ignore pushes to master and merge queue temporary branches, as they are handled by the merge queue.
+    branches-ignore:
+      - master
+      - 'gh-readonly-queue/**'
+     # Defining branches-ignore excludes tag pushes by default, so add them back so all bots run on a tag.
+    tags:
+      - '**'
   pull_request:
+  # Run on merge queue groups.
+  merge_group:
+    types: [ checks_requested ]
   schedule:
      - cron: '0 6 * * 1' # 6am Monday
   workflow_dispatch:
@@ -424,7 +434,7 @@ jobs:
       contents: none
     name: Notify Discord of Failure
     needs: build
-    if: failure() && (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/master' && github.repository == 'Dart-Code/Dart-Code'
+    if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.ref == 'refs/heads/master' || github.event.merge_group.base_ref == 'refs/heads/master') && github.repository == 'Dart-Code/Dart-Code'
     runs-on: ubuntu-latest
 
     steps:
