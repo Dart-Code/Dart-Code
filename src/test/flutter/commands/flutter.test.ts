@@ -5,6 +5,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { defaultLaunchJson, ExtensionRestartReason, flutterCreateAvailablePlatforms } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
+import { RunProcessResult } from "../../../shared/processes";
 import { fsPath } from "../../../shared/utils/fs";
 import { startFakeDebugSession } from "../../debug_helpers";
 import { activate, flutterHelloWorldFolder, getRandomTempFolder, privateApi, sb, setConfigForTest, stubCreateQuickPickActions } from "../../helpers";
@@ -65,14 +66,14 @@ describe("flutter commands", () => {
 		await setConfigForTest("dart", "flutterCreateAndroidLanguage", "java");
 		sb.stub(privateApi.flutterCapabilities, "supportsIOSLanguage").get(() => true);
 
-		const exitCode = await vs.commands.executeCommand<number>("_flutter.create", {
+		const res = await vs.commands.executeCommand<RunProcessResult>("_flutter.create", {
 			packageName: "sample_app",
 			packagePath: projectFolder,
 			platform: "web",
 			triggerData: { empty: true, template: "app" },
 		});
 
-		assert.equal(exitCode, 0);
+		assert.equal(res.exitCode, 0);
 		assert.ok(runFlutterInFolder.calledOnce);
 		assert.equal(runFlutterInFolder.firstCall.args[0], projectFolder);
 		assert.deepEqual(runFlutterInFolder.firstCall.args[1], [
