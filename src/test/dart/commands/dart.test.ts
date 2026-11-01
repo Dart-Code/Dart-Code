@@ -5,7 +5,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { DART_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { DartProjectTemplate } from "../../../shared/interfaces";
-import { activate, defer, getRandomTempFolder, privateApi, sb, tryDelete, waitForResult } from "../../helpers";
+import { activate, defer, delay, getRandomTempFolder, privateApi, sb, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart commands", () => {
 	before("activate", () => activate());
@@ -238,10 +238,29 @@ describe("dart commands", () => {
 		const tempFolder = tempFolderWithCleanup();
 		stubFolderPick(tempFolder);
 		sb.stub(vs.window, "showInputBox").resolves("my_sdk_project");
-		stubOpenFolder();
+
+		// Changing dart.sdkPath triggers the extension's configuration-change
+		// handler, which schedules a full extension reload via
+		// commands.executeCommand("_dart.reloadExtension"). A reload that lands
+		// while the analyzer is still starting can leave it in a broken state
+		// and hang every subsequent suite, so the reload command is swallowed
+		// here. This stub is not part of `sb` because it must outlive the test:
+		// the config change from restoring the setting is dispatched
+		// asynchronously and its reload timer can fire after the test ends.
+		const executeCommand = sinon.stub(vs.commands, "executeCommand").callThrough();
+		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
+		const reloadExtension = executeCommand.withArgs("_dart.reloadExtension").resolves();
+		// Deferred functions run in reverse registration order, so the
+		// workspace setting is restored before this stub is removed. The delay
+		// lets any pending config-change reload timer fire into the swallow if
+		// the explicit restore above did not run (e.g. a failed assertion).
+		defer("Restore executeCommand stub", async () => {
+			await delay(1000);
+			executeCommand.restore();
+		});
 
 		// Use the real SDK path as the configured value: it is a valid path,
-		// so it cannot interfere with the reload the setting change triggers.
+		// so it cannot interfere with the SDKs the extension resolves.
 		const customSdkPath = privateApi.workspaceContext.sdks.dart;
 		const dartConfig = vs.workspace.getConfiguration("dart");
 		const previousSdkPath = dartConfig.inspect<string>("sdkPath")?.workspaceValue;
@@ -250,18 +269,9 @@ describe("dart commands", () => {
 		});
 		await dartConfig.update("sdkPath", customSdkPath, vs.ConfigurationTarget.Workspace);
 
-		// Changing dart.sdkPath reloads the extension, which can briefly
-		// unregister the command, so invoke it with a bounded retry instead
-		// of a fixed delay.
-		await waitForResult(async () => {
-			try {
-				await vs.commands.executeCommand("dart.createProject");
-				return true;
-			} catch {
-				return false;
-			}
-		}, "dart.createProject was not re-registered after the extension reload", 30000);
+		await vs.commands.executeCommand("dart.createProject");
 
+		assert.ok(openFolder.calledOnce);
 		const settingsFile = path.join(tempFolder, "my_sdk_project", ".vscode", "settings.json");
 		assert.ok(fs.existsSync(settingsFile), "a .vscode/settings.json should be created for the custom SDK");
 		const settings = JSON.parse(fs.readFileSync(settingsFile).toString()) as Record<string, unknown>;
@@ -272,6 +282,15 @@ describe("dart commands", () => {
 			dartConfig.inspect<string>("sdkPath")?.workspaceValue,
 			previousSdkPath,
 			"the workspace dart.sdkPath setting should be restored",
+		);
+
+		// Wait for the configuration-change events from both updates to have
+		// been dispatched and their reload commands swallowed, so no
+		// _dart.reloadExtension remains pending when the stub is removed.
+		await waitForResult(
+			() => reloadExtension.callCount >= 2,
+			"expected the dart.sdkPath changes to have triggered extension reloads",
+			10000,
 		);
 	});
 });
