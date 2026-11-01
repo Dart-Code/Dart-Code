@@ -361,7 +361,10 @@ export function stubCreateInputBox(valueToReturn: string) {
 
 		// Capture the onDidAccept method to capture the callback.
 		let acceptCallback: () => void;
-		sb.stub(input, "onDidAccept").callsFake((func: () => void) => acceptCallback = func);
+		sb.stub(input, "onDidAccept").callsFake((func: () => void) => {
+			acceptCallback = func;
+			return { dispose: () => undefined };
+		});
 
 		// Capture the show method to then call that callback with our fake answer.
 		// Also stash the original value so we can check it was pre-populated correctly.
@@ -447,7 +450,7 @@ export function stubCreateQuickPickActions(actions: QuickPickAction[]): void {
 			title: undefined as string | undefined,
 		};
 
-		return quickPick;
+		return quickPick as unknown as vs.QuickPick<vs.QuickPickItem>;
 	});
 }
 
@@ -586,6 +589,25 @@ beforeEach("stash current test name", function () {
 
 	deferUntilLast("Reset current test name", () => fileSafeCurrentTestName = "unknown");
 });
+
+// SinonStubbedFunction<T> uses `infer` on a single call signature, which for overloaded
+// functions (such as vs.window.showInformationMessage) only infers from the last overload
+// and rejects valid arguments/return types from earlier overloads. Fall back to untyped
+// SinonStub/SinonSpy for multi-overload functions while keeping strict types for single-signature methods.
+type IsOverloaded<T> = T extends { (...args: infer A1): infer R1; (...args: infer A2): infer R2 }
+	? [A1, R1] extends [A2, R2] ? ([A2, R2] extends [A1, R1] ? false : true) : true
+	: false;
+
+declare module "sinon" {
+	interface SinonStubStatic {
+		// eslint-disable-next-line @typescript-eslint/prefer-function-type
+		<T, K extends keyof T>(obj: T, method: K): IsOverloaded<T[K]> extends true ? SinonStub : SinonStubbedFunction<T[K]>;
+	}
+	interface SinonSpyStatic {
+		// eslint-disable-next-line @typescript-eslint/prefer-function-type
+		<T, K extends keyof T>(obj: T, method: K): IsOverloaded<T[K]> extends true ? SinonSpy : T[K] extends (...args: infer TArgs) => infer R ? SinonSpy<TArgs, R> : SinonSpy;
+	}
+}
 
 export let sb: sinon.SinonSandbox;
 beforeEach("create sinon sandbox", () => {

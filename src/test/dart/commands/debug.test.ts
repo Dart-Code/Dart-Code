@@ -84,7 +84,7 @@ describe("debug commands", () => {
 		sb.stub(vs.workspace, "getConfiguration").withArgs("launch", sinon.match.any).returns({
 			inspect,
 			update,
-		} as any);
+		} as unknown as vs.WorkspaceConfiguration);
 
 		await vs.commands.executeCommand("dart.createLaunchConfiguration", helloWorldExampleSubFolderMainFile);
 
@@ -594,8 +594,9 @@ describe("debug commands", () => {
 
 		it("dart.flutter.widgetErrorInspectData and dart.flutter.devToolsDeepLink handle suppression, Inspect Widget, and Do Not Ask Again", async () => {
 			const session = startFakeDebugSession({ debuggerType: DebuggerType.Flutter, id: "widget-error-session" });
-			const dartSession = privateApi.debugSessions.find((s) => s.session.id === session.id)!;
-			dartSession.vmServiceUri = "ws://127.0.0.1:8123/ws";
+			const dartSession = Object.assign(privateApi.debugSessions.find((s) => s.session.id === session.id)!, {
+				vmServiceUri: "ws://127.0.0.1:8123/ws",
+			});
 
 			const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
 			const spawnDevTools = sb.stub(privateApi.devTools, "spawn").resolves(undefined);
@@ -641,7 +642,7 @@ describe("debug commands", () => {
 			assert.ok(showWarningMessage.notCalled);
 
 			// Legacy dart.flutter.widgetErrorInspectData: Inspect Widget.
-			showWarningMessage.resolves("Inspect Widget" as any);
+			showWarningMessage.resolves("Inspect Widget");
 			privateApi.debugCommands.handleDebugSessionCustomEvent({
 				body: {
 					devToolsUrl: "http://127.0.0.1:9100",
@@ -654,14 +655,14 @@ describe("debug commands", () => {
 			await waitForResult(() => spawnDevTools.calledOnce && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(showWarningMessage.calledOnceWithExactly("Legacy overflow error", "Inspect Widget", doNotAskAgainAction));
 			assert.ok(spawnDevTools.calledOnceWithExactly(
-				dartSession as any,
+				dartSession,
 				{ inspectorRef: "legacy-ref-1", pageId: widgetInspectorPage.id },
 				true,
 			));
 
 			// Legacy dart.flutter.widgetErrorInspectData: Do Not Ask Again.
 			showWarningMessage.resetHistory();
-			showWarningMessage.resolves(doNotAskAgainAction as any);
+			showWarningMessage.resolves(doNotAskAgainAction);
 			privateApi.debugCommands.handleDebugSessionCustomEvent({
 				body: {
 					devToolsUrl: "http://127.0.0.1:9100",
@@ -679,7 +680,7 @@ describe("debug commands", () => {
 			// New dart.flutter.devToolsDeepLink: Inspect Widget with valid deepLinkUrl.
 			showWarningMessage.resetHistory();
 			spawnDevTools.resetHistory();
-			showWarningMessage.resolves("Inspect Widget" as any);
+			showWarningMessage.resolves("Inspect Widget");
 			privateApi.debugCommands.handleDebugSessionCustomEvent({
 				body: {
 					deepLinkUrl: "http://example.org/#/inspector?uri&inspectorRef=inspector-0",
@@ -691,7 +692,7 @@ describe("debug commands", () => {
 			await waitForResult(() => spawnDevTools.calledOnce && !privateApi.debugCommands.suppressFlutterWidgetErrors);
 			assert.ok(showWarningMessage.calledOnceWithExactly("A RenderFlex overflowed", "Inspect Widget", doNotAskAgainAction));
 			assert.ok(spawnDevTools.calledOnceWithExactly(
-				dartSession as any,
+				dartSession,
 				{ inspectorRef: "inspector-0", pageId: "inspector" },
 				true,
 			));

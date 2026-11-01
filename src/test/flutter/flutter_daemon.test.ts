@@ -8,7 +8,7 @@ import * as processes from "../../extension/utils/processes";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath } from "../../shared/constants";
 import { FlutterWorkspaceContext } from "../../shared/interfaces";
-import { activate, logger, privateApi, sb, waitForResult } from "../helpers";
+import { activate, fakeCancellationToken, logger, privateApi, sb, waitForResult } from "../helpers";
 
 describe("flutter daemon", () => {
 	let daemon: TestFlutterDaemon;
@@ -42,7 +42,7 @@ describe("flutter daemon", () => {
 	it("surfaces startup work messages as progress notifications", async () => {
 		const report = sb.stub();
 		const withProgress = sb.stub(vs.window, "withProgress").callsFake(async (_options, task) => {
-			void task({ report });
+			void task({ report }, fakeCancellationToken);
 			return undefined;
 		});
 
