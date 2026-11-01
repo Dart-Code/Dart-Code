@@ -55,7 +55,7 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 
 Here are some useful commands when working on the project.
 
-- `npm install`: Installs dependencies. This may need to be run if dependencies appear to be missing.
+- `npm install`: Installs dependencies. Always run `npm install` first when working in a new worktree or if `node_modules` is missing, before running `npm run lint`, `npm run build`, or `npm test`.
 - `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints. Pass a relative file path to lint only that file.
 - `npm run lint:fix`: Fixes lints that can be fixed automatically.
 - `npm run build`: Builds the extension bundle (`src/extension/` and `src/debug/`) with Webpack.
