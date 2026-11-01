@@ -173,7 +173,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		await util.promptToReloadExtension(this.logger, { restartReason: ExtensionRestartReason.AfterFlutterUpgrade });
 	}
 
-	private async flutterCreate({ packageName, packagePath, triggerData, platform }: FlutterCreateCommandArgs) {
+	private async flutterCreate({ packageName, packagePath, triggerData, platform }: FlutterCreateCommandArgs): Promise<number | undefined> {
 		if (!packagePath) {
 			packagePath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, { flutterOnly: true });
 			if (!packagePath)
@@ -232,13 +232,13 @@ export class FlutterCommands extends BaseSdkCommands {
 		args.push(".");
 
 		const packageOrFolderDisplayName = getPackageOrFolderDisplayName(packagePath, { packageName });
-		const exitCode = await this.runFlutterInFolder(packagePath, args, packageOrFolderDisplayName);
+		const res = await this.runFlutterInFolder(packagePath, args, packageOrFolderDisplayName);
 
 		if (!vsCodeVersion.supportsDebugWithoutLaunchJson) {
 			this.writeDefaultLaunchJson(packagePath);
 		}
 
-		return exitCode;
+		return res?.exitCode;
 	}
 
 	public writeDefaultLaunchJson(projectPath: string) {

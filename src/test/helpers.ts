@@ -595,47 +595,22 @@ beforeEach("stash current test name", function () {
 // functions (such as vs.window.showInformationMessage) only infers from the last overload
 // and rejects valid arguments/return types from earlier overloads. Fall back to untyped
 // SinonStub/SinonSpy for multi-overload functions while keeping strict types for single-signature methods.
-type IsMultiOverload<T> =
-	T extends {
-		(...args: infer A1): infer R1;
-		(...args: infer A2): infer R2;
+type IsOverloaded<T> = T extends { (...args: infer A1): infer R1; (...args: infer A2): infer R2 }
+	? [A1, R1] extends [A2, R2] ? ([A2, R2] extends [A1, R1] ? false : true) : true
+	: false;
+
+declare module "sinon" {
+	interface SinonStubStatic {
+		// eslint-disable-next-line @typescript-eslint/prefer-function-type
+		<T, K extends keyof T>(obj: T, method: K): IsOverloaded<T[K]> extends true ? SinonStub : SinonStubbedFunction<T[K]>;
 	}
-		? [A1, R1] extends [A2, R2]
-			? [A2, R2] extends [A1, R1]
-				? false
-				: true
-			: true
-		: false;
+	interface SinonSpyStatic {
+		// eslint-disable-next-line @typescript-eslint/prefer-function-type
+		<T, K extends keyof T>(obj: T, method: K): IsOverloaded<T[K]> extends true ? SinonSpy : T[K] extends (...args: infer TArgs) => infer R ? SinonSpy<TArgs, R> : SinonSpy;
+	}
+}
 
-type StubbedFunction<T> = IsMultiOverload<T> extends true
-	? sinon.SinonStub
-	: sinon.SinonStubbedFunction<T>;
-
-type SpiedFunction<T> = IsMultiOverload<T> extends true
-	? sinon.SinonSpy
-	: T extends (...args: infer TArgs) => infer TReturnValue
-		? sinon.SinonSpy<TArgs, TReturnValue>
-		: sinon.SinonSpy;
-
-type Sandbox = Omit<sinon.SinonSandbox, "stub" | "spy"> & {
-	stub: {
-		<TArgs extends readonly any[] = any[], R = any>(): sinon.SinonStub<TArgs, R>;
-		<T>(obj: T): sinon.SinonStubbedInstance<T>;
-		<T, K extends keyof T>(obj: T, method: K): StubbedFunction<T[K]>;
-	};
-	spy: {
-		(): sinon.SinonSpy;
-		<F extends (...args: any[]) => any>(func: F): sinon.SinonSpy<Parameters<F>, ReturnType<F>>;
-		<T>(obj: T): sinon.SinonSpiedInstance<T>;
-		<T, K extends keyof T>(obj: T, method: K): SpiedFunction<T[K]>;
-		<T, K extends keyof T>(obj: T, method: K, types: Array<"get" | "set">): PropertyDescriptor & {
-			get: sinon.SinonSpy<[], T[K]>;
-			set: sinon.SinonSpy<[T[K]], void>;
-		};
-	};
-};
-
-export let sb: Sandbox;
+export let sb: sinon.SinonSandbox;
 beforeEach("create sinon sandbox", () => {
 	if (logger)
 		logger.info(`Creating sinon sandbox`);

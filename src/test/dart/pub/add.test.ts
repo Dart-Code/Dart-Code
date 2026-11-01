@@ -138,7 +138,7 @@ describe("pub add", () => {
 
 	it("can add a dependency by URL by selecting the GIT option", async () => {
 		const spawn = ChildProcessSpawnStub.dartPub();
-		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves({ label: "GIT", marker: "GIT" });
+		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves({ label: "Git Repository URL", marker: "GIT" });
 		sb.stub(privateApi.addDependencyCommand, "promptForGitUrl").resolves("https://github.com/dart-lang/timing");
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageName").resolves("timing");
 		sb.stub(privateApi.addDependencyCommand, "promptForGitRef").resolves("");
