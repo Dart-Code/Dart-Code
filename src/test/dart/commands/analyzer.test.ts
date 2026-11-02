@@ -10,7 +10,7 @@ import { ExtensionRestartReason, getServerStartReason } from "../../../shared/co
 import { SpawnedProcess } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest } from "../../helpers";
+import { activate, defer, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest } from "../../helpers";
 
 describe("toggle show TODOs", () => {
 	const settingName = "showTodos";
@@ -691,27 +691,25 @@ describe("analyzer", () => {
 		});
 
 		it("restarts on close up to maxRestartCount and stops if crashing repeatedly within 3 minutes", () => {
-			try {
-				const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves();
-				const handler = createErrorHandler();
+			defer("Reset serverStartReason", () => privateApi.analyzer.setServerStartReason(undefined));
 
-				// First 2 closes always restart.
-				assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
-				assert.ok(privateApi.analyzer.getAnalyzerArgs(privateApi.logger, new DartCapabilities("3.15.0-99.0.dev")).includes("--start-reason=server-crash-automatic-restart"));
-				assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves();
+			const handler = createErrorHandler();
 
-				// If oldest restart was > 3 minutes ago, shifts and restarts.
-				handler.restarts[0] = Date.now() - (4 * 60 * 1000);
-				assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
-				assert.equal(handler.restarts.length, 2);
+			// First 2 closes always restart.
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
+			assert.ok(privateApi.analyzer.getAnalyzerArgs(privateApi.logger, new DartCapabilities("3.15.0-99.0.dev")).includes("--start-reason=server-crash-automatic-restart"));
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
 
-				// Next close within 3 minutes exceeds maxRestartCount and does not restart.
-				assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
-				assert.ok(showErrorMessage.calledOnce);
-				assert.ok(showErrorMessage.firstCall.args[0].includes("The Dart Analysis Server crashed 3 times in the last 3 minutes and will not restart."));
-			} finally {
-				privateApi.analyzer.setServerStartReason(undefined);
-			}
+			// If oldest restart was > 3 minutes ago, shifts and restarts.
+			handler.restarts[0] = Date.now() - (4 * 60 * 1000);
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
+			assert.equal(handler.restarts.length, 2);
+
+			// Next close within 3 minutes exceeds maxRestartCount and does not restart.
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
+			assert.ok(showErrorMessage.calledOnce);
+			assert.ok(showErrorMessage.firstCall.args[0].includes("The Dart Analysis Server crashed 3 times in the last 3 minutes and will not restart."));
 		});
 	});
 
