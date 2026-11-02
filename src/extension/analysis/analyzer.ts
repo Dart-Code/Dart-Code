@@ -68,6 +68,10 @@ export class LspAnalyzer extends Analyzer {
 		this.setupStatusItem();
 
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
+		this.disposables.push({
+			dispose: () => this.client.state === ls.State.Running ? this.client.stop() : undefined,
+		});
+
 
 		// Set up features that register capabilities and may also wrap client middleware.
 		if (config.lspCachingMiddleware)
@@ -719,28 +723,21 @@ export class LspAnalyzer extends Analyzer {
 
 	public override async dispose(): Promise<void> {
 		this.isDisposed = true;
-		try {
-			// If the client is still starting, calling `stop()` immediately will throw
-			// ("Client is not running and can't be stopped") and leave `clientStartPromise`
-			// to finish initializing and registering duplicate commands/providers in the
-			// background. Wait for `clientStartPromise` to settle first, then stop the client
-			// if it is running, before calling `super.dispose()` (which has a 3s timeout in
-			// `disposeAllAsync` and kills the server process if it has not exited after `stop()`).
-			if (this.client.state === ls.State.Starting) {
-				try {
-					await withTimeout(this.clientStartPromise, "LSP client did not finish starting during disposal", 10);
-				} catch {
-					// Ignore startup errors or timeout during disposal; if startup timed out,
-					// `super.dispose()` will run `handleDisposeCleanup` to kill the process.
-				}
+		// If the client is still starting, calling `stop()` immediately during `super.dispose()`
+		// will throw ("Client is not running and can't be stopped") and leave `clientStartPromise`
+		// to finish initializing and registering duplicate commands/providers in the background.
+		// Wait for `clientStartPromise` to settle first before running `super.dispose()` (which
+		// concurrently stops the client and starts `handleDisposeCleanup`'s 3s process-kill timer).
+		if (this.client.state === ls.State.Starting) {
+			const timeoutSeconds = 10;
+			try {
+				await withTimeout(this.clientStartPromise, "LSP client did not finish starting during disposal", timeoutSeconds);
+			} catch {
+				// Ignore startup errors or timeout during disposal; if startup timed out,
+				// `super.dispose()` will run `handleDisposeCleanup` to kill the process.
 			}
-			if (this.client.state === ls.State.Running)
-				await this.client.stop();
-		} catch (e) {
-			this.logger.error(e);
-		} finally {
-			await super.dispose();
 		}
+		await super.dispose();
 	}
 
 	/**
@@ -855,12 +852,12 @@ class DartErrorHandler implements ls.ErrorHandler {
 
 	readonly maxRestartCount = 2;
 
-	constructor(private readonly logger: Logger, private readonly isDisposed?: () => boolean) { }
+	constructor(private readonly logger: Logger, private readonly checkDisposed?: () => boolean) { }
 
 	public error(error: Error, message: ls.Message, count: number): ls.ErrorHandlerResult {
 		// If the analyzer has been disposed, do not continue or log errors if the
 		// server process is terminated during shutdown.
-		if (this.isDisposed?.())
+		if (this.checkDisposed?.())
 			return { action: ls.ErrorAction.Shutdown, handled: true };
 		this.logger.warn(`LSP Client error: (error: ${error}, count: ${count})`);
 		if (count && count < this.maxRestartCount) {
@@ -872,7 +869,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 	public closed(): ls.CloseHandlerResult {
 		// If the analyzer has been disposed (for example, if the server was killed by
 		// `handleDisposeCleanup` before the client reached `Stopping`), do not restart it.
-		if (this.isDisposed?.())
+		if (this.checkDisposed?.())
 			return { action: ls.CloseAction.DoNotRestart, handled: true };
 		this.restarts.push(Date.now());
 		this.logger.warn(`LSP Client closed (${this.restarts.length} recent restarts recorded)`);

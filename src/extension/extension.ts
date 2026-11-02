@@ -112,8 +112,7 @@ let extensionThisSessionStart = extensionTotalSessionStart; // Reset during ever
 
 let previousSettingsObject: Record<string, string | number | boolean | undefined> | undefined;
 let pendingConfigReloadTimer: NodeJS.Timeout | undefined;
-let hasPendingReload = false;
-let reloadPromise = Promise.resolve();
+let reloadPromise: Promise<void> | undefined;
 let experiments: KnownExperiments;
 
 const loggers: IAmDisposableAsync[] = [];
@@ -154,17 +153,15 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	util.logTime("Code called activate");
 
 	// Wire up a reload command that will re-initialise everything.
-	// Chain reloads onto `reloadPromise` so reload requests never run `deactivate`/`activate`
-	// in parallel. If a reload is requested while a reload is already pending or deactivating
-	// (`hasPendingReload` is true, before `activate` has started), coalesce into that reload
-	// so we don't spawn a new set of processes only to immediately tear them down again.
+	// If a reload is requested while a reload is already in progress, coalesce into
+	// `reloadPromise` so we don't run `deactivate`/`activate` in parallel or spawn a
+	// new set of processes only to immediately tear them down again.
 	const reloadSub = vs.commands.registerCommand("_dart.reloadExtension", (reason?: ExtensionRestartReason, data?: string) => {
-		if (hasPendingReload) {
-			logger.info(`Skipping overlapping extension reload (${reason}, ${data}) because a reload is already pending.`);
+		if (reloadPromise) {
+			logger.info(`Skipping overlapping extension reload (${reason}, ${data}) because a reload is already in progress.`);
 			return reloadPromise;
 		}
-		hasPendingReload = true;
-		reloadPromise = reloadPromise.catch(() => undefined).then(async () => {
+		reloadPromise = (async () => {
 			try {
 				reason ??= ExtensionRestartReason.Unknown;
 				logger.warn(`Performing extension reload (${reason}, ${data})...`);
@@ -177,12 +174,12 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 				await disposeAllAsync(subscriptionsToDispose);
 				reloadSub.dispose();
 				context.subscriptions.length = 0;
+				await activate(context, true);
+				logger.info("Done reloading extension!");
 			} finally {
-				hasPendingReload = false;
+				reloadPromise = undefined;
 			}
-			await activate(context, true);
-			logger.info("Done reloading extension!");
-		});
+		})();
 		return reloadPromise;
 	});
 	context.subscriptions.push(reloadSub);
