@@ -133,7 +133,7 @@ jobs:
 
       - name: Set up Dart ${{ matrix.build-version }}
         if: env.NEEDS_DART == 'true'
-        uses: dart-lang/setup-dart@6e0ff0bc3a029a9532ae6a86b1ea4906038921bc
+        uses: dart-lang/setup-dart@a1d8526c926344e01ba48a7368788c05ac98cb29
         with:
           sdk: ${{ matrix.build-version }}
 
