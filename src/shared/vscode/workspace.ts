@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Disposable, ExtensionContext, Memento, Uri } from "vscode";
-import { cursorInstallMcpServer, installFlutterExtensionPromptKey, isDartCodeTestRun, onlyAnalyzeProjectsWithOpenFilesPromptKey, useRecommendedSettingsPromptKey, userPromptContextPrefix } from "../constants";
+import { cursorInstallMcpServer, installFlutterExtensionPromptKey, isDartCodeTestRun, onlyAnalyzeProjectsWithOpenFilesPromptKey, tenMinutesInMs, useRecommendedSettingsPromptKey, userPromptContextPrefix } from "../constants";
 import { DartWorkspaceContext } from "../interfaces";
 import { fsPath, getDartToolDir } from "../utils/fs";
 
@@ -73,35 +73,63 @@ export class Context {
 export class GlobalState {
 	private readonly stateFilePath: string;
 	private state: Record<string, unknown> | undefined;
+	private stateLoadedAt = 0;
 
 	constructor(
 		private readonly fallbackState: Memento,
 		public readonly storagePath: string,
+		private readonly cacheDurationMs = tenMinutesInMs,
 	) {
 		this.stateFilePath = path.join(this.storagePath, "state.json");
 	}
 
 	/**
 	 * Reads the current state directly from disk. Returns an empty object if the
-	 * file does not exist or cannot be parsed.
+	 * file does not exist, or falls back to any existing in-memory state if the file
+	 * cannot be read or parsed (for example due to a transient file lock on Windows).
 	 */
 	private readStateFromDisk(): Record<string, unknown> {
+		this.stateLoadedAt = Date.now();
 		try {
-			if (!fs.existsSync(this.stateFilePath))
-				return {};
 			const content = fs.readFileSync(this.stateFilePath, "utf8");
 			const parsed = JSON.parse(content) as unknown;
 			return parsed && typeof parsed === "object" && !Array.isArray(parsed)
 				? parsed as Record<string, unknown>
 				: {};
+		} catch (e) {
+			if ((e as NodeJS.ErrnoException | undefined)?.code === "ENOENT")
+				return {};
+			return this.state ? { ...this.state } : {};
+		}
+	}
+
+	/**
+	 * Writes the state object to disk atomically via a temporary file and rename so
+	 * concurrent readers never observe a truncated or partially-written file.
+	 */
+	private writeStateToDisk(data: Record<string, unknown>): void {
+		const tempFilePath = `${this.stateFilePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
+		try {
+			fs.mkdirSync(this.storagePath, { recursive: true });
+			fs.writeFileSync(tempFilePath, JSON.stringify(data, undefined, "\t"));
+			fs.renameSync(tempFilePath, this.stateFilePath);
 		} catch {
-			return {};
+			// Ignore disk or locking errors (such as Windows file locks); in-memory state is already updated.
+			try {
+				if (fs.existsSync(tempFilePath))
+					fs.unlinkSync(tempFilePath);
+			} catch {
+				// Ignore cleanup errors.
+			}
 		}
 	}
 
 	private get<T>(key: string): T | undefined {
-		// Cache in memory for reads so we don't hit the disk on every property access.
-		this.state ??= this.readStateFromDisk();
+		// Cache in memory for reads so we don't hit the disk on every property access,
+		// but re-read periodically in case another window or profile updated the file.
+		if (!this.state || Date.now() - this.stateLoadedAt >= this.cacheDurationMs)
+			this.state = this.readStateFromDisk();
+
 		if (Object.prototype.hasOwnProperty.call(this.state, key)) {
 			const val = this.state[key];
 			return val === null ? undefined : val as T;
@@ -110,27 +138,31 @@ export class GlobalState {
 		// Fall back to VS Code's per-profile globalState for values set prior to
 		// moving to the cross-profile store, and migrate them to the new store.
 		const fallbackValue = this.fallbackState.get<T>(key);
-		if (fallbackValue !== undefined)
-			this.set(key, fallbackValue);
+		if (fallbackValue !== undefined) {
+			// Re-read from disk before migrating in case another profile wrote or cleared
+			// this key since our cache was populated. Only migrate if still absent on disk.
+			const data = this.readStateFromDisk();
+			if (Object.prototype.hasOwnProperty.call(data, key)) {
+				this.state = data;
+				const val = data[key];
+				return val === null ? undefined : val as T;
+			}
+			data[key] = fallbackValue;
+			this.state = data;
+			this.writeStateToDisk(data);
+		}
 		return fallbackValue;
 	}
 
 	private set(key: string, value: unknown): void {
-		try {
-			fs.mkdirSync(this.storagePath, { recursive: true });
-			// Always re-read from disk right before writing so we don't overwrite
-			// changes made concurrently by other VS Code windows or profiles.
-			const data = this.readStateFromDisk();
-			// Store null when resetting to undefined so we know the key was explicitly
-			// cleared in the global store and should not fall back to ExtensionContext.globalState.
-			data[key] = value === undefined ? null : value;
-			this.state = data;
-			fs.writeFileSync(this.stateFilePath, JSON.stringify(data, undefined, "\t"));
-		} catch {
-			// Still update in-memory state if disk write fails so the current session behaves consistently.
-			this.state ??= {};
-			this.state[key] = value === undefined ? null : value;
-		}
+		// Always re-read from disk right before writing so we don't overwrite
+		// changes made concurrently by other VS Code windows or profiles.
+		const data = this.readStateFromDisk();
+		// Store null when resetting to undefined so we know the key was explicitly
+		// cleared in the global store and should not fall back to ExtensionContext.globalState.
+		data[key] = value === undefined ? null : value;
+		this.state = data;
+		this.writeStateToDisk(data);
 	}
 
 	public async clear(): Promise<void> {

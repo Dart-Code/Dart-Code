@@ -556,6 +556,43 @@ describe("State storage wrappers", () => {
 		assert.equal(profile1.getPackageLastCheckedForUpdates("devtools"), undefined);
 	});
 
+	it("does not overwrite newer shared values when migrating a legacy key after initial cache load", () => {
+		const storageDir = createTempStorageDir();
+		// Profile A has a legacy true value in its per-profile Memento.
+		const profileAMemento = createFakeMemento({
+			"hasPrompted.cursor_install_mcp_server": true,
+			"lastSeenVersion": "3.144.0",
+		});
+		const profileA = new GlobalState(profileAMemento, storageDir);
+		const profileB = new GlobalState(createFakeMemento(), storageDir);
+
+		// Profile A performs an unrelated read, populating its in-memory cache (which does not have cursorInstallMcpServer yet).
+		assert.equal(profileA.getFlutterSurveyNotificationDoNotShow("2026Q1"), false);
+
+		// Profile B subsequently writes false for cursorInstallMcpServer and clears lastSeenVersion in the shared file.
+		profileB.setHasPrompted(cursorInstallMcpServer, false);
+		profileB.lastSeenVersion = undefined;
+
+		// When Profile A reads those keys, it must re-read from disk before migrating its legacy Memento values,
+		// returning Profile B's newer shared decisions rather than overwriting them with legacy values.
+		assert.equal(profileA.getHasPrompted(cursorInstallMcpServer), false);
+		assert.equal(profileA.lastSeenVersion, undefined);
+		assert.equal(profileB.getHasPrompted(cursorInstallMcpServer), false);
+	});
+
+	it("re-reads from disk after the cache duration expires", () => {
+		const storageDir = createTempStorageDir();
+		// Use a 0ms cache duration so every read refreshes from disk.
+		const profile1 = new GlobalState(createFakeMemento(), storageDir, 0);
+		const profile2 = new GlobalState(createFakeMemento(), storageDir, 0);
+
+		profile1.lastSeenVersion = "3.146.0";
+		assert.equal(profile2.lastSeenVersion, "3.146.0");
+
+		profile1.lastSeenVersion = "3.148.0";
+		assert.equal(profile2.lastSeenVersion, "3.148.0");
+	});
+
 	it("handles corrupted state.json gracefully and clears state properly", async () => {
 		const storageDir = createTempStorageDir();
 		fs.writeFileSync(path.join(storageDir, "state.json"), "{ invalid json");
