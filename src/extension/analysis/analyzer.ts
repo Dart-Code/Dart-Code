@@ -848,6 +848,8 @@ class DartErrorHandler implements ls.ErrorHandler {
 	constructor(private readonly logger: Logger, private readonly isDisposed?: () => boolean) { }
 
 	public error(error: Error, message: ls.Message, count: number): ls.ErrorHandlerResult {
+		// If the analyzer has been disposed, do not continue or log errors if the
+		// server process is terminated during shutdown.
 		if (this.isDisposed?.())
 			return { action: ls.ErrorAction.Shutdown, handled: true };
 		this.logger.warn(`LSP Client error: (error: ${error}, count: ${count})`);
@@ -858,6 +860,8 @@ class DartErrorHandler implements ls.ErrorHandler {
 	}
 
 	public closed(): ls.CloseHandlerResult {
+		// If the analyzer has been disposed (for example, if the server was killed by
+		// `handleDisposeCleanup` before the client reached `Stopping`), do not restart it.
 		if (this.isDisposed?.())
 			return { action: ls.CloseAction.DoNotRestart, handled: true };
 		this.restarts.push(Date.now());

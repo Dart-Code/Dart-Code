@@ -33,6 +33,9 @@ describe("extension api", () => {
 		const initialAnalyzer = privateApi.analyzer;
 		const warnSpy = sb.spy(privateApi.logger, "warn");
 
+		// Trigger two concurrent reloads; the second arrives while the first is still
+		// deactivating and should coalesce into the first reload rather than spawning
+		// a second deactivate/activate cycle.
 		await Promise.all([
 			commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test),
 			commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test),
@@ -40,11 +43,24 @@ describe("extension api", () => {
 
 		// The overlapping reload requests should have coalesced into a single reload,
 		// disposed the original analyzer, and replaced it with a new live analyzer.
+		const firstReloadAnalyzer = privateApi.analyzer;
 		assert.equal(warnSpy.withArgs(sinon.match("Performing extension reload")).callCount, 1);
 		assert.equal((initialAnalyzer as any).isDisposed, true);
-		assert.notStrictEqual(privateApi.analyzer, initialAnalyzer);
+		assert.notStrictEqual(firstReloadAnalyzer, initialAnalyzer);
+		assert.equal((firstReloadAnalyzer as any).isDisposed, false);
+
+		// Immediately trigger another reload while `firstReloadAnalyzer`'s LanguageClient
+		// is still starting up in the background (before `initialAnalysis` completes),
+		// verifying that disposing an in-flight analyzer waits for `client.start()` to
+		// settle and stops it cleanly without colliding with the next analyzer's registrations.
+		await commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
+		assert.equal((firstReloadAnalyzer as any).isDisposed, true);
+		assert.notStrictEqual(privateApi.analyzer, firstReloadAnalyzer);
 		assert.equal((privateApi.analyzer as any).isDisposed, false);
 
+		// Wait for initial/current analysis on the newly reloaded analyzer and verify
+		// that it is functional and serving LSP requests (such as document outlines)
+		// rather than hanging due to failed client initialization.
 		await activate();
 		const doc = await workspace.openTextDocument(helloWorldMainFile);
 		const outline = (await extApi.workspace.getOutline(doc))!;
