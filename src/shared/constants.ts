@@ -96,6 +96,39 @@ export enum ExtensionRestartReason {
 	Test = "test",
 }
 
+export function getServerStartReason(restartReason: ExtensionRestartReason): string {
+	switch (restartReason) {
+		case ExtensionRestartReason.AnalysisServerRestartCommand:
+			return "manual-restart";
+		case ExtensionRestartReason.AnalysisServerCrashedManyTimes:
+		case ExtensionRestartReason.AnalysisServerFromSourceMismatch:
+		case ExtensionRestartReason.AnalyzerTerminated:
+			return "server-crash-manual-restart";
+		case ExtensionRestartReason.FlutterDaemonTerminatedExit:
+		case ExtensionRestartReason.FlutterDaemonTerminatedPing:
+		case ExtensionRestartReason.FlutterDaemonTerminatedSend:
+		case ExtensionRestartReason.FlutterDaemonTimeout:
+		case ExtensionRestartReason.FlutterSdkActivationFailure:
+		case ExtensionRestartReason.RestartMacDaemonMessage:
+		case ExtensionRestartReason.ToolingDaemonStatusBar:
+		case ExtensionRestartReason.ToolingDaemonTerminated:
+			return "other-crash-manual-restart";
+		// TODO(dantup): Check if any of these should have unique values.
+		case ExtensionRestartReason.AfterFlutterClone:
+		case ExtensionRestartReason.AfterFlutterExtensionInstall:
+		case ExtensionRestartReason.AfterFlutterUpgrade:
+		case ExtensionRestartReason.AfterSdkVersionFileChange:
+		case ExtensionRestartReason.ChangeWorkspaceFolders:
+		case ExtensionRestartReason.ConfigurationChange:
+		case ExtensionRestartReason.FlutterProjectAdded:
+		case ExtensionRestartReason.LocatedSdk:
+		case ExtensionRestartReason.NewPlatformEnabledPrompt:
+		case ExtensionRestartReason.Test:
+		case ExtensionRestartReason.Unknown:
+			return "clean-start";
+	}
+}
+
 export const debugLaunchProgressId = "launch";
 export const debugTerminatingProgressId = "terminate";
 

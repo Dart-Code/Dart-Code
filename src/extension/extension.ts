@@ -30,7 +30,7 @@ import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { ProjectFinder, clearCaches, createWatcher, envUtils, getDartWorkspaceFolders, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
-import { LspAnalyzer } from "./analysis/analyzer";
+import { LspAnalyzer, setAnalysisServerStartReason } from "./analysis/analyzer";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
 import { PublicDartExtensionApiImpl, extensionApiModel } from "./api/extension_api";
@@ -155,6 +155,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		reason ??= ExtensionRestartReason.Unknown;
 		logger.warn(`Performing extension reload (${reason}, ${data})...`);
 		analytics.logExtensionRestart(reason, data);
+		setAnalysisServerStartReason(reason);
 		await deactivate(true, reason);
 		await disposeAllAsync(context.subscriptions);
 		await activate(context, true);

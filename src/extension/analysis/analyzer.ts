@@ -7,7 +7,7 @@ import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } 
 import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, ExtensionRestartReason } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason, getServerStartReason } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -44,6 +44,11 @@ import {
 // Globals so we only show these errors once per session.
 let hasShownAnalysisServerVersionMismatchError = false;
 let hasShownDartOsVersionError = false;
+let serverStartReason = "clean-start";
+
+export function setAnalysisServerStartReason(reason: ExtensionRestartReason): void {
+	serverStartReason = getServerStartReason(reason);
+}
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
@@ -466,7 +471,7 @@ export class LspAnalyzer extends Analyzer {
 			"Dart Analysis Server",
 			async () => {
 				try {
-					const streamInfo = await this.spawnServer(logger, sdks);
+					const streamInfo = await this.spawnServer(logger, sdks, dartCapabilities);
 					const jsonEncoder = ls.RAL().applicationJson.encoder;
 
 					return {
@@ -637,11 +642,11 @@ export class LspAnalyzer extends Analyzer {
 		}
 	}
 
-	public spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo> {
+	public spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities): Promise<StreamInfo> {
 		// TODO: Replace with constructing an Analyzer that passes LSP flag (but still reads config
 		// from paths etc) and provide it's process.
 		const vmPath = path.join(sdks.dart, dartVMPath);
-		const args = getAnalyzerArgs(logger);
+		const args = getAnalyzerArgs(logger, dartCapabilities);
 
 		logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
 		const analysisServerStartTime = Date.now();
@@ -736,7 +741,7 @@ class LoggingTransform extends stream.Transform {
 	}
 }
 
-function getAnalyzerArgs(logger: Logger) {
+function getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities) {
 	// Use || so an empty string in settings still falls back to "language-server".
 	const analyzerPath = config.analyzerPath || "language-server"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 
@@ -784,6 +789,8 @@ function getAnalyzerArgs(logger: Logger) {
 	const clientID = isRunningLocally ? "VS-Code" : "VS-Code-Remote";
 	analyzerArgs.push(`--client-id=${clientID}`);
 	analyzerArgs.push(`--client-version=${extensionVersion}`);
+	if (dartCapabilities.supportsServerStartReason)
+		analyzerArgs.push(`--start-reason=${serverStartReason}`);
 
 	// The analysis server supports verboses log files.
 	if (config.analyzerInstrumentationLogFile)
@@ -821,6 +828,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 		this.restarts.push(Date.now());
 		this.logger.warn(`LSP Client closed (${this.restarts.length} recent restarts recorded)`);
 		if (this.restarts.length <= this.maxRestartCount) {
+			serverStartReason = "server-crash-automatic-restart";
 			return { action: ls.CloseAction.Restart };
 		} else {
 			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
@@ -838,6 +846,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 				};
 			} else {
 				this.restarts.shift();
+				serverStartReason = "server-crash-automatic-restart";
 				return {
 					action: ls.CloseAction.Restart,
 				};

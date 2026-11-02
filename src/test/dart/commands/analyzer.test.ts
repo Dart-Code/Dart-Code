@@ -5,6 +5,8 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { AugmentationRequest, AugmentedRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../../shared/analysis/lsp/custom_protocol";
+import { DartCapabilities } from "../../../shared/capabilities/dart";
+import { ExtensionRestartReason, getServerStartReason } from "../../../shared/constants";
 import { SpawnedProcess } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { fsPath } from "../../../shared/utils/fs";
@@ -611,7 +613,7 @@ describe("analyzer", () => {
 			const expectedMessage = `Could not find a Dart Analysis Server at ${missingPath}`;
 
 			assert.throws(
-				() => privateApi.analyzer.spawnServer(fakeLogger, privateApi.workspaceContext.sdks),
+				() => privateApi.analyzer.spawnServer(fakeLogger, privateApi.workspaceContext.sdks, privateApi.dartCapabilities),
 				new RegExp(`^Error: Could not find a Dart Analysis Server at ${missingPath.replace(/\\/g, "\\\\")}$`),
 			);
 			assert.ok(showErrorMessage.calledOnceWithExactly(expectedMessage));
@@ -647,7 +649,7 @@ describe("analyzer", () => {
 			};
 
 			assert.throws(
-				() => privateApi.analyzer.spawnServer(fakeLogger, privateApi.workspaceContext.sdks),
+				() => privateApi.analyzer.spawnServer(fakeLogger, privateApi.workspaceContext.sdks, privateApi.dartCapabilities),
 				/STOP_BEFORE_SPAWN/,
 			);
 
@@ -665,6 +667,48 @@ describe("analyzer", () => {
 			assert.ok(capturedArgs.includes(`--instrumentation-log-file=${instrLog}`));
 			assert.ok(capturedArgs.includes(`--session-log=${sessionLog}`));
 			assert.ok(capturedArgs.includes("--analyzer-custom-flag"));
+		});
+
+		it("includes --start-reason when supported by the SDK", () => {
+			function spawnAndGetArgs(capabilities: DartCapabilities): string[] {
+				let capturedArgs: string[] | undefined;
+				const fakeLogger = {
+					error: () => undefined,
+					info: (msg: string) => {
+						const prefix = " with args ";
+						const idx = msg.indexOf(prefix);
+						if (idx !== -1) {
+							capturedArgs = JSON.parse(msg.substring(idx + prefix.length)) as string[];
+							throw new Error("STOP_BEFORE_SPAWN");
+						}
+					},
+					warn: () => undefined,
+				};
+
+				assert.throws(
+					() => privateApi.analyzer.spawnServer(fakeLogger, privateApi.workspaceContext.sdks, capabilities),
+					/STOP_BEFORE_SPAWN/,
+				);
+				assert.ok(capturedArgs);
+				return capturedArgs;
+			}
+
+			const supportedArgs = spawnAndGetArgs(new DartCapabilities("3.15.0-99.0.dev"));
+			assert.ok(supportedArgs.includes("--start-reason=clean-start"));
+
+			const unsupportedArgs = spawnAndGetArgs(new DartCapabilities("3.15.0-98.0.dev"));
+			assert.ok(!unsupportedArgs.some((a) => a.startsWith("--start-reason=")));
+		});
+
+		it("computes the right start reason", () => {
+			assert.equal(getServerStartReason(ExtensionRestartReason.AnalysisServerRestartCommand), "manual-restart");
+			assert.equal(getServerStartReason(ExtensionRestartReason.AnalysisServerCrashedManyTimes), "server-crash-manual-restart");
+			assert.equal(getServerStartReason(ExtensionRestartReason.AnalyzerTerminated), "server-crash-manual-restart");
+			assert.equal(getServerStartReason(ExtensionRestartReason.FlutterDaemonTerminatedExit), "other-crash-manual-restart");
+			assert.equal(getServerStartReason(ExtensionRestartReason.ToolingDaemonTerminated), "other-crash-manual-restart");
+			assert.equal(getServerStartReason(ExtensionRestartReason.ConfigurationChange), "clean-start");
+			assert.equal(getServerStartReason(ExtensionRestartReason.AfterFlutterUpgrade), "clean-start");
+			assert.equal(getServerStartReason(ExtensionRestartReason.ChangeWorkspaceFolders), "clean-start");
 		});
 	});
 
