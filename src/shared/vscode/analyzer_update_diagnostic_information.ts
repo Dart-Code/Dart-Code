@@ -26,19 +26,20 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 	}
 
 	public get feature(): StaticFeature {
-		const disposables = this.disposables;
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		const that = this;
 		return {
-			clear() {
-				disposeAll(disposables);
+			clear: () => {
+				// Called by LanguageClient when the server stops or restarts. Only reset isSupported
+				// here; this.disposables holds the configuration change listener and is disposed in dispose().
+				this.isSupported = false;
 			},
 			fillClientCapabilities(_capabilities: ClientCapabilities) { },
 			getState(): FeatureState {
 				return { kind: "static" };
 			},
-			initialize(serverCapabilities) {
-				that.isSupported = !!serverCapabilities.experimental?.updateDiagnosticInformation;
+			initialize: (serverCapabilities) => {
+				// Called by LanguageClient on every server initialization (including automatic restarts).
+				this.isSupported = !!serverCapabilities.experimental?.updateDiagnosticInformation;
+				void this.updateDiagnosticInformationIfSupported();
 			},
 		};
 	}
@@ -121,6 +122,6 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 	}
 }
 
-class UpdateDiagnosticInformationRequest {
+export class UpdateDiagnosticInformationRequest {
 	public static type = new RequestType<object, void, void>("dart/updateDiagnosticInformation");
 }
