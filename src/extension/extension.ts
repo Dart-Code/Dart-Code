@@ -49,7 +49,7 @@ import { FlutterCommands } from "./commands/flutter";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
-import { SdkCommands } from "./commands/sdk";
+import { commandState, SdkCommands } from "./commands/sdk";
 import { SettingsCommands } from "./commands/settings";
 import { TestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation } from "./commands/test";
 import { config } from "./config";
@@ -733,6 +733,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			addDependencyCommand,
 			analyzer,
 			clearCaches,
+			commandState,
 			config,
 			context: extContext,
 			currentAnalysis: () => withTimeout(analyzer.onCurrentAnalysisComplete, "In-progress analysis did not complete", 120),

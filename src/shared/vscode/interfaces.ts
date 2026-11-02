@@ -126,6 +126,10 @@ export interface InternalExtensionApi {
 		promptForPathPackageInfo(packagePath?: string): Promise<PathPubPackage | undefined>;
 	},
 	clearCaches: () => void;
+	commandState: {
+		numProjectCreationsInProgress: number;
+		promptToReloadOnVersionChanges: boolean;
+	};
 	config: {
 		workspaceSdkPath: string | undefined;
 	};
