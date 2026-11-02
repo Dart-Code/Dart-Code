@@ -77,6 +77,7 @@ export class Context {
 export class GlobalState {
 	private readonly stateFilePath: string;
 	private state: Record<string, unknown> | undefined;
+	private pendingUpdates: Record<string, unknown> = {};
 	private stateLoadedAt = 0;
 
 	constructor(
@@ -89,39 +90,61 @@ export class GlobalState {
 	}
 
 	/**
-	 * Reads the current state directly from disk. Returns an empty object if the
-	 * file does not exist, or falls back to any existing in-memory state if the file
-	 * cannot be read or parsed (for example due to a transient file lock on Windows).
+	 * Reads the current state directly from disk, merging any pending in-memory updates
+	 * that previously failed to write. Returns only pending updates if the file does not
+	 * exist, or falls back to any existing in-memory state if the file cannot be read or
+	 * parsed (for example due to a transient file lock on Windows).
 	 */
 	private readStateFromDisk(): Record<string, unknown> {
 		this.stateLoadedAt = Date.now();
 		try {
 			const content = fs.readFileSync(this.stateFilePath, "utf8");
 			const parsed = JSON.parse(content) as unknown;
-			return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+			const diskState = parsed && typeof parsed === "object" && !Array.isArray(parsed)
 				? parsed as Record<string, unknown>
 				: {};
+			return { ...diskState, ...this.pendingUpdates };
 		} catch (e) {
 			if ((e as NodeJS.ErrnoException | undefined)?.code === "ENOENT")
-				return {};
+				return { ...this.pendingUpdates };
 			this.logger.warn(`Failed to read global state from ${this.stateFilePath}: ${String(e)}`);
-			return this.state ? { ...this.state } : {};
+			return { ...this.state, ...this.pendingUpdates };
 		}
 	}
 
 	/**
-	 * Writes `this.state` to disk atomically via a temporary file and rename so
-	 * concurrent readers never observe a truncated or partially-written file.
+	 * Re-reads state from disk, applies the key update, and writes `this.state` to disk
+	 * atomically via a temporary file and rename so concurrent readers never observe a
+	 * truncated or partially-written file.
 	 */
-	private writeStateToDisk(): void {
+	private updateState(key: string, storedValue: unknown, { onlyIfAbsent = false } = {}): void {
 		const tempFilePath = `${this.stateFilePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
 		try {
 			fs.mkdirSync(this.storagePath, { recursive: true });
+		} catch {
+			// Ignore errors creating directory; writeFileSync below will report if it fails.
+		}
+
+		// Always re-read from disk immediately before writing so the window between
+		// reading and the atomic rename is as short as possible.
+		const data = this.readStateFromDisk();
+		if (onlyIfAbsent && Object.prototype.hasOwnProperty.call(data, key)) {
+			this.state = data;
+			return;
+		}
+
+		this.pendingUpdates[key] = storedValue;
+		data[key] = storedValue;
+		this.state = data;
+
+		try {
 			fs.writeFileSync(tempFilePath, JSON.stringify(this.state, undefined, "\t"));
 			fs.renameSync(tempFilePath, this.stateFilePath);
+			this.pendingUpdates = {};
 		} catch (e) {
 			this.logger.warn(`Failed to write global state to ${this.stateFilePath}: ${String(e)}`);
-			// Ignore disk or locking errors (such as Windows file locks); in-memory state is already updated.
+			// Ignore disk or locking errors (such as Windows file locks); in-memory state and
+			// pendingUpdates are retained so future reads and writes preserve the update.
 			try {
 				if (fs.existsSync(tempFilePath))
 					fs.unlinkSync(tempFilePath);
@@ -161,33 +184,23 @@ export class GlobalState {
 		if (fallbackValue !== undefined) {
 			// Re-read from disk before migrating in case another profile wrote or cleared
 			// this key since our cache was populated. Only migrate if still absent on disk.
-			const data = this.readStateFromDisk();
-			if (Object.prototype.hasOwnProperty.call(data, key)) {
-				this.state = data;
-				const val = data[key];
-				return val === null ? undefined : val as T;
-			}
-			data[key] = fallbackValue;
-			this.state = data;
-			this.writeStateToDisk();
+			this.updateState(key, fallbackValue, { onlyIfAbsent: true });
+			const val = this.state[key];
+			return val === null ? undefined : val as T;
 		}
-		return fallbackValue;
+		return undefined;
 	}
 
 	private set(key: string, value: unknown): void {
-		// Always re-read from disk right before writing so we don't overwrite
-		// changes made concurrently by other VS Code windows or profiles.
-		const data = this.readStateFromDisk();
 		// Store null when resetting to undefined so we know the key was explicitly
 		// cleared in the global store and should not fall back to ExtensionContext.globalState.
-		data[key] = value === undefined ? null : value;
-		this.state = data;
-		this.writeStateToDisk();
+		this.updateState(key, value === undefined ? null : value);
 	}
 
 	// Helper for tests to reset stored state between test runs.
 	public async clear(): Promise<void> {
 		this.state = {};
+		this.pendingUpdates = {};
 		try {
 			if (fs.existsSync(this.stateFilePath))
 				fs.unlinkSync(this.stateFilePath);

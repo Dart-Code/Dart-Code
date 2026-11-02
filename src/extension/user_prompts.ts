@@ -6,6 +6,7 @@ import { cursorInstallMcpServer, DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREAT
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
+import { versionIsAtLeast } from "../shared/utils";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, getExtensionVersionForReleaseNotes, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate, showSdkDeprecationNoticeIfAppropriate } from "../shared/vscode/user_prompts";
@@ -70,7 +71,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		// If we've not got a stored version, this is the first install, so just
 		// stash the current version and don't show anything.
 		context.globalState.lastSeenVersion = extensionVersionForReleaseNotes;
-	} else if (!isDevExtension && lastSeenVersionNotification !== extensionVersionForReleaseNotes) {
+	} else if (!isDevExtension && !versionIsAtLeast(lastSeenVersionNotification, extensionVersionForReleaseNotes)) {
 		const versionLink = extensionVersionForReleaseNotes.split(".").slice(0, 2).join(".").replace(".", "-");
 		void promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
 			context.globalState.lastSeenVersion = extensionVersionForReleaseNotes,

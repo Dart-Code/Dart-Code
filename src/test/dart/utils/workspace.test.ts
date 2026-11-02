@@ -206,6 +206,35 @@ describe("State storage wrappers", () => {
 		assert.equal(profile2.lastSeenVersion, "3.148.0");
 	});
 
+	it("retains pending updates across cache expiry and subsequent writes when a disk write fails", () => {
+		const storageDir = createTempStorageDir();
+		const stateFilePath = path.join(storageDir, "state.json");
+		// Use a 0ms cache duration so every read re-reads from disk.
+		const profile1 = new GlobalState(nullLogger, createFakeMemento(), storageDir, 0);
+		profile1.lastSeenVersion = "3.146.0";
+
+		// Replace state.json with a directory to force renameSync to fail on the next write,
+		// then restore the original state.json content so disk still only has the initial state.
+		const savedContent = fs.readFileSync(stateFilePath, "utf8");
+		fs.unlinkSync(stateFilePath);
+		fs.mkdirSync(stateFilePath);
+		profile1.setFlutterSurveyNotificationDoNotShow("2026Q1", true);
+		fs.rmdirSync(stateFilePath);
+		fs.writeFileSync(stateFilePath, savedContent);
+
+		// Even though the disk write failed and the cache expires (0ms) so it re-reads the old
+		// state.json from disk, the pending update is merged and retained on read.
+		assert.equal(profile1.getFlutterSurveyNotificationDoNotShow("2026Q1"), true);
+
+		// A subsequent write merges the pending update with the disk state and persists both.
+		profile1.setExperimentRandomNumber("exp1", 42);
+
+		const profile2 = new GlobalState(nullLogger, createFakeMemento(), storageDir);
+		assert.equal(profile2.lastSeenVersion, "3.146.0");
+		assert.equal(profile2.getFlutterSurveyNotificationDoNotShow("2026Q1"), true);
+		assert.equal(profile2.getExperimentRandomNumber("exp1"), 42);
+	});
+
 	it("handles corrupted state.json gracefully and clears state properly", async () => {
 		const storageDir = createTempStorageDir();
 		fs.writeFileSync(path.join(storageDir, "state.json"), "{ invalid json");
