@@ -123,7 +123,7 @@ export class DartCommands extends BaseSdkCommands {
 		void vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
 	}
 
-	private validateDartProjectName(input: string, folderDir: string) {
+	public validateDartProjectName(input: string, folderDir: string) {
 		if (!packageNameRegex.test(input))
 			return "Dart project names should be all lowercase, with underscores to separate words";
 
@@ -135,7 +135,7 @@ export class DartCommands extends BaseSdkCommands {
 			return `A project with this name already exists within the selected directory`;
 	}
 
-	private getProjectKind(templateName: string) {
+	public getProjectKind(templateName: string) {
 		if (templateName.includes("package"))
 			return "package";
 		if (templateName.includes("web"))
