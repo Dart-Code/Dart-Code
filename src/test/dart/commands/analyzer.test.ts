@@ -778,15 +778,15 @@ describe("analyzer", () => {
 		it("waits for starting client to settle before stopping during dispose", async () => {
 			const analyzer = privateApi.analyzer as unknown as {
 				client: ls.LanguageClient;
+				dispose: () => Promise<void>;
 				disposables: Array<{ dispose: () => Promise<void> | void }>;
 				isDisposed: boolean;
 			};
-			// `analyzer.disposables[1]` is the client-stopping disposable registered in the
-			// `LspAnalyzer` constructor (`disposables[0]` is `onAnalysisStatusChangeEmitter`
-			// from `Analyzer`). Invoking it with stubbed `client` methods (and resetting
-			// `isDisposed` in `finally`) exercises the real disposal closure and `errorHandler`
-			// binding without stopping the live `LanguageClient` used by subsequent tests.
-			const clientDisposable = analyzer.disposables[1];
+			// Temporarily clear `analyzer.disposables` and restore `isDisposed` in `finally`
+			// so calling `analyzer.dispose()` exercises `LspAnalyzer.dispose()` and its
+			// `errorHandler` binding without disposing live features or the server process
+			// used by subsequent tests.
+			const savedDisposables = analyzer.disposables.splice(0);
 			let currentState = ls.State.Starting;
 			let resolveStart!: () => void;
 			const startPromise = new Promise<void>((resolve) => { resolveStart = resolve; });
@@ -801,7 +801,7 @@ describe("analyzer", () => {
 			});
 
 			try {
-				const disposePromise = Promise.resolve(clientDisposable.dispose());
+				const disposePromise = analyzer.dispose();
 				// While start() is still pending, stop() must not have been called yet
 				// and the analyzer's errorHandler should already treat the analyzer as disposed.
 				assert.ok(startStub.calledOnce);
@@ -815,6 +815,7 @@ describe("analyzer", () => {
 				await disposePromise;
 				assert.ok(stopStub.calledOnce);
 			} finally {
+				analyzer.disposables.push(...savedDisposables);
 				analyzer.isDisposed = false;
 			}
 		});

@@ -12,6 +12,7 @@ import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
+import { withTimeout } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { AnalyzerUpdateDiagnosticInformationFeature } from "../../shared/vscode/analyzer_update_diagnostic_information";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
@@ -66,25 +67,6 @@ export class LspAnalyzer extends Analyzer {
 		this.setupStatusItem();
 
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
-		this.disposables.push({
-			dispose: async () => {
-				this.isDisposed = true;
-				// If the client is still starting, calling stop() immediately will throw
-				// ("Client is not running and can't be stopped") and leave the client to
-				// finish starting and register duplicate commands/providers in the background.
-				// Wait for startup to settle first, then stop the client if it is running.
-				if (this.client.state === ls.State.Starting) {
-					try {
-						await this.client.start();
-					} catch {
-						// Ignore startup errors during disposal.
-					}
-				}
-				if (this.client.state === ls.State.Running)
-					await this.client.stop();
-			},
-		});
-
 
 		// Set up features that register capabilities and may also wrap client middleware.
 		if (config.lspCachingMiddleware)
@@ -731,6 +713,32 @@ export class LspAnalyzer extends Analyzer {
 
 	public setServerStartReason(reason: ExtensionRestartReason | undefined): void {
 		setAnalysisServerStartReason(reason);
+	}
+
+	public override async dispose(): Promise<void> {
+		this.isDisposed = true;
+		try {
+			// If the client is still starting, calling stop() immediately will throw
+			// ("Client is not running and can't be stopped") and leave the client to
+			// finish starting and register duplicate commands/providers in the background.
+			// Wait for startup to settle first, then stop the client if it is running,
+			// before calling `super.dispose()` (which has a 3s timeout in `disposeAllAsync`
+			// and kills the server process if it has not exited after `client.stop()`).
+			if (this.client.state === ls.State.Starting) {
+				try {
+					await withTimeout(this.client.start(), "LSP client did not finish starting during disposal", 10);
+				} catch {
+					// Ignore startup errors or timeout during disposal; if startup timed out,
+					// `super.dispose()` will run `handleDisposeCleanup` to kill the process.
+				}
+			}
+			if (this.client.state === ls.State.Running)
+				await this.client.stop();
+		} catch (e) {
+			this.logger.error(e);
+		} finally {
+			await super.dispose();
+		}
 	}
 
 	/**
