@@ -1,5 +1,7 @@
 import * as ls from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
+import { DartCapabilities } from "./capabilities/dart";
+import { ExtensionRestartReason } from "./constants";
 import { EventEmitter } from "./events";
 import { DartSdks, IAmDisposableAsync, Logger, SpawnedProcess } from "./interfaces";
 import { DartToolingDaemon } from "./services/tooling_daemon";
@@ -33,6 +35,8 @@ export abstract class Analyzer implements IAmDisposableAsync {
 	public abstract getImports(params: ls.TextDocumentPositionParams): Promise<ls.Location[] | null>;
 	public abstract getAugmented(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
 	public abstract getAugmentation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
+	public abstract getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities): string[];
+	public abstract setServerStartReason(reason: ExtensionRestartReason | undefined): void;
 	public abstract spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo>;
 	public abstract handleDisposeCleanup(process: SpawnedProcess): Promise<void>;
 

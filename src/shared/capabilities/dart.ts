@@ -33,6 +33,7 @@ export class DartCapabilities {
 	get supportsMcpServerLogFile() { return versionIsAtLeast(this.version, "3.9.0-303"); }
 	get mcpServerRequiresExperimentalFlag() { return !versionIsAtLeast(this.version, "3.9.0-293"); }
 	get supportsInteractiveForms() { return versionIsAtLeast(this.version, "3.13.0-0"); }
+	get supportsServerStartReason() { return versionIsAtLeast(this.version, "3.15.0-99.0.dev"); }
 
 	// https://github.com/dart-lang/ai/pull/253
 	// https://github.com/dart-lang/sdk/commit/d90b10c1b167663b9b51adc274ea0fdb18ba5856
