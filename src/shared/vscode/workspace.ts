@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Disposable, ExtensionContext, Memento, Uri } from "vscode";
 import { cursorInstallMcpServer, installFlutterExtensionPromptKey, isDartCodeTestRun, onlyAnalyzeProjectsWithOpenFilesPromptKey, tenMinutesInMs, useRecommendedSettingsPromptKey, userPromptContextPrefix } from "../constants";
-import { DartWorkspaceContext } from "../interfaces";
+import { DartWorkspaceContext, Logger } from "../interfaces";
 import { fsPath, getDartToolDir } from "../utils/fs";
 
 // Prompt keys for one-time user notifications that should apply across all VS Code profiles.
@@ -24,13 +24,17 @@ export class Context {
 	public readonly profileState: ProfileState;
 	public readonly workspaceState: WorkspaceState;
 
-	private constructor(private readonly context: ExtensionContext, public readonly workspaceContext: DartWorkspaceContext) {
+	private constructor(private readonly context: ExtensionContext, logger: Logger, public readonly workspaceContext: DartWorkspaceContext) {
 		/* eslint-disable dart-code/no-extension-context-state */
-		const dartToolDir = !isDartCodeTestRun ? getDartToolDir() : undefined;
+		const contextStoragePath = fsPath(context.globalStorageUri);
+		const env = isDartCodeTestRun
+			? { HOME: contextStoragePath, APPDATA: contextStoragePath }
+			: process.env;
+		const dartToolDir = getDartToolDir(env);
 		const globalStoragePath = dartToolDir
 			? path.join(dartToolDir, "dart-code")
-			: fsPath(context.globalStorageUri);
-		this.globalState = new GlobalState(context.globalState, globalStoragePath);
+			: contextStoragePath;
+		this.globalState = new GlobalState(logger, context.globalState, globalStoragePath);
 		this.profileState = new ProfileState(context.globalState);
 		this.workspaceState = new WorkspaceState(context.workspaceState);
 		/* eslint-enable dart-code/no-extension-context-state */
@@ -43,8 +47,8 @@ export class Context {
 		await this.workspaceState.clear();
 	}
 
-	public static for(context: ExtensionContext, workspaceContext: DartWorkspaceContext): Context {
-		return new Context(context, workspaceContext);
+	public static for(context: ExtensionContext, logger: Logger, workspaceContext: DartWorkspaceContext): Context {
+		return new Context(context, logger, workspaceContext);
 	}
 
 	public get subscriptions(): Disposable[] {
@@ -76,6 +80,7 @@ export class GlobalState {
 	private stateLoadedAt = 0;
 
 	constructor(
+		private readonly logger: Logger,
 		private readonly fallbackState: Memento,
 		public readonly storagePath: string,
 		private readonly cacheDurationMs = tenMinutesInMs,
@@ -99,21 +104,23 @@ export class GlobalState {
 		} catch (e) {
 			if ((e as NodeJS.ErrnoException | undefined)?.code === "ENOENT")
 				return {};
+			this.logger.warn(`Failed to read global state from ${this.stateFilePath}: ${String(e)}`);
 			return this.state ? { ...this.state } : {};
 		}
 	}
 
 	/**
-	 * Writes the state object to disk atomically via a temporary file and rename so
+	 * Writes `this.state` to disk atomically via a temporary file and rename so
 	 * concurrent readers never observe a truncated or partially-written file.
 	 */
-	private writeStateToDisk(data: Record<string, unknown>): void {
+	private writeStateToDisk(): void {
 		const tempFilePath = `${this.stateFilePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
 		try {
 			fs.mkdirSync(this.storagePath, { recursive: true });
-			fs.writeFileSync(tempFilePath, JSON.stringify(data, undefined, "\t"));
+			fs.writeFileSync(tempFilePath, JSON.stringify(this.state, undefined, "\t"));
 			fs.renameSync(tempFilePath, this.stateFilePath);
-		} catch {
+		} catch (e) {
+			this.logger.warn(`Failed to write global state to ${this.stateFilePath}: ${String(e)}`);
 			// Ignore disk or locking errors (such as Windows file locks); in-memory state is already updated.
 			try {
 				if (fs.existsSync(tempFilePath))
@@ -137,6 +144,19 @@ export class GlobalState {
 
 		// Fall back to VS Code's per-profile globalState for values set prior to
 		// moving to the cross-profile store, and migrate them to the new store.
+		//
+		// Because `fallbackState` is scoped to the active VS Code profile:
+		// - If a user has legacy values in Profile A, but first opens Profile B (which
+		//   has no legacy values) and reads a key, `fallbackState.get(key)` in Profile B
+		//   returns `undefined` and nothing is written to `state.json`.
+		// - When the user later opens Profile A and reads that key, the key is still
+		//   absent from `state.json`, so Profile A will read its legacy value from its
+		//   own `fallbackState` and migrate it into `state.json` (making it visible to
+		//   Profile B on subsequent reads).
+		// - If Profile B explicitly writes a new value for the key before Profile A
+		//   migrates it, `state.json` will contain Profile B's value, and Profile A's
+		//   fresh disk check below will see the key is now present and use Profile B's
+		//   newer shared value rather than overwriting it with Profile A's older value.
 		const fallbackValue = this.fallbackState.get<T>(key);
 		if (fallbackValue !== undefined) {
 			// Re-read from disk before migrating in case another profile wrote or cleared
@@ -149,7 +169,7 @@ export class GlobalState {
 			}
 			data[key] = fallbackValue;
 			this.state = data;
-			this.writeStateToDisk(data);
+			this.writeStateToDisk();
 		}
 		return fallbackValue;
 	}
@@ -162,9 +182,10 @@ export class GlobalState {
 		// cleared in the global store and should not fall back to ExtensionContext.globalState.
 		data[key] = value === undefined ? null : value;
 		this.state = data;
-		this.writeStateToDisk(data);
+		this.writeStateToDisk();
 	}
 
+	// Helper for tests to reset stored state between test runs.
 	public async clear(): Promise<void> {
 		this.state = {};
 		try {
@@ -217,6 +238,7 @@ export class GlobalState {
 export class ProfileState {
 	constructor(private readonly state: Memento) { }
 
+	// Helper for tests to reset stored state between test runs.
 	public async clear(): Promise<void> {
 		for (const clearableKey of this.state.keys())
 			await this.state.update(clearableKey, undefined);
@@ -247,6 +269,7 @@ export class ProfileState {
 export class WorkspaceState {
 	constructor(private readonly state: Memento) { }
 
+	// Helper for tests to reset stored state between test runs.
 	public async clear(): Promise<void> {
 		for (const clearableKey of this.state.keys())
 			await this.state.update(clearableKey, undefined);

@@ -202,7 +202,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;
-	const extContext = Context.for(context, workspaceContext);
+	const extContext = Context.for(context, logger, workspaceContext);
 	const sdks = workspaceContext.sdks;
 	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
 
