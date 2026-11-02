@@ -99,6 +99,7 @@ export enum ExtensionRestartReason {
 export function getServerStartReason(restartReason: ExtensionRestartReason): string {
 	switch (restartReason) {
 		case ExtensionRestartReason.AnalysisServerRestartCommand:
+		case ExtensionRestartReason.ToolingDaemonStatusBar:
 			return "manual-restart";
 		case ExtensionRestartReason.AnalysisServerCrashedManyTimes:
 		case ExtensionRestartReason.AnalysisServerFromSourceMismatch:
@@ -110,7 +111,6 @@ export function getServerStartReason(restartReason: ExtensionRestartReason): str
 		case ExtensionRestartReason.FlutterDaemonTimeout:
 		case ExtensionRestartReason.FlutterSdkActivationFailure:
 		case ExtensionRestartReason.RestartMacDaemonMessage:
-		case ExtensionRestartReason.ToolingDaemonStatusBar:
 		case ExtensionRestartReason.ToolingDaemonTerminated:
 			return "other-crash-manual-restart";
 		// TODO(dantup): Check if any of these should have unique values.

@@ -34,7 +34,8 @@ export abstract class Analyzer implements IAmDisposableAsync {
 	public abstract getImports(params: ls.TextDocumentPositionParams): Promise<ls.Location[] | null>;
 	public abstract getAugmented(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
 	public abstract getAugmentation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
-	public abstract spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities): Promise<StreamInfo>;
+	public abstract getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities): string[];
+	public abstract spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo>;
 	public abstract handleDisposeCleanup(process: SpawnedProcess): Promise<void>;
 
 	constructor(protected readonly logger: Logger) {

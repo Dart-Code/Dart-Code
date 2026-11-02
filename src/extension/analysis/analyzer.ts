@@ -471,7 +471,7 @@ export class LspAnalyzer extends Analyzer {
 			"Dart Analysis Server",
 			async () => {
 				try {
-					const streamInfo = await this.spawnServer(logger, sdks, dartCapabilities);
+					const streamInfo = await this.spawnServer(logger, sdks);
 					const jsonEncoder = ls.RAL().applicationJson.encoder;
 
 					return {
@@ -642,11 +642,11 @@ export class LspAnalyzer extends Analyzer {
 		}
 	}
 
-	public spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities): Promise<StreamInfo> {
+	public spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo> {
 		// TODO: Replace with constructing an Analyzer that passes LSP flag (but still reads config
 		// from paths etc) and provide it's process.
 		const vmPath = path.join(sdks.dart, dartVMPath);
-		const args = getAnalyzerArgs(logger, dartCapabilities);
+		const args = this.getAnalyzerArgs(logger, this.dartCapabilities);
 
 		logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
 		const analysisServerStartTime = Date.now();
@@ -702,6 +702,10 @@ export class LspAnalyzer extends Analyzer {
 		});
 
 		return Promise.resolve({ reader, writer });
+	}
+
+	public getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities): string[] {
+		return getAnalyzerArgs(logger, dartCapabilities);
 	}
 
 	/**
