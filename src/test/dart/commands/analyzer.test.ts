@@ -11,7 +11,7 @@ import { SpawnedProcess } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { fsPath } from "../../../shared/utils/fs";
 import { AnalyzerUpdateDiagnosticInformationFeature, UpdateDiagnosticInformationRequest } from "../../../shared/vscode/analyzer_update_diagnostic_information";
-import { activate, defer, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest } from "../../helpers";
+import { activate, defer, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("toggle show TODOs", () => {
 	const settingName = "showTodos";
@@ -775,14 +775,17 @@ describe("analyzer", () => {
 			assert.equal(statusEvents.length, 2);
 		});
 
-		it("resends diagnostic information on server re-initialization and preserves config listener across clear", async () => {
+		it("resends diagnostic information on server re-initialization and re-registers config listener after clear", async () => {
 			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest").resolves(undefined);
 
 			// Grab the AnalyzerUpdateDiagnosticInformationFeature registered on the analyzer and its
 			// underlying StaticFeature hook that vscode-languageclient calls during server lifecycle events.
 			const updateDiag = (privateApi.analyzer as unknown as { updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature }).updateDiagnosticInformation;
 			const lspFeature = updateDiag.feature;
-			defer("Restore diagnostic feature capabilities", () => lspFeature.initialize(privateApi.analyzer.client.initializeResult!.capabilities, undefined));
+			defer("Restore diagnostic feature capabilities", () => {
+				lspFeature.clear();
+				lspFeature.initialize(privateApi.analyzer.client.initializeResult!.capabilities, undefined);
+			});
 
 			// 1. When the LSP server stops/crashes, LanguageClient calls clear() on all features.
 			//    Verify this marks the feature as unsupported so requests are not sent while stopped.
@@ -803,10 +806,11 @@ describe("analyzer", () => {
 			assert.equal(sendRequest.callCount, 2);
 			assert.ok(sendRequest.secondCall.calledWith(UpdateDiagnosticInformationRequest.type, sinon.match.object));
 
-			// 4. Verify that clear() did not dispose the workspace.onDidChangeConfiguration listener,
+			// 4. Verify that initialize() re-registered the workspace.onDidChangeConfiguration listener after clear(),
 			//    so changing a watched setting after a restart still triggers an update to the server.
-			await setConfigForTest("editor", "formatOnSave", true);
-			assert.ok(sendRequest.callCount >= 3);
+			const currentValue = vs.workspace.getConfiguration("dart").get<boolean>("onlyAnalyzeProjectsWithOpenFiles");
+			await setConfigForTest("dart", "onlyAnalyzeProjectsWithOpenFiles", !currentValue);
+			await waitForResult(() => sendRequest.callCount >= 3);
 			assert.ok(sendRequest.lastCall.calledWith(UpdateDiagnosticInformationRequest.type, sinon.match.object));
 		});
 

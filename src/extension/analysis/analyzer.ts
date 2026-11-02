@@ -89,17 +89,18 @@ export class LspAnalyzer extends Analyzer {
 			},
 		});
 		this.disposables.push(this.client.onDidChangeState((e) => {
+			if (e.newState === ls.State.Running) {
+				// Connect (or reconnect after a server restart) to DTD whenever the client reaches Running.
+				void this.connectToDtd(this.dtd);
+			}
 			if (e.oldState === ls.State.Running) {
-				// If the server terminates mid-analysis, it will never send the "end" work-done
+				// If the server stops or crashes mid-analysis, it will never send the "end" work-done
 				// progress notification for "ANALYZING", which would leave the status item and
 				// isAnalyzing state stuck as busy. Reset them when leaving the Running state.
 				if (this.statusItem.busy) {
 					this.statusItem.busy = false;
 					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
 				}
-			} else if (e.newState === ls.State.Running) {
-				// Connect (or reconnect after a server restart) to DTD whenever the client reaches Running.
-				void this.connectToDtd(this.dtd);
 			}
 		}));
 
