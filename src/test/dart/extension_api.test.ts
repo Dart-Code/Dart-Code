@@ -1,8 +1,9 @@
 import { strict as assert } from "assert";
+import * as sinon from "sinon";
 import { commands, workspace } from "vscode";
 import { ExtensionRestartReason } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
-import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, waitForResult } from "../helpers";
+import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, privateApi, sb, waitForResult } from "../helpers";
 
 describe("extension api", () => {
 	it("provides the DTD Uri and notifies of changes", async () => {
@@ -27,16 +28,27 @@ describe("extension api", () => {
 		sub.dispose();
 	});
 
-	it("serializes concurrent extension reloads without breaking the analyzer", async () => {
+	it("coalesces overlapping extension reloads without breaking the analyzer", async () => {
 		await activateWithoutAnalysis();
+		const initialAnalyzer = privateApi.analyzer;
+		const warnSpy = sb.spy(privateApi.logger, "warn");
 
 		await Promise.all([
 			commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test),
 			commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test),
 		]);
 
+		// The overlapping reload requests should have coalesced into a single reload,
+		// disposed the original analyzer, and replaced it with a new live analyzer.
+		assert.equal(warnSpy.withArgs(sinon.match("Performing extension reload")).callCount, 1);
+		assert.equal((initialAnalyzer as any).isDisposed, true);
+		assert.notStrictEqual(privateApi.analyzer, initialAnalyzer);
+		assert.equal((privateApi.analyzer as any).isDisposed, false);
+
 		await activate();
-		assert.ok(extApi.sdks.dart);
+		const doc = await workspace.openTextDocument(helloWorldMainFile);
+		const outline = (await extApi.workspace.getOutline(doc))!;
+		assert.equal(outline.element.name, "<unit>");
 	});
 
 	it("workspace.getOutline", async () => {

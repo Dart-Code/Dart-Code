@@ -781,6 +781,11 @@ describe("analyzer", () => {
 				disposables: Array<{ dispose: () => Promise<void> | void }>;
 				isDisposed: boolean;
 			};
+			// `analyzer.disposables[1]` is the client-stopping disposable registered in the
+			// `LspAnalyzer` constructor (`disposables[0]` is `onAnalysisStatusChangeEmitter`
+			// from `Analyzer`). Invoking it with stubbed `client` methods (and resetting
+			// `isDisposed` in `finally`) exercises the real disposal closure and `errorHandler`
+			// binding without stopping the live `LanguageClient` used by subsequent tests.
 			const clientDisposable = analyzer.disposables[1];
 			let currentState = ls.State.Starting;
 			let resolveStart!: () => void;
