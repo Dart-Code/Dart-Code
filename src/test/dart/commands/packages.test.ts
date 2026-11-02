@@ -1,5 +1,4 @@
 import { strict as assert } from "assert";
-import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { iUnderstandAction } from "../../../shared/constants";
@@ -12,11 +11,8 @@ const nestedFlutterFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "nes
 describe("package commands", () => {
 	before("activate", () => activate());
 
-	function createPubspecIn(folder: string): void {
-		const folderPath = path.join(fsPath(helloWorldFolder), folder);
-		fs.mkdirSync(folderPath, { recursive: true });
-		fs.writeFileSync(path.join(folderPath, "pubspec.yaml"), "name: pubspec_change_trigger\n");
-		defer(`Delete ${folder}`, () => fs.rmSync(path.join(fsPath(helloWorldFolder), folder.split(path.sep)[0]), { recursive: true, force: true }));
+	function pubspecUri(relativeDir: string): vs.Uri {
+		return vs.Uri.file(path.join(fsPath(helloWorldFolder), relativeDir, "pubspec.yaml"));
 	}
 
 	describe("dart.upgradePackages.majorVersions", () => {
@@ -181,11 +177,11 @@ describe("package commands", () => {
 		});
 	});
 
-	describe("pubspec watcher", () => {
+	describe("handlePubspecChange", () => {
 		it("fetches packages when a pubspec is modified", async () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 
-			createPubspecIn("pubspec_trigger_tmp");
+			privateApi.packageCommands.handlePubspecChange(pubspecUri(""));
 
 			await waitForResult(() => fetchPackagesOrPrompt.calledOnce);
 		});
@@ -194,21 +190,22 @@ describe("package commands", () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.stub(privateApi.logger, "info");
 
-			createPubspecIn(path.join("pubspec_hidden_tmp", ".hidden"));
+			privateApi.packageCommands.handlePubspecChange(pubspecUri(".hidden"));
 
-			await waitForResult(() => infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping pubspec change for ignored folder")));
-			await delay(1200); // Allow time for any (incorrect) debounced fetch to fire.
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping pubspec change for ignored folder")));
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 
 		it("ignores pubspecs in build folders that were not saved in the editor", async () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.stub(privateApi.logger, "info");
+			// Ensure any manual-save flag set by a previous test has expired so this
+			// change counts as external.
+			await delay(1100);
 
-			createPubspecIn(path.join("pubspec_build_tmp", "build"));
+			privateApi.packageCommands.handlePubspecChange(pubspecUri("build"));
 
-			await waitForResult(() => infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping pubspec change for ignored folder")));
-			await delay(1200);
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping pubspec change for ignored folder")));
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 
@@ -217,10 +214,9 @@ describe("package commands", () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.stub(privateApi.logger, "info");
 
-			createPubspecIn("pubspec_disabled_tmp");
+			privateApi.packageCommands.handlePubspecChange(pubspecUri(""));
 
-			await waitForResult(() => infoLogs.getCalls().some((call) => String(call.args[0]).includes('Automatically running "pub get" is disabled')));
-			await delay(1200);
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes('Automatically running "pub get" is disabled')));
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 
@@ -229,10 +225,9 @@ describe("package commands", () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.stub(privateApi.logger, "info");
 
-			createPubspecIn("pubspec_suppressed_tmp");
+			privateApi.packageCommands.handlePubspecChange(pubspecUri(""));
 
-			await waitForResult(() => infoLogs.getCalls().some((call) => String(call.args[0]).includes('Workspace suppresses automatic "pub"')));
-			await delay(1200);
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes('Workspace suppresses automatic "pub"')));
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 
@@ -242,10 +237,9 @@ describe("package commands", () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.stub(privateApi.logger, "info");
 
-			createPubspecIn("pubspec_creating_tmp");
+			privateApi.packageCommands.handlePubspecChange(pubspecUri(""));
 
-			await waitForResult(() => infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping package fetch because project creation is in progress")));
-			await delay(1200);
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping package fetch because project creation is in progress")));
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 	});
