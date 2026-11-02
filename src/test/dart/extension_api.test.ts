@@ -27,6 +27,18 @@ describe("extension api", () => {
 		sub.dispose();
 	});
 
+	it("serializes concurrent extension reloads without breaking the analyzer", async () => {
+		await activateWithoutAnalysis();
+
+		await Promise.all([
+			commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test),
+			commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test),
+		]);
+
+		await activate();
+		assert.ok(extApi.sdks.dart);
+	});
+
 	it("workspace.getOutline", async () => {
 		await activate();
 

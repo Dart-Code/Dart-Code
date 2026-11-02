@@ -22,6 +22,7 @@ jobs:
     permissions:
       contents: none
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       excludes: ${{ join(steps.*.outputs.excludes) }}
       run_tests: ${{ github.event_name != 'merge_group' }}
@@ -52,6 +53,7 @@ jobs:
 
     name: "${{ matrix.bot }} (${{ matrix.build-version }} ${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     needs: build_exclusions
 
     strategy:
@@ -329,6 +331,7 @@ jobs:
     needs: build_exclusions
     if: needs.build_exclusions.outputs.check_links == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     permissions:
       contents: read
@@ -359,6 +362,7 @@ jobs:
     needs: build
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       # Fail if the build check did not pass.
       - name: Check results
@@ -375,6 +379,7 @@ jobs:
     # explicitly check that ran and passed or failed (and was not skipped/cancelled).
     if: always() && needs.build_exclusions.outputs.run_tests == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure')
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       has_coverage: ${{ steps.merge_coverage.outcome == 'success' }}
 
@@ -436,6 +441,7 @@ jobs:
     needs: merge_artifacts
     if: needs.merge_artifacts.outputs.has_coverage == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
 
@@ -461,6 +467,7 @@ jobs:
     needs: build
     if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.ref == 'refs/heads/master' || github.event.merge_group.base_ref == 'refs/heads/master') && github.repository == 'Dart-Code/Dart-Code'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
 

@@ -58,6 +58,7 @@ export class LspAnalyzer extends Analyzer {
 	public readonly refactors: InteractiveRefactors;
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
+	private isDisposed = false;
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly analytics: Analytics) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
@@ -65,7 +66,24 @@ export class LspAnalyzer extends Analyzer {
 		this.setupStatusItem();
 
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
-		this.disposables.push({ dispose: () => this.client.stop() });
+		this.disposables.push({
+			dispose: async () => {
+				this.isDisposed = true;
+				// If the client is still starting, calling stop() immediately will throw
+				// ("Client is not running and can't be stopped") and leave the client to
+				// finish starting and register duplicate commands/providers in the background.
+				// Wait for startup to settle first, then stop the client if it is running.
+				if (this.client.state === ls.State.Starting) {
+					try {
+						await this.client.start();
+					} catch {
+						// Ignore startup errors during disposal.
+					}
+				}
+				if (this.client.state === ls.State.Running)
+					await this.client.stop();
+			},
+		});
 
 
 		// Set up features that register capabilities and may also wrap client middleware.
@@ -90,6 +108,8 @@ export class LspAnalyzer extends Analyzer {
 		this.client.registerFeature(this.updateDiagnosticInformation.feature);
 
 		void this.client.start().then(() => {
+			if (this.isDisposed)
+				return;
 			this.statusItem.text = "Dart Analysis Server";
 			// Reminder: These onNotification calls only hold ONE handler!
 			this.client.onNotification(OpenUriNotification.type, (params) => {
@@ -122,10 +142,11 @@ export class LspAnalyzer extends Analyzer {
 			const registerExperimentalHandlers = !!config.experimentalDtdHandlers;
 			try {
 				const dtdUri = await dtd?.dtdUri;
-				if (dtdUri)
+				if (dtdUri && !this.isDisposed)
 					await this.client.sendRequest(ConnectToDtdRequest.type, { uri: dtdUri, registerExperimentalHandlers });
 			} catch (e) {
-				this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${String(e)}`);
+				if (!this.isDisposed)
+					this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${String(e)}`);
 			}
 		}
 	}
@@ -413,7 +434,7 @@ export class LspAnalyzer extends Analyzer {
 	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: InteractiveMiddleware): LanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
-			errorHandler: new DartErrorHandler(logger),
+			errorHandler: new DartErrorHandler(logger, () => this.isDisposed),
 			initializationFailedHandler: (error: ls.ResponseError<ls.InitializeError> | Error | undefined) => {
 				logger.warn(`Failed to initialize LSP server: ${error}`);
 				return false; // Let client handle reinitialization.
@@ -824,9 +845,11 @@ class DartErrorHandler implements ls.ErrorHandler {
 
 	readonly maxRestartCount = 2;
 
-	constructor(private readonly logger: Logger) { }
+	constructor(private readonly logger: Logger, private readonly isDisposed?: () => boolean) { }
 
 	public error(error: Error, message: ls.Message, count: number): ls.ErrorHandlerResult {
+		if (this.isDisposed?.())
+			return { action: ls.ErrorAction.Shutdown, handled: true };
 		this.logger.warn(`LSP Client error: (error: ${error}, count: ${count})`);
 		if (count && count < this.maxRestartCount) {
 			return { action: ls.ErrorAction.Continue };
@@ -835,6 +858,8 @@ class DartErrorHandler implements ls.ErrorHandler {
 	}
 
 	public closed(): ls.CloseHandlerResult {
+		if (this.isDisposed?.())
+			return { action: ls.CloseAction.DoNotRestart, handled: true };
 		this.restarts.push(Date.now());
 		this.logger.warn(`LSP Client closed (${this.restarts.length} recent restarts recorded)`);
 		if (this.restarts.length <= this.maxRestartCount) {

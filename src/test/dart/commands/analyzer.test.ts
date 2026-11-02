@@ -676,9 +676,9 @@ describe("analyzer", () => {
 	});
 
 	describe("DartErrorHandler", () => {
-		function createErrorHandler(): ls.ErrorHandler & { restarts: number[] } {
-			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger) => ls.ErrorHandler & { restarts: number[] };
-			return new ErrorHandlerClass(privateApi.logger);
+		function createErrorHandler(isDisposed?: () => boolean): ls.ErrorHandler & { restarts: number[] } {
+			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger, isDisposed?: () => boolean) => ls.ErrorHandler & { restarts: number[] };
+			return new ErrorHandlerClass(privateApi.logger, isDisposed);
 		}
 
 		it("continues on error before maxRestartCount and shuts down at maxRestartCount", () => {
@@ -688,6 +688,15 @@ describe("analyzer", () => {
 			assert.deepEqual(handler.error(new Error("err1"), msg, 1), { action: ls.ErrorAction.Continue });
 			assert.deepEqual(handler.error(new Error("err2"), msg, 2), { action: ls.ErrorAction.Shutdown });
 			assert.deepEqual(handler.error(new Error("err0"), msg, 0), { action: ls.ErrorAction.Shutdown });
+		});
+
+		it("shuts down on error and does not restart on close when analyzer is disposed", () => {
+			const handler = createErrorHandler(() => true);
+			const msg: ls.Message = { jsonrpc: "2.0" };
+
+			assert.deepEqual(handler.error(new Error("err1"), msg, 1), { action: ls.ErrorAction.Shutdown, handled: true });
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
+			assert.equal(handler.restarts.length, 0);
 		});
 
 		it("restarts on close up to maxRestartCount and stops if crashing repeatedly within 3 minutes", () => {
@@ -763,6 +772,45 @@ describe("analyzer", () => {
 				assert.ok(hungProc.kill.calledOnce);
 			} finally {
 				clock.restore();
+			}
+		});
+
+		it("waits for starting client to settle before stopping during dispose", async () => {
+			const analyzer = privateApi.analyzer as unknown as {
+				client: ls.LanguageClient;
+				disposables: Array<{ dispose: () => Promise<void> | void }>;
+				isDisposed: boolean;
+			};
+			const clientDisposable = analyzer.disposables[1];
+			let currentState = ls.State.Starting;
+			let resolveStart!: () => void;
+			const startPromise = new Promise<void>((resolve) => { resolveStart = resolve; });
+
+			sb.stub(analyzer.client, "state").get(() => currentState);
+			const startStub = sb.stub(analyzer.client, "start").callsFake(async () => {
+				await startPromise;
+				currentState = ls.State.Running;
+			});
+			const stopStub = sb.stub(analyzer.client, "stop").callsFake(async () => {
+				currentState = ls.State.Stopped;
+			});
+
+			try {
+				const disposePromise = Promise.resolve(clientDisposable.dispose());
+				// While start() is still pending, stop() must not have been called yet
+				// and the analyzer's errorHandler should already treat the analyzer as disposed.
+				assert.ok(startStub.calledOnce);
+				assert.ok(stopStub.notCalled);
+				assert.deepEqual(
+					analyzer.client.clientOptions.errorHandler!.closed(),
+					{ action: ls.CloseAction.DoNotRestart, handled: true },
+				);
+
+				resolveStart();
+				await disposePromise;
+				assert.ok(stopStub.calledOnce);
+			} finally {
+				analyzer.isDisposed = false;
 			}
 		});
 	});

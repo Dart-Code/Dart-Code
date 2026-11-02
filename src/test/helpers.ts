@@ -299,12 +299,12 @@ export async function activate(file?: vs.Uri | null): Promise<void> {
 	await activateWithoutAnalysis(file);
 
 	logger.info(`Waiting for initial analysis`);
-	await privateApi.initialAnalysis;
+	await withTimeout(privateApi.initialAnalysis, "Initial analysis did not complete", 120);
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(50);
 	logger.info(`Waiting for in-progress analysis`);
-	await privateApi.currentAnalysis();
+	await withTimeout(privateApi.currentAnalysis(), "In-progress analysis did not complete", 120);
 
 	logger.info(`Ready to start test`);
 	const cpuLoad = os.loadavg();
@@ -870,15 +870,22 @@ export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInfor
 	return workspaceSymbolResult || [];
 }
 
-export function waitForDiagnosticChange(resource?: vs.Uri): Promise<void> {
-	return new Promise((resolve) => {
-		const disposable = vs.languages.onDidChangeDiagnostics((e) => {
-			if (!resource || e.uris.find((r) => fsPath(r) === fsPath(resource))) {
-				resolve();
-				disposable.dispose();
-			}
-		});
-	});
+export async function waitForDiagnosticChange(resource?: vs.Uri): Promise<void> {
+	let disposable: vs.Disposable | undefined;
+	try {
+		await withTimeout(
+			new Promise<void>((resolve) => {
+				disposable = vs.languages.onDidChangeDiagnostics((e) => {
+					if (!resource || e.uris.find((r) => fsPath(r) === fsPath(resource)))
+						resolve();
+				});
+			}),
+			"Diagnostics did not change",
+			60,
+		);
+	} finally {
+		disposable?.dispose();
+	}
 }
 
 export async function acceptFirstSuggestion(): Promise<void> {
@@ -1208,7 +1215,7 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 	await delay(1);
 }
 
-export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
+export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds = 120): Promise<void> {
 	logger.info("Waiting for any in-progress analysis to complete");
 	await privateApi.currentAnalysis();
 	// Get a new completer for the next analysis.
