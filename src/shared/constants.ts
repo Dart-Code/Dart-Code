@@ -75,6 +75,7 @@ export enum ExtensionRestartReason {
 	AfterFlutterExtensionInstall = "afterFlutterExtensionInstall",
 	AfterFlutterUpgrade = "afterFlutterUpgrade",
 	AfterSdkVersionFileChange = "afterSdkVersionFileChange",
+	AnalysisServerAutoRestart = "analysisServerAutoRestart",
 	AnalysisServerCrashedManyTimes = "analysisServerCrashedManyTimes",
 	AnalysisServerFromSourceMismatch = "analysisServerFromSourceMismatch",
 	AnalysisServerRestartCommand = "analysisServerRestartCommand",
@@ -96,10 +97,12 @@ export enum ExtensionRestartReason {
 	Test = "test",
 }
 
-export function getServerStartReason(restartReason: ExtensionRestartReason): string {
+export function getServerStartReason(restartReason: ExtensionRestartReason | undefined): string {
 	switch (restartReason) {
 		case ExtensionRestartReason.AnalysisServerRestartCommand:
 			return "manual-restart";
+		case ExtensionRestartReason.AnalysisServerAutoRestart:
+			return "server-crash-automatic-restart";
 		case ExtensionRestartReason.AnalysisServerCrashedManyTimes:
 		case ExtensionRestartReason.AnalysisServerFromSourceMismatch:
 		case ExtensionRestartReason.AnalyzerTerminated:
@@ -125,6 +128,7 @@ export function getServerStartReason(restartReason: ExtensionRestartReason): str
 		case ExtensionRestartReason.NewPlatformEnabledPrompt:
 		case ExtensionRestartReason.Test:
 		case ExtensionRestartReason.Unknown:
+		case undefined:
 			return "clean-start";
 	}
 }

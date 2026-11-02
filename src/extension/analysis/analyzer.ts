@@ -44,10 +44,10 @@ import {
 // Globals so we only show these errors once per session.
 let hasShownAnalysisServerVersionMismatchError = false;
 let hasShownDartOsVersionError = false;
-let serverStartReason = "clean-start";
+let extensionRestartReason: ExtensionRestartReason | undefined;
 
-export function setAnalysisServerStartReason(reason: ExtensionRestartReason): void {
-	serverStartReason = getServerStartReason(reason);
+export function setExtensionRestartReason(reason: ExtensionRestartReason): void {
+	extensionRestartReason = reason;
 }
 
 export class LspAnalyzer extends Analyzer {
@@ -790,7 +790,7 @@ function getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities) {
 	analyzerArgs.push(`--client-id=${clientID}`);
 	analyzerArgs.push(`--client-version=${extensionVersion}`);
 	if (dartCapabilities.supportsServerStartReason)
-		analyzerArgs.push(`--start-reason=${serverStartReason}`);
+		analyzerArgs.push(`--start-reason=${getServerStartReason(extensionRestartReason)}`);
 
 	// The analysis server supports verboses log files.
 	if (config.analyzerInstrumentationLogFile)
@@ -828,7 +828,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 		this.restarts.push(Date.now());
 		this.logger.warn(`LSP Client closed (${this.restarts.length} recent restarts recorded)`);
 		if (this.restarts.length <= this.maxRestartCount) {
-			serverStartReason = "server-crash-automatic-restart";
+			extensionRestartReason = ExtensionRestartReason.AnalysisServerAutoRestart;
 			return { action: ls.CloseAction.Restart };
 		} else {
 			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
@@ -846,7 +846,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 				};
 			} else {
 				this.restarts.shift();
-				serverStartReason = "server-crash-automatic-restart";
+				extensionRestartReason = ExtensionRestartReason.AnalysisServerAutoRestart;
 				return {
 					action: ls.CloseAction.Restart,
 				};
