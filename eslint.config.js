@@ -31,7 +31,22 @@ export default defineConfig([
 		linterOptions: {
 			reportUnusedDisableDirectives: true,
 		},
+		plugins: {
+			"dart-code": {
+				rules: {
+					"no-extension-context-state": {
+						create: (ctx) => ({
+							"MemberExpression[property.name=/^(globalState|workspaceState|globalStorageUri|storageUri)$/]": (node) => {
+								if (ctx.sourceCode.parserServices?.getTypeAtLocation(node.object).getSymbol()?.getName() === "ExtensionContext")
+									ctx.report({ node: node.property, message: `Do not access ${node.property.name} on ExtensionContext directly; use the Context wrapper instead.` });
+							},
+						}),
+					},
+				},
+			},
+		},
 		rules: {
+			"dart-code/no-extension-context-state": "error",
 			"no-restricted-properties": [
 				"error",
 				{

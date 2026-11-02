@@ -8,7 +8,7 @@ const arbExtensionIdentifier = "Google.arb-editor";
 
 export class ArbExtensionRecommentation {
 	constructor(private readonly recommendations: ExtensionRecommentations, private readonly context: Context) {
-		context.context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.maybePrompt(e?.document)));
+		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.maybePrompt(e?.document)));
 	}
 
 	private hasShownPromptThisSession = false;
@@ -26,7 +26,7 @@ export class ArbExtensionRecommentation {
 			return;
 
 		// Have already ignored.
-		if (this.context.getIgnoredExtensionRecommendationIdentifiers().find((identifier) => identifier.toLowerCase() === arbExtensionIdentifier.toLowerCase()))
+		if (this.context.profileState.getIgnoredExtensionRecommendationIdentifiers().find((identifier) => identifier.toLowerCase() === arbExtensionIdentifier.toLowerCase()))
 			return;
 
 		this.hasShownPromptThisSession = true;

@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
-import { cursorInstallMcpServer, DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, onlyAnalyzeProjectsWithOpenFilesDeprecationUrl, onlyAnalyzeProjectsWithOpenFilesPromptKey, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { cursorInstallMcpServer, DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, onlyAnalyzeProjectsWithOpenFilesDeprecationUrl, onlyAnalyzeProjectsWithOpenFilesPromptKey, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
@@ -20,29 +20,27 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 	if (workspaceContext.config.disableStartupPrompts)
 		return;
 
-	function shouldSuppress(key: string): boolean {
-		const stateKey = `${userPromptContextPrefix}${key}`;
-		return context.get(stateKey) === true;
+	function shouldSuppress<K extends string>(state: { getHasPrompted(key: K): boolean }, key: K): boolean {
+		return state.getHasPrompted(key);
 	}
 
 	/// Shows a prompt and stores the return value. Prompt should return `true` to mark
 	/// this extension as seen-forever and it won't be shown again. Returning anything
 	/// else will allow the prompt to appear again next time.
-	function showPrompt(key: string, prompt: () => Thenable<boolean>): void {
-		const stateKey = `${userPromptContextPrefix}${key}`;
-		void prompt().then((res) => context.update(stateKey, res), error);
+	function showPrompt<K extends string>(state: { setHasPrompted(key: K, value: boolean): void }, key: K, prompt: () => Thenable<boolean>): void {
+		void prompt().then((res) => state.setHasPrompted(key, res), error);
 	}
 
 	if (await showSdkDeprecationNoticeIfAppropriate(logger, context, workspaceContext, dartCapabilities))
 		return; // We showed it, so skip any more.
 
-	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !shouldSuppress(installFlutterExtensionPromptKey)) {
+	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !shouldSuppress(context.profileState, installFlutterExtensionPromptKey)) {
 		// It's possible that we got here when the user installed the Flutter extension, because it causes Dart to install
 		// first and activate. So, before showing this prompt we'll wait 30 seconds and then check if we still don't
 		// have the Flutter extension, and then show the prompt.
 		await new Promise((resolve) => setTimeout(resolve, 20000).unref());
 		if (!checkHasFlutterExtension())
-			return showPrompt(installFlutterExtensionPromptKey, () => extensionRecommendations.promptToInstallFlutterExtension());
+			return showPrompt(context.profileState, installFlutterExtensionPromptKey, () => extensionRecommendations.promptToInstallFlutterExtension());
 	}
 
 	// Check the user hasn't installed Flutter in a forbidden location that will cause issues.
@@ -67,15 +65,15 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 	}
 
 	const extensionVersionForReleaseNotes = getExtensionVersionForReleaseNotes();
-	const lastSeenVersionNotification = context.lastSeenVersion;
+	const lastSeenVersionNotification = context.globalState.lastSeenVersion;
 	if (!lastSeenVersionNotification) {
 		// If we've not got a stored version, this is the first install, so just
 		// stash the current version and don't show anything.
-		context.lastSeenVersion = extensionVersionForReleaseNotes;
+		context.globalState.lastSeenVersion = extensionVersionForReleaseNotes;
 	} else if (!isDevExtension && lastSeenVersionNotification !== extensionVersionForReleaseNotes) {
 		const versionLink = extensionVersionForReleaseNotes.split(".").slice(0, 2).join(".").replace(".", "-");
 		void promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
-			context.lastSeenVersion = extensionVersionForReleaseNotes,
+			context.globalState.lastSeenVersion = extensionVersionForReleaseNotes,
 		);
 		return;
 	}
@@ -85,20 +83,20 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
-	if (!shouldSuppress(onlyAnalyzeProjectsWithOpenFilesPromptKey) && config.onlyAnalyzeProjectsWithOpenFiles) {
-		showPrompt(onlyAnalyzeProjectsWithOpenFilesPromptKey, promptAboutOnlyAnalyzeProjectsWithOpenFilesDeprecation);
+	if (!shouldSuppress(context.globalState, onlyAnalyzeProjectsWithOpenFilesPromptKey) && config.onlyAnalyzeProjectsWithOpenFiles) {
+		showPrompt(context.globalState, onlyAnalyzeProjectsWithOpenFilesPromptKey, promptAboutOnlyAnalyzeProjectsWithOpenFilesDeprecation);
 		return;
 	}
 
-	if (!shouldSuppress(useRecommendedSettingsPromptKey) && !hasAnyExistingDartSettings()) {
-		showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
+	if (!shouldSuppress(context.profileState, useRecommendedSettingsPromptKey) && !hasAnyExistingDartSettings()) {
+		showPrompt(context.profileState, useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
 		return;
 	}
 
 	// Show MCP install prompt for Cursor.
 	if (vs.env.appName === "Cursor" && workspaceContext.sdks.dart) {
-		if (!shouldSuppress(cursorInstallMcpServer)) {
-			showPrompt(cursorInstallMcpServer, promptToInstallMcpServerForCursor);
+		if (!shouldSuppress(context.globalState, cursorInstallMcpServer)) {
+			showPrompt(context.globalState, cursorInstallMcpServer, promptToInstallMcpServerForCursor);
 			return;
 		}
 	}

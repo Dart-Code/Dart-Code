@@ -33,8 +33,8 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	if (now <= surveyData.startDate || now >= surveyData.endDate)
 		return false;
 
-	const lastShown = context.getFlutterSurveyNotificationLastShown(surveyData.uniqueId);
-	const doNotShow = context.getFlutterSurveyNotificationDoNotShow(surveyData.uniqueId);
+	const lastShown = context.globalState.getFlutterSurveyNotificationLastShown(surveyData.uniqueId);
+	const doNotShow = context.globalState.getFlutterSurveyNotificationDoNotShow(surveyData.uniqueId);
 
 	// Don't show this notification if user previously said not to.
 	if (doNotShow)
@@ -57,18 +57,18 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for
 	// 40 hours.
-	context.setFlutterSurveyNotificationLastShown(surveyData.uniqueId, Date.now());
+	context.globalState.setFlutterSurveyNotificationLastShown(surveyData.uniqueId, Date.now());
 
 	// Prompt to show and handle response.
 	analytics.logFlutterSurveyShown();
 	void vs.window.showInformationMessage(surveyData.title, takeSurveyAction, skipThisSurveyAction).then(async (choice) => {
 		if (choice === skipThisSurveyAction) {
-			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
+			context.globalState.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
 			analytics.logFlutterSurveyDismissed();
 		} else if (choice === takeSurveyAction) {
 			// Mark as do-not-show-again if they answer it, since it seems silly
 			// to show them again if they already completed it.
-			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
+			context.globalState.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
 			await openInBrowser(surveyUrl);
 			analytics.logFlutterSurveyClicked();
 		}
@@ -88,8 +88,8 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 	if (!isRunningLocally)
 		return { didOpen: false };
 
-	const lastShown = context.devToolsNotificationLastShown;
-	const doNotShow = context.devToolsNotificationDoNotShow;
+	const lastShown = context.profileState.devToolsNotificationLastShown;
+	const doNotShow = context.profileState.devToolsNotificationDoNotShow;
 
 	// Don't show this notification more than 10 times or if user said not to.
 	if (doNotShow)
@@ -99,11 +99,11 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 	if (lastShown && Date.now() - lastShown < noRepeatPromptThreshold)
 		return { didOpen: false };
 
-	context.devToolsNotificationLastShown = Date.now();
+	context.profileState.devToolsNotificationLastShown = Date.now();
 
 	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openAction, alwaysOpenAction, notTodayAction, doNotAskAgainAction);
 	if (choice === doNotAskAgainAction) {
-		context.devToolsNotificationDoNotShow = true;
+		context.profileState.devToolsNotificationDoNotShow = true;
 		return { didOpen: false };
 	} else if (choice === alwaysOpenAction) {
 		void vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.onDebugPrompt });
@@ -144,13 +144,13 @@ export async function showSdkDeprecationNoticeIfAppropriate(logger: Logger, cont
 			? [moreInfoAction]
 			: [moreInfoAction, iUnderstandAction];
 
-		if (dartCapabilities.isUnsupportedNow || !context.getSdkDeprecationNoticeDoNotShow(dartSdkVersion)) {
+		if (dartCapabilities.isUnsupportedNow || !context.globalState.getSdkDeprecationNoticeDoNotShow(dartSdkVersion)) {
 			const action = await vs.window.showWarningMessage(message, ...actions);
 			if (action === moreInfoAction) {
 				await envUtils.openInBrowser(sdkDeprecationInformationUrl);
 			}
 
-			context.setSdkDeprecationNoticeDoNotShow(dartSdkVersion, true);
+			context.globalState.setSdkDeprecationNoticeDoNotShow(dartSdkVersion, true);
 
 			return true;
 		}

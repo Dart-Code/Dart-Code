@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, env, TelemetryLogger, TelemetrySender } from "vscode";
-import { dartCodeExtensionIdentifier, ExtensionRestartReason, isChromeOS, isDartCodeTestRun, isWin, isWSL } from "../shared/constants";
+import { dartCodeExtensionIdentifier, ExtensionRestartReason, isChromeOS, isDartCodeTestRun, isWSL } from "../shared/constants";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { disposeAll } from "../shared/utils";
-import { getRandomInt } from "../shared/utils/fs";
+import { getDartToolDir, getRandomInt } from "../shared/utils/fs";
 import { simplifyVersion } from "../shared/utils/workspace";
 import { hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
 import { hostKind } from "../shared/vscode/utils";
@@ -245,13 +245,13 @@ export class Analytics implements IAmDisposable {
 	private isOptedOutOfDartToolingTelemetry(): boolean {
 		// Don't let this function ever throw.
 		try {
-			const configDirectory = isWin ? process.env.USERPROFILE : process.env.HOME;
-			if (!configDirectory) {
+			const dartToolDir = getDartToolDir();
+			if (!dartToolDir) {
 				this.logger.warn(`No valid home dir to check Dart/Flutter analytics file, disabling analytics`);
 				return true;
 			}
 
-			const configFile = path.join(configDirectory, ".dart-tool", "dart-flutter-telemetry.config");
+			const configFile = path.join(dartToolDir, "dart-flutter-telemetry.config");
 			if (!fs.existsSync(configFile)) {
 				return false; // No file, means not opted out.
 			}

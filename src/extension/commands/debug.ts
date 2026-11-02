@@ -385,8 +385,8 @@ export class DebugCommands implements IAmDisposable {
 				request: "launch",
 				type: "dart",
 			});
-			if (!this.context.hasNotifiedAboutProfileModeDefaultConfiguration) {
-				this.context.hasNotifiedAboutProfileModeDefaultConfiguration = true;
+			if (!this.context.globalState.hasNotifiedAboutProfileModeDefaultConfiguration) {
+				this.context.globalState.hasNotifiedAboutProfileModeDefaultConfiguration = true;
 				void vs.window.showInformationMessage("Profiling Flutter app with default configuration. To customize this, create a launch configuration (and include 'flutterMode': 'profile').");
 			}
 		}));
@@ -535,7 +535,7 @@ export class DebugCommands implements IAmDisposable {
 	}
 
 	public promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(e: vs.Breakpoint): void {
-		if (this.hasPromptedAboutDebugSettings || this.context.breakpointInNonDebuggableFileDoNotShowAgain || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
+		if (this.hasPromptedAboutDebugSettings || this.context.profileState.breakpointInNonDebuggableFileDoNotShowAgain || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
 			return;
 
 		// Don't consider non-files or non-Dart files.
@@ -560,7 +560,7 @@ export class DebugCommands implements IAmDisposable {
 		const debugEverything = "Debug all code";
 		void vs.window.showWarningMessage(message, debugJustMyCodeAction, debugEverything, doNotAskAgainAction).then((choice) => {
 			if (choice === doNotAskAgainAction)
-				this.context.breakpointInNonDebuggableFileDoNotShowAgain = true;
+				this.context.profileState.breakpointInNonDebuggableFileDoNotShowAgain = true;
 			if (choice !== debugEverything)
 				return;
 
@@ -806,7 +806,7 @@ export class DebugCommands implements IAmDisposable {
 						break;
 					}
 
-					if (this.context.getAppWarningDoNotShow(warningId))
+					if (this.context.globalState.getAppWarningDoNotShow(warningId))
 						break;
 
 					const url = params.url as string | undefined;
@@ -822,7 +822,7 @@ export class DebugCommands implements IAmDisposable {
 							this.logger.error(`Failed to launch URL from Flutter app.warning event: ${url}: ${String(e)}`);
 						}
 					} else if (userAction === doNotShowAgainAction) {
-						this.context.setAppWarningDoNotShow(warningId, true);
+						this.context.globalState.setAppWarningDoNotShow(warningId, true);
 					}
 					break;
 				}

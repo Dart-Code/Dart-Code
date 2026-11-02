@@ -94,6 +94,16 @@ export function homeRelativePath(p: string | undefined) {
 	return p;
 }
 
+/**
+ * Returns the path to the `.dart-tool` directory in the user's home/AppData folder,
+ * matching the path used by Dart/Flutter tooling (`%APPDATA%\.dart-tool` on Windows
+ * and `$HOME/.dart-tool` on macOS/Linux).
+ */
+export function getDartToolDir(env: NodeJS.ProcessEnv = process.env, platformIsWin = isWin): string | undefined {
+	const baseDir = platformIsWin ? env.APPDATA : env.HOME;
+	return baseDir ? path.join(baseDir, ".dart-tool") : undefined;
+}
+
 export function isWithinPath(file: string, folder: string) {
 	const relative = path.relative(folder.toLowerCase(), file.toLowerCase());
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);

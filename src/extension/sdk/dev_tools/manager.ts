@@ -624,7 +624,7 @@ export class DevToolsManager implements IAmDisposable {
 		if (!results)
 			return;
 
-		const ignoredExtensions = this.context.getIgnoredExtensionRecommendationIdentifiers();
+		const ignoredExtensions = this.context.profileState.getIgnoredExtensionRecommendationIdentifiers();
 		const installedExtension = vs.extensions.all.map((e) => e.id);
 		const promotableExtensions = Object.keys(results).flatMap((projectRoot) => results[projectRoot]?.extensions ?? [])
 			// Remove user-ignored extensions.

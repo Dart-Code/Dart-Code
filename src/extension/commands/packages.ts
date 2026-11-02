@@ -202,12 +202,12 @@ export class PackageCommands extends BaseSdkCommands {
 		if (!config.enablePub)
 			return;
 
-		if (!this.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation) {
+		if (!this.context.globalState.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation) {
 			const resp = await vs.window.showWarningMessage("Running 'pub get --major-versions' will update your pubspec.yaml to match the 'resolvable' column reported in 'pub outdated'", iUnderstandAction);
 			if (resp !== iUnderstandAction) {
 				return;
 			}
-			this.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
+			this.context.globalState.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
 		}
 
 		if (!uri || !(uri instanceof vs.Uri)) {

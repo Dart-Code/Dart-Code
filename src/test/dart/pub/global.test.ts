@@ -43,7 +43,7 @@ describe("pub global", () => {
 	});
 
 	it("does not report update-available for an out-of-date package if checked within 24 hours", async () => {
-		privateApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twoHoursInMs);
+		privateApi.context.globalState.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twoHoursInMs);
 
 		const installedVersion = await privateApi.pubGlobal.getInstalledVersion(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
 		const status = await privateApi.pubGlobal.checkVersionStatus(installedButOutOfDatePackage1, installedVersion);
@@ -52,7 +52,7 @@ describe("pub global", () => {
 
 	it("does report update-available for an out-of-date package last checked over 24 hours ago", async () => {
 		const twentyFiveHoursInMs = 1000 * 60 * 60 * 25;
-		privateApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twentyFiveHoursInMs);
+		privateApi.context.globalState.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twentyFiveHoursInMs);
 
 		const installedVersion = await privateApi.pubGlobal.getInstalledVersion(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
 		const status = await privateApi.pubGlobal.checkVersionStatus(installedButOutOfDatePackage1, installedVersion);
@@ -60,7 +60,7 @@ describe("pub global", () => {
 	});
 
 	it("can install a package that's not installed", async () => {
-		privateApi.context.setPackageLastCheckedForUpdates(definitelyNotInstalledPackage2, undefined);
+		privateApi.context.globalState.setPackageLastCheckedForUpdates(definitelyNotInstalledPackage2, undefined);
 
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Activate ${definitelyNotInstalledPackage2}`);
 
@@ -77,7 +77,7 @@ describe("pub global", () => {
 	});
 
 	it("can prompt to update a below-minimum package", async () => {
-		privateApi.context.setPackageLastCheckedForUpdates(installedButBelowMinimumPackage1, undefined);
+		privateApi.context.globalState.setPackageLastCheckedForUpdates(installedButBelowMinimumPackage1, undefined);
 
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Update ${installedButBelowMinimumPackage1}`);
 
@@ -93,7 +93,7 @@ describe("pub global", () => {
 	});
 
 	it("can prompt to update an out-of-date package", async () => {
-		privateApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, undefined);
+		privateApi.context.globalState.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, undefined);
 
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Update ${installedButOutOfDatePackage1}`);
 
@@ -109,7 +109,7 @@ describe("pub global", () => {
 	});
 
 	it("can auto-update a below-minimum package", async () => {
-		privateApi.context.setPackageLastCheckedForUpdates(installedButBelowMinimumPackage2, undefined);
+		privateApi.context.globalState.setPackageLastCheckedForUpdates(installedButBelowMinimumPackage2, undefined);
 		const installPrompt = sb.stub(vs.window, "showWarningMessage");
 
 		// Ensure we're not prompted but it's updated.

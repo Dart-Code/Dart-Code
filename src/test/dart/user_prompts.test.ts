@@ -1,12 +1,17 @@
 import { strict as assert } from "assert";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, openAction, skipThisSurveyAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
+import { cursorInstallMcpServer, doNotAskAgainAction, flutterSurveyDataUrl, installFlutterExtensionPromptKey, longRepeatPromptThreshold, noRepeatPromptThreshold, openAction, skipThisSurveyAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { Analytics } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
+import { getDartToolDir } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate, showSdkDeprecationNoticeIfAppropriate } from "../../shared/vscode/user_prompts";
-import { activateWithoutAnalysis, clearAllContext, flutterTestSurveyID, logger, privateApi, sb } from "../helpers";
+import { GlobalState, ProfileState, WorkspaceState } from "../../shared/vscode/workspace";
+import { activateWithoutAnalysis, clearAllContext, defer, flutterTestSurveyID, logger, privateApi, sb, tryDelete } from "../helpers";
 
 describe("DevTools notification", async () => {
 	beforeEach("activate", () => activateWithoutAnalysis());
@@ -29,14 +34,14 @@ describe("DevTools notification", async () => {
 
 		// Flags were updated.
 		const context = privateApi.context;
-		assert.equal(context.devToolsNotificationDoNotShow, false);
+		assert.equal(context.profileState.devToolsNotificationDoNotShow, false);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.devToolsNotificationLastShown && context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
+		assert.equal(context.profileState.devToolsNotificationLastShown && context.profileState.devToolsNotificationLastShown > Date.now() - 10000 && context.profileState.devToolsNotificationLastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already set", async () => {
 		const context = privateApi.context;
-		context.devToolsNotificationLastShown = Date.now() - (noRepeatPromptThreshold + twoHoursInMs);
+		context.profileState.devToolsNotificationLastShown = Date.now() - (noRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openAction);
@@ -52,15 +57,15 @@ describe("DevTools notification", async () => {
 		assert.equal(res.didOpen, true);
 
 		// Flags were updated.
-		assert.equal(context.devToolsNotificationDoNotShow, false);
+		assert.equal(context.profileState.devToolsNotificationDoNotShow, false);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
+		assert.equal(context.profileState.devToolsNotificationLastShown > Date.now() - 10000 && context.profileState.devToolsNotificationLastShown <= Date.now(), true);
 	});
 
 	it("does not show if shown in the last 20 hours", async () => {
 		const context = privateApi.context;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
-		context.devToolsNotificationLastShown = Date.now() - fiveHoursInMs;
+		context.profileState.devToolsNotificationLastShown = Date.now() - fiveHoursInMs;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openAction);
@@ -91,11 +96,11 @@ describe("DevTools notification", async () => {
 		assert.equal(res.didOpen, false);
 
 		// Flag was written.
-		assert.equal(privateApi.context.devToolsNotificationDoNotShow, true);
+		assert.equal(privateApi.context.profileState.devToolsNotificationDoNotShow, true);
 	});
 
 	it("does not prompt if told not to ask again", async () => {
-		privateApi.context.devToolsNotificationDoNotShow = true;
+		privateApi.context.profileState.devToolsNotificationDoNotShow = true;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(doNotAskAgainAction);
@@ -175,9 +180,9 @@ describe("Survey notification", async () => {
 
 		// Flags were updated.
 		const context = privateApi.context;
-		assert.equal(context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
+		assert.equal(context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 		// Marked as shown within the last 10 seconds.
-		const lastShown = context.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
+		const lastShown = context.globalState.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
 		assert.equal(lastShown && lastShown > Date.now() - 10000 && lastShown <= Date.now(), true);
 	});
 
@@ -200,7 +205,7 @@ describe("Survey notification", async () => {
 
 	it("shows and updates context values when already seen", async () => {
 		const context = privateApi.context;
-		context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs));
+		context.globalState.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs));
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -217,9 +222,9 @@ describe("Survey notification", async () => {
 		assert.equal(surveyShown.calledOnce, true);
 
 		// Flags were updated.
-		assert.equal(context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
+		assert.equal(context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 		// Marked as shown within the last 10 seconds.
-		const lastShown = context.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
+		const lastShown = context.globalState.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
 		assert.equal(lastShown && lastShown > Date.now() - 10000 && lastShown <= Date.now(), true);
 	});
 
@@ -227,7 +232,7 @@ describe("Survey notification", async () => {
 		const context = privateApi.context;
 		const now = surveyIsOpenDate;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
-		context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, now - fiveHoursInMs);
+		context.globalState.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, now - fiveHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -259,12 +264,12 @@ describe("Survey notification", async () => {
 		assert.equal(surveyDismissed.calledOnce, true);
 
 		// Flag was written.
-		await waitFor(() => privateApi.context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID));
-		assert.equal(privateApi.context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
+		await waitFor(() => privateApi.context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID));
+		assert.equal(privateApi.context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 	});
 
 	it("does not prompt if told not to ask again", async () => {
-		privateApi.context.setFlutterSurveyNotificationDoNotShow(flutterTestSurveyID, true);
+		privateApi.context.globalState.setFlutterSurveyNotificationDoNotShow(flutterTestSurveyID, true);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(skipThisSurveyAction);
@@ -430,3 +435,166 @@ describe("SDK deprecation notice", async () => {
 		assert.equal(showWarningMessage.calledTwice, true);
 	});
 });
+
+describe("State storage wrappers", () => {
+	function createFakeMemento(initialValues: Record<string, unknown> = {}): vs.Memento {
+		const store = new Map<string, unknown>(Object.entries(initialValues));
+		return {
+			get<T>(key: string, defaultValue?: T): T | undefined {
+				return store.has(key) ? store.get(key) as T : defaultValue;
+			},
+			keys(): readonly string[] {
+				return Array.from(store.keys());
+			},
+			async update(key: string, value: unknown): Promise<void> {
+				if (value === undefined)
+					store.delete(key);
+				else
+					store.set(key, value);
+			},
+		};
+	}
+
+	function createTempStorageDir(): string {
+		const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dart-code-state-test-"));
+		defer("Delete temp state dir", () => tryDelete(dir));
+		return dir;
+	}
+
+	it("computes the correct .dart-tool storage path", () => {
+		const winPath = getDartToolDir(
+			{ APPDATA: "C:\\Users\\Test\\AppData\\Roaming", HOME: "C:\\Users\\Test" },
+			true,
+		);
+		assert.equal(winPath, path.join("C:\\Users\\Test\\AppData\\Roaming", ".dart-tool"));
+
+		const unixPath = getDartToolDir(
+			{ APPDATA: "/should/not/be/used", HOME: "/home/testuser" },
+			false,
+		);
+		assert.equal(unixPath, path.join("/home/testuser", ".dart-tool"));
+
+		assert.equal(getDartToolDir({}, true), undefined);
+		assert.equal(getDartToolDir({}, false), undefined);
+	});
+
+	it("shares GlobalState across multiple profiles, caches reads in memory, and preserves concurrent writes", () => {
+		const storageDir = path.join(createTempStorageDir(), "nested", "dart-code");
+		const profile1 = new GlobalState(createFakeMemento(), storageDir);
+		const profile2 = new GlobalState(createFakeMemento(), storageDir);
+
+		// Writing from profile 1 creates the directory/file and is visible when profile 2 reads it.
+		profile1.setFlutterSurveyNotificationDoNotShow("2026Q1", true);
+		assert.equal(profile2.getFlutterSurveyNotificationDoNotShow("2026Q1"), true);
+
+		// Writing a different key from profile 2 re-reads from disk before writing,
+		// so it does not clobber profile 1's key, and updates profile 2's cache.
+		profile2.lastSeenVersion = "3.148.0";
+		profile1.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
+		profile1.setHasPrompted(cursorInstallMcpServer, true);
+		profile2.setExperimentRandomNumber("exp1", 42);
+		profile2.setExperimentHasActivated("exp1", true);
+
+		// A new instance reading from disk sees all updates from both profiles.
+		const profile3 = new GlobalState(createFakeMemento(), storageDir);
+		assert.equal(profile3.lastSeenVersion, "3.148.0");
+		assert.equal(profile3.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation, true);
+		assert.equal(profile3.getFlutterSurveyNotificationDoNotShow("2026Q1"), true);
+		assert.equal(profile3.getHasPrompted(cursorInstallMcpServer), true);
+		assert.equal(profile3.getExperimentRandomNumber("exp1"), 42);
+		assert.equal(profile3.getExperimentHasActivated("exp1"), true);
+
+		// Profile 1 also saw profile 2's write when profile 1 re-read before its own write.
+		assert.equal(profile1.lastSeenVersion, "3.148.0");
+
+		// Subsequent reads use the in-memory cache without re-reading disk.
+		fs.unlinkSync(path.join(storageDir, "state.json"));
+		assert.equal(profile3.lastSeenVersion, "3.148.0");
+	});
+
+	it("falls back to ExtensionContext.globalState when key is not in GlobalState and migrates it", () => {
+		const storageDir = createTempStorageDir();
+		const profile1Memento = createFakeMemento({
+			flutterSurvey2026Q1NotificationDoNotShowAgain: true,
+			lastSeenVersion: "3.146.0",
+		});
+		const profile2Memento = createFakeMemento();
+
+		const profile1 = new GlobalState(profile1Memento, storageDir);
+		const profile2 = new GlobalState(profile2Memento, storageDir);
+
+		// Profile 1 falls back to its Memento and migrates the value to state.json.
+		assert.equal(profile1.getFlutterSurveyNotificationDoNotShow("2026Q1"), true);
+		assert.equal(profile1.lastSeenVersion, "3.146.0");
+
+		// Profile 2 now sees the migrated values too.
+		assert.equal(profile2.getFlutterSurveyNotificationDoNotShow("2026Q1"), true);
+		assert.equal(profile2.lastSeenVersion, "3.146.0");
+	});
+
+	it("does not fall back to ExtensionContext.globalState if a key was set in GlobalState and then reset", () => {
+		const storageDir = createTempStorageDir();
+		const profile1Memento = createFakeMemento({
+			"lastSeenVersion": "3.146.0",
+			"packageLastCheckedForUpdates:devtools": 12345,
+		});
+
+		const profile1 = new GlobalState(profile1Memento, storageDir);
+
+		// First read migrates from Memento (or we set a new value in GlobalState).
+		assert.equal(profile1.lastSeenVersion, "3.146.0");
+		profile1.lastSeenVersion = "3.148.0";
+		assert.equal(profile1.lastSeenVersion, "3.148.0");
+
+		// Now reset lastSeenVersion to undefined in GlobalState.
+		// Even though profile1Memento still has "3.146.0", GlobalState must NOT fall back to it.
+		profile1.lastSeenVersion = undefined;
+		assert.equal(profile1.lastSeenVersion, undefined);
+
+		// Also test resetting a key directly without reading/migrating it first.
+		profile1.setPackageLastCheckedForUpdates("devtools", undefined);
+		assert.equal(profile1.getPackageLastCheckedForUpdates("devtools"), undefined);
+	});
+
+	it("handles corrupted state.json gracefully and clears state properly", async () => {
+		const storageDir = createTempStorageDir();
+		fs.writeFileSync(path.join(storageDir, "state.json"), "{ invalid json");
+
+		const memento = createFakeMemento({ lastSeenVersion: "3.146.0" });
+		const globalState = new GlobalState(memento, storageDir);
+
+		// Does not throw and falls back cleanly.
+		assert.equal(globalState.lastSeenVersion, "3.146.0");
+
+		// Writing overwrites the invalid JSON with valid JSON.
+		globalState.lastSeenVersion = "3.148.0";
+		assert.equal(globalState.lastSeenVersion, "3.148.0");
+
+		// Clearing wipes both state.json and Memento.
+		await globalState.clear();
+		assert.equal(globalState.lastSeenVersion, undefined);
+	});
+
+	it("keeps ProfileState isolated per profile and WorkspaceState isolated per workspace", () => {
+		const profile1 = new ProfileState(createFakeMemento());
+		const profile2 = new ProfileState(createFakeMemento());
+
+		profile1.setHasPrompted(installFlutterExtensionPromptKey, true);
+		profile1.ignoreExtensionRecommendation("some.extension");
+		profile1.lastUsedNewProjectPath = "/path/one";
+
+		assert.equal(profile1.getHasPrompted(installFlutterExtensionPromptKey), true);
+		assert.equal(profile2.getHasPrompted(installFlutterExtensionPromptKey), false);
+		assert.deepEqual(profile1.getIgnoredExtensionRecommendationIdentifiers(), ["some.extension"]);
+		assert.deepEqual(profile2.getIgnoredExtensionRecommendationIdentifiers(), []);
+		assert.equal(profile1.lastUsedNewProjectPath, "/path/one");
+		assert.equal(profile2.lastUsedNewProjectPath, undefined);
+
+		const ws1 = new WorkspaceState(createFakeMemento());
+		const ws2 = new WorkspaceState(createFakeMemento());
+		ws1.lastFlutterDeviceId = "macos";
+		assert.equal(ws1.lastFlutterDeviceId, "macos");
+		assert.equal(ws2.lastFlutterDeviceId, undefined);
+	});
+});
+
