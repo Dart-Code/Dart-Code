@@ -748,6 +748,9 @@ class LoggingTransform extends stream.Transform {
 }
 
 function getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities) {
+	const currentStartReason = serverStartReason;
+	serverStartReason = "clean-start";
+
 	// Use || so an empty string in settings still falls back to "language-server".
 	const analyzerPath = config.analyzerPath || "language-server"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 
@@ -796,7 +799,7 @@ function getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities) {
 	analyzerArgs.push(`--client-id=${clientID}`);
 	analyzerArgs.push(`--client-version=${extensionVersion}`);
 	if (dartCapabilities.supportsServerStartReason)
-		analyzerArgs.push(`--start-reason=${serverStartReason}`);
+		analyzerArgs.push(`--start-reason=${currentStartReason}`);
 
 	// The analysis server supports verboses log files.
 	if (config.analyzerInstrumentationLogFile)

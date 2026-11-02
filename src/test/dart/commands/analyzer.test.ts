@@ -696,12 +696,14 @@ describe("analyzer", () => {
 
 			// First 2 closes always restart.
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
+			assert.ok(privateApi.analyzer.getAnalyzerArgs(privateApi.logger, new DartCapabilities("3.15.0-99.0.dev")).includes("--start-reason=server-crash-automatic-restart"));
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
 
 			// If oldest restart was > 3 minutes ago, shifts and restarts.
 			handler.restarts[0] = Date.now() - (4 * 60 * 1000);
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
 			assert.equal(handler.restarts.length, 2);
+			assert.ok(privateApi.analyzer.getAnalyzerArgs(privateApi.logger, new DartCapabilities("3.15.0-99.0.dev")).includes("--start-reason=server-crash-automatic-restart"));
 
 			// Next close within 3 minutes exceeds maxRestartCount and does not restart.
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
