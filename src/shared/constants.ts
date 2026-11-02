@@ -113,7 +113,6 @@ export function getServerStartReason(restartReason: ExtensionRestartReason): str
 		case ExtensionRestartReason.RestartMacDaemonMessage:
 		case ExtensionRestartReason.ToolingDaemonTerminated:
 			return "other-crash-manual-restart";
-		// TODO(dantup): Check if any of these should have unique values.
 		case ExtensionRestartReason.AfterFlutterClone:
 		case ExtensionRestartReason.AfterFlutterExtensionInstall:
 		case ExtensionRestartReason.AfterFlutterUpgrade:
