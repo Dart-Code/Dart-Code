@@ -676,9 +676,9 @@ describe("analyzer", () => {
 	});
 
 	describe("DartErrorHandler", () => {
-		function createErrorHandler(isDisposed?: () => boolean): ls.ErrorHandler & { restarts: number[] } {
-			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger, isDisposed?: () => boolean) => ls.ErrorHandler & { restarts: number[] };
-			return new ErrorHandlerClass(privateApi.logger, isDisposed);
+		function createErrorHandler(checkDisposed: () => boolean = () => false): ls.ErrorHandler & { restarts: number[] } {
+			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger, checkDisposed: () => boolean) => ls.ErrorHandler & { restarts: number[] };
+			return new ErrorHandlerClass(privateApi.logger, checkDisposed);
 		}
 
 		it("continues on error before maxRestartCount and shuts down at maxRestartCount", () => {
