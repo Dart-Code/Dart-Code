@@ -24,9 +24,9 @@ describe("packages tree data", () => {
 	describe("pub deps (pre-workspace format)", () => {
 		it("builds the correct tree", async () => {
 			sb.stub(projectFinder, "findAllProjectFolders")
-				.returns(["/path/to/my_package_1", "/path/to/my_package_2"]);
+				.resolves(["/path/to/my_package_1", "/path/to/my_package_2"]);
 			sb.stub(deps, "getJson")
-				.callsFake((projectPath: string) => projectPath.endsWith("my_package_2") ? fakePreWorkspacePubDepsJsonSinglePackage : fakePreWorkspacePubDepsJsonBasic);
+				.callsFake(async (projectPath: string) => projectPath.endsWith("my_package_2") ? fakePreWorkspacePubDepsJsonSinglePackage : fakePreWorkspacePubDepsJsonBasic);
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 
 			const textTree = (await makeTextTreeUsingCustomTree(undefined, privateApi.packagesTreeProvider)).join("\n");
@@ -62,9 +62,9 @@ my_package_2
 	describe("pub deps (workspace)", () => {
 		it("builds the correct tree", async () => {
 			sb.stub(projectFinder, "findAllProjectFolders")
-				.returns(["/path/to/workspace", "/path/to/workspace/my_package_1", "/path/to/workspace/my_package_2"]);
+				.resolves(["/path/to/workspace", "/path/to/workspace/my_package_1", "/path/to/workspace/my_package_2"]);
 			sb.stub(deps, "getJson")
-				.callsFake((_projectPath: string) => fakePostWorkspacePubDepsJsonWorkspace);
+				.callsFake(async (_projectPath: string) => fakePostWorkspacePubDepsJsonWorkspace);
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 
 			const textTree = (await makeTextTreeUsingCustomTree(undefined, privateApi.packagesTreeProvider)).join("\n");

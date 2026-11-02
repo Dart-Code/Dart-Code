@@ -227,7 +227,7 @@ function createTestEnvironment(overridePath?: string) {
 		fs.mkdirSync(folderPath, { recursive: true });
 	defer(`delete ${folderPath}`, () => tryDelete(folderPath));
 
-	const startDebugSession = sb.stub(debug, "startDebugging").callsFake(() => Promise.resolve());
+	const startDebugSession = sb.stub(debug, "startDebugging").resolves(true);
 	return { wf, baseUri, filePath, startDebugSession };
 }
 

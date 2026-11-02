@@ -15,7 +15,7 @@ describe("dart tasks", () => {
 		await vs.commands.executeCommand("dart.task.dartdoc");
 
 		assert.ok(executeTask.calledOnce);
-		const task = executeTask.firstCall.args[0] as vs.Task;
+		const task = executeTask.firstCall.args[0];
 		assert.equal(fsPath((task.scope as vs.WorkspaceFolder).uri), fsPath(helloWorldFolder));
 		const execution = task.execution as vs.ProcessExecution;
 		assert.ok(execution.process.endsWith(executableNames.dart), `Task execution process was ${execution.process}`);
