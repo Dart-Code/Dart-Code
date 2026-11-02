@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import { commands, workspace } from "vscode";
+import * as ls from "vscode-languageclient";
 import { ExtensionRestartReason } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, privateApi, sb, waitForResult } from "../helpers";
@@ -51,10 +52,16 @@ describe("extension api", () => {
 
 		// Immediately trigger another reload while `firstReloadAnalyzer`'s LanguageClient
 		// is still starting up in the background (before `initialAnalysis` completes),
-		// verifying that disposing an in-flight analyzer waits for `client.start()` to
+		// verifying that disposing an in-flight analyzer waits for `clientStartPromise` to
 		// settle and stops it cleanly without colliding with the next analyzer's registrations.
+		assert.equal(firstReloadAnalyzer.client.state, ls.State.Starting);
 		await commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
 		assert.equal((firstReloadAnalyzer as any).isDisposed, true);
+		assert.equal(firstReloadAnalyzer.client.state, ls.State.Stopped);
+		assert.deepEqual(
+			firstReloadAnalyzer.client.clientOptions.errorHandler!.closed(),
+			{ action: ls.CloseAction.DoNotRestart, handled: true },
+		);
 		assert.notStrictEqual(privateApi.analyzer, firstReloadAnalyzer);
 		assert.equal((privateApi.analyzer as any).isDisposed, false);
 

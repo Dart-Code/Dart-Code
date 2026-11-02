@@ -53,6 +53,7 @@ export function setAnalysisServerStartReason(reason: ExtensionRestartReason | un
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
+	private readonly clientStartPromise: Promise<void>;
 	public readonly fileTracker: FileTracker;
 	private readonly cachingMiddleware: CachingMiddlewareFeature | undefined;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
@@ -89,7 +90,8 @@ export class LspAnalyzer extends Analyzer {
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.client.registerFeature(this.updateDiagnosticInformation.feature);
 
-		void this.client.start().then(() => {
+		this.clientStartPromise = this.client.start();
+		void this.clientStartPromise.then(() => {
 			if (this.isDisposed)
 				return;
 			this.statusItem.text = "Dart Analysis Server";
@@ -718,15 +720,15 @@ export class LspAnalyzer extends Analyzer {
 	public override async dispose(): Promise<void> {
 		this.isDisposed = true;
 		try {
-			// If the client is still starting, calling stop() immediately will throw
-			// ("Client is not running and can't be stopped") and leave the client to
-			// finish starting and register duplicate commands/providers in the background.
-			// Wait for startup to settle first, then stop the client if it is running,
-			// before calling `super.dispose()` (which has a 3s timeout in `disposeAllAsync`
-			// and kills the server process if it has not exited after `client.stop()`).
+			// If the client is still starting, calling `stop()` immediately will throw
+			// ("Client is not running and can't be stopped") and leave `clientStartPromise`
+			// to finish initializing and registering duplicate commands/providers in the
+			// background. Wait for `clientStartPromise` to settle first, then stop the client
+			// if it is running, before calling `super.dispose()` (which has a 3s timeout in
+			// `disposeAllAsync` and kills the server process if it has not exited after `stop()`).
 			if (this.client.state === ls.State.Starting) {
 				try {
-					await withTimeout(this.client.start(), "LSP client did not finish starting during disposal", 10);
+					await withTimeout(this.clientStartPromise, "LSP client did not finish starting during disposal", 10);
 				} catch {
 					// Ignore startup errors or timeout during disposal; if startup timed out,
 					// `super.dispose()` will run `handleDisposeCleanup` to kill the process.
