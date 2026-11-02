@@ -424,6 +424,48 @@ describe("SdkUtils", () => {
 		});
 	});
 
+	describe("scanWorkspace SDK search precedence", () => {
+		function setDartPathOverride(sdkBin: string) {
+			const previous = process.env.DART_PATH_OVERRIDE;
+			process.env.DART_PATH_OVERRIDE = sdkBin;
+			defer("Restore DART_PATH_OVERRIDE", () => {
+				if (previous === undefined)
+					delete process.env.DART_PATH_OVERRIDE;
+				else
+					process.env.DART_PATH_OVERRIDE = previous;
+			});
+		}
+
+		it("selects an SDK from DART_PATH_OVERRIDE ahead of the system PATH", async () => {
+			await setConfigForTest("dart", "sdkPath", undefined);
+			const overrideSdk = path.join(createTempDir(), "override-sdk");
+			createFakeDartSdk(overrideSdk);
+			setDartPathOverride(path.join(overrideSdk, "bin"));
+			// Keep the test independent of any Flutter SDK installed on the CI runner.
+			sb.stub(privateApi.sdkUtils!, "findFlutterSdk").returns({ candidatePaths: [], sdkInitScript: undefined });
+
+			const result = await privateApi.sdkUtils!.scanWorkspace();
+
+			assert.equal(result.sdks.dart, overrideSdk);
+			assert.equal(result.sdks.dartVersion, "3.5.0");
+		});
+
+		it("prefers configured dart.sdkPath over DART_PATH_OVERRIDE", async () => {
+			const configuredSdk = path.join(createTempDir(), "configured-sdk");
+			const overrideSdk = path.join(createTempDir(), "override-sdk");
+			createFakeDartSdk(configuredSdk);
+			createFakeDartSdk(overrideSdk);
+			await setConfigForTest("dart", "sdkPath", configuredSdk);
+			setDartPathOverride(path.join(overrideSdk, "bin"));
+			sb.stub(privateApi.sdkUtils!, "findFlutterSdk").returns({ candidatePaths: [], sdkInitScript: undefined });
+
+			const result = await privateApi.sdkUtils!.scanWorkspace();
+
+			assert.equal(result.sdks.dart, configuredSdk);
+			assert.equal(result.sdks.dartVersion, "3.5.0");
+		});
+	});
+
 	describe("warnIfBadConfigSdk & openSettingsFile", () => {
 		it("warns when configured global dart.sdkPath does not match found SDK and opens global settings", async () => {
 			// Configure an invalid global dart.sdkPath so scanWorkspace falls back to PATH and warns that
