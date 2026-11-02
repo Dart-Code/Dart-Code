@@ -99,6 +99,11 @@ export interface DebugCommandHandler {
 	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
 }
 
+export interface DartCommandHandler {
+	getProjectKind(templateName: string): string;
+	validateDartProjectName(input: string, folderDir: string): string | undefined;
+}
+
 export interface FlutterCommandHandler {
 	runFlutterInFolder(folder: string, args: string[], packageOrFolderDisplayName: string | undefined, alwaysShowOutput: boolean, operationProgress?: OperationProgress, customScript?: CustomScript): Promise<RunProcessResult | undefined>;
 	writeDefaultLaunchJson(projectPath: string): void;
@@ -121,12 +126,16 @@ export interface InternalExtensionApi {
 		promptForPathPackageInfo(packagePath?: string): Promise<PathPubPackage | undefined>;
 	},
 	clearCaches: () => void;
+	config: {
+		workspaceSdkPath: string | undefined;
+	};
 	context: Context;
 	currentAnalysis: () => Promise<void>;
 	interactiveRefactors: InteractiveRefactors | undefined;
 	isInTestFileThatHasImplementation: boolean;
 	isInImplementationFileThatCanHaveTest: boolean;
 	dartCapabilities: DartCapabilities;
+	dartCommands: DartCommandHandler;
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;
 	devTools: {

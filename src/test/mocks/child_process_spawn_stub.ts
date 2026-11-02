@@ -35,7 +35,10 @@ export interface SpawnedProcessCall {
 export class ChildProcessSpawnStub {
 	private readonly fakedCalls: SpawnedProcessCall[] = [];
 
-	constructor(shouldFake: (bin: string, args?: string[]) => boolean) {
+	constructor(
+		shouldFake: (bin: string, args?: string[]) => boolean,
+		{ stdout, exitCode = 0 }: { stdout?: string, exitCode?: number } = {},
+	) {
 		const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
 
 		sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
@@ -52,11 +55,13 @@ export class ChildProcessSpawnStub {
 			proc.stderr.setEncoding = () => undefined;
 			proc.kill = () => true;
 
-			// Simulate the process completing successfully right away.
+			// Simulate the process completing right away.
 			setImmediate(() => {
-				proc.exitCode = 0;
-				proc.emit("exit", 0, null);
-				proc.emit("close", 0, null);
+				if (stdout)
+					proc.stdout.emit("data", Buffer.from(stdout));
+				proc.exitCode = exitCode;
+				proc.emit("exit", exitCode, null);
+				proc.emit("close", exitCode, null);
 			});
 
 			return proc as ChildProcess;
@@ -69,6 +74,13 @@ export class ChildProcessSpawnStub {
 
 	static isExecutable(binPath: string, expectedBinPath: string): boolean {
 		return binPath.endsWith(expectedBinPath) || binPath.endsWith(`${expectedBinPath}"`);
+	}
+
+	static dartCreate(options?: { stdout?: string, exitCode?: number }) {
+		return new ChildProcessSpawnStub(
+			(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) && ChildProcessSpawnStub.includesArg(args, "create"),
+			options,
+		);
 	}
 
 	static dartDoc() {
