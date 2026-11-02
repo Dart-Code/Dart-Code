@@ -44,10 +44,10 @@ import {
 // Globals so we only show these errors once per session.
 let hasShownAnalysisServerVersionMismatchError = false;
 let hasShownDartOsVersionError = false;
-let extensionRestartReason: ExtensionRestartReason | undefined;
+let serverStartReason = "clean-start";
 
-export function setExtensionRestartReason(reason: ExtensionRestartReason): void {
-	extensionRestartReason = reason;
+export function setAnalysisServerStartReason(reason: ExtensionRestartReason): void {
+	serverStartReason = getServerStartReason(reason);
 }
 
 export class LspAnalyzer extends Analyzer {
@@ -667,10 +667,12 @@ export class LspAnalyzer extends Analyzer {
 
 			// Handle some well-known kinds of errors to help troubleshoot.
 			if (typeof errorOutput === "string") {
-				if (!hasShownAnalysisServerVersionMismatchError && config.analyzerPath && errorOutput.includes("analysis_server.dart") && errorOutput.includes("The specified language version is too high")) {
+				const isFromSourceLanguageVersionMismatch = errorOutput.includes("analysis_server.dart") && errorOutput.includes("The specified language version is too high");
+				const isFromSourceOptionMismatch = errorOutput.includes("FormatException: Could not find an option named");
+				if (!hasShownAnalysisServerVersionMismatchError && config.analyzerPath && (isFromSourceLanguageVersionMismatch || isFromSourceOptionMismatch)) {
 					hasShownAnalysisServerVersionMismatchError = true;
 					void promptToReloadExtension(logger, {
-						prompt: "Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?",
+						prompt: "Running the analysis server from source failed because of a version mismatch between the Dart SDK and the analysis server.",
 						offerLog: true,
 						severity: "ERROR",
 						restartReason: ExtensionRestartReason.AnalysisServerFromSourceMismatch
@@ -790,7 +792,7 @@ function getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities) {
 	analyzerArgs.push(`--client-id=${clientID}`);
 	analyzerArgs.push(`--client-version=${extensionVersion}`);
 	if (dartCapabilities.supportsServerStartReason)
-		analyzerArgs.push(`--start-reason=${getServerStartReason(extensionRestartReason)}`);
+		analyzerArgs.push(`--start-reason=${serverStartReason}`);
 
 	// The analysis server supports verboses log files.
 	if (config.analyzerInstrumentationLogFile)
@@ -828,7 +830,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 		this.restarts.push(Date.now());
 		this.logger.warn(`LSP Client closed (${this.restarts.length} recent restarts recorded)`);
 		if (this.restarts.length <= this.maxRestartCount) {
-			extensionRestartReason = ExtensionRestartReason.AnalysisServerAutoRestart;
+			serverStartReason = "server-crash-automatic-restart";
 			return { action: ls.CloseAction.Restart };
 		} else {
 			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
@@ -846,7 +848,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 				};
 			} else {
 				this.restarts.shift();
-				extensionRestartReason = ExtensionRestartReason.AnalysisServerAutoRestart;
+				serverStartReason = "server-crash-automatic-restart";
 				return {
 					action: ls.CloseAction.Restart,
 				};

@@ -703,9 +703,7 @@ describe("analyzer", () => {
 		});
 
 		it("computes the right start reason", () => {
-			assert.equal(getServerStartReason(undefined), "clean-start");
 			assert.equal(getServerStartReason(ExtensionRestartReason.AnalysisServerRestartCommand), "manual-restart");
-			assert.equal(getServerStartReason(ExtensionRestartReason.AnalysisServerAutoRestart), "server-crash-automatic-restart");
 			assert.equal(getServerStartReason(ExtensionRestartReason.AnalysisServerCrashedManyTimes), "server-crash-manual-restart");
 			assert.equal(getServerStartReason(ExtensionRestartReason.AnalyzerTerminated), "server-crash-manual-restart");
 			assert.equal(getServerStartReason(ExtensionRestartReason.FlutterDaemonTerminatedExit), "other-crash-manual-restart");
