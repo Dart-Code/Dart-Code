@@ -700,26 +700,52 @@ describe("analyzer", () => {
 			assert.equal(handler.restarts.length, 0);
 		});
 
-		it("restarts on close up to maxRestartCount and stops if crashing repeatedly within 3 minutes", () => {
+		it("restarts on close up to maxRestartCount and stops if crashing repeatedly within 3 minutes", async () => {
 			defer("Reset serverStartReason", () => privateApi.analyzer.setServerStartReason(undefined));
 
-			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves();
+			let resolveFirstPrompt: (() => void) | undefined;
+			const firstPromptPromise = new Promise<void>((resolve) => { resolveFirstPrompt = resolve; });
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+			showErrorMessage.onFirstCall().returns(firstPromptPromise as any);
+			showErrorMessage.resolves();
 			const handler = createErrorHandler();
 
-			// First 2 closes always restart.
+			// First 2 closes always restart and show a single auto-restarted prompt (guarded by isShowingAnalyzerError while open).
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
 			assert.ok(privateApi.analyzer.getAnalyzerArgs(privateApi.logger, new DartCapabilities("3.15.0-99.0.dev")).includes("--start-reason=server-crash-automatic-restart"));
-			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
+			assert.equal(showErrorMessage.callCount, 1);
+			assert.deepEqual(showErrorMessage.firstCall.args, [
+				"The Dart Analysis Server terminated unexpectedly and has been automatically restarted. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.",
+				"Show Log",
+			]);
 
-			// If oldest restart was > 3 minutes ago, shifts and restarts.
+			// Second close while first prompt is still open does not show a duplicate prompt.
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
+			assert.equal(showErrorMessage.callCount, 1);
+
+			// Dismiss the first prompt so isShowingAnalyzerError resets.
+			resolveFirstPrompt!();
+			await new Promise((resolve) => setImmediate(resolve));
+
+			// If oldest restart was > 3 minutes ago, shifts and restarts (and shows the auto-restarted prompt again).
 			handler.restarts[0] = Date.now() - (4 * 60 * 1000);
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
 			assert.equal(handler.restarts.length, 2);
+			assert.equal(showErrorMessage.callCount, 2);
+			assert.deepEqual(showErrorMessage.secondCall.args, [
+				"The Dart Analysis Server terminated unexpectedly and has been automatically restarted. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.",
+				"Show Log",
+			]);
+			await new Promise((resolve) => setImmediate(resolve));
 
-			// Next close within 3 minutes exceeds maxRestartCount and does not restart.
+			// Next close within 3 minutes exceeds maxRestartCount and does not restart, offering "Restart Extension".
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
-			assert.ok(showErrorMessage.calledOnce);
-			assert.ok(showErrorMessage.firstCall.args[0].includes("The Dart Analysis Server crashed 3 times in the last 3 minutes and will not restart."));
+			assert.equal(showErrorMessage.callCount, 3);
+			assert.deepEqual(showErrorMessage.thirdCall.args, [
+				"The Dart Analysis Server crashed 3 times in the last 3 minutes and will not restart. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.",
+				"Restart Extension",
+				"Show Log",
+			]);
 		});
 	});
 

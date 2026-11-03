@@ -176,6 +176,13 @@ export async function getLatestSdkVersion(webClient: WebClient): Promise<string>
 	}
 }
 
+export function showLog(specificLog: string | undefined, ringLogContents: string, tempLogPath?: string) {
+	if (specificLog && fs.existsSync(specificLog))
+		void workspace.openTextDocument(specificLog).then(window.showTextDocument);
+	else
+		void openLogContents(undefined, ringLogContents, tempLogPath);
+}
+
 export async function promptToReloadExtension(
 	logger: Logger,
 	{ prompt, buttonText, offerLog, specificLog, severity, restartReason, restartData }:
@@ -199,10 +206,7 @@ export async function promptToReloadExtension(
 		const chosenAction = prompt && await show(prompt, ...actions);
 		if (chosenAction === showLogAction) {
 			showPromptAgain = true;
-			if (specificLog && fs.existsSync(specificLog))
-				void workspace.openTextDocument(specificLog).then(window.showTextDocument);
-			else
-				void openLogContents(undefined, ringLogContents, tempLogPath);
+			showLog(specificLog, ringLogContents, tempLogPath);
 		} else if (!prompt || chosenAction === restartAction) {
 			void commands.executeCommand("_dart.reloadExtension", restartReason, restartData);
 		}

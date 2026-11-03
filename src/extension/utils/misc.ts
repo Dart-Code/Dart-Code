@@ -1,16 +1,28 @@
 import * as path from "path";
-import { ExtensionRestartReason, flutterPath } from "../../shared/constants";
+import * as vs from "vscode";
+import { ExtensionRestartReason, flutterPath, showLogAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { config } from "../config";
-import { promptToReloadExtension } from "../utils";
+import { ringLog } from "../extension";
+import { promptToReloadExtension, showLog } from "../utils";
 import { runToolProcess } from "./processes";
 
 let isShowingAnalyzerError = false;
 
-export function reportAnalyzerTerminatedWithError(logger: Logger, duringStartup = false) {
+export function reportAnalyzerTerminatedWithError(logger: Logger, { duringStartup = false, automaticallyRestarted = false }: { duringStartup?: boolean, automaticallyRestarted?: boolean } = {}) {
 	if (isShowingAnalyzerError)
 		return;
 	isShowingAnalyzerError = true;
+	if (automaticallyRestarted) {
+		const ringLogContents = ringLog.toString();
+		const prompt = "The Dart Analysis Server terminated unexpectedly and has been automatically restarted. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.";
+		void vs.window.showErrorMessage(prompt, showLogAction).then((chosenAction) => {
+			isShowingAnalyzerError = false;
+			if (chosenAction === showLogAction)
+				showLog(config.analyzerLogFile, ringLogContents);
+		});
+		return;
+	}
 	const prompt = duringStartup
 		? "The Dart Analyzer could not be started."
 		: "The Dart Analyzer has terminated. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.";

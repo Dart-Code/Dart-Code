@@ -731,8 +731,10 @@ export class LspAnalyzer extends Analyzer {
 		process.on("exit", (code, signal) => {
 			logger.info(`${processName} exited (${code}, ${signal})`);
 
-			if (code)
-				reportAnalyzerTerminatedWithError(logger);
+			// If the server exits before the LSP client has finished initializing,
+			// the LSP client will not automatically restart it.
+			if (code && !this.isDisposed && !this.client.initializeResult)
+				reportAnalyzerTerminatedWithError(logger, { duringStartup: true });
 
 			if (!config.analyzerPath) { // Don't report for devs running from source.
 				const durationMs = Date.now() - analysisServerStartTime;
@@ -886,6 +888,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 		this.logger.warn(`LSP Client closed (${this.restarts.length} recent restarts recorded)`);
 		if (this.restarts.length <= this.maxRestartCount) {
 			serverStartReason = "server-crash-automatic-restart";
+			reportAnalyzerTerminatedWithError(this.logger, { automaticallyRestarted: true });
 			return { action: ls.CloseAction.Restart };
 		} else {
 			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
@@ -895,6 +898,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 					prompt,
 					offerLog: true,
 					severity: "ERROR",
+					specificLog: config.analyzerLogFile,
 					restartReason: ExtensionRestartReason.AnalysisServerCrashedManyTimes
 				});
 				return {
@@ -904,6 +908,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 			} else {
 				this.restarts.shift();
 				serverStartReason = "server-crash-automatic-restart";
+				reportAnalyzerTerminatedWithError(this.logger, { automaticallyRestarted: true });
 				return {
 					action: ls.CloseAction.Restart,
 				};
