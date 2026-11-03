@@ -528,11 +528,8 @@ describe("pub package commands", () => {
 					);
 				});
 			}
-
-
 		});
 	}
-
 
 	describe("package picker", () => {
 		beforeEach("activate without an open file", () => activateWithoutAnalysis(null));
