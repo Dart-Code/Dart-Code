@@ -424,48 +424,6 @@ describe("SdkUtils", () => {
 		});
 	});
 
-	describe("scanWorkspace SDK search precedence", () => {
-		function setDartPathOverride(sdkBin: string) {
-			const previous = process.env.DART_PATH_OVERRIDE;
-			process.env.DART_PATH_OVERRIDE = sdkBin;
-			defer("Restore DART_PATH_OVERRIDE", () => {
-				if (previous === undefined)
-					delete process.env.DART_PATH_OVERRIDE;
-				else
-					process.env.DART_PATH_OVERRIDE = previous;
-			});
-		}
-
-		it("selects an SDK from DART_PATH_OVERRIDE ahead of the system PATH", async () => {
-			await setConfigForTest("dart", "sdkPath", undefined);
-			const overrideSdk = path.join(createTempDir(), "override-sdk");
-			createFakeDartSdk(overrideSdk);
-			setDartPathOverride(path.join(overrideSdk, "bin"));
-			// Keep the test independent of any Flutter SDK installed on the CI runner.
-			sb.stub(privateApi.sdkUtils!, "findFlutterSdk").returns({ candidatePaths: [], sdkInitScript: undefined });
-
-			const result = await privateApi.sdkUtils!.scanWorkspace();
-
-			assert.equal(result.sdks.dart, overrideSdk);
-			assert.equal(result.sdks.dartVersion, "3.5.0");
-		});
-
-		it("prefers configured dart.sdkPath over DART_PATH_OVERRIDE", async () => {
-			const configuredSdk = path.join(createTempDir(), "configured-sdk");
-			const overrideSdk = path.join(createTempDir(), "override-sdk");
-			createFakeDartSdk(configuredSdk);
-			createFakeDartSdk(overrideSdk);
-			await setConfigForTest("dart", "sdkPath", configuredSdk);
-			setDartPathOverride(path.join(overrideSdk, "bin"));
-			sb.stub(privateApi.sdkUtils!, "findFlutterSdk").returns({ candidatePaths: [], sdkInitScript: undefined });
-
-			const result = await privateApi.sdkUtils!.scanWorkspace();
-
-			assert.equal(result.sdks.dart, configuredSdk);
-			assert.equal(result.sdks.dartVersion, "3.5.0");
-		});
-	});
-
 	describe("warnIfBadConfigSdk & openSettingsFile", () => {
 		it("warns when configured global dart.sdkPath does not match found SDK and opens global settings", async () => {
 			// Configure an invalid global dart.sdkPath so scanWorkspace falls back to PATH and warns that
@@ -1112,6 +1070,211 @@ describe("SdkUtils", () => {
 	});
 
 	describe("scanWorkspace", () => {
+		describe("Dart SDK search precedence", () => {
+			// Clears the settings and environment variables that can affect SDK searching so
+			// tests are independent of the machine they're run on. Callers should still set
+			// process.env.PATH and stub workspace folders as required.
+			async function useIsolatedSdkSearch(): Promise<void> {
+				await setConfigForTest("dart", "sdkPath", undefined);
+				await setConfigForTest("dart", "flutterSdkPath", undefined);
+				await setConfigForTest("dart", "getDartSdkCommand", undefined);
+				await setConfigForTest("dart", "getFlutterSdkCommand", undefined);
+				await setConfigForTest("dart", "analyzerSshHost", undefined);
+
+				const originalPath = process.env.PATH;
+				const originalFlutterRoot = process.env.FLUTTER_ROOT;
+				process.env.PATH = "";
+				delete process.env.FLUTTER_ROOT;
+				defer("restore PATH and FLUTTER_ROOT", () => {
+					process.env.PATH = originalPath;
+					if (originalFlutterRoot === undefined)
+						delete process.env.FLUTTER_ROOT;
+					else
+						process.env.FLUTTER_ROOT = originalFlutterRoot;
+				});
+			}
+
+			function setWorkspaceFolders(folderPaths: string[]): void {
+				sb.stub(vs.workspace, "workspaceFolders").get(() => folderPaths.map((folder, index) => ({
+					uri: vs.Uri.file(folder),
+					name: path.basename(folder),
+					index,
+				})));
+				privateApi.clearCaches();
+				defer("clear caches", () => privateApi.clearCaches());
+			}
+
+			function createDartProject(parent: string, name = "dart_proj"): string {
+				const projectDir = path.join(parent, name);
+				touchFile(path.join(projectDir, "pubspec.yaml"), `name: ${name}\n`);
+				return projectDir;
+			}
+
+			it("prefers a Fuchsia SDK over dart.sdkPath and PATH", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				fs.mkdirSync(path.join(tempDir, ".jiri_root"), { recursive: true });
+				const fuchsiaDartSdk = path.join(tempDir, "third_party/dart/tools/sdks/dart-sdk");
+				createFakeDartSdk(fuchsiaDartSdk, { version: "3.7.0" });
+				setWorkspaceFolders([createDartProject(tempDir)]);
+
+				const configuredSdk = path.join(tempDir, "configured-sdk");
+				createFakeDartSdk(configuredSdk, { version: "3.4.0" });
+				await setConfigForTest("dart", "sdkPath", configuredSdk);
+				const pathSdk = path.join(tempDir, "path-sdk");
+				createFakeDartSdk(pathSdk, { version: "3.5.0" });
+				process.env.PATH = path.join(pathSdk, "bin");
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, fuchsiaDartSdk);
+				assert.equal(wc.sdks.dartVersion, "3.7.0");
+			});
+
+			it("prefers the Flutter SDK's embedded Dart SDK over dart.sdkPath for a Flutter project", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				const flutterSdk = path.join(tempDir, "flutter-sdk");
+				createFakeFlutterSdk(flutterSdk, { withDartSdk: true });
+				const embeddedDartSdk = path.join(flutterSdk, "bin", "cache", "dart-sdk");
+				await setConfigForTest("dart", "flutterSdkPath", flutterSdk);
+
+				// scanWorkspace runs "flutter --help" to initialize the Flutter SDK for Flutter projects,
+				// but the fake binary is not runnable so complete it immediately.
+				const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
+				sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
+					if (args?.includes("--help")) {
+						const proc: any = new EventEmitter();
+						proc.pid = 12345;
+						proc.stdout = new EventEmitter();
+						proc.stderr = new EventEmitter();
+						proc.kill = () => true;
+						setImmediate(() => {
+							proc.exitCode = 0;
+							proc.emit("exit", 0, null);
+							proc.emit("close", 0, null);
+						});
+						return proc as ChildProcess;
+					}
+					return realSpawn(bin, args, opts);
+				});
+
+				const flutterProjectDir = path.join(tempDir, "flutter_proj");
+				touchFile(path.join(flutterProjectDir, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+				setWorkspaceFolders([flutterProjectDir]);
+
+				const configuredSdk = path.join(tempDir, "configured-sdk");
+				createFakeDartSdk(configuredSdk, { version: "3.4.0" });
+				await setConfigForTest("dart", "sdkPath", configuredSdk);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, embeddedDartSdk);
+			});
+
+			it("prefers dart.sdkPath over dart.getDartSdkCommand", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				const configuredSdk = path.join(tempDir, "configured-sdk");
+				createFakeDartSdk(configuredSdk, { version: "3.4.0" });
+				await setConfigForTest("dart", "sdkPath", configuredSdk);
+				const commandSdk = path.join(tempDir, "command-sdk");
+				createFakeDartSdk(commandSdk, { version: "3.5.0" });
+				await setConfigForTest("dart", "getDartSdkCommand", {
+					executable: process.execPath,
+					args: ["-e", `console.log(${JSON.stringify(commandSdk)})`],
+				});
+				setWorkspaceFolders([createDartProject(tempDir)]);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, configuredSdk);
+				assert.equal(wc.sdks.dartVersion, "3.4.0");
+			});
+
+			it("prefers dart.getDartSdkCommand over PATH", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				const commandSdk = path.join(tempDir, "command-sdk");
+				createFakeDartSdk(commandSdk, { version: "3.5.0" });
+				await setConfigForTest("dart", "getDartSdkCommand", {
+					executable: process.execPath,
+					args: ["-e", `console.log(${JSON.stringify(commandSdk)})`],
+				});
+				const pathSdk = path.join(tempDir, "path-sdk");
+				createFakeDartSdk(pathSdk, { version: "3.4.0" });
+				process.env.PATH = path.join(pathSdk, "bin");
+				setWorkspaceFolders([createDartProject(tempDir)]);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, commandSdk);
+				assert.equal(wc.sdks.dartVersion, "3.5.0");
+			});
+
+			it("uses a Dart SDK from PATH when nothing else provides one", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				const pathSdk = path.join(tempDir, "path-sdk");
+				createFakeDartSdk(pathSdk, { version: "3.5.0" });
+				process.env.PATH = path.join(pathSdk, "bin");
+				setWorkspaceFolders([createDartProject(tempDir)]);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, pathSdk);
+				assert.equal(wc.sdks.dartVersion, "3.5.0");
+			});
+
+			it("prefers PATH over the Flutter SDK's embedded Dart SDK fallback", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				const flutterSdk = path.join(tempDir, "flutter-sdk");
+				createFakeFlutterSdk(flutterSdk, { withDartSdk: true });
+				await setConfigForTest("dart", "flutterSdkPath", flutterSdk);
+				const pathSdk = path.join(tempDir, "path-sdk");
+				createFakeDartSdk(pathSdk, { version: "3.5.0" });
+				process.env.PATH = path.join(pathSdk, "bin");
+				setWorkspaceFolders([createDartProject(tempDir)]);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, pathSdk);
+				assert.equal(wc.sdks.dartVersion, "3.5.0");
+			});
+
+			it("falls back to the Flutter SDK's embedded Dart SDK when no Dart SDK is found", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				const flutterSdk = path.join(tempDir, "flutter-sdk");
+				createFakeFlutterSdk(flutterSdk, { withDartSdk: true });
+				const embeddedDartSdk = path.join(flutterSdk, "bin", "cache", "dart-sdk");
+				await setConfigForTest("dart", "flutterSdkPath", flutterSdk);
+				setWorkspaceFolders([createDartProject(tempDir)]);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, embeddedDartSdk);
+			});
+
+			it("falls back to the Bazel workspace's default Dart SDK", async function () {
+				// Bazel flutter.json is not supported on Windows (tryProcessBazelFlutterConfig is a no-op there).
+				if (isWin)
+					return this.skip();
+
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				await setConfigForTest("dart", "previewBazelWorkspaceCustomScripts", true);
+				touchFile(path.join(tempDir, "WORKSPACE"));
+				const flutterSdk = path.join(tempDir, "flutter-sdk");
+				createFakeFlutterSdk(flutterSdk, { withDartSdk: false });
+				const bazelDartSdk = path.join(tempDir, "dart-sdk");
+				createFakeDartSdk(bazelDartSdk, { version: "3.5.0" });
+				touchFile(path.join(tempDir, "dart/config/ide/flutter.json"), JSON.stringify({
+					sdkHome: flutterSdk,
+					defaultDartSdk: bazelDartSdk,
+				}));
+				setWorkspaceFolders([tempDir]);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, bazelDartSdk);
+				assert.equal(wc.sdks.dartVersion, "3.5.0");
+			});
+		});
+
 		it("returns early when analyzerSshHost is configured", async () => {
 			// When dart.analyzerSshHost is configured, the analysis server runs over SSH on a remote host,
 			// so scanWorkspace skips local workspace/SDK scanning and returns a WorkspaceContext with config.sdkPath.
@@ -1267,5 +1430,6 @@ describe("SdkUtils", () => {
 				assert.equal(wcBazel.sdks.flutter, flutterSdk);
 			}
 		});
+
 	});
 });

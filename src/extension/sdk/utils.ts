@@ -305,9 +305,7 @@ export class SdkUtils {
 	public async scanWorkspace(): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
 
-		const pathOverride = process.env.DART_PATH_OVERRIDE ?? "";
-		const normalPath = process.env.PATH ?? "";
-		const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
+		const paths = (process.env.PATH ?? "").split(path.delimiter).filter((p) => p);
 
 		// Some paths to search after PATH as a final resort.
 		const fallbackSdkSearchPaths = [
