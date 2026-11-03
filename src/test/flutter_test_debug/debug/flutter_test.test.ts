@@ -29,7 +29,7 @@ describe("flutter test debugger", () => {
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutputContains("console", `✓ Hello world test`),
+			dc.assertOutputContains("console", `Hello world test`),
 			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -41,7 +41,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(dc, flutterTestOtherFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutputContains("console", `✓ Other tests group Other test\n`),
+			dc.assertOutputContains("console", `Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
