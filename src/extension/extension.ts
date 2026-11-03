@@ -370,8 +370,21 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (!isRestart)
 		await handleNewProjects(logger);
 
+	// Dart Tooling Daemon.
+	// Set the working directory to the first Dart project's folder (or first workspace folder) as a workaround
+	// for https://github.com/dart-lang/sdk/issues/64641 because DTD uses its working directory as the project root,
+	// and otherwise it would inherit whatever the CWD was when VS Code was launched (which could be a different
+	// project if we used File -> Open).
+	const dartWorkspaceFolders = getDartWorkspaceFolders();
+	const dtdWorkingDirectory = workspaceContext.firstDartProject
+		?? (dartWorkspaceFolders.length ? fsPath(dartWorkspaceFolders[0].uri) : undefined);
+	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
+		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, dtdWorkingDirectory, deviceManager)
+		: undefined;
+	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
+
 	// Fire up the analyzer process.
-	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, analytics);
+	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon, analytics);
 	maybeAnalyzer = analyzer;
 	context.subscriptions.push(analyzer);
 
@@ -425,20 +438,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 
 	const extensionRecommendations = new ExtensionRecommentations(logger, analytics, extContext);
-
-	// Dart Tooling Daemon.
-	// Set the working directory to the first Dart project's folder (or first workspace folder) as a workaround
-	// for https://github.com/dart-lang/sdk/issues/64641 because DTD uses its working directory as the project root,
-	// and otherwise it would inherit whatever the CWD was when VS Code was launched (which could be a different
-	// project if we used File -> Open).
-	const dartWorkspaceFolders = getDartWorkspaceFolders();
-	const dtdWorkingDirectory = workspaceContext.firstDartProject
-		?? (dartWorkspaceFolders.length ? fsPath(dartWorkspaceFolders[0].uri) : undefined);
-	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
-		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, dtdWorkingDirectory, deviceManager)
-		: undefined;
-	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
-	void analyzer.connectToDtd(dartToolingDaemon);
 
 	const devTools = new DevToolsManager(logger, extContext, analytics, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);

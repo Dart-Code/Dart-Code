@@ -4,13 +4,14 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
-import { AugmentationRequest, AugmentedRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../../shared/analysis/lsp/custom_protocol";
+import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../../shared/analysis/lsp/custom_protocol";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { ExtensionRestartReason, getServerStartReason } from "../../../shared/constants";
 import { SpawnedProcess } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, defer, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest } from "../../helpers";
+import { AnalyzerUpdateDiagnosticInformationFeature, UpdateDiagnosticInformationRequest } from "../../../shared/vscode/analyzer_update_diagnostic_information";
+import { activate, defer, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("toggle show TODOs", () => {
 	const settingName = "showTodos";
@@ -731,6 +732,86 @@ describe("analyzer", () => {
 			await privateApi.analyzer.connectToDtd({ dtdUri: Promise.resolve("ws://127.0.0.1:1234/ws") } as unknown as DartToolingDaemon);
 			if (privateApi.dartCapabilities.supportsLspOverDtd)
 				assert.ok(loggerError.calledOnce);
+		});
+
+		it("reconnects to DTD when LanguageClient restarts", async () => {
+			sb.stub(privateApi.dartCapabilities, "supportsLspOverDtd").get(() => true);
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest").resolves(null);
+			const fakeDtd = { dtdUri: Promise.resolve("ws://127.0.0.1:1234/ws") } as unknown as DartToolingDaemon;
+			(privateApi.analyzer as any).dtd = fakeDtd;
+			defer("Restore dtd", () => (privateApi.analyzer as any).dtd = privateApi.toolingDaemon);
+
+			const stateEmitter = (privateApi.analyzer.client as any)._stateChangeEmitter as vs.EventEmitter<ls.StateChangeEvent>; // eslint-disable-line no-underscore-dangle
+			stateEmitter.fire({ oldState: ls.State.Running, newState: ls.State.Stopped });
+			stateEmitter.fire({ oldState: ls.State.Stopped, newState: ls.State.Starting });
+			stateEmitter.fire({ oldState: ls.State.Starting, newState: ls.State.Running });
+
+			await fakeDtd.dtdUri;
+			assert.ok(sendRequest.calledOnceWithExactly(ConnectToDtdRequest.type, { uri: "ws://127.0.0.1:1234/ws", registerExperimentalHandlers: true }));
+		});
+
+		it("resets busy status and fires onAnalysisStatusChange when LanguageClient stops mid-analysis", () => {
+			const middleware = privateApi.analyzer.client.clientOptions.middleware!;
+			const statusEvents: Array<{ isAnalyzing: boolean }> = [];
+			const sub = privateApi.analyzer.onAnalysisStatusChange((e) => statusEvents.push(e));
+			defer("Dispose status subscription", () => sub.dispose());
+			const statusItem = (privateApi.analyzer as any).statusItem as vs.LanguageStatusItem;
+			const stateEmitter = (privateApi.analyzer.client as any)._stateChangeEmitter as vs.EventEmitter<ls.StateChangeEvent>; // eslint-disable-line no-underscore-dangle
+
+			middleware.handleWorkDoneProgress!("ANALYZING", { kind: "begin", title: "Analyzing" }, () => undefined);
+			assert.equal(statusItem.busy, true);
+			assert.deepEqual(statusEvents, [{ isAnalyzing: true, suppressProgress: true }]);
+
+			// Stopping while busy should clear busy and fire isAnalyzing: false.
+			stateEmitter.fire({ oldState: ls.State.Running, newState: ls.State.Stopped });
+			assert.equal(statusItem.busy, false);
+			assert.deepEqual(statusEvents, [
+				{ isAnalyzing: true, suppressProgress: true },
+				{ isAnalyzing: false, suppressProgress: true },
+			]);
+
+			// Stopping again when not busy should not fire duplicate events.
+			stateEmitter.fire({ oldState: ls.State.Running, newState: ls.State.Stopped });
+			assert.equal(statusEvents.length, 2);
+		});
+
+		it("resends diagnostic information on server re-initialization and re-registers config listener after clear", async () => {
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest").resolves(undefined);
+
+			// Grab the AnalyzerUpdateDiagnosticInformationFeature registered on the analyzer and its
+			// underlying StaticFeature hook that vscode-languageclient calls during server lifecycle events.
+			const updateDiag = (privateApi.analyzer as unknown as { updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature }).updateDiagnosticInformation;
+			const lspFeature = updateDiag.feature;
+			defer("Restore diagnostic feature capabilities", () => {
+				lspFeature.clear();
+				lspFeature.initialize(privateApi.analyzer.client.initializeResult!.capabilities, undefined);
+			});
+
+			// 1. When the LSP server stops/crashes, LanguageClient calls clear() on all features.
+			//    Verify this marks the feature as unsupported so requests are not sent while stopped.
+			lspFeature.clear();
+			await updateDiag.updateDiagnosticInformationIfSupported();
+			assert.ok(sendRequest.notCalled);
+
+			// 2. When the LSP server starts, LanguageClient calls initialize(serverCapabilities).
+			//    Verify this automatically sends diagnostic information to the server.
+			lspFeature.initialize({ experimental: { updateDiagnosticInformation: true } } as ls.ServerCapabilities, undefined);
+			assert.ok(sendRequest.calledOnce);
+			assert.ok(sendRequest.firstCall.calledWith(UpdateDiagnosticInformationRequest.type, sinon.match.object));
+
+			// 3. Simulate an internal server restart (LanguageClient calls clear() then initialize()).
+			//    Verify diagnostic information is sent again to the new server process.
+			lspFeature.clear();
+			lspFeature.initialize({ experimental: { updateDiagnosticInformation: true } } as ls.ServerCapabilities, undefined);
+			assert.equal(sendRequest.callCount, 2);
+			assert.ok(sendRequest.secondCall.calledWith(UpdateDiagnosticInformationRequest.type, sinon.match.object));
+
+			// 4. Verify that initialize() re-registered the workspace.onDidChangeConfiguration listener after clear(),
+			//    so changing a watched setting after a restart still triggers an update to the server.
+			const currentValue = vs.workspace.getConfiguration("dart").get<boolean>("onlyAnalyzeProjectsWithOpenFiles");
+			await setConfigForTest("dart", "onlyAnalyzeProjectsWithOpenFiles", !currentValue);
+			await waitForResult(() => sendRequest.callCount >= 3);
+			assert.ok(sendRequest.lastCall.calledWith(UpdateDiagnosticInformationRequest.type, sinon.match.object));
 		});
 
 		it("initializationFailedHandler logs warning and returns false", () => {

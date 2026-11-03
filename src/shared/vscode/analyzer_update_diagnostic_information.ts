@@ -21,24 +21,26 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 	private disposables: IAmDisposable[] = [];
 	private isSupported = false;
 
-	constructor(private readonly logger: Logger, private readonly client: LanguageClient) {
-		this.disposables.push(workspace.onDidChangeConfiguration((e) => this.updateDiagnosticInformationIfRelevantConfigChanged(e)));
-	}
+	constructor(private readonly logger: Logger, private readonly client: LanguageClient) { }
 
 	public get feature(): StaticFeature {
-		const disposables = this.disposables;
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		const that = this;
 		return {
-			clear() {
-				disposeAll(disposables);
+			clear: () => {
+				// Called by LanguageClient when the server stops or restarts.
+				this.isSupported = false;
+				disposeAll(this.disposables);
 			},
 			fillClientCapabilities(_capabilities: ClientCapabilities) { },
 			getState(): FeatureState {
 				return { kind: "static" };
 			},
-			initialize(serverCapabilities) {
-				that.isSupported = !!serverCapabilities.experimental?.updateDiagnosticInformation;
+			initialize: (serverCapabilities) => {
+				// Called by LanguageClient on every server initialization (including automatic restarts).
+				this.isSupported = !!serverCapabilities.experimental?.updateDiagnosticInformation;
+				if (this.isSupported) {
+					this.disposables.push(workspace.onDidChangeConfiguration((e) => this.updateDiagnosticInformationIfRelevantConfigChanged(e)));
+					void this.updateDiagnosticInformationIfSupported();
+				}
 			},
 		};
 	}
@@ -121,6 +123,6 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 	}
 }
 
-class UpdateDiagnosticInformationRequest {
+export class UpdateDiagnosticInformationRequest {
 	public static type = new RequestType<object, void, void>("dart/updateDiagnosticInformation");
 }
