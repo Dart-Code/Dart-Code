@@ -1208,6 +1208,22 @@ describe("SdkUtils", () => {
 				assert.equal(wc.sdks.dartVersion, "3.5.0");
 			});
 
+			it("uses a configured SDK when PATH is unset entirely", async () => {
+				await useIsolatedSdkSearch();
+				const tempDir = createTempDir();
+				const configuredSdk = path.join(tempDir, "configured-sdk");
+				createFakeDartSdk(configuredSdk, { version: "3.6.0" });
+				await setConfigForTest("dart", "sdkPath", configuredSdk);
+				setWorkspaceFolders([createDartProject(tempDir)]);
+
+				// Exercise the missing-PATH fallback in scanWorkspace, not just an empty PATH.
+				delete process.env.PATH;
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				assert.equal(wc.sdks.dart, configuredSdk);
+				assert.equal(wc.sdks.dartVersion, "3.6.0");
+			});
+
 			it("uses a Dart SDK from PATH when nothing else provides one", async () => {
 				await useIsolatedSdkSearch();
 				const tempDir = createTempDir();
