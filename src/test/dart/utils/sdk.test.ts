@@ -1257,7 +1257,6 @@ describe("SdkUtils", () => {
 
 				await useIsolatedSdkSearch();
 				const tempDir = createTempDir();
-				await setConfigForTest("dart", "previewBazelWorkspaceCustomScripts", true);
 				touchFile(path.join(tempDir, "WORKSPACE"));
 				const flutterSdk = path.join(tempDir, "flutter-sdk");
 				createFakeFlutterSdk(flutterSdk, { withDartSdk: false });
