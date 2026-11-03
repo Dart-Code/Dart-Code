@@ -54,7 +54,7 @@ module.exports = {
 			},
 			retries: isCI ? 2 : 0,        // Retry failing tests to reduce flakes
 			slow: 20000,       // increased threshold before marking a test as slow
-			timeout: 360000,   // increased timeout because starting up Code, Analyzer, Pub, etc. is slooow
+			timeout: 180000,   // increased timeout because starting up Code, Analyzer, Pub, etc. is slooow
 			ui: "bdd",         // the TDD UI is being used in extension.test.ts (suite, test, etc.)
 		});
 

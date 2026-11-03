@@ -676,9 +676,9 @@ describe("analyzer", () => {
 	});
 
 	describe("DartErrorHandler", () => {
-		function createErrorHandler(): ls.ErrorHandler & { restarts: number[] } {
-			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger) => ls.ErrorHandler & { restarts: number[] };
-			return new ErrorHandlerClass(privateApi.logger);
+		function createErrorHandler(checkDisposed: () => boolean = () => false): ls.ErrorHandler & { restarts: number[] } {
+			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger, checkDisposed: () => boolean) => ls.ErrorHandler & { restarts: number[] };
+			return new ErrorHandlerClass(privateApi.logger, checkDisposed);
 		}
 
 		it("continues on error before maxRestartCount and shuts down at maxRestartCount", () => {
@@ -688,6 +688,15 @@ describe("analyzer", () => {
 			assert.deepEqual(handler.error(new Error("err1"), msg, 1), { action: ls.ErrorAction.Continue });
 			assert.deepEqual(handler.error(new Error("err2"), msg, 2), { action: ls.ErrorAction.Shutdown });
 			assert.deepEqual(handler.error(new Error("err0"), msg, 0), { action: ls.ErrorAction.Shutdown });
+		});
+
+		it("shuts down on error and does not restart on close when analyzer is disposed", () => {
+			const handler = createErrorHandler(() => true);
+			const msg: ls.Message = { jsonrpc: "2.0" };
+
+			assert.deepEqual(handler.error(new Error("err1"), msg, 1), { action: ls.ErrorAction.Shutdown, handled: true });
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
+			assert.equal(handler.restarts.length, 0);
 		});
 
 		it("restarts on close up to maxRestartCount and stops if crashing repeatedly within 3 minutes", () => {

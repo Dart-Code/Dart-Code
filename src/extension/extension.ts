@@ -111,6 +111,8 @@ const extensionTotalSessionStart = Date.now(); // Set for overall session.
 let extensionThisSessionStart = extensionTotalSessionStart; // Reset during every activation.
 
 let previousSettingsObject: Record<string, string | number | boolean | undefined> | undefined;
+let pendingConfigReloadTimer: NodeJS.Timeout | undefined;
+let reloadPromise: Promise<void> | undefined;
 let experiments: KnownExperiments;
 
 const loggers: IAmDisposableAsync[] = [];
@@ -151,15 +153,29 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	util.logTime("Code called activate");
 
 	// Wire up a reload command that will re-initialise everything.
-	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (reason?: ExtensionRestartReason, data?: string) => {
-		reason ??= ExtensionRestartReason.Unknown;
-		logger.warn(`Performing extension reload (${reason}, ${data})...`);
-		analytics.logExtensionRestart(reason, data);
-		setAnalysisServerStartReason(reason);
-		await deactivate(true, reason);
-		await disposeAllAsync(context.subscriptions);
-		await activate(context, true);
-		logger.info("Done reloading extension!");
+	// If a reload is requested while a reload is already in progress, coalesce into
+	// `reloadPromise` so we don't run `deactivate`/`activate` in parallel or spawn a
+	// new set of processes only to immediately tear them down again.
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (reason?: ExtensionRestartReason, data?: string) => {
+		if (reloadPromise) {
+			logger.info(`Skipping overlapping extension reload (${reason}, ${data}) because a reload is already in progress.`);
+			return reloadPromise;
+		}
+		reloadPromise = (async () => {
+			try {
+				reason ??= ExtensionRestartReason.Unknown;
+				logger.warn(`Performing extension reload (${reason}, ${data})...`);
+				analytics.logExtensionRestart(reason, data);
+				setAnalysisServerStartReason(reason);
+				await deactivate(true, reason);
+				await disposeAllAsync(context.subscriptions);
+				await activate(context, true);
+				logger.info("Done reloading extension!");
+			} finally {
+				reloadPromise = undefined;
+			}
+		})();
+		return reloadPromise;
 	}));
 
 	// Configure if using flutter-dev.
@@ -861,7 +877,8 @@ ${ringLogContents.split("\n").filter((l) => l.includes("[General]") || l.include
 		}
 
 		const restartData = getConfigurationChangeRestartData(changedSettingsNames, prevObject, newObject);
-		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData }), 50);
+		clearTimeout(pendingConfigReloadTimer);
+		pendingConfigReloadTimer = setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData }), 50);
 	}
 }
 
@@ -932,6 +949,12 @@ function getSettingsThatRequireRestart(): Record<string, string | number | boole
 
 export async function deactivate(isRestart = false, reason: ExtensionRestartReason | undefined): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
+
+	// Cancel any pending config-change reload timer and clear `previousSettingsObject`
+	// so config-change events firing during deactivation do not schedule another reload.
+	clearTimeout(pendingConfigReloadTimer);
+	pendingConfigReloadTimer = undefined;
+	previousSettingsObject = undefined;
 
 	// Record session durations.
 	const sessionEndTimestamp = Date.now();
