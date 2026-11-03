@@ -69,7 +69,7 @@ export class LspAnalyzer extends Analyzer {
 
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		this.disposables.push({
-			dispose: () => this.client.state === ls.State.Running ? this.client.stop() : undefined,
+			dispose: () => this.client.state !== ls.State.Starting ? this.client.stop() : undefined,
 		});
 
 
@@ -96,8 +96,10 @@ export class LspAnalyzer extends Analyzer {
 
 		this.clientStartPromise = this.client.start();
 		void this.clientStartPromise.then(() => {
-			if (this.isDisposed)
+			if (this.isDisposed) {
+				void this.client.stop().catch((e) => this.logger.error(e));
 				return;
+			}
 			this.statusItem.text = "Dart Analysis Server";
 			// Reminder: These onNotification calls only hold ONE handler!
 			this.client.onNotification(OpenUriNotification.type, (params) => {
