@@ -101,9 +101,9 @@ export class PubGlobal {
 		}
 
 		// If we haven't checked in the last 24 hours, check if there's an update available.
-		const lastChecked = this.context.getPackageLastCheckedForUpdates(packageID);
+		const lastChecked = this.context.globalState.getPackageLastCheckedForUpdates(packageID);
 		if (!lastChecked || lastChecked <= Date.now() - noRepeatPromptThreshold) {
-			this.context.setPackageLastCheckedForUpdates(packageID, Date.now());
+			this.context.globalState.setPackageLastCheckedForUpdates(packageID, Date.now());
 			try {
 				const pubPackage = await this.pubApi.getPackage(packageID);
 				if (!pubVersionIsAtLeast(installedVersion, pubPackage.latest.version)) {

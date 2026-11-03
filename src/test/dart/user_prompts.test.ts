@@ -29,14 +29,14 @@ describe("DevTools notification", async () => {
 
 		// Flags were updated.
 		const context = privateApi.context;
-		assert.equal(context.devToolsNotificationDoNotShow, false);
+		assert.equal(context.profileState.devToolsNotificationDoNotShow, false);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.devToolsNotificationLastShown && context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
+		assert.equal(context.profileState.devToolsNotificationLastShown && context.profileState.devToolsNotificationLastShown > Date.now() - 10000 && context.profileState.devToolsNotificationLastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already set", async () => {
 		const context = privateApi.context;
-		context.devToolsNotificationLastShown = Date.now() - (noRepeatPromptThreshold + twoHoursInMs);
+		context.profileState.devToolsNotificationLastShown = Date.now() - (noRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openAction);
@@ -52,15 +52,15 @@ describe("DevTools notification", async () => {
 		assert.equal(res.didOpen, true);
 
 		// Flags were updated.
-		assert.equal(context.devToolsNotificationDoNotShow, false);
+		assert.equal(context.profileState.devToolsNotificationDoNotShow, false);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
+		assert.equal(context.profileState.devToolsNotificationLastShown > Date.now() - 10000 && context.profileState.devToolsNotificationLastShown <= Date.now(), true);
 	});
 
 	it("does not show if shown in the last 20 hours", async () => {
 		const context = privateApi.context;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
-		context.devToolsNotificationLastShown = Date.now() - fiveHoursInMs;
+		context.profileState.devToolsNotificationLastShown = Date.now() - fiveHoursInMs;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openAction);
@@ -91,11 +91,11 @@ describe("DevTools notification", async () => {
 		assert.equal(res.didOpen, false);
 
 		// Flag was written.
-		assert.equal(privateApi.context.devToolsNotificationDoNotShow, true);
+		assert.equal(privateApi.context.profileState.devToolsNotificationDoNotShow, true);
 	});
 
 	it("does not prompt if told not to ask again", async () => {
-		privateApi.context.devToolsNotificationDoNotShow = true;
+		privateApi.context.profileState.devToolsNotificationDoNotShow = true;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(doNotAskAgainAction);
@@ -175,9 +175,9 @@ describe("Survey notification", async () => {
 
 		// Flags were updated.
 		const context = privateApi.context;
-		assert.equal(context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
+		assert.equal(context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 		// Marked as shown within the last 10 seconds.
-		const lastShown = context.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
+		const lastShown = context.globalState.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
 		assert.equal(lastShown && lastShown > Date.now() - 10000 && lastShown <= Date.now(), true);
 	});
 
@@ -200,7 +200,7 @@ describe("Survey notification", async () => {
 
 	it("shows and updates context values when already seen", async () => {
 		const context = privateApi.context;
-		context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs));
+		context.globalState.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs));
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -217,9 +217,9 @@ describe("Survey notification", async () => {
 		assert.equal(surveyShown.calledOnce, true);
 
 		// Flags were updated.
-		assert.equal(context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
+		assert.equal(context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 		// Marked as shown within the last 10 seconds.
-		const lastShown = context.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
+		const lastShown = context.globalState.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
 		assert.equal(lastShown && lastShown > Date.now() - 10000 && lastShown <= Date.now(), true);
 	});
 
@@ -227,7 +227,7 @@ describe("Survey notification", async () => {
 		const context = privateApi.context;
 		const now = surveyIsOpenDate;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
-		context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, now - fiveHoursInMs);
+		context.globalState.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, now - fiveHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -259,12 +259,12 @@ describe("Survey notification", async () => {
 		assert.equal(surveyDismissed.calledOnce, true);
 
 		// Flag was written.
-		await waitFor(() => privateApi.context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID));
-		assert.equal(privateApi.context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
+		await waitFor(() => privateApi.context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID));
+		assert.equal(privateApi.context.globalState.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 	});
 
 	it("does not prompt if told not to ask again", async () => {
-		privateApi.context.setFlutterSurveyNotificationDoNotShow(flutterTestSurveyID, true);
+		privateApi.context.globalState.setFlutterSurveyNotificationDoNotShow(flutterTestSurveyID, true);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(skipThisSurveyAction);
@@ -430,3 +430,4 @@ describe("SDK deprecation notice", async () => {
 		assert.equal(showWarningMessage.calledTwice, true);
 	});
 });
+

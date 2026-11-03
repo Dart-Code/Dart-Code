@@ -383,8 +383,8 @@ describe("debug commands", () => {
 			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
 			const warningId = "test-warning-id";
 
-			privateApi.context.setAppWarningDoNotShow(warningId, undefined);
-			defer("Reset warning state", () => privateApi.context.setAppWarningDoNotShow(warningId, undefined));
+			privateApi.context.globalState.setAppWarningDoNotShow(warningId, undefined);
+			defer("Reset warning state", () => privateApi.context.globalState.setAppWarningDoNotShow(warningId, undefined));
 
 			// Missing warningId or warning text.
 			privateApi.debugCommands.handleDebugSessionCustomEvent({
@@ -436,7 +436,7 @@ describe("debug commands", () => {
 				event: "flutter.forwardedEvent",
 				session,
 			});
-			await waitForResult(() => privateApi.context.getAppWarningDoNotShow(warningId) === true);
+			await waitForResult(() => privateApi.context.globalState.getAppWarningDoNotShow(warningId) === true);
 			assert.ok(showWarningMessage.calledOnceWithExactly("No URL warning", doNotShowAgainAction));
 
 			// Subsequent warning with same warningId is skipped.

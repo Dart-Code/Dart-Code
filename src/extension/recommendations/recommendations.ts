@@ -32,7 +32,7 @@ export class ExtensionRecommentations {
 		const identifier = extension.identifier;
 
 		// Never promote ignored extensions.
-		const ignoredExtensions = this.context.getIgnoredExtensionRecommendationIdentifiers();
+		const ignoredExtensions = this.context.profileState.getIgnoredExtensionRecommendationIdentifiers();
 		if (ignoredExtensions.find((ignored) => ignored.trim().toLowerCase() === identifier.trim().toLowerCase()))
 			return;
 
@@ -48,7 +48,7 @@ export class ExtensionRecommentations {
 			await this.installExtension(identifier);
 		} else {
 			this.analytics.logExtensionPromotion(AnalyticsEvent.ExtensionRecommendation_Rejected, identifier);
-			this.context.ignoreExtensionRecommendation(extension.identifier);
+			this.context.profileState.ignoreExtensionRecommendation(extension.identifier);
 		}
 	}
 

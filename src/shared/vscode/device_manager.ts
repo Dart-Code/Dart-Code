@@ -79,7 +79,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 	public isDevicePreferred(device: f.Device | undefined): boolean {
 		const isPreferred = this.config.flutterRememberSelectedDevice
 			&& !!device
-			&& this.extContext.workspaceLastFlutterDeviceId === device.id;
+			&& this.extContext.workspaceState.lastFlutterDeviceId === device.id;
 		return isPreferred;
 	}
 
@@ -324,7 +324,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 			? device.id
 			: undefined;
 		this.logger.info(`Saving ${deviceIdToRemember} as preferred device`);
-		this.extContext.workspaceLastFlutterDeviceId = deviceIdToRemember;
+		this.extContext.workspaceState.lastFlutterDeviceId = deviceIdToRemember;
 	}
 
 	public shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;

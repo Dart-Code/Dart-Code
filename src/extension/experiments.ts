@@ -34,25 +34,24 @@ class Experiment {
 	constructor(protected readonly logger: Logger, protected readonly workspaceContext: WorkspaceContext, private readonly context: Context, private readonly id: string, private readonly currentPercent: number) {
 		// If this is the first time we've seen this experiment, generate a random number
 		// from 1-100.
-		const contextKey = `experiment-${id}`;
-		const contextHasActivatedKey = `${contextKey}-hasActivated`;
 		if (clearAllExperiments) {
-			context.update(contextKey, undefined);
-			context.update(contextHasActivatedKey, undefined);
+			context.globalState.setExperimentRandomNumber(id, undefined);
+			context.globalState.setExperimentHasActivated(id, undefined);
 		}
 
-		this.randomNumber = context.get(contextKey) as number;
-		if (!this.randomNumber) {
-			this.randomNumber = getRandomInt(1, 100);
-			context.update(contextKey, this.randomNumber);
-			logger.info(`Generated random number ${this.randomNumber} for new experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
+		let randomNumber = context.globalState.getExperimentRandomNumber(id);
+		if (!randomNumber) {
+			randomNumber = getRandomInt(1, 100);
+			context.globalState.setExperimentRandomNumber(id, randomNumber);
+			logger.info(`Generated random number ${randomNumber} for new experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
 		} else {
-			logger.info(`Experiment random number is ${this.randomNumber} for experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
+			logger.info(`Experiment random number is ${randomNumber} for experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
 		}
+		this.randomNumber = randomNumber;
 
 		if (this.applies) {
-			const isFirst = !context.get(contextHasActivatedKey);
-			context.update(contextHasActivatedKey, true);
+			const isFirst = !context.globalState.getExperimentHasActivated(id);
+			context.globalState.setExperimentHasActivated(id, true);
 			logger.info(`Experiment '${id}' is activating (${isFirst ? "first time" : "not first time"})`);
 			void this.activate(isFirst)
 				// Activate is allowed to return false if it skipped activating (eg. not relevant) so
@@ -60,7 +59,7 @@ class Experiment {
 				.then((v) => {
 					if (v === false) {
 						logger.info(`Experiment '${id}' aborted. Clearing hasActivated flag`);
-						context.update(contextHasActivatedKey, undefined);
+						context.globalState.setExperimentHasActivated(id, undefined);
 					}
 				});
 		} else {

@@ -335,13 +335,13 @@ export class FlutterCommands extends BaseSdkCommands {
 		// If already in a workspace, set the default folder to something nearby.
 		const folders = await vs.window.showOpenDialog({
 			canSelectFolders: true,
-			defaultUri: this.context.lastUsedNewProjectPath ? vs.Uri.file(this.context.lastUsedNewProjectPath) : undefined,
+			defaultUri: this.context.profileState.lastUsedNewProjectPath ? vs.Uri.file(this.context.profileState.lastUsedNewProjectPath) : undefined,
 			openLabel: "Select a folder to create the project in",
 		});
 		if (folders?.length !== 1)
 			return;
 		const folderPath = fsPath(folders[0]);
-		this.context.lastUsedNewProjectPath = folderPath;
+		this.context.profileState.lastUsedNewProjectPath = folderPath;
 
 		const projectKind = this.getProjectKind(template.id);
 		const defaultName = nextAvailableFilename(folderPath, `flutter_${projectKind}_`);

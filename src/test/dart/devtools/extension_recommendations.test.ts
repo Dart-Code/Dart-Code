@@ -11,7 +11,7 @@ describe("devtools extensions recommendations", () => {
 		if (!privateApi.dartCapabilities.supportsDevToolsVsCodeExtensions)
 			this.skip();
 
-		await privateApi.context.context.globalState.update(`ignoredExtensionRecommendations`, undefined);
+		await privateApi.context.profileState.clear();
 	});
 
 	it("prompts and installs", async () => {

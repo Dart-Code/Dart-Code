@@ -20,7 +20,7 @@ describe("device_manager", () => {
 
 	beforeEach(() => activateWithoutAnalysis());
 	beforeEach(() => {
-		privateApi.context.workspaceLastFlutterDeviceId = undefined;
+		privateApi.context.workspaceState.lastFlutterDeviceId = undefined;
 		daemon = new FakeFlutterDaemon();
 		// TODO: Tests for custom emulators.
 		dm = new FlutterDeviceManager(
@@ -235,7 +235,7 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
 
 		// Connecting desktop does change the selected device.
-		privateApi.context.workspaceLastFlutterDeviceId = desktop.id;
+		privateApi.context.workspaceState.lastFlutterDeviceId = desktop.id;
 		await daemon.connect(desktop, true);
 		assert.deepStrictEqual(dm.currentDevice, desktop);
 	});
@@ -414,7 +414,7 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
 
 		// Mark current device as preferred.
-		privateApi.context.workspaceLastFlutterDeviceId = physicalAndroidMobile.id;
+		privateApi.context.workspaceState.lastFlutterDeviceId = physicalAndroidMobile.id;
 
 		// Connect another ephemeral device and verify currentDevice is not changed.
 		await daemon.connect(emulatedAndroidMobile, true);
@@ -465,7 +465,7 @@ describe("device_manager", () => {
 
 		assert.deepStrictEqual(await dmNever.getPickableEmulators(true), []);
 		await dmNever.selectDevice({ device: physicalAndroidMobile, label: physicalAndroidMobile.name });
-		assert.equal(privateApi.context.workspaceLastFlutterDeviceId, undefined);
+		assert.equal(privateApi.context.workspaceState.lastFlutterDeviceId, undefined);
 
 		// When flutterShowEmulators is "local" and isRunningLocally is false, returns [].
 		sb.stub(vsUtils, "isRunningLocally").value(false);
@@ -650,7 +650,7 @@ describe("device_manager", () => {
 
 		// Next connected device should be remembered because rememberNextAddedDevice was set.
 		await daemon.connect(emulatedAndroidMobile, true);
-		assert.equal(privateApi.context.workspaceLastFlutterDeviceId, emulatedAndroidMobile.id);
+		assert.equal(privateApi.context.workspaceState.lastFlutterDeviceId, emulatedAndroidMobile.id);
 
 		// 2. emulator (without and with coldBoot)
 		await dm.selectDevice({ device: androidEmulator, label: androidEmulator.name });

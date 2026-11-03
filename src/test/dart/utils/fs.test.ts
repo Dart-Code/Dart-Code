@@ -4,7 +4,7 @@ import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
 import { nullLogger } from "../../../shared/logging";
-import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
+import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getDartToolDir, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
 import { createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, testProjectsFolder, tryDelete } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
@@ -372,5 +372,24 @@ describe("findProjectFolders", () => {
 		// - level3 searches 5 levels deep from itself (level3 -> level4 -> level5 -> level6 -> level7), finding both level5 and level7.
 		const projects = await findProjectFolders(logger, [level1, level3], [], { requirePubspec: true, searchDepth: 5 }, fakeCancellationToken);
 		assert.deepStrictEqual(projects, [level5, level7]);
+	});
+});
+
+describe("getDartToolDir", () => {
+	it("computes the correct .dart-tool storage path", () => {
+		const winPath = getDartToolDir(
+			{ APPDATA: "C:\\Users\\Test\\AppData\\Roaming", HOME: "C:\\Users\\Test" },
+			true,
+		);
+		assert.equal(winPath, path.join("C:\\Users\\Test\\AppData\\Roaming", ".dart-tool"));
+
+		const unixPath = getDartToolDir(
+			{ APPDATA: "/should/not/be/used", HOME: "/home/testuser" },
+			false,
+		);
+		assert.equal(unixPath, path.join("/home/testuser", ".dart-tool"));
+
+		assert.equal(getDartToolDir({}, true), undefined);
+		assert.equal(getDartToolDir({}, false), undefined);
 	});
 });

@@ -31,7 +31,27 @@ export default defineConfig([
 		linterOptions: {
 			reportUnusedDisableDirectives: true,
 		},
+		plugins: {
+			"dart-code": {
+				rules: {
+					// Disallows accessing `globalState`, `workspaceState`, `globalStorageUri`, or `storageUri`
+					// directly on VS Code's `ExtensionContext`. All extension state and storage access should go
+					// through the `Context` wrapper in `src/shared/vscode/workspace.ts` (`globalState`, `profileState`,
+					// `workspaceState`, and `extensionStorageUri`) so that cross-profile vs. per-profile vs. per-workspace
+					// scoping is enforced consistently.
+					"no-extension-context-state": {
+						create: (ctx) => ({
+							"MemberExpression[property.name=/^(globalState|workspaceState|globalStorageUri|storageUri)$/]": (node) => {
+								if (ctx.sourceCode.parserServices?.getTypeAtLocation(node.object).getSymbol()?.getName() === "ExtensionContext")
+									ctx.report({ node: node.property, message: `Do not access ${node.property.name} on ExtensionContext directly; use the Context wrapper instead.` });
+							},
+						}),
+					},
+				},
+			},
+		},
 		rules: {
+			"dart-code/no-extension-context-state": "error",
 			"no-restricted-properties": [
 				"error",
 				{
