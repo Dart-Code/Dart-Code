@@ -39,6 +39,7 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 - Use double quotes for strings.
 - No trailing spaces.
 - Include full stops on comment sentences.
+- Use JSDoc (`/** ... */`) for documentation comments rather than Dart-style `///` comments. Only convert existing `///` comments when adding or modifying them.
 - Avoid braces for simple one-line if/else blocks.
 
 

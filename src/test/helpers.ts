@@ -304,7 +304,7 @@ export async function activate(file?: vs.Uri | null): Promise<void> {
 	// before we continue.
 	await delay(50);
 	logger.info(`Waiting for in-progress analysis`);
-	await withTimeout(privateApi.currentAnalysis(), "In-progress analysis did not complete", 120);
+	await privateApi.currentAnalysis();
 
 	logger.info(`Ready to start test`);
 	const cpuLoad = os.loadavg();
@@ -1215,7 +1215,7 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 	await delay(1);
 }
 
-export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds = 120): Promise<void> {
+export async function waitForNextAnalysis(action: () => void | Thenable<void>): Promise<void> {
 	logger.info("Waiting for any in-progress analysis to complete");
 	await privateApi.currentAnalysis();
 	// Get a new completer for the next analysis.
@@ -1223,7 +1223,7 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>, t
 	logger.info("Running requested action");
 	await action();
 	logger.info(`Waiting for analysis to complete`);
-	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
+	await nextAnalysis;
 }
 
 export async function getResolvedDebugConfiguration(extraConfiguration?: { program: string | undefined, [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
@@ -1255,12 +1255,12 @@ export async function getAttachConfiguration(extraConfiguration?: Record<string,
 export async function writeBrokenDartCodeIntoFileForTest(file: vs.Uri): Promise<void> {
 	const nextAnalysis = privateApi.nextAnalysis();
 	fs.writeFileSync(fsPath(file), "this is broken dart code");
+	defer("Remove broken Dart file", () => tryDelete(file));
 	await nextAnalysis;
 	// HACK: Sometimes we see analysis the analysis flag toggle quickly and we get an empty error list
 	// so we need to add a small delay here and then wait for any in progress analysis.
 	await delay(50);
 	await privateApi.currentAnalysis();
-	defer("Remove broken Dart file", () => tryDelete(file));
 }
 
 export function deleteFileIfExists(filePath: string) {
@@ -1298,11 +1298,18 @@ export async function captureDebugSessionCustomEvents(startDebug: () => void, ex
 		});
 	});
 
-	startDebug();
-	await Promise.all([startPromise, endPromise]);
-	startSub?.dispose();
-	endSub?.dispose();
-	eventSub.dispose();
+	try {
+		startDebug();
+		await withTimeout(
+			Promise.all([startPromise, endPromise]),
+			"Debug session did not start and terminate",
+			120,
+		);
+	} finally {
+		startSub?.dispose();
+		endSub?.dispose();
+		eventSub.dispose();
+	}
 
 	return events;
 }

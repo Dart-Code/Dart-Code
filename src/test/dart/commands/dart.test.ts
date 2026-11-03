@@ -36,8 +36,10 @@ describe("dart commands", () => {
 	};
 	const templates = [consoleTemplate, packageTemplate, webTemplate];
 
-	/// Stubs the `dart create --list-templates` spawn so the template fetch
-	/// resolves with [result] JSON.
+	/**
+	 * Stubs the `dart create --list-templates` spawn so the template fetch
+	 * resolves with `result` JSON.
+	 */
 	function stubTemplateFetch(result: DartProjectTemplate[] = templates) {
 		return ChildProcessSpawnStub.dartCreate({ stdout: JSON.stringify(result) });
 	}
@@ -69,7 +71,7 @@ describe("dart commands", () => {
 
 	it("shows an activation failure and does not fetch templates when no Dart SDK is configured", async () => {
 		const create = ChildProcessSpawnStub.dartCreate();
-		const showDartActivationFailure = sb.stub(privateApi.sdkUtils!, "showDartActivationFailure").resolves();
+		const showDartActivationFailure = sb.stub(privateApi.sdkUtils!, "showDartActivationFailure");
 		sb.stub(privateApi.workspaceContext.sdks, "dart").value(undefined);
 
 		await vs.commands.executeCommand("dart.createProject");
@@ -179,30 +181,12 @@ describe("dart commands", () => {
 		assert.ok(!fs.existsSync(path.join(tempFolder, "existing_project", DART_CREATE_PROJECT_TRIGGER_FILE)));
 	});
 
-	it("creates the project folder, trigger file and opens the folder", async () => {
+	it("creates the project folder, trigger file, SDK setting and opens the folder", async () => {
 		stubTemplateFetch();
 		stubTemplatePick("console");
 		const tempFolder = tempFolderWithCleanup();
 		stubFolderPick(tempFolder);
 		sb.stub(vs.window, "showInputBox").resolves("my_test_project");
-		const openFolder = stubOpenFolder();
-
-		await vs.commands.executeCommand("dart.createProject");
-
-		assert.ok(openFolder.calledOnce);
-		const projectFolder = path.join(tempFolder, "my_test_project");
-		const triggerFile = path.join(projectFolder, DART_CREATE_PROJECT_TRIGGER_FILE);
-		assert.ok(fs.existsSync(triggerFile));
-		const recordedTemplate = JSON.parse(fs.readFileSync(triggerFile).toString()) as DartProjectTemplate;
-		assert.equal(recordedTemplate.name, "console");
-	});
-
-	it("writes the Dart SDK setting into the new project when a custom SDK is configured", async () => {
-		stubTemplateFetch();
-		stubTemplatePick("console");
-		const tempFolder = tempFolderWithCleanup();
-		stubFolderPick(tempFolder);
-		sb.stub(vs.window, "showInputBox").resolves("my_sdk_project");
 		const openFolder = stubOpenFolder();
 
 		// Use the real SDK path as the configured value: it is a valid path,
@@ -213,8 +197,26 @@ describe("dart commands", () => {
 		await vs.commands.executeCommand("dart.createProject");
 
 		assert.ok(openFolder.calledOnce);
-		const settingsFile = path.join(tempFolder, "my_sdk_project", ".vscode", "settings.json");
+		const projectFolder = path.join(tempFolder, "my_test_project");
+		const triggerFile = path.join(projectFolder, DART_CREATE_PROJECT_TRIGGER_FILE);
+		assert.ok(fs.existsSync(triggerFile));
+		const recordedTemplate = JSON.parse(fs.readFileSync(triggerFile).toString()) as DartProjectTemplate;
+		assert.equal(recordedTemplate.name, "console");
+
+		const settingsFile = path.join(projectFolder, ".vscode", "settings.json");
 		const settings = JSON.parse(fs.readFileSync(settingsFile, "utf8")) as Record<string, unknown>;
 		assert.equal(settings["dart.sdkPath"], customSdkPath);
+	});
+
+	it("runs dart create for the selected template in the project folder", async () => {
+		const create = ChildProcessSpawnStub.dartCreate();
+		const tempFolder = tempFolderWithCleanup();
+
+		await vs.commands.executeCommand("_dart.create", tempFolder, "package");
+
+		create.assertDartCalls([{
+			args: ["create", "-t", "package", ".", "--force"],
+			cwd: tempFolder,
+		}]);
 	});
 });
