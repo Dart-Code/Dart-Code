@@ -12,7 +12,6 @@ import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
-import { withTimeout } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { AnalyzerUpdateDiagnosticInformationFeature } from "../../shared/vscode/analyzer_update_diagnostic_information";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
@@ -69,7 +68,20 @@ export class LspAnalyzer extends Analyzer {
 
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		this.disposables.push({
-			dispose: () => this.client.state !== ls.State.Starting ? this.client.stop() : undefined,
+			dispose: async () => {
+				this.isDisposed = true;
+				// If the client is still starting, calling `stop()` immediately will throw
+				// ("Client is not running and can't be stopped") and leave `clientStartPromise`
+				// to finish initializing and registering duplicate commands/providers in the
+				// background. Wait for `clientStartPromise` to settle first, then stop the client.
+				try {
+					await this.clientStartPromise;
+				} catch {
+					// Ignore startup errors if the server failed to start or was killed during disposal.
+				}
+				if (this.client.state === ls.State.Running)
+					await this.client.stop();
+			},
 		});
 
 
@@ -96,10 +108,8 @@ export class LspAnalyzer extends Analyzer {
 
 		this.clientStartPromise = this.client.start();
 		void this.clientStartPromise.then(() => {
-			if (this.isDisposed) {
-				void this.client.stop().catch((e) => this.logger.error(e));
+			if (this.isDisposed)
 				return;
-			}
 			this.statusItem.text = "Dart Analysis Server";
 			// Reminder: These onNotification calls only hold ONE handler!
 			this.client.onNotification(OpenUriNotification.type, (params) => {
@@ -721,26 +731,6 @@ export class LspAnalyzer extends Analyzer {
 
 	public setServerStartReason(reason: ExtensionRestartReason | undefined): void {
 		setAnalysisServerStartReason(reason);
-	}
-
-	public override async dispose(): Promise<void> {
-		this.isDisposed = true;
-		// If the client is still starting (waiting for the LSP `initialize` handshake),
-		// calling `stop()` immediately during `super.dispose()` will throw ("Client is not
-		// running and can't be stopped") and leave `clientStartPromise` to finish initializing
-		// and registering duplicate commands/providers in the background. Wait briefly for
-		// `clientStartPromise` to settle first before running `super.dispose()` (which
-		// concurrently stops the client and starts `handleDisposeCleanup`'s 3s process-kill timer).
-		if (this.client.state === ls.State.Starting) {
-			const timeoutSeconds = 2;
-			try {
-				await withTimeout(this.clientStartPromise, "LSP client did not finish starting during disposal", timeoutSeconds);
-			} catch {
-				// Ignore startup errors or timeout during disposal; if startup timed out,
-				// `super.dispose()` will run `handleDisposeCleanup` to kill the process.
-			}
-		}
-		await super.dispose();
 	}
 
 	/**
