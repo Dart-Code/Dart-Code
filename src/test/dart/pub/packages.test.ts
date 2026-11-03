@@ -5,11 +5,13 @@ import * as sinon from "sinon";
 import * as url from "url";
 import * as vs from "vscode";
 import { getFolderToRunCommandIn } from "../../../extension/utils/vscode/projects";
+import { iUnderstandAction } from "../../../shared/constants";
 import { MissingPackageMap, PackageMap, PackageMapLoader } from "../../../shared/pub/package_map";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
 import { getPubWorkspaceOrPackageFolderInfo, getPubWorkspaceStatus, promptToRunPubGet, promptToRunPubUpgrade, PubPackageStatus } from "../../../shared/vscode/pub";
 import * as sharedVscodeUtils from "../../../shared/vscode/utils";
-import { activate, activateWithoutAnalysis, defer, fixPath, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, privateApi, sb, tryDelete } from "../../helpers";
+import { activate, activateWithoutAnalysis, closeAllOpenFiles, defer, fixPath, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldPubspec, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
+import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("pub package status", () => {
 	before("activate", () => activate());
@@ -526,8 +528,79 @@ describe("pub package commands", () => {
 					);
 				});
 			}
+
+			it("spawns the expected pub command for a Dart project", async () => {
+				const spawn = ChildProcessSpawnStub.dartPub();
+				await vs.commands.executeCommand(commandName, helloWorldPubspec);
+				spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: commandName === "dart.getPackages" ? ["pub", "get", "--no-example"] : ["pub", "upgrade"] }]);
+			});
+
+			it("does nothing when pub is disabled", async () => {
+				await setConfigForTest("dart", "enablePub", false);
+				const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
+				await vs.commands.executeCommand(commandName, helloWorldPubspec);
+				spawn.assertCalls([]);
+			});
+
+			it("does nothing when folder selection is cancelled", async () => {
+				await closeAllOpenFiles();
+				sb.stub(vs.window, "showQuickPick").resolves();
+				const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
+				await vs.commands.executeCommand(commandName);
+				spawn.assertCalls([]);
+			});
 		});
 	}
+
+	describe("dart.upgradePackages.majorVersions", () => {
+		beforeEach("reset the warning state", () => {
+			privateApi.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = false;
+		});
+
+		it("does nothing when pub is disabled", async () => {
+			await setConfigForTest("dart", "enablePub", false);
+			const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
+			await vs.commands.executeCommand("dart.upgradePackages.majorVersions", helloWorldFolder);
+			spawn.assertCalls([]);
+		});
+
+		it("does nothing when the warning is dismissed", async () => {
+			const warningStub = sb.stub(vs.window, "showWarningMessage").resolves();
+			const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
+			await vs.commands.executeCommand("dart.upgradePackages.majorVersions", helloWorldFolder);
+			assert.ok(warningStub.calledOnce);
+			assert.ok(!privateApi.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation);
+			spawn.assertCalls([]);
+		});
+
+		it("runs dart pub upgrade --major-versions for a Dart project", async () => {
+			sb.stub(vs.window, "showWarningMessage").resolves(iUnderstandAction);
+			const spawn = ChildProcessSpawnStub.dartPub();
+			await vs.commands.executeCommand("dart.upgradePackages.majorVersions", helloWorldFolder);
+			spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "upgrade", "--major-versions"] }]);
+		});
+
+		it("does not warn again after the warning has been accepted", async () => {
+			const warningStub = sb.stub(vs.window, "showWarningMessage").resolves(iUnderstandAction);
+			const spawn = ChildProcessSpawnStub.dartPub();
+			await vs.commands.executeCommand("dart.upgradePackages.majorVersions", helloWorldFolder);
+			await vs.commands.executeCommand("dart.upgradePackages.majorVersions", helloWorldFolder);
+			assert.equal(warningStub.callCount, 1);
+			spawn.assertDartCalls([
+				{ cwd: fsPath(helloWorldFolder), args: ["pub", "upgrade", "--major-versions"] },
+				{ cwd: fsPath(helloWorldFolder), args: ["pub", "upgrade", "--major-versions"] },
+			]);
+		});
+
+		it("does nothing when folder selection is cancelled", async () => {
+			await closeAllOpenFiles();
+			privateApi.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
+			sb.stub(vs.window, "showQuickPick").resolves();
+			const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
+			await vs.commands.executeCommand("dart.upgradePackages.majorVersions");
+			spawn.assertCalls([]);
+		});
+	});
 
 	describe("package picker", () => {
 		beforeEach("activate without an open file", () => activateWithoutAnalysis(null));
