@@ -454,8 +454,10 @@ export class LspAnalyzer extends Analyzer {
 		const clientOptions: ls.LanguageClientOptions = {
 			errorHandler: new DartErrorHandler(
 				logger,
-				() => this.isDisposed,
-				() => this.client.state === ls.State.Starting || this.client.state === ls.State.StartFailed,
+				{
+					checkDisposed: () => this.isDisposed,
+					checkDuringStartup: () => this.client.state === ls.State.Starting || this.client.state === ls.State.StartFailed,
+				},
 			),
 			initializationFailedHandler: (error: ls.ResponseError<ls.InitializeError> | Error | undefined) => {
 				logger.warn(`Failed to initialize LSP server: ${error}`);
@@ -735,14 +737,6 @@ export class LspAnalyzer extends Analyzer {
 		process.on("exit", (code, signal) => {
 			logger.info(`${processName} exited (${code}, ${signal})`);
 
-			// If the server exits during initialization, vscode-languageclient's `initialize` catch block
-			// invokes `initializationFailedHandler` and sets the client state to `StartFailed` without
-			// auto-restarting. Report a startup failure so the user is offered a "Restart Extension" button.
-			// Note: We check `client.state` rather than `client.initializeResult` because `vscode-languageclient`
-			// only clears `_initializeResult` on `stop()`, not when restarting after a crash.
-			if (code && !this.isDisposed && (this.client.state === ls.State.Starting || this.client.state === ls.State.StartFailed))
-				reportAnalyzerTerminatedWithError(logger, { duringStartup: true });
-
 			if (!config.analyzerPath) { // Don't report for devs running from source.
 				const durationMs = Date.now() - analysisServerStartTime;
 				this.analytics.logAnalysisServerTerminate(code ?? 0, durationMs);
@@ -869,14 +863,18 @@ function getAnalyzerArgs(logger: Logger, dartCapabilities: DartCapabilities) {
 // https://github.com/microsoft/vscode-languageserver-node/blob/d810d51297c667bd3a3f46912eb849055beb8b6b/client/src/common/client.ts#L439
 class DartErrorHandler implements ls.ErrorHandler {
 	private readonly restarts: number[] = [];
+	private readonly checkDisposed: () => boolean;
+	private readonly checkDuringStartup: () => boolean;
 
 	readonly maxRestartCount = 2;
 
 	constructor(
 		private readonly logger: Logger,
-		private readonly checkDisposed: () => boolean,
-		private readonly checkDuringStartup: () => boolean = () => false,
-	) { }
+		{ checkDisposed, checkDuringStartup = () => false }: { checkDisposed: () => boolean; checkDuringStartup?: () => boolean },
+	) {
+		this.checkDisposed = checkDisposed;
+		this.checkDuringStartup = checkDuringStartup;
+	}
 
 	public error(error: Error, message: ls.Message, count: number): ls.ErrorHandlerResult {
 		// If the analyzer has been disposed, do not continue or log errors if the
@@ -900,7 +898,9 @@ class DartErrorHandler implements ls.ErrorHandler {
 		// fails `initialize` and transitions to `StartFailed`. Even if `closed()` returned `Restart`,
 		// `vscode-languageclient`'s `start()` returns the already-rejected `_onStart` promise when
 		// called while `initialize` is still unwinding, so it cannot recover automatically.
-		// Return `DoNotRestart` and report a startup failure (which offers "Restart Extension").
+		// Note: `checkDuringStartup` checks `client.state` (`Starting` or `StartFailed`) rather than
+		// `client.initializeResult` because `vscode-languageclient` only clears `_initializeResult`
+		// on `stop()`, not when restarting after a crash.
 		if (this.checkDuringStartup()) {
 			reportAnalyzerTerminatedWithError(this.logger, { duringStartup: true });
 			return { action: ls.CloseAction.DoNotRestart, handled: true };

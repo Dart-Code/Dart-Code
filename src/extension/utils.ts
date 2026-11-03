@@ -176,11 +176,11 @@ export async function getLatestSdkVersion(webClient: WebClient): Promise<string>
 	}
 }
 
-export function showLog(specificLog: string | undefined, ringLogContents: string, tempLogPath?: string) {
+export function showLog(specificLog: string | undefined, logContents: string, tempLogPath?: string) {
 	if (specificLog && fs.existsSync(specificLog))
 		void workspace.openTextDocument(specificLog).then(window.showTextDocument);
 	else
-		void openLogContents(undefined, ringLogContents, tempLogPath);
+		void openLogContents(undefined, logContents, tempLogPath);
 }
 
 export async function promptToReloadExtension(
