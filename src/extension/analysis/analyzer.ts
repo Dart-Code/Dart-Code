@@ -74,6 +74,11 @@ export class LspAnalyzer extends Analyzer {
 				// ("Client is not running and can't be stopped") and leave `clientStartPromise`
 				// to finish initializing and registering duplicate commands/providers in the
 				// background. Wait for `clientStartPromise` to settle first, then stop the client.
+				//
+				// This will not hang if the server is unresponsive during startup because
+				// `Analyzer.dispose()` runs all `this.disposables` in parallel via `Promise.allSettled`
+				// (bounded by `disposeAllAsync`'s 3s timeout), including `handleDisposeCleanup(process)`
+				// which kills the server process after 3s (closing stdio and rejecting `clientStartPromise`).
 				try {
 					await this.clientStartPromise;
 				} catch {

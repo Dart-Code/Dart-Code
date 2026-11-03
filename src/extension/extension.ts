@@ -156,7 +156,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// If a reload is requested while a reload is already in progress, coalesce into
 	// `reloadPromise` so we don't run `deactivate`/`activate` in parallel or spawn a
 	// new set of processes only to immediately tear them down again.
-	const reloadSub = vs.commands.registerCommand("_dart.reloadExtension", (reason?: ExtensionRestartReason, data?: string) => {
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (reason?: ExtensionRestartReason, data?: string) => {
 		if (reloadPromise) {
 			logger.info(`Skipping overlapping extension reload (${reason}, ${data}) because a reload is already in progress.`);
 			return reloadPromise;
@@ -167,13 +167,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 				logger.warn(`Performing extension reload (${reason}, ${data})...`);
 				analytics.logExtensionRestart(reason, data);
 				setAnalysisServerStartReason(reason);
-				const subscriptionsToDispose = context.subscriptions.filter((s) => s !== reloadSub);
-				context.subscriptions.length = 0;
-				context.subscriptions.push(reloadSub);
 				await deactivate(true, reason);
-				await disposeAllAsync(subscriptionsToDispose);
-				reloadSub.dispose();
-				context.subscriptions.length = 0;
+				await disposeAllAsync(context.subscriptions);
 				await activate(context, true);
 				logger.info("Done reloading extension!");
 			} finally {
@@ -181,8 +176,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			}
 		})();
 		return reloadPromise;
-	});
-	context.subscriptions.push(reloadSub);
+	}));
 
 	// Configure if using flutter-dev.
 	setFlutterDev(config.useFlutterDev);
