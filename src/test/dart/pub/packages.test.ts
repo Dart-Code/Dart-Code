@@ -554,7 +554,7 @@ describe("pub package commands", () => {
 
 	describe("dart.upgradePackages.majorVersions", () => {
 		beforeEach("reset the warning state", () => {
-			privateApi.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = false;
+			privateApi.context.globalState.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = false;
 		});
 
 		it("does nothing when pub is disabled", async () => {
@@ -569,7 +569,7 @@ describe("pub package commands", () => {
 			const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
 			await vs.commands.executeCommand("dart.upgradePackages.majorVersions", helloWorldFolder);
 			assert.ok(warningStub.calledOnce);
-			assert.ok(!privateApi.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation);
+			assert.ok(!privateApi.context.globalState.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation);
 			spawn.assertCalls([]);
 		});
 
@@ -594,7 +594,7 @@ describe("pub package commands", () => {
 
 		it("does nothing when folder selection is cancelled", async () => {
 			await closeAllOpenFiles();
-			privateApi.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
+			privateApi.context.globalState.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
 			sb.stub(vs.window, "showQuickPick").resolves();
 			const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
 			await vs.commands.executeCommand("dart.upgradePackages.majorVersions");
