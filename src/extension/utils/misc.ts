@@ -8,21 +8,30 @@ import { promptToReloadExtension, showLog } from "../utils";
 import { runToolProcess } from "./processes";
 
 let isShowingAnalyzerError = false;
+let isShowingAnalyzerRestartedPrompt = false;
 
 export function reportAnalyzerTerminatedWithError(logger: Logger, { duringStartup = false, automaticallyRestarted = false }: { duringStartup?: boolean, automaticallyRestarted?: boolean } = {}) {
-	if (isShowingAnalyzerError)
-		return;
-	isShowingAnalyzerError = true;
 	if (automaticallyRestarted) {
+		// Suppress duplicate auto-restart notifications if one (or a fatal analyzer error) is already open.
+		if (isShowingAnalyzerRestartedPrompt || isShowingAnalyzerError)
+			return;
+		isShowingAnalyzerRestartedPrompt = true;
 		const ringLogContents = ringLog.toString();
 		const prompt = "The Dart Analysis Server terminated unexpectedly and has been automatically restarted. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.";
 		void vs.window.showErrorMessage(prompt, showLogAction).then((chosenAction) => {
-			isShowingAnalyzerError = false;
+			isShowingAnalyzerRestartedPrompt = false;
 			if (chosenAction === showLogAction)
 				showLog(config.analyzerLogFile, ringLogContents);
 		});
 		return;
 	}
+	// Track fatal analyzer error prompts separately from `isShowingAnalyzerRestartedPrompt` so that if an
+	// automatic restart subsequently fails during startup while the earlier "automatically restarted"
+	// notification (which has no "Restart Extension" button) is still open, the startup failure prompt
+	// (which offers "Restart Extension") is still shown.
+	if (isShowingAnalyzerError)
+		return;
+	isShowingAnalyzerError = true;
 	const prompt = duringStartup
 		? "The Dart Analyzer could not be started."
 		: "The Dart Analyzer has terminated. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.";

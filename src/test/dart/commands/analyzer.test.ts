@@ -677,9 +677,13 @@ describe("analyzer", () => {
 	});
 
 	describe("DartErrorHandler", () => {
-		function createErrorHandler(checkDisposed: () => boolean = () => false): ls.ErrorHandler & { restarts: number[] } {
-			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (logger: typeof privateApi.logger, checkDisposed: () => boolean) => ls.ErrorHandler & { restarts: number[] };
-			return new ErrorHandlerClass(privateApi.logger, checkDisposed);
+		function createErrorHandler(checkDisposed: () => boolean = () => false, checkDuringStartup: () => boolean = () => false): ls.ErrorHandler & { restarts: number[] } {
+			const ErrorHandlerClass = privateApi.analyzer.client.clientOptions.errorHandler!.constructor as new (
+				logger: typeof privateApi.logger,
+				checkDisposed: () => boolean,
+				checkDuringStartup?: () => boolean,
+			) => ls.ErrorHandler & { restarts: number[] };
+			return new ErrorHandlerClass(privateApi.logger, checkDisposed, checkDuringStartup);
 		}
 
 		it("continues on error before maxRestartCount and shuts down at maxRestartCount", () => {
@@ -698,6 +702,39 @@ describe("analyzer", () => {
 			assert.deepEqual(handler.error(new Error("err1"), msg, 1), { action: ls.ErrorAction.Shutdown, handled: true });
 			assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
 			assert.equal(handler.restarts.length, 0);
+		});
+
+		it("shows startup error with Restart Extension even while an auto-restart prompt is open", async () => {
+			let resolveFirstPrompt: (() => void) | undefined;
+			const firstPromptPromise = new Promise<void>((resolve) => { resolveFirstPrompt = resolve; });
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+			showErrorMessage.onFirstCall().returns(firstPromptPromise as any);
+			showErrorMessage.resolves();
+
+			let isDuringStartup = false;
+			const handler = createErrorHandler(() => false, () => isDuringStartup);
+
+			// 1. Server crashes after initialization and is automatically restarted, leaving the Show Log toast open.
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.Restart });
+			assert.equal(showErrorMessage.callCount, 1);
+			assert.deepEqual(showErrorMessage.firstCall.args, [
+				"The Dart Analysis Server terminated unexpectedly and has been automatically restarted. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.",
+				"Show Log",
+			]);
+
+			// 2. Replacement server crashes during startup while the first toast is still open.
+			//    The startup failure prompt offering "Restart Extension" must still be shown.
+			isDuringStartup = true;
+			assert.deepEqual(handler.closed(), { action: ls.CloseAction.DoNotRestart, handled: true });
+			assert.equal(showErrorMessage.callCount, 2);
+			assert.deepEqual(showErrorMessage.secondCall.args, [
+				"The Dart Analyzer could not be started.",
+				"Restart Extension",
+				"Show Log",
+			]);
+
+			resolveFirstPrompt!();
+			await new Promise((resolve) => setImmediate(resolve));
 		});
 
 		it("restarts on close up to maxRestartCount and stops if crashing repeatedly within 3 minutes", async () => {
