@@ -8,7 +8,7 @@ import { waitFor } from "../../shared/utils/promises";
 import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate, showSdkDeprecationNoticeIfAppropriate } from "../../shared/vscode/user_prompts";
 import { activateWithoutAnalysis, clearAllContext, flutterTestSurveyID, logger, privateApi, sb } from "../helpers";
 
-describe("DevTools notification", async () => {
+describe("DevTools notification", () => {
 	beforeEach("activate", () => activateWithoutAnalysis());
 	beforeEach("clearExtensionContext", () => clearAllContext(privateApi.context));
 	afterEach("clearExtensionContext", () => clearAllContext(privateApi.context));
@@ -112,7 +112,7 @@ describe("DevTools notification", async () => {
 	});
 });
 
-describe("Survey notification", async () => {
+describe("Survey notification", () => {
 	beforeEach("activate", () => activateWithoutAnalysis());
 	beforeEach("clearExtensionContext", () => clearAllContext(privateApi.context));
 	afterEach("clearExtensionContext", () => clearAllContext(privateApi.context));
@@ -298,7 +298,7 @@ describe("Survey notification", async () => {
 	});
 });
 
-describe("SDK deprecation notice", async () => {
+describe("SDK deprecation notice", () => {
 	let showWarningMessage: sinon.SinonStub;
 
 	beforeEach("activate", () => activateWithoutAnalysis());

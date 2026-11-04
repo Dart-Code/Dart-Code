@@ -63,7 +63,7 @@ describe("caching middleware", () => {
 			const { provideDocumentSymbols } = createTestHarness();
 			const doc = createFakeDocument("file:///test/a.dart", 1);
 			const symbols = [createFakeSymbol("MyClass")];
-			const nextMock = mock.fn(async () => symbols);
+			const nextMock = mock.fn(() => symbols);
 
 			const res1 = await provideDocumentSymbols(doc, fakeCancellationToken, nextMock);
 			const res2 = await provideDocumentSymbols(doc, fakeCancellationToken, nextMock);
@@ -81,7 +81,7 @@ describe("caching middleware", () => {
 			const symbolsV2 = [createFakeSymbol("MyClassV2")];
 
 			let callCount = 0;
-			const nextMock = mock.fn(async () => ++callCount === 1 ? symbolsV1 : symbolsV2);
+			const nextMock = mock.fn(() => ++callCount === 1 ? symbolsV1 : symbolsV2);
 
 			const res1 = await provideDocumentSymbols(docV1, fakeCancellationToken, nextMock);
 			const res2 = await provideDocumentSymbols(docV2, fakeCancellationToken, nextMock);
@@ -100,7 +100,7 @@ describe("caching middleware", () => {
 			const symbolsA = [createFakeSymbol("ClassA")];
 			const symbolsB = [createFakeSymbol("ClassB")];
 
-			const nextMock = mock.fn(async (d: vs.TextDocument) => d.uri.toString().endsWith("a.dart") ? symbolsA : symbolsB);
+			const nextMock = mock.fn((d: vs.TextDocument) => d.uri.toString().endsWith("a.dart") ? symbolsA : symbolsB);
 
 			const resA1 = await provideDocumentSymbols(docA, fakeCancellationToken, nextMock);
 			const resB1 = await provideDocumentSymbols(docB, fakeCancellationToken, nextMock);
@@ -122,7 +122,7 @@ describe("caching middleware", () => {
 			const symbols1 = [createFakeSymbol("A")];
 			const symbols2 = [createFakeSymbol("B")];
 			let callCount = 0;
-			const nextMock = mock.fn(async () => ++callCount === 1 ? symbols1 : symbols2);
+			const nextMock = mock.fn(() => ++callCount === 1 ? symbols1 : symbols2);
 
 			const res1 = await provideDocumentSymbols(doc, fakeCancellationToken, nextMock);
 			assert.strictEqual(res1, symbols1);
@@ -148,7 +148,7 @@ describe("caching middleware", () => {
 			const symbols2 = [createFakeSymbol("Second")];
 
 			let callCount = 0;
-			const nextMock = mock.fn(async () => ++callCount === 1 ? symbols1 : symbols2);
+			const nextMock = mock.fn(() => ++callCount === 1 ? symbols1 : symbols2);
 
 			const res1 = await provideDocumentSymbols(doc, fakeCancellationToken, nextMock);
 			assert.strictEqual(res1, symbols1);
@@ -206,6 +206,7 @@ describe("caching middleware", () => {
 			const symbols = [createFakeSymbol("Recovered")];
 
 			let callCount = 0;
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			const nextMock = mock.fn(async () => {
 				callCount++;
 				if (callCount === 1)

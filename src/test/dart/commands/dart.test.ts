@@ -131,7 +131,7 @@ describe("dart commands", () => {
 		);
 	});
 
-	it("validates project names against invalid, reserved and duplicate names", async () => {
+	it("validates project names against invalid, reserved and duplicate names", () => {
 		const tempFolder = tempFolderWithCleanup();
 		fs.mkdirSync(path.join(tempFolder, "existing_project"));
 

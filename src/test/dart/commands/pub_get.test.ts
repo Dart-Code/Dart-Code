@@ -20,7 +20,7 @@ describe("pub get", () => {
 			return vs.Uri.file(path.join(fsPath(helloWorldFolder), relativeDir, "pubspec.yaml"));
 		}
 
-		it("ignores pubspecs in hidden folders", async () => {
+		it("ignores pubspecs in hidden folders", () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.spy(privateApi.logger, "info");
 
@@ -30,7 +30,7 @@ describe("pub get", () => {
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 
-		it("ignores pubspecs in build folders that were not saved in the editor", async () => {
+		it("ignores pubspecs in build folders that were not saved in the editor", () => {
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.spy(privateApi.logger, "info");
 
@@ -51,7 +51,7 @@ describe("pub get", () => {
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 
-		it("does not fetch when the workspace suppresses automatic pub", async () => {
+		it("does not fetch when the workspace suppresses automatic pub", () => {
 			sb.stub(privateApi.workspaceContext, "config").value({ ...privateApi.workspaceContext.config, disableAutomaticPub: true });
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
 			const infoLogs = sb.spy(privateApi.logger, "info");
@@ -62,7 +62,7 @@ describe("pub get", () => {
 			assert.ok(fetchPackagesOrPrompt.notCalled);
 		});
 
-		it("does not fetch while project creation is in progress", async () => {
+		it("does not fetch while project creation is in progress", () => {
 			privateApi.commandState.numProjectCreationsInProgress++;
 			defer("Reset project creation count", () => privateApi.commandState.numProjectCreationsInProgress--);
 			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();

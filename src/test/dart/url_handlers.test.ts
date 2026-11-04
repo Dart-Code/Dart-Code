@@ -11,7 +11,7 @@ import { getChildFolders } from "../../shared/utils/fs";
 import { DartUriHandler } from "../../shared/vscode/uri_handlers/uri_handler";
 import { activate, privateApi, sb, tryDelete } from "../helpers";
 
-describe("URL handler", async () => {
+describe("URL handler", () => {
 	const urlHandler = new DartUriHandler(new FlutterCapabilities("1.0.0"));
 	const tempPath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", "my.sample.id");
 

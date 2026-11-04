@@ -11,7 +11,7 @@ import { activate, closeAllOpenFiles, delay, flutterHelloWorldMainFile, helloWor
 describe("dart tooling daemon", () => {
 	beforeEach("activate", () => activate());
 
-	beforeEach("skip if not supported", async function () {
+	beforeEach("skip if not supported", function () {
 		if (!privateApi.dartCapabilities.supportsToolingDaemon)
 			this.skip();
 	});

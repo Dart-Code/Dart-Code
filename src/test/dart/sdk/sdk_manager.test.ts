@@ -197,7 +197,7 @@ describe("SdkManager", () => {
 			path.join(currentDart, dartVMPath),
 		].includes(filePath));
 		sb.stub(fsUtils, "getSdkVersion").callsFake((_logger, sdk) => sdk.sdkRoot === dart300 ? "3.0.0" : "3.1.0");
-		const showQuickPick = sb.stub(vs.window, "showQuickPick").callsFake(async (items) => (items as Array<{ folder: string }>).find((item) => item.folder === dart300));
+		const showQuickPick = sb.stub(vs.window, "showQuickPick").callsFake((items) => Promise.resolve((items as Array<{ folder: string }>).find((item) => item.folder === dart300)));
 		const manager = new DartSdkManager(logger, dartConfig, sdks);
 
 		await manager.promptForSdk([sdkRoot]);
@@ -222,7 +222,7 @@ describe("SdkManager", () => {
 			path.join(currentDart, dartVMPath),
 		].includes(filePath));
 		sb.stub(fsUtils, "getSdkVersion").callsFake((_logger, sdk) => sdk.sdkRoot === dart300 ? "3.0.0" : "3.1.0");
-		sb.stub(vs.window, "showQuickPick").callsFake(async (items) => (items as Array<{ folder: string }>).find((item) => item.folder === dart300));
+		sb.stub(vs.window, "showQuickPick").callsFake((items) => Promise.resolve((items as Array<{ folder: string }>).find((item) => item.folder === dart300)));
 		const manager = new DartSdkManager(logger, dartConfig, sdks);
 
 		await manager.promptForSdk([sdkRoot]);
@@ -247,7 +247,7 @@ describe("SdkManager", () => {
 			path.join(currentFlutter, flutterPath),
 		].includes(filePath));
 		sb.stub(fsUtils, "getSdkVersion").callsFake((_logger, sdk) => sdk.sdkRoot === flutter310 ? "3.10.0" : "3.13.0");
-		sb.stub(vs.window, "showQuickPick").callsFake(async (items) => (items as Array<{ folder: string | undefined }>)[0]);
+		sb.stub(vs.window, "showQuickPick").callsFake((items) => Promise.resolve((items as Array<{ folder: string | undefined }>)[0]));
 		const manager = new FlutterSdkManager(logger, flutterConfig, sdks);
 
 		await manager.promptForSdk([sdkRoot]);

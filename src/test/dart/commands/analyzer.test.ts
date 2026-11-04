@@ -162,7 +162,7 @@ describe("analyzer", () => {
 			const itemString = new vs.CompletionItem("test1");
 			itemString.documentation = "Doc 1\n{@template foo}\nTemplate body\n{@endtemplate}";
 
-			const resolvedString = await middleware.resolveCompletionItem!(itemString, fakeCancellationToken, async (i: vs.CompletionItem) => i);
+			const resolvedString = await middleware.resolveCompletionItem!(itemString, fakeCancellationToken, (i: vs.CompletionItem) => i);
 			assert.equal(resolvedString?.documentation, "Doc 1\nTemplate body");
 		});
 
@@ -171,7 +171,7 @@ describe("analyzer", () => {
 			const itemMd = new vs.CompletionItem("test2");
 			itemMd.documentation = new vs.MarkdownString("Doc 2\n{@template bar}\nMarkdown body\n{@endtemplate}");
 
-			const resolvedMd = await middleware.resolveCompletionItem!(itemMd, fakeCancellationToken, async (i: vs.CompletionItem) => i);
+			const resolvedMd = await middleware.resolveCompletionItem!(itemMd, fakeCancellationToken, (i: vs.CompletionItem) => i);
 			assert.ok(resolvedMd?.documentation instanceof vs.MarkdownString);
 			assert.equal((resolvedMd.documentation).value, "Doc 2\nMarkdown body");
 		});
@@ -180,7 +180,7 @@ describe("analyzer", () => {
 			const middleware = getMiddleware();
 			const itemNoDoc = new vs.CompletionItem("test3");
 
-			const resolvedNoDoc = await middleware.resolveCompletionItem!(itemNoDoc, fakeCancellationToken, async (i: vs.CompletionItem) => i);
+			const resolvedNoDoc = await middleware.resolveCompletionItem!(itemNoDoc, fakeCancellationToken, (i: vs.CompletionItem) => i);
 			assert.equal(resolvedNoDoc?.documentation, undefined);
 		});
 
@@ -189,7 +189,7 @@ describe("analyzer", () => {
 			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
 			const pos = new vs.Position(0, 0);
 			const unknownObj = { other: 123 } as unknown as vs.MarkedString;
-			const hoverResult = await middleware.provideHover!(doc, pos, fakeCancellationToken, async () => ({
+			const hoverResult = await middleware.provideHover!(doc, pos, fakeCancellationToken, () => ({
 				contents: [
 					"Hover string\n{@template s}\nS\n{@endtemplate}",
 					new vs.MarkdownString("Hover md\n{@template m}\nM\n{@endtemplate}"),
@@ -211,7 +211,7 @@ describe("analyzer", () => {
 			const doc = await vs.workspace.openTextDocument(helloWorldMainFile);
 			const pos = new vs.Position(0, 0);
 
-			const nullHover = await middleware.provideHover!(doc, pos, fakeCancellationToken, async () => null);
+			const nullHover = await middleware.provideHover!(doc, pos, fakeCancellationToken, () => null);
 			assert.equal(nullHover, null);
 		});
 
@@ -221,7 +221,7 @@ describe("analyzer", () => {
 			const pos = new vs.Position(0, 0);
 			const context: vs.CompletionContext = { triggerKind: vs.CompletionTriggerKind.Invoke, triggerCharacter: undefined };
 
-			const nullRes = await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, async () => null);
+			const nullRes = await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, () => null);
 			assert.equal(nullRes, undefined);
 		});
 
@@ -235,7 +235,7 @@ describe("analyzer", () => {
 				onCancellationRequested: () => ({ dispose: () => undefined }),
 			};
 
-			const emptyListRes = await middleware.provideCompletionItem!(doc, pos, context, cancelledToken, async () => new vs.CompletionList([], true));
+			const emptyListRes = await middleware.provideCompletionItem!(doc, pos, context, cancelledToken, () => new vs.CompletionList([], true));
 			assert.equal(emptyListRes, undefined);
 		});
 
@@ -264,7 +264,7 @@ describe("analyzer", () => {
 				],
 			} as vs.CompletionList;
 
-			await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, async () => list);
+			await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, () => list);
 
 			assert.equal(importItem.command?.command, "editor.action.triggerSuggest");
 			assert.equal(namedArgItem.command?.command, "editor.action.triggerSuggest");
@@ -295,7 +295,7 @@ describe("analyzer", () => {
 				plainItem,
 			]);
 
-			await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, async () => list);
+			await middleware.provideCompletionItem!(doc, pos, context, fakeCancellationToken, () => list);
 
 			assert.equal(sigHelpStringItem.command?.command, "editor.action.triggerParameterHints");
 			assert.equal(sigHelpSnippetItem.command?.command, "editor.action.triggerParameterHints");
@@ -309,7 +309,7 @@ describe("analyzer", () => {
 			const context: vs.CompletionContext = { triggerKind: vs.CompletionTriggerKind.Invoke, triggerCharacter: undefined };
 
 			const arrayItems = [new vs.CompletionItem("import '';")];
-			const arrayRes = await middleware.provideCompletionItem!(doc, new vs.Position(1, 2), context, fakeCancellationToken, async () => arrayItems);
+			const arrayRes = await middleware.provideCompletionItem!(doc, new vs.Position(1, 2), context, fakeCancellationToken, () => arrayItems);
 			assert.strictEqual(arrayRes, arrayItems);
 			assert.equal(arrayItems[0].command?.command, "editor.action.triggerSuggest");
 		});
@@ -353,7 +353,7 @@ describe("analyzer", () => {
 			const results = await middleware.workspace!.configuration!(
 				params,
 				fakeCancellationToken,
-				async () => [
+				() => [
 					// 1. A `"dart"` section where `maxCompletionItems` and `documentation` are not set by the user.
 					{},
 					// 2. A `"dart"` section where `maxCompletionItems` and `documentation` are explicitly set by the user.
@@ -387,6 +387,7 @@ describe("analyzer", () => {
 
 		it("getDiagnosticServerPort returns undefined when cancelled", async () => {
 			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			sendRequest.withArgs(DiagnosticServerRequest.type, sinon.match.any).callsFake(async (_type: any, token: vs.CancellationToken) => {
 				const cancellable = token as { cancel?: () => void };
 				if (typeof cancellable.cancel === "function")

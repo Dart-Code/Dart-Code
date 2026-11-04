@@ -433,6 +433,7 @@ describe("pub add", () => {
 		});
 
 		it("promptForGitUrl uses the expected input box options", async () => {
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
 				assert.deepStrictEqual(options, {
 					ignoreFocusOut: true,
@@ -449,6 +450,7 @@ describe("pub add", () => {
 		});
 
 		it("promptForGitPath uses the expected input box options", async () => {
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
 				assert.deepStrictEqual(options, {
 					ignoreFocusOut: true,
@@ -465,6 +467,7 @@ describe("pub add", () => {
 		});
 
 		it("promptForGitRef uses the expected input box options", async () => {
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
 				assert.deepStrictEqual(options, {
 					ignoreFocusOut: true,
@@ -481,6 +484,7 @@ describe("pub add", () => {
 		});
 
 		it("promptForPackageName uses the expected input box options", async () => {
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
 				assert.deepStrictEqual(options, {
 					ignoreFocusOut: true,

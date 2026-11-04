@@ -18,7 +18,7 @@ describe("pub package status", () => {
 
 	let workspace: WorkspaceInfo;
 
-	it("no pubspec", async () => {
+	it("no pubspec", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {},
@@ -27,7 +27,7 @@ describe("pub package status", () => {
 		expectStatus(workspace, []); // No projects found.
 	});
 
-	it("pubspec without dependencies", async () => {
+	it("pubspec without dependencies", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
@@ -41,7 +41,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("no package_config", async () => {
+	it("no package_config", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
@@ -54,7 +54,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("package_config is stale compared to pubspec.yaml", async () => {
+	it("package_config is stale compared to pubspec.yaml", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
@@ -68,7 +68,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("package_config is stale compared to pubspec.lock", async () => {
+	it("package_config is stale compared to pubspec.lock", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
@@ -83,7 +83,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("pubspec lock is stale compared to pubspec", async () => {
+	it("pubspec lock is stale compared to pubspec", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
@@ -98,7 +98,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("everything up-to-date", async () => {
+	it("everything up-to-date", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
@@ -112,7 +112,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("last used SDK is old (MAJOR)", async () => {
+	it("last used SDK is old (MAJOR)", () => {
 		workspace = {
 			sdkVersion: "2.0.0",
 			openFolders: ["/projects/proj1"],
@@ -127,7 +127,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("last used SDK is old (MINOR)", async () => {
+	it("last used SDK is old (MINOR)", () => {
 		workspace = {
 			sdkVersion: "1.3.3",
 			openFolders: ["/projects/proj1"],
@@ -142,7 +142,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("last used SDK is old (PATCH)", async () => {
+	it("last used SDK is old (PATCH)", () => {
 		workspace = {
 			sdkVersion: "1.2.4",
 			openFolders: ["/projects/proj1"],
@@ -157,7 +157,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("last used SDK is newer (MAJOR)", async () => {
+	it("last used SDK is newer (MAJOR)", () => {
 		workspace = {
 			sdkVersion: "1.2.3",
 			openFolders: ["/projects/proj1"],
@@ -172,7 +172,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("last used SDK is newer (MINOR)", async () => {
+	it("last used SDK is newer (MINOR)", () => {
 		workspace = {
 			sdkVersion: "1.2.3",
 			openFolders: ["/projects/proj1"],
@@ -187,7 +187,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("last used SDK is newer (PATCH)", async () => {
+	it("last used SDK is newer (PATCH)", () => {
 		workspace = {
 			sdkVersion: "1.2.3",
 			openFolders: ["/projects/proj1"],
@@ -202,7 +202,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("multi-project folder, no package configs", async () => {
+	it("multi-project folder, no package configs", () => {
 		workspace = {
 			openFolders: ["/projects/root"],
 			files: {
@@ -217,7 +217,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("multi-project folder, everything up-to-date", async () => {
+	it("multi-project folder, everything up-to-date", () => {
 		workspace = {
 			openFolders: ["/projects/root"],
 			files: {
@@ -234,7 +234,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("multi-root workspace, no package configs", async () => {
+	it("multi-root workspace, no package configs", () => {
 		workspace = {
 			openFolders: ["/projects/proj1", "/projects/proj2"],
 			files: {
@@ -249,7 +249,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("multi-root workspace, everything up-to-date", async () => {
+	it("multi-root workspace, everything up-to-date", () => {
 		workspace = {
 			openFolders: ["/projects/proj1", "/projects/proj2"],
 			files: {
@@ -275,7 +275,7 @@ describe("pub package status", () => {
 			? "pub workspace (only children open)"
 			: "pub workspace";
 
-		it(`${name}, no package configs`, async () => {
+		it(`${name}, no package configs`, () => {
 			workspace = {
 				openFolders,
 				files: {
@@ -295,7 +295,7 @@ describe("pub package status", () => {
 			]);
 		});
 
-		it(`${name}, root pubspec is new`, async () => {
+		it(`${name}, root pubspec is new`, () => {
 			workspace = {
 				openFolders,
 				files: {
@@ -317,7 +317,7 @@ describe("pub package status", () => {
 			]);
 		});
 
-		it(`${name}, child project pubspec is new`, async () => {
+		it(`${name}, child project pubspec is new`, () => {
 			workspace = {
 				openFolders,
 				files: {
@@ -339,7 +339,7 @@ describe("pub package status", () => {
 			]);
 		});
 
-		it(`${name}, everything up-to-date`, async () => {
+		it(`${name}, everything up-to-date`, () => {
 			workspace = {
 				openFolders,
 				files: {
@@ -534,7 +534,7 @@ describe("pub package commands", () => {
 	describe("package picker", () => {
 		beforeEach("activate without an open file", () => activateWithoutAnalysis(null));
 
-		it("collapses pub workspace projects into a single picker entry with a package count", async () => {
+		it("collapses pub workspace projects into a single picker entry with a package count", () => {
 			const openFolders = ["/projects/root/proj1", "/projects/root/proj2", "/projects/standalone"].map(fixPath);
 			const files: FilesInfo = {};
 

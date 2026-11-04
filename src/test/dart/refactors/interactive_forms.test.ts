@@ -41,6 +41,7 @@ describe("interactive forms", () => {
 	describe("field types", () => {
 		describe("string", () => {
 			it("handles and validates required", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "What is your name?");
 					assert.equal(options.value, "Alice");
@@ -105,6 +106,7 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "What is your nickname?");
 
@@ -148,6 +150,7 @@ describe("interactive forms", () => {
 
 		describe("number", () => {
 			it("handles and validates required", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "How old are you?");
 					assert.equal(options.value, "25");
@@ -183,6 +186,7 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "What is your favorite number?");
 
@@ -218,6 +222,7 @@ describe("interactive forms", () => {
 
 		describe("boolean", () => {
 			it("handles using QuickPick", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", async (items: any, options: any) => {
 					assert.equal(options.placeHolder, "Enable feature?");
 					assert.deepEqual(items, [
@@ -247,6 +252,7 @@ describe("interactive forms", () => {
 
 		describe("enum", () => {
 			it("handles using QuickPick", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", async (items: any, options: any) => {
 					assert.equal(options.placeHolder, "Select environment");
 					assert.deepEqual(items, [
@@ -353,6 +359,7 @@ describe("interactive forms", () => {
 				const existingFolderUri = vscode.workspace.workspaceFolders![0].uri;
 				const nonExistentFileUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, "non_existent_file.txt");
 
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showOpenDialogMock = mock.method(vscode.window, "showOpenDialog", async (options: vscode.OpenDialogOptions) => {
 					assert.equal(options.defaultUri?.toString(), existingFolderUri.toString());
 					assert.equal(options.canSelectFiles, true);
@@ -386,6 +393,7 @@ describe("interactive forms", () => {
 			});
 
 			it("handles for new resource using showSaveDialog", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showSaveDialogMock = mock.method(vscode.window, "showSaveDialog", async (options: any) => {
 					assert.equal(options.title, "Create new output file");
 					return vscode.Uri.parse("file:///workspace/output.dart");
@@ -413,9 +421,9 @@ describe("interactive forms", () => {
 			});
 
 			it("handles for existing or new resource via additional QuickPick", async () => {
-				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", async <T>(items: T[]) => items[0]);
+				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", <T>(items: T[]) => Promise.resolve(items[0]));
 
-				const showOpenDialogMock = mock.method(vscode.window, "showOpenDialog", async () => [vscode.Uri.parse("file:///workspace/selected.dart")]);
+				const showOpenDialogMock = mock.method(vscode.window, "showOpenDialog", () => Promise.resolve([vscode.Uri.parse("file:///workspace/selected.dart")]));
 
 				// eslint-disable-next-line no-bitwise
 				const combinationExistence = FileExistence.New | FileExistence.Existing;
@@ -445,6 +453,7 @@ describe("interactive forms", () => {
 
 		describe("list", () => {
 			it("handles and validates required strings", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Tags (comma separated)");
 
@@ -496,6 +505,7 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional strings", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Tags (comma separated)");
 
@@ -529,6 +539,7 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates required numbers", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Ages (comma separated)");
 
@@ -564,6 +575,7 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional numbers", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Ages (comma separated)");
 
@@ -599,6 +611,7 @@ describe("interactive forms", () => {
 			});
 
 			it("warns and fails when list elements are unsupported", async () => {
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				const showErrorMessageMock = mock.method(vscode.window, "showErrorMessage", async (msg: string) => {
 					assert.ok(msg.includes("List input for bool is not supported"));
 					return undefined;
@@ -626,9 +639,9 @@ describe("interactive forms", () => {
 
 	describe("validation and errors", () => {
 		it("shows warning messages for validation errors from the server", async () => {
-			const showWarningMessageMock = mock.method(vscode.window, "showWarningMessage", async () => undefined);
+			const showWarningMessageMock = mock.method(vscode.window, "showWarningMessage", () => Promise.resolve(undefined));
 
-			const showInputBoxMock = mock.method(vscode.window, "showInputBox", async () => "user-attempt");
+			const showInputBoxMock = mock.method(vscode.window, "showInputBox", () => Promise.resolve("user-attempt"));
 
 			const flow = await runInteractiveFormTest({
 				formFields: [
@@ -650,9 +663,9 @@ describe("interactive forms", () => {
 		});
 
 		it("aborts when the server exceeds maximum retry attempts", async () => {
-			const showWarningMessageMock = mock.method(vscode.window, "showWarningMessage", async () => undefined);
+			const showWarningMessageMock = mock.method(vscode.window, "showWarningMessage", () => Promise.resolve(undefined));
 
-			mock.method(vscode.window, "showInputBox", async () => "some-input");
+			mock.method(vscode.window, "showInputBox", () => Promise.resolve("some-input"));
 
 			const flow = await runInteractiveFormTest({
 				formFields: [
@@ -674,7 +687,7 @@ describe("interactive forms", () => {
 		});
 
 		it("cancels execution if the user cancels an input prompt", async () => {
-			const showInputBoxMock = mock.method(vscode.window, "showInputBox", async () => undefined);
+			const showInputBoxMock = mock.method(vscode.window, "showInputBox", () => Promise.resolve(undefined));
 
 			const flow = await runInteractiveFormTest({
 				formFields: [
@@ -739,6 +752,7 @@ async function runInteractiveFormTest(params: {
 		initializeResult: {
 			capabilities: serverCapabilities
 		},
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		sendRequest: async (method: string, requestParams: Record<string, unknown>) => {
 			if (method === "command/resolve") {
 				resolveCallCount++;
