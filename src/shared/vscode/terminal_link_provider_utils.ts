@@ -39,11 +39,11 @@ export async function findPackageUriLinks(content: string, isKnownPackage: (pack
 	return results;
 }
 
-export async function findFileUriLinks(line: string): Promise<DartFileUriLink[]> {
+export async function findFileUriLinks(lineContent: string): Promise<DartFileUriLink[]> {
 	const results: DartFileUriLink[] = [];
 	fileUriPattern.lastIndex = -1;
 	let result: RegExpExecArray | null;
-	while ((result = fileUriPattern.exec(line)) && result.groups) {
+	while ((result = fileUriPattern.exec(lineContent)) && result.groups) {
 		let uri: vs.Uri | undefined;
 		try {
 			uri = vs.Uri.parse(result.groups.uri, true);

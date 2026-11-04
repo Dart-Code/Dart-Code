@@ -92,9 +92,11 @@ export abstract class TreeNode {
 export class WorkspaceFolderNode extends TreeNode {
 	declare parent: undefined;
 	declare children: Array<ProjectNode | SuiteNode>;
+	public readonly path: string;
 
-	constructor(public readonly name: string, public readonly path: string) {
+	constructor(public readonly name: string, folderPath: string) {
 		super();
+		this.path = folderPath;
 	}
 
 	get label(): string { return this.name; }
@@ -102,13 +104,15 @@ export class WorkspaceFolderNode extends TreeNode {
 
 export class ProjectNode extends TreeNode {
 	declare children: SuiteNode[];
+	public readonly path: string;
 
 	constructor(
 		public readonly parent: WorkspaceFolderNode | undefined,
 		public readonly name: string,
-		public readonly path: string,
+		projectPath: string,
 		public readonly supportsCoverage: boolean) {
 		super();
+		this.path = projectPath;
 	}
 
 	get label(): string { return this.name; }
@@ -133,8 +137,11 @@ export class SuiteNode extends RunnableTreeNode {
 }
 
 export class GroupNode extends RunnableTreeNode {
-	constructor(suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string, public range: Range | undefined) {
+	public path: string;
+
+	constructor(suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, groupPath: string, public range: Range | undefined) {
 		super(suiteData);
+		this.path = groupPath;
 	}
 
 	get isSkipped(): boolean {
@@ -152,10 +159,12 @@ export class TestNode extends RunnableTreeNode {
 
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
+	public path: string;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, public range: Range | undefined) {
+	constructor(suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, testPath: string, public range: Range | undefined) {
 		super(suiteData);
+		this.path = testPath;
 	}
 
 	get status(): TestStatus {
@@ -354,15 +363,15 @@ export class TestModel {
 		// We can't tell if it's a file or directory because it's already been deleted, so just
 		// try both.
 		const nodesToRemove = new Set<TreeNode>();
-		const suite = this.suites.getForPath(suiteOrDirectoryPath);
-		if (suite) {
-			nodesToRemove.add(suite.node);
+		const exactSuite = this.suites.getForPath(suiteOrDirectoryPath);
+		if (exactSuite) {
+			nodesToRemove.add(exactSuite.node);
 			this.suites.deleteForPath(suiteOrDirectoryPath);
 		} else {
-			for (const suite of this.suites.values()) {
-				if (isWithinPath(suite.path, suiteOrDirectoryPath)) {
-					nodesToRemove.add(suite.node);
-					this.suites.deleteForPath(suite.path);
+			for (const candidateSuite of this.suites.values()) {
+				if (isWithinPath(candidateSuite.path, suiteOrDirectoryPath)) {
+					nodesToRemove.add(candidateSuite.node);
+					this.suites.deleteForPath(candidateSuite.path);
 				}
 			}
 		}
@@ -721,8 +730,10 @@ export class SuiteData {
 	 * https://github.com/Dart-Code/Dart-Code/issues/5928
 	 */
 	public isRunningWholeSuite = false;
+	public readonly path: string;
 
-	constructor(public readonly path: string, public readonly projectPath: string | undefined, parent: ProjectNode | WorkspaceFolderNode | undefined) {
+	constructor(suitePath: string, public readonly projectPath: string | undefined, parent: ProjectNode | WorkspaceFolderNode | undefined) {
+		this.path = suitePath;
 		this.node = new SuiteNode(this, parent);
 	}
 

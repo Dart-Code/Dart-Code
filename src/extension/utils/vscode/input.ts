@@ -89,10 +89,10 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 	let placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	const value = setting.currentValue;
+	const currentValue = setting.currentValue;
 	switch (setting.settingKind) {
 		case "STRING": {
-			const stringResult = await vs.window.showInputBox({ prompt, title, value: value as string | undefined });
+			const stringResult = await vs.window.showInputBox({ prompt, title, value: currentValue as string | undefined });
 			const accepted = stringResult !== undefined;
 			if (accepted)
 				await setting.setValue(stringResult);
@@ -127,8 +127,8 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 			quickPick.placeholder = placeholder;
 			quickPick.title = title;
 			const items: Array<vs.QuickPickItem & { isDoNotAskNextTime?: boolean }> = [];
-			for (const value of setting.enumValues) {
-				items.push({ label: value } satisfies vs.QuickPickItem);
+			for (const enumValue of setting.enumValues) {
+				items.push({ label: enumValue } satisfies vs.QuickPickItem);
 			}
 			if (doNotAskOption) {
 				items.push({ kind: vs.QuickPickItemKind.Separator, label: "" });

@@ -362,28 +362,28 @@ describe("pub package status", () => {
 		});
 	}
 
-	function expectStatus(workspace: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", triggeredByFile?: "pubspec.yaml" | "pubspec.lock", reason?: string }>) {
-		workspace.openFolders = workspace.openFolders.map(fixPath);
-		const fixedFiles: typeof workspace.files = {};
-		for (const p of Object.keys(workspace.files))
-			fixedFiles[fixPath(p)] = workspace.files[p];
-		workspace.files = fixedFiles;
+	function expectStatus(workspaceInfo: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", triggeredByFile?: "pubspec.yaml" | "pubspec.lock", reason?: string }>) {
+		workspaceInfo.openFolders = workspaceInfo.openFolders.map(fixPath);
+		const fixedFiles: typeof workspaceInfo.files = {};
+		for (const p of Object.keys(workspaceInfo.files))
+			fixedFiles[fixPath(p)] = workspaceInfo.files[p];
+		workspaceInfo.files = fixedFiles;
 		expectedStatuses = expectedStatuses.map((s) => ({ ...s, folder: fixPath(s.folder) }));
 
-		const files = workspace.files;
+		const files = workspaceInfo.files;
 		const existsSync = (f: string) => !!files[f];
 		const mtimeSync = (f: string) => { if (files[f] !== undefined) return new Date(files[f].mtime); else throw new Error("No file"); };
 		const readFileSync = (f: string) => { if (files[f]?.content !== undefined) return files[f].content; else throw new Error("No file/content"); };
 
 		// Project folders are anything from the openFolders and below that contain pubspecs
 		// according to files.
-		const foldersWithPubspecs = Object.keys(workspace.files).filter((p) => p.endsWith("pubspec.yaml")).map((p) => p.substring(0, p.length - 13));
-		const projectFolders = foldersWithPubspecs.filter((p) => workspace.openFolders.find((wf) => isWithinPathOrEqual(p, wf)));
+		const foldersWithPubspecs = Object.keys(workspaceInfo.files).filter((p) => p.endsWith("pubspec.yaml")).map((p) => p.substring(0, p.length - 13));
+		const projectFolders = foldersWithPubspecs.filter((p) => workspaceInfo.openFolders.find((wf) => isWithinPathOrEqual(p, wf)));
 
 		const results = getPubWorkspaceStatus(
 			{
 				dartSdkIsFromFlutter: false,
-				dartVersion: workspace.sdkVersion ?? "1.2.3",
+				dartVersion: workspaceInfo.sdkVersion ?? "1.2.3",
 				isPreReleaseSdk: false,
 			},
 			privateApi.logger,

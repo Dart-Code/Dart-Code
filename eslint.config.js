@@ -130,12 +130,6 @@ export default defineConfig([
 			"no-eval": "error",
 			"no-multiple-empty-lines": "error",
 			"no-new-wrappers": "error",
-			"no-shadow": [
-				"off",
-				{
-					"hoist": "all"
-				}
-			],
 			"no-throw-literal": "error",
 			"no-trailing-spaces": "error",
 			"no-undef-init": "error",
@@ -226,6 +220,7 @@ export default defineConfig([
 					"checksVoidReturn": false
 				}
 			],
+			"@typescript-eslint/no-shadow": "error",
 			"@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
 			"@typescript-eslint/prefer-for-of": "error",
 			"@typescript-eslint/prefer-function-type": "error",

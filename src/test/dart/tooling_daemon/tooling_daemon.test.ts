@@ -42,8 +42,8 @@ describe("dart tooling daemon", () => {
 		await daemon.connected;
 		await delay(50);
 
-		const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri: helloWorldMainFile.toString() });
-		assert.ok(result.content);
+		const initialResult = await daemon.callMethod(ServiceMethod.readFileAsString, { uri: helloWorldMainFile.toString() });
+		assert.ok(initialResult.content);
 
 		// If we're on Windows, try with different casings because it's easy to have different drive
 		// letter casing from different APIs and we don't know the source of all other callers of this
@@ -60,8 +60,8 @@ describe("dart tooling daemon", () => {
 				(_fullMatch, prefix, driveLetter) => `${prefix}${driveLetter}:`,
 			] as Array<(_fullMatch: string, prefix: string, driveLetter: string, colon: string) => string>) {
 				const uri = helloWorldMainFile.toString().replace(/(file:\/\/\/)(\w)(:|%3a|%3A)/, replacer);
-				const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri });
-				assert.ok(result.content);
+				const replacedUriResult = await daemon.callMethod(ServiceMethod.readFileAsString, { uri });
+				assert.ok(replacedUriResult.content);
 			}
 		}
 	});

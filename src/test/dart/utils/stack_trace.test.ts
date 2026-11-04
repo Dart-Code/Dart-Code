@@ -26,17 +26,17 @@ const uris = [
 	// Flutter web
 	"lib/_engine/engine/window.dart",
 ];
-const line = 123;
+const lineNumber = 123;
 const col = 45;
 
 function getValidStackFrames(prefix: string, uri: string, withLineCol: boolean): string[] {
 	const frames = withLineCol
 		? [
 			// Dart/Flutter
-			`${prefix}(${uri}:${line}:${col})`,
-			`${prefix}(${uri}:${line}:${col}))`, // This extra closing paren exists in Dart stacks 🤷‍♂️
+			`${prefix}(${uri}:${lineNumber}:${col})`,
+			`${prefix}(${uri}:${lineNumber}:${col}))`, // This extra closing paren exists in Dart stacks 🤷‍♂️
 			// Flutter web
-			`${uri} ${line}:${col}        ${prefix}`,
+			`${uri} ${lineNumber}:${col}        ${prefix}`,
 		]
 		: [
 			// Dart/Flutter
@@ -49,7 +49,7 @@ function getValidStackFrames(prefix: string, uri: string, withLineCol: boolean):
 	// Assertion failure
 	if (!prefix) {
 		if (withLineCol)
-			frames.push(`'${uri}': Failed assertion: line ${line} pos ${col}: '!keyReservation.contains(key)': is not true.`);
+			frames.push(`'${uri}': Failed assertion: line ${lineNumber} pos ${col}: '!keyReservation.contains(key)': is not true.`);
 		else
 			frames.push(`'${uri}': Failed assertion: '!keyReservation.contains(key)': is not true.`);
 	}
@@ -98,7 +98,7 @@ describe("stack trace parser", () => {
 							const expectedText = withLineCol && text.trim() ? text.trim() : validStackFrame.trim();
 							assert.equal(result.text, expectedText);
 							assert.equal(result.sourceUri, uri);
-							assert.equal(result.line, withLineCol ? line : undefined);
+							assert.equal(result.line, withLineCol ? lineNumber : undefined);
 							assert.equal(result.col, withLineCol ? col : undefined);
 						});
 					}

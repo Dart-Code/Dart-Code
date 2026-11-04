@@ -195,13 +195,13 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				this.logger.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
 				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			}
-		} catch (e: unknown) {
+		} catch (handlingError: unknown) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				const err = e as { stack?: string } | undefined;
-				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${String(e)})\n\n${err?.stack}\n\n${message}`);
+				const err = handlingError as { stack?: string } | undefined;
+				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${String(handlingError)})\n\n${err?.stack}\n\n${message}`);
 				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			} else {
-				throw e;
+				throw handlingError;
 			}
 		}
 	}
@@ -248,12 +248,12 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 	}
 
-	protected notify<T>(subscriptions: Array<(notification: T) => Promise<void> | void>, notification: T): Promise<unknown> {
+	protected notify<TNotification>(subscriptions: Array<(notification: TNotification) => Promise<void> | void>, notification: TNotification): Promise<unknown> {
 		const promises = subscriptions.map(async (sub) => await sub(notification));
 		return Promise.all(promises).catch((e) => this.logger.error(e));
 	}
 
-	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {
+	protected subscribe<TNotification>(subscriptions: Array<(notification: TNotification) => void>, subscriber: (notification: TNotification) => void): IAmDisposable {
 		subscriptions.push(subscriber);
 		const disposable = {
 			dispose: () => {

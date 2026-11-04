@@ -32,10 +32,10 @@ export async function getFolderToRunCommandIn(
 		if (editor)
 			file = fsPath(editor.document.uri);
 	}
-	const folder = file && locateBestProjectRoot(file, !!selection);
+	const bestProjectRoot = file && locateBestProjectRoot(file, !!selection);
 
-	if (folder)
-		return folder;
+	if (bestProjectRoot)
+		return bestProjectRoot;
 
 	// Otherwise look for what projects we have.
 	const selectableFolders = (await getAllProjectFolders(logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth }))

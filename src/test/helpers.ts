@@ -771,8 +771,8 @@ export async function getCodeActions({ kind, title, requireExactlyOne = false, w
 	let codeActions: vs.CodeAction[] = [];
 	let matchingActions = await waitFor(async () => {
 		codeActions = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, range);
-		const matchingActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!)) && (!title || ca.title === title));
-		return (!waitForMatch || matchingActions.length) ? matchingActions : undefined;
+		const filteredActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!)) && (!title || ca.title === title));
+		return (!waitForMatch || filteredActions.length) ? filteredActions : undefined;
 	});
 
 	matchingActions ??= [];
@@ -1437,22 +1437,22 @@ export function ensurePackageTreeNode(items: vs.TreeItem[] | undefined | null, n
 	if (!items)
 		throw new Error("No tree nodes found to check");
 
-	const item = items.find((item) =>
+	const foundItem = items.find((item) =>
 		item.contextValue?.includes(nodeContext)
 		&& renderedItemLabel(item) === label,
 	);
-	if (!item)
+	if (!foundItem)
 		throw new Error(`Did not find item matching ${label} in:\n${items.map((item) => `    ${renderedItemLabel(item)} (${typeof item.label === "string" ? item.label : item.label?.label ?? "<unnamed>"}, ${item.contextValue})`).join("\n")}`);
 
 	if (description)
-		assert.equal(item.description, description);
+		assert.equal(foundItem.description, description);
 
 	assert.ok(
-		item,
+		foundItem,
 		`Couldn't find ${nodeContext} tree node for ${label} in\n`
 		+ items.map((item) => `        ${item.constructor.name}/${renderedItemLabel(item)}`).join("\n"),
 	);
-	return item;
+	return foundItem;
 }
 
 export function renderedItemLabel(item: vs.TreeItem): string {

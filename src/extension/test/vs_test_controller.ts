@@ -103,8 +103,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				if (coverageExcludePatterns.some((p: string) => minimatch(absolutePath, p, { dot: true })))
 					continue;
 				const uri = vs.Uri.file(absolutePath);
-				const coverage = new DartFileCoverage(uri, fileCoverage);
-				run.addCoverage(coverage);
+				const dartFileCoverage = new DartFileCoverage(uri, fileCoverage);
+				run.addCoverage(dartFileCoverage);
 			}
 		} catch (e) {
 			this.logger.error(`Failed to read expected coverage file "${coverageFilePath}": ${String(e)}`);
@@ -578,7 +578,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					break;
 				default: {
 					const outputEvents = node.outputEvents;
-					const output = outputEvents.map((output) => this.formatNotification(output)).join("\n");
+					const output = outputEvents.map((outputEvent) => this.formatNotification(outputEvent)).join("\n");
 					const outputMessage = formatForTerminal(output);
 					const testMessage = new vs.TestMessage(outputMessage);
 

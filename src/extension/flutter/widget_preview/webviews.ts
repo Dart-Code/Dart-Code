@@ -148,7 +148,7 @@ export class WidgetPreviewEmbeddedView extends WidgetPreviewView {
 		this.panel.onDidDispose(() => this.dispose(true));
 
 		this.previewUrls
-			.then((previewUrls) => this.panel.webview.html = getPageHtmlSource(previewUrls, { location: "editor" }))
+			.then((resolvedPreviewUrls) => this.panel.webview.html = getPageHtmlSource(resolvedPreviewUrls, { location: "editor" }))
 			.catch((e) => this.logger.error(e));
 	}
 

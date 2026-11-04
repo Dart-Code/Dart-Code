@@ -156,16 +156,16 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			path: fsPath(flutterHelloWorldMainFile),
 		};
 		await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
-		const stack = await dc.getStack();
-		const frames = stack.body.stackFrames;
+		const initialStack = await dc.getStack();
+		const initialFrames = initialStack.body.stackFrames;
 		// Web/Flutter have slightly different representations of this
 		// so allow either.
-		if (frames[0].name.includes("."))
-			assert.equal(frames[0].name, "MyHomePage.build");
+		if (initialFrames[0].name.includes("."))
+			assert.equal(initialFrames[0].name, "MyHomePage.build");
 		else
-			assert.equal(frames[0].name, "build");
-		dc.assertPath(frames[0].source!.path, expectedLocation.path);
-		assert.equal(frames[0].source!.name, "package:flutter_hello_world/main.dart");
+			assert.equal(initialFrames[0].name, "build");
+		dc.assertPath(initialFrames[0].source!.path, expectedLocation.path);
+		assert.equal(initialFrames[0].source!.name, "package:flutter_hello_world/main.dart");
 
 		await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
@@ -183,16 +183,16 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await waitAllThrowIfTerminates(dc,
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->assertStoppedLocation:breakpoint`, dc.assertStoppedLocation("breakpoint", expectedLocation))
 					.then(async () => {
-						const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
-						const frames = stack.body.stackFrames;
+						const reloadStack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
+						const reloadFrames = reloadStack.body.stackFrames;
 						// Web/Flutter have slightly different representations of this
 						// so allow either.
-						if (frames[0].name.includes("."))
-							assert.equal(frames[0].name, "MyHomePage.build");
+						if (reloadFrames[0].name.includes("."))
+							assert.equal(reloadFrames[0].name, "MyHomePage.build");
 						else
-							assert.equal(frames[0].name, "build");
-						dc.assertPath(frames[0].source!.path, expectedLocation.path);
-						assert.equal(frames[0].source!.name, "package:flutter_hello_world/main.dart");
+							assert.equal(reloadFrames[0].name, "build");
+						dc.assertPath(reloadFrames[0].source!.path, expectedLocation.path);
+						assert.equal(reloadFrames[0].source!.name, "package:flutter_hello_world/main.dart");
 					})
 					.then(() => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),

@@ -68,6 +68,7 @@ export enum LogCategory {
 	FlutterRun,
 	FlutterTest,
 	FlutterWidgetPreview,
+	// eslint-disable-next-line @typescript-eslint/no-shadow
 	VmService,
 	WebDaemon,
 	DartToolingDaemon,

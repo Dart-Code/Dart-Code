@@ -69,10 +69,10 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 
 		if (!uri) {
-			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, { selection: uri, flutterOnly: true });
-			if (!path)
+			const selectedFolder = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, { selection: uri, flutterOnly: true });
+			if (!selectedFolder)
 				return;
-			uri = vs.Uri.file(path);
+			uri = vs.Uri.file(selectedFolder);
 		}
 
 		return this.flutterCleanForUri(uri, operationProgress);
@@ -195,9 +195,9 @@ export class FlutterCommands extends BaseSdkCommands {
 				args.push("--platforms");
 				args.push(platform);
 			} else if (defaultPlatforms) {
-				for (const platform of defaultPlatforms) {
+				for (const defaultPlatform of defaultPlatforms) {
 					args.push("--platforms");
-					args.push(platform);
+					args.push(defaultPlatform);
 				}
 			}
 		}
