@@ -245,7 +245,7 @@ void main() => test("test inside ${newFilename}", () {});
 		const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest([suiteNode]));
 
 		assert.deepStrictEqual(
-			configs.map((config) => path.basename(config.program as string)),
+			configs.map((config) => path.basename(config.program!)),
 			["project_test.dart"],
 		);
 	});

@@ -14,6 +14,14 @@ import { activate, defer, deferUntilLast, getRandomTempFolder, helloWorldFolder,
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const childProcess = require("child_process") as typeof import("child_process");
 
+type FakeProcess = EventEmitter & {
+	exitCode?: number;
+	kill: () => boolean;
+	pid: number;
+	stderr: EventEmitter & { setEncoding?: () => void };
+	stdout: EventEmitter & { setEncoding?: () => void };
+};
+
 describe("pubspecContentReferencesFlutter", () => {
 	it("returns false for non-Flutter pubspec.yaml", () => {
 		const isFlutter = pubspecContentReferencesFlutter(`
@@ -561,7 +569,7 @@ describe("SdkUtils", () => {
 			);
 
 			assert.equal(showErrorMessage.callCount, 2);
-			assert.ok(showErrorMessage.firstCall.args[0].startsWith("Could not find a Dart SDK."));
+			assert.ok((showErrorMessage.firstCall.args[0] as string).startsWith("Could not find a Dart SDK."));
 			assert.equal(showErrorMessage.secondCall.args[0], "That folder does not appear to be a Dart SDK.");
 			assert.ok(saveSdkPath.calledOnceWithExactly(fsPath(validFolder)));
 			assert.ok(reloadExtensionStub.calledOnceWith("_dart.reloadExtension", ExtensionRestartReason.LocatedSdk));
@@ -758,7 +766,7 @@ describe("SdkUtils", () => {
 				if (!res)
 					return realSpawn(bin, args, opts);
 
-				const proc: any = new EventEmitter();
+				const proc = new EventEmitter() as FakeProcess;
 				proc.pid = 12345;
 				proc.stdout = new EventEmitter();
 				proc.stdout.setEncoding = () => undefined;
@@ -788,7 +796,7 @@ describe("SdkUtils", () => {
 					proc.emit("close", code, null);
 				});
 
-				return proc as ChildProcess;
+				return proc;
 			});
 		}
 
@@ -1140,7 +1148,7 @@ describe("SdkUtils", () => {
 				const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
 				sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
 					if (args?.includes("--help")) {
-						const proc: any = new EventEmitter();
+						const proc = new EventEmitter() as FakeProcess;
 						proc.pid = 12345;
 						proc.stdout = new EventEmitter();
 						proc.stderr = new EventEmitter();
@@ -1150,7 +1158,7 @@ describe("SdkUtils", () => {
 							proc.emit("exit", 0, null);
 							proc.emit("close", 0, null);
 						});
-						return proc as ChildProcess;
+						return proc;
 					}
 					return realSpawn(bin, args, opts);
 				});
@@ -1297,7 +1305,7 @@ describe("SdkUtils", () => {
 			sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
 				if (args?.includes("--help")) {
 					createFakeFlutterSdk(realFlutterSdk, { version: null, withDartSdk: true });
-					const proc: any = new EventEmitter();
+					const proc = new EventEmitter() as FakeProcess;
 					proc.pid = 12345;
 					proc.stdout = new EventEmitter();
 					proc.stderr = new EventEmitter();
@@ -1307,7 +1315,7 @@ describe("SdkUtils", () => {
 						proc.emit("exit", 0, null);
 						proc.emit("close", 0, null);
 					});
-					return proc as ChildProcess;
+					return proc;
 				}
 				return realSpawn(bin, args, opts);
 			});
@@ -1351,7 +1359,7 @@ describe("SdkUtils", () => {
 			sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
 				if (args?.includes("--help")) {
 					createFakeDartSdk(path.join(flutterSdk, "bin", "cache", "dart-sdk"));
-					const proc: any = new EventEmitter();
+					const proc = new EventEmitter() as FakeProcess;
 					proc.pid = 12345;
 					proc.stdout = new EventEmitter();
 					proc.stderr = new EventEmitter();
@@ -1361,7 +1369,7 @@ describe("SdkUtils", () => {
 						proc.emit("exit", 0, null);
 						proc.emit("close", 0, null);
 					});
-					return proc as ChildProcess;
+					return proc;
 				}
 				return realSpawn(bin, args, opts);
 			});

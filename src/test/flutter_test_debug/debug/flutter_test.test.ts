@@ -324,7 +324,7 @@ describe("flutter test debugger", () => {
 				if (runByLine) {
 					const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 					assert.equal(configs.length, 1);
-					assert.ok((configs[0].program as string).endsWith(`?line=${testPos.line + 1}`), configs[0].program as string);
+					assert.ok(configs[0].program!.endsWith(`?line=${testPos.line + 1}`), configs[0].program);
 				} else {
 					const customEvents = await captureDebugSessionCustomEvents(async () => {
 						const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
@@ -363,9 +363,9 @@ describe("flutter test debugger", () => {
 				const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 				assert.equal(configs.length, 1);
 				if (runByLine) {
-					assert.ok((configs[0].program as string).endsWith(`?line=${testPos.line + 1}`), configs[0].program as string);
+					assert.ok(configs[0].program!.endsWith(`?line=${testPos.line + 1}`), configs[0].program);
 				} else {
-					assert.ok((configs[0].toolArgs as string[] | undefined)?.includes("^multi\\nline\\ntest( \\(variant: .*\\))?$"), JSON.stringify(configs[0].toolArgs));
+					assert.ok(configs[0].toolArgs?.includes("^multi\\nline\\ntest( \\(variant: .*\\))?$"), JSON.stringify(configs[0].toolArgs));
 				}
 			});
 
@@ -396,7 +396,7 @@ describe("flutter test debugger", () => {
 				if (!runByLine) {
 					const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 					assert.equal(configs.length, 1);
-					assert.ok((configs[0].toolArgs as string[] | undefined)?.includes("--run-skipped"), JSON.stringify(configs[0].toolArgs));
+					assert.ok(configs[0].toolArgs?.includes("--run-skipped"), JSON.stringify(configs[0].toolArgs));
 				} else {
 					const customEvents = await captureDebugSessionCustomEvents(async () => {
 						const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
@@ -430,7 +430,7 @@ describe("flutter test debugger", () => {
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail two`)!);
 
 				const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest(testItems));
-				const launchText = configs.map((config) => [config.program, ...(config.args as string[] | undefined ?? []), ...(config.toolArgs as string[] | undefined ?? [])].join(" ")).join("\n");
+				const launchText = configs.map((config) => [config.program, ...(config.args ?? []), ...(config.toolArgs ?? [])].join(" ")).join("\n");
 
 				// One launch per file, and each requested test is identified either by name or line.
 				assert.equal(configs.length, 2);

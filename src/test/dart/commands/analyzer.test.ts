@@ -115,7 +115,8 @@ describe("analyzer", () => {
 	describe("OpenUriNotification", () => {
 		function getOpenUriHandler(): (params: { uri: string }) => void {
 			const client = privateApi.analyzer.client;
-			return (client as any)._notificationHandlers.get(OpenUriNotification.type.method) as (params: { uri: string }) => void; // eslint-disable-line no-underscore-dangle
+			const handlers = (client as any)._notificationHandlers as Map<string, (params: { uri: string }) => void>; // eslint-disable-line no-underscore-dangle
+			return handlers.get(OpenUriNotification.type.method)!;
 		}
 
 		it("opens file: URIs using showTextDocument", () => {
@@ -125,7 +126,7 @@ describe("analyzer", () => {
 			handler({ uri: helloWorldMainFile.toString() });
 
 			assert.ok(showTextDocument.calledOnce);
-			assert.equal(showTextDocument.firstCall.args[0].toString(), helloWorldMainFile.toString());
+			assert.equal((showTextDocument.firstCall.args[0] as vs.Uri).toString(), helloWorldMainFile.toString());
 		});
 
 		it("opens http: and https: URIs using envUtils.openInBrowser", () => {
@@ -387,8 +388,9 @@ describe("analyzer", () => {
 		it("getDiagnosticServerPort returns undefined when cancelled", async () => {
 			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
 			sendRequest.withArgs(DiagnosticServerRequest.type, sinon.match.any).callsFake(async (_type: any, token: vs.CancellationToken) => {
-				if (typeof (token as any).cancel === "function")
-					(token as any).cancel();
+				const cancellable = token as { cancel?: () => void };
+				if (typeof cancellable.cancel === "function")
+					cancellable.cancel();
 				else
 					Object.defineProperty(token, "isCancellationRequested", { value: true });
 				throw new Error("Request cancelled");

@@ -92,8 +92,8 @@ export class VmServiceExtensions {
 		}
 	}
 
-	private shouldSilenceError(e: any): boolean {
-		return !!(isDartCodeTestRun && "message" in e && typeof e.message === "string" && e.message.includes("Service connection disposed"));
+	private shouldSilenceError(e: unknown): boolean {
+		return !!(isDartCodeTestRun && e && typeof e === "object" && "message" in e && typeof e.message === "string" && e.message.includes("Service connection disposed"));
 	}
 
 	private formatPathForPubRootDirectories(path: string): string {

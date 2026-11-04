@@ -134,18 +134,18 @@ export function startFakeDebugSession(options?: {
  * The stub resolves `false` on purpose. Test commands only finish after the session
  * terminates when start reports success, and a stub never produces that event.
  */
-export async function captureStartDebuggingConfigs(start: () => Thenable<unknown>): Promise<DebugConfiguration[]> {
+export async function captureStartDebuggingConfigs(start: () => Thenable<unknown>): Promise<Array<DebugConfiguration & DartVsCodeLaunchArgs>> {
 	const startDebugging = sb.stub(debug, "startDebugging").resolves(false);
 	await start();
 	assert.ok(startDebugging.called);
-	return startDebugging.getCalls().map((call) => call.args[1] as DebugConfiguration);
+	return startDebugging.getCalls().map((call) => call.args[1] as DebugConfiguration & DartVsCodeLaunchArgs);
 }
 
 /*
  * Runs the CodeLens outline command for one discovered test and returns the launch
  * configuration that would have been started.
  */
-export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (test: TestOutlineInfo) => boolean): Promise<DebugConfiguration> {
+export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (test: TestOutlineInfo) => boolean): Promise<DebugConfiguration & DartVsCodeLaunchArgs> {
 	const editor = await openFile(fileUri);
 	const outline = await getExpectedOutline(editor.document);
 
@@ -164,7 +164,7 @@ export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (t
  * Runs the VS Code test controller for the supplied request and returns every launch
  * configuration that would have been started. `isDebug` selects the Debug profile.
  */
-export async function captureTestDebugConfigurations(createRequest: () => TestRunRequest, isDebug = false, token: CancellationToken = fakeCancellationToken): Promise<DebugConfiguration[]> {
+export async function captureTestDebugConfigurations(createRequest: () => TestRunRequest, isDebug = false, token: CancellationToken = fakeCancellationToken): Promise<Array<DebugConfiguration & DartVsCodeLaunchArgs>> {
 	const controller = privateApi.testController!;
 	return captureStartDebuggingConfigs(() => controller.runTests(isDebug, false, createRequest(), token));
 }
@@ -173,7 +173,7 @@ export async function captureTestDebugConfigurations(createRequest: () => TestRu
  * Runs the VS Code test controller for items chosen from one suite and returns the
  * single launch configuration that would have been started.
  */
-export async function captureTestDebugConfigurationForItems(fileUri: Uri, selectItems: (suiteNode: TestItem) => TestItem[], isDebug = false): Promise<DebugConfiguration> {
+export async function captureTestDebugConfigurationForItems(fileUri: Uri, selectItems: (suiteNode: TestItem) => TestItem[], isDebug = false): Promise<DebugConfiguration & DartVsCodeLaunchArgs> {
 	const editor = await openFile(fileUri);
 	await getExpectedOutline(editor.document);
 	// The test tree is cleared between tests, so rebuild the suite from the cached outline.
