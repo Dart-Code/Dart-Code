@@ -48,6 +48,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		context.subscriptions.push(this);
 
 		this.editorServices = new EditorServices(this, deviceManager);
+		this.disposables.push(this.editorServices);
 
 		this.setUpStatusBarAndCommand(context);
 
@@ -275,6 +276,10 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	public dispose() {
+		if (this.sendActiveLocationDebounceTimer) {
+			clearTimeout(this.sendActiveLocationDebounceTimer);
+			this.sendActiveLocationDebounceTimer = undefined;
+		}
 		void commands.executeCommand("setContext", DTD_AVAILABLE, false);
 		super.dispose();
 	}
@@ -282,6 +287,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 
 class EditorServices implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
+	private disposed = false;
 
 	public activeLocation: ActiveLocation = {
 		textDocument: undefined,
@@ -294,6 +300,9 @@ class EditorServices implements IAmDisposable {
 	) { }
 
 	async register(): Promise<void> {
+		if (this.disposed)
+			return;
+
 		if (this.deviceManager) {
 			this.disposables.push(this.deviceManager.onDeviceAdded(async (device) => {
 				const supportedTypes = await this.deviceManager?.getSupportedPlatformsForWorkspace();
@@ -392,6 +401,7 @@ class EditorServices implements IAmDisposable {
 	}
 
 	public dispose(): void {
+		this.disposed = true;
 		disposeAll(this.disposables);
 	}
 

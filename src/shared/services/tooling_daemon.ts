@@ -227,8 +227,17 @@ export class DartToolingDaemon implements IAmDisposable {
 	public sendEvent(stream: Stream.Editor, params: DebugSessionStartedEvent | DebugSessionStoppedEvent | DebugSessionChangedEvent): void;
 	public sendEvent(stream: Stream.Editor, params: ActiveLocationChangedEvent): void;
 	public sendEvent(stream: Stream, params: Event): void {
-		if (!this.connection)
+		if (!this.connection) {
+			// During shutdown it's expected that events can't be sent (for example an
+			// async event handler that was in-flight when we were disposed), so just
+			// drop them. Otherwise this is an unexpected failure that should be
+			// surfaced.
+			if (this.isShuttingDown) {
+				this.logger.info(`Unable to send event to ${stream}, DTD connection is unavailable`);
+				return;
+			}
 			throw new Error(`Unable to send event to ${stream}, DTD connection is unavailable`);
+		}
 
 		this.send({
 			jsonrpc: "2.0",
