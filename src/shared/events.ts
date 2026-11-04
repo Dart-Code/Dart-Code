@@ -8,7 +8,7 @@ export class EventEmitter<T> implements IAmDisposable {
 		this.emitter.emit("thing", x);
 	}
 
-	public listen(listener: (e: T) => any, thisArgs?: any): IAmDisposable {
+	public listen(listener: (e: T) => unknown, thisArgs?: unknown): IAmDisposable {
 		if (thisArgs)
 			listener = listener.bind(thisArgs);
 		this.emitter.on("thing", listener);
@@ -31,7 +31,7 @@ export class EventsEmitter<T> implements IAmDisposable {
 		this.emitter.emit(event, x);
 	}
 
-	public listen(event: string, listener: (e: T) => any, thisArgs?: any): IAmDisposable {
+	public listen(event: string, listener: (e: T) => unknown, thisArgs?: unknown): IAmDisposable {
 		if (thisArgs)
 			listener = listener.bind(thisArgs);
 		this.emitter.on(event, listener);
@@ -45,4 +45,4 @@ export class EventsEmitter<T> implements IAmDisposable {
 	}
 }
 
-export type Event<T> = (listener: (e: T) => any, thisArgs?: any) => IAmDisposable;
+export type Event<T> = (listener: (e: T) => unknown, thisArgs?: unknown) => IAmDisposable;

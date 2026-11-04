@@ -7,11 +7,11 @@ export interface Request<T> {
 
 interface Response<T> {
 	id: string;
-	error: any;
+	error: unknown;
 	result: T;
 }
 
-export type UnknownResponse = Response<any>;
+export type UnknownResponse = Response<unknown>;
 
 interface Notification<T> {
 	event: string;

@@ -172,10 +172,8 @@ describe("flutter commands", () => {
 		assert.deepEqual(platformsSetting.currentValue, flutterCreateAvailablePlatforms);
 		assert.deepEqual(platformsSetting.enumValues, flutterCreateAvailablePlatforms);
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		await organizationSetting.setValue("com.example.changed" as any);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		await platformsSetting.setValue([...flutterCreateAvailablePlatforms] as any);
+		await organizationSetting.setValue("com.example.changed" as never);
+		await platformsSetting.setValue([...flutterCreateAvailablePlatforms] as never);
 
 		assert.equal(vs.workspace.getConfiguration("dart").get("flutterCreateOrganization"), "com.example.changed");
 		assert.equal(vs.workspace.getConfiguration("dart").inspect("flutterCreatePlatforms")?.globalValue, undefined);

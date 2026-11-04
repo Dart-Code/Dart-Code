@@ -598,7 +598,7 @@ export class TestModel {
 				continue;
 			const regex = new RegExp(makeRegexForTests([{ name: child.name, isGroup: child instanceof GroupNode, position: undefined }]));
 			if (regex.test(name))
-				return child as any as T;
+				return child as unknown as T;
 		}
 	}
 

@@ -11,7 +11,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	public process?: SpawnedProcess;
 	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
-	private readonly activeRequests: Record<string, [(result: any) => void | Promise<void>, (error: any) => void | Promise<void>, string] | "CANCELLED"> = {};
+	private readonly activeRequests: Record<string, [(result: never) => void | Promise<void>, (error: unknown) => void | Promise<void>, string] | "CANCELLED"> = {};
 	private messageBuffers: Buffer[] = [];
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
@@ -188,7 +188,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			if (msgObj && this.isNotification(msgObj))
 				void this.handleNotification(msgObj as T).catch((e) => this.logger.error(e));
 			else if (msgObj && this.isRequest(msgObj))
-				this.processServerRequest(msgObj as unknown as Request<any>).catch((e) => this.logger.error(e));
+				this.processServerRequest(msgObj as unknown as Request<unknown>).catch((e) => this.logger.error(e));
 			else if (msgObj && this.isResponse(msgObj))
 				this.handleResponse(msgObj as unknown as UnknownResponse).catch((e) => this.logger.error(e));
 			else {
@@ -207,12 +207,12 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract handleNotification(evt: T): Promise<void>;
-	protected async handleRequest(_method: string, _args: any): Promise<any> { }
+	protected async handleRequest(_method: string, _args: unknown): Promise<unknown> { return; }
 	protected isNotification(msg: Record<string, unknown>): boolean { return !!msg.event; }
 	protected isRequest(msg: Record<string, unknown>): boolean { return !!msg.method && !!msg.id; }
 	protected isResponse(msg: Record<string, unknown>): boolean { return !!msg.id; }
 
-	private async processServerRequest(request: Request<any>) {
+	private async processServerRequest(request: Request<unknown>) {
 		let result: unknown;
 		let error: unknown;
 		try {
@@ -238,13 +238,12 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			this.logger.error(`Unable to handle response with ID ${evt.id} because its handler is not available`);
 			return;
 		}
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const error = evt.error;
 
 		if (error) {
 			await handler[1](error);
 		} else {
-			await handler[0](evt.result);
+			await handler[0](evt.result as never);
 		}
 	}
 

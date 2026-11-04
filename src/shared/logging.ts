@@ -31,10 +31,10 @@ export class EmittingLogger implements Logger, IAmDisposable {
 	public info(message: string, category?: LogCategory): void {
 		this.log(message, LogSeverity.Info, category);
 	}
-	public warn(errorOrMessage: any, category?: LogCategory): void {
+	public warn(errorOrMessage: unknown, category?: LogCategory): void {
 		this.log(errorMessageWithStack(errorOrMessage), LogSeverity.Warn, category);
 	}
-	public error(errorOrMessage: any, category?: LogCategory): void {
+	public error(errorOrMessage: unknown, category?: LogCategory): void {
 		this.log(errorMessageWithStack(errorOrMessage), LogSeverity.Error, category);
 	}
 
@@ -69,10 +69,10 @@ export class CategoryLogger implements Logger {
 	public info(message: string, category: LogCategory = this.defaultCategory): void {
 		this.base.info(message, category);
 	}
-	public warn(errorOrMessage: any, category: LogCategory = this.defaultCategory): void {
+	public warn(errorOrMessage: unknown, category: LogCategory = this.defaultCategory): void {
 		this.base.warn(errorOrMessage, category);
 	}
-	public error(errorOrMessage: any, category: LogCategory = this.defaultCategory): void {
+	public error(errorOrMessage: unknown, category: LogCategory = this.defaultCategory): void {
 		this.base.error(errorOrMessage, category);
 	}
 }

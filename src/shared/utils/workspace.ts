@@ -105,7 +105,7 @@ function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWorkspaceC
 // To avoid trailing zeros being trimmed (eg. "3.10" being treated as the number
 // 3.1), the version will actually be reported like "3.10.x" where x is literally "x"
 // for all versions.
-export function simplifyVersion(rawVersion: any): string | undefined {
+export function simplifyVersion(rawVersion: unknown): string | undefined {
 	if (typeof rawVersion !== "string")
 		return;
 

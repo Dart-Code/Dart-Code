@@ -11,13 +11,18 @@ interface DoNotAskOption {
 }
 
 export type PickableSetting = vs.QuickPickItem & DoNotAskOption & ({
-	settingKind: "STRING" | "ENUM" | "BOOL",
-	currentValue: any,
-	setValue: (newValue: any) => Promise<void>,
+	settingKind: "STRING" | "ENUM",
+	currentValue: string,
+	setValue(newValue: string | undefined): Promise<void>,
+	enumValues?: string[],
+} | {
+	settingKind: "BOOL",
+	currentValue: string,
+	setValue(newValue: boolean | undefined): Promise<void>,
 	enumValues?: string[],
 } | {
 	settingKind: "MULTI_ENUM",
-	currentValue: any[],
-	setValue: (newValue: any[]) => Promise<void>,
+	currentValue: string[],
+	setValue(newValue: string[]): Promise<void>,
 	enumValues: string[],
 });

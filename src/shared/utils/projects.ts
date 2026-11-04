@@ -17,7 +17,7 @@ export function writeFlutterSdkSettingIntoProject(flutterSdkPath: string, projec
 	writeSettingIntoProject(projectFolder, { "dart.flutterSdkPath": flutterSdkPath });
 }
 
-function writeSettingIntoProject(projectFolder: string, settings: any): void {
+function writeSettingIntoProject(projectFolder: string, settings: Record<string, string>): void {
 	const vsCodeFolder = path.join(projectFolder, ".vscode");
 	const settingsFile = path.join(vsCodeFolder, "settings.json");
 

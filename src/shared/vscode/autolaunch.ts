@@ -203,8 +203,8 @@ export class AutoLaunch implements IAmDisposable {
 				return;
 
 			await debug.startDebugging(wf, configuration);
-		} catch (e: any) {
-			this.logger.warn(`[AutoLaunch] Failed to start debugging session from autolaunch file: ${e}`);
+		} catch (e: unknown) {
+			this.logger.warn(`[AutoLaunch] Failed to start debugging session from autolaunch file: ${String(e)}`);
 		}
 	}
 

@@ -119,8 +119,8 @@ export interface FlutterCreateTriggerData {
 
 export interface Logger {
 	info(message: string, category?: LogCategory): void;
-	warn(message: any, category?: LogCategory): void;
-	error(error: any, category?: LogCategory): void;
+	warn(message: unknown, category?: LogCategory): void;
+	error(error: unknown, category?: LogCategory): void;
 }
 
 export interface LogMessage {
@@ -146,7 +146,7 @@ export interface IAmDisposableAsync {
 
 export interface CancellationToken {
 	isCancellationRequested: boolean;
-	onCancellationRequested: Event<any>;
+	onCancellationRequested: Event<unknown>;
 }
 
 export interface IFlutterDaemon extends IAmDisposable {

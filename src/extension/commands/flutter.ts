@@ -37,7 +37,7 @@ export class FlutterCommands extends BaseSdkCommands {
 
 		this.disposables.push(vs.commands.registerCommand("flutter.clean", this.flutterClean.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("flutter.clean.all", this.flutterCleanAllProjects.bind(this)));
-		this.disposables.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
+		this.disposables.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: unknown) => vs.commands.executeCommand("flutter.screenshot", args)));
 		this.disposables.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("flutter.doctor.sidebar", () => this.flutterDoctor({ commandSource: CommandSource.sidebarTitle })));
@@ -482,7 +482,7 @@ export class FlutterCommands extends BaseSdkCommands {
 			detail: "The platforms that should be enabled for new Flutter applications.",
 			enumValues: flutterCreateAvailablePlatforms,
 			label: "Platforms",
-			setValue: async (newValues: any[]) => {
+			setValue: async (newValues: string[]) => {
 				const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
 					? undefined // all
 					: newValues;
