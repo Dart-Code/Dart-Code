@@ -123,6 +123,33 @@ describe("dart tooling daemon editor events", () => {
 		}
 	});
 
+	it("does not register event listeners if disposed before register() runs", async () => {
+		const daemon = privateApi.toolingDaemon!;
+		const deviceManager = privateApi.deviceManager!;
+		await daemon.connected;
+
+		const sendEvent = sb.spy(daemon, "sendEvent");
+		sb.stub(deviceManager, "getSupportedPlatformsForWorkspace").resolves(["android"]);
+		const editorServices = (daemon as any).editorServices as { dispose(): void; register(): Promise<void> };
+
+		try {
+			// Simulate the race where the daemon is disposed after connecting but before
+			// EditorServices.register() runs (for example an extension reload).
+			editorServices.dispose();
+			await editorServices.register();
+
+			await deviceManager.deviceAdded(physicalAndroidMobile);
+			// Allow time for any listener that was registered to run.
+			await delay(100);
+			assert.ok(
+				!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.deviceAdded),
+				"deviceAdded event was sent by a listener registered after dispose",
+			);
+		} finally {
+			await reloadExtension();
+		}
+	});
+
 	it("does not send pending active-location events after dispose", async function () {
 		if (!privateApi.dartCapabilities.supportsLspOverDtd)
 			this.skip();
