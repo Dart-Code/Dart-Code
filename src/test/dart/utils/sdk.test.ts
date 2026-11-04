@@ -1080,7 +1080,10 @@ describe("SdkUtils", () => {
 				process.env.PATH = "";
 				delete process.env.FLUTTER_ROOT;
 				defer("restore PATH and FLUTTER_ROOT", () => {
-					process.env.PATH = originalPath;
+					if (originalPath === undefined)
+						delete process.env.PATH;
+					else
+						process.env.PATH = originalPath;
 					if (originalFlutterRoot === undefined)
 						delete process.env.FLUTTER_ROOT;
 					else
