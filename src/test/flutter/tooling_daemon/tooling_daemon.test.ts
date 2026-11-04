@@ -75,19 +75,21 @@ describe("dart tooling daemon editor events", () => {
 		defer("Dispose marker", () => { marker.dispose(); });
 
 		void deviceManager.deviceAdded(physicalAndroidMobile);
+		(deviceManager as unknown as { onDeviceChangedEmitter: vs.EventEmitter<f.Device> })
+			.onDeviceChangedEmitter.fire(physicalAndroidMobile);
 		await waitForResult(() => emitterFired, "deviceAdded event did not fire");
-		await waitForResult(() => getSupportedPlatforms.callCount >= 2, "device event listener did not start");
+		await waitForResult(() => getSupportedPlatforms.callCount >= 3, "device event listeners did not start");
 
 		daemon.dispose();
 		listenerGate.resolve([]);
 
-		// The in-flight listener should resume and exit via the disposed guard
+		// The in-flight listeners should resume and exit via the disposed guard
 		// rather than calling sendEvent (which before the fix threw and became
 		// an unhandled rejection in an async event callback).
 		await delay(50);
 		assert.ok(
-			!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.deviceAdded),
-			"in-flight deviceAdded event reached sendEvent after dispose",
+			!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.deviceAdded || call.args[1]?.kind === EventKind.deviceChanged),
+			"in-flight device event reached sendEvent after dispose",
 		);
 
 		// Sending an event directly after dispose should still be dropped (and
@@ -98,6 +100,64 @@ describe("dart tooling daemon editor events", () => {
 			logMessages.some((m) => m.includes("DTD connection is unavailable")),
 			"the dropped event was not logged",
 		);
+	});
+
+	it("does not reject a service response that is in-flight during dispose", async () => {
+		const daemon = privateApi.toolingDaemon!;
+		const deviceManager = privateApi.deviceManager!;
+		await daemon.connected;
+		defer("Reload extension", reloadExtension);
+
+		// Wait until the Editor services have been registered over the connection.
+		const serviceHandlers = () => (daemon as unknown as { serviceHandlers: Record<string, unknown> }).serviceHandlers;
+		await waitForResult(() => serviceHandlers()["Editor.getDevices"] !== undefined, "Editor.getDevices was not registered");
+
+		const getSupportedPlatforms = sb.stub(deviceManager, "getSupportedPlatformsForWorkspace");
+		const listenerGate = new PromiseCompleter<f.PlatformType[]>();
+		getSupportedPlatforms.returns(listenerGate.promise);
+
+		// Simulate the DTD sending a getDevices request while the handler is
+		// suspended on getSupportedPlatformsForWorkspace(), then dispose before
+		// it resumes so the response is sent after the connection is gone.
+		const handleData = (data: unknown) => (daemon as unknown as { handleData(d: string): Promise<void> }).handleData(JSON.stringify(data));
+		const request = handleData({ id: "1", jsonrpc: "2.0", method: "Editor.getDevices", params: {} });
+		await waitForResult(() => getSupportedPlatforms.callCount >= 1, "service handler did not start");
+
+		daemon.dispose();
+		listenerGate.resolve([]);
+
+		// Without the shutdown guard in send(), the response send would throw and
+		// the error-path send would also throw, producing an unhandled rejection.
+		await request;
+	});
+
+	it("safely ignores lifecycle calls made after dispose", async () => {
+		const daemon = privateApi.toolingDaemon!;
+		await daemon.connected;
+		defer("Reload extension", reloadExtension);
+
+		daemon.dispose();
+
+		// Async continuations that resume after dispose should complete as safe
+		// no-ops rather than throwing or doing work on a dead daemon.
+		const d = daemon as unknown as {
+			connect(): Promise<void>;
+			handleOpen(): Promise<void>;
+			registerServices(): Promise<void>;
+			sendWorkspaceFolders(uris: string[]): Promise<void>;
+			sendActiveLocation(location: unknown): Promise<void>;
+			setUpVmServiceRegistrations(): Promise<void>;
+			registerVmService(args: { name: string; vmServiceUri: string }): Promise<void>;
+			unregisterVmService(uri: string): Promise<void>;
+		};
+		await d.connect();
+		await d.handleOpen();
+		await d.registerServices();
+		await d.sendWorkspaceFolders([]);
+		await d.sendActiveLocation({ selections: [] });
+		await d.setUpVmServiceRegistrations();
+		await d.registerVmService({ name: "test", vmServiceUri: "ws://localhost/ws" });
+		await d.unregisterVmService("ws://localhost/ws");
 	});
 
 	it("unsubscribes device event listeners when disposed", async () => {
