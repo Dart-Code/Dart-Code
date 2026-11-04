@@ -56,7 +56,7 @@ export function forceWindowsDriveLetterToUppercaseInUriString<T extends string |
 	if (typeof uriString !== "string")
 		return undefined as (undefined extends T ? undefined : never);
 
-	return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (match, scheme, authority, driveLetter, colon) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
+	return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (match: string, scheme: string, authority: string | undefined, driveLetter: string, colon: string) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
 }
 
 /**
@@ -238,9 +238,10 @@ export function projectReferencesFlutter(folder?: string): boolean {
 		try {
 			const pubspecContent = fs.readFileSync(pubspecPath);
 			return pubspecContentReferencesFlutter(pubspecContent.toString());
-		} catch (e: any) {
-			if (e?.code !== "ENOENT") // Don't warn for missing files.
-				console.warn(`Failed to read ${pubspecPath}: ${e}`);
+		} catch (e: unknown) {
+			const err = e as { code?: unknown } | undefined;
+			if (err?.code !== "ENOENT") // Don't warn for missing files.
+				console.warn(`Failed to read ${pubspecPath}: ${String(e)}`);
 		}
 	}
 	return false;

@@ -36,7 +36,8 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 			},
 			initialize: (serverCapabilities) => {
 				// Called by LanguageClient on every server initialization (including automatic restarts).
-				this.isSupported = !!serverCapabilities.experimental?.updateDiagnosticInformation;
+				const experimental = serverCapabilities.experimental as { updateDiagnosticInformation?: boolean } | undefined;
+				this.isSupported = !!experimental?.updateDiagnosticInformation;
 				if (this.isSupported) {
 					this.disposables.push(workspace.onDidChangeConfiguration((e) => this.updateDiagnosticInformationIfRelevantConfigChanged(e)));
 					void this.updateDiagnosticInformationIfSupported();
@@ -83,7 +84,7 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 	}
 
 	private getInterestingSettings(): unknown {
-		const results: any = {};
+		const results: Record<string, Record<string, unknown>> = {};
 
 		for (const section of Object.keys(interestingSettings)) {
 			const c = workspace.getConfiguration(section, { languageId: "dart" });

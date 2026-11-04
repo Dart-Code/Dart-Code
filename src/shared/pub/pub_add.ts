@@ -65,9 +65,9 @@ export class PackageCacheData {
 			: value;
 	}
 
-	private static mapReviver(key: unknown, value: any): unknown {
-		return typeof value === "object" && value?.dataType === "Map"
-			? new Map(value.value) // eslint-disable-line @typescript-eslint/no-unsafe-argument
+	private static mapReviver(key: unknown, value: unknown): unknown {
+		return typeof value === "object" && value !== null && "dataType" in value && value.dataType === "Map" && "value" in value
+			? new Map(value.value as Array<[unknown, unknown]>)
 			: value;
 	}
 }

@@ -11,7 +11,7 @@ export class LspUriConverters implements LspConverters {
 			uri = vs.Uri.file(fsPath(uri, { useRealCasing: this.normalizeFileCasing }));
 
 		const uriString = uri.toString();
-		return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (match, scheme, authority, driveLetter, colon) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
+		return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (match: string, scheme: string, authority: string | undefined, driveLetter: string, colon: string) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
 	}
 
 	public protocol2Code(file: string): vs.Uri {

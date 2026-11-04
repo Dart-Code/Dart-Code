@@ -31,9 +31,10 @@ function getCapabilitiesFromVersionInPackageGraph(logger: Logger, packageFile: s
 			return new DartTestCapabilities(testVersion);
 
 		logger.warn(`Failed to parse pkg:test version number from ${packageGraphFile}: ${testVersion}`);
-	} catch (e: any) {
-		if (e?.code !== "ENOENT")
-			logger.warn(`Failed to read pkg:test version number from ${packageGraphFile}: ${e}`);
+	} catch (e: unknown) {
+		const err = e as { code?: unknown } | undefined;
+		if (err?.code !== "ENOENT")
+			logger.warn(`Failed to read pkg:test version number from ${packageGraphFile}: ${String(e)}`);
 	}
 
 	return undefined;

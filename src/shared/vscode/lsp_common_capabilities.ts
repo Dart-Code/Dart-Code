@@ -9,11 +9,12 @@ export class CommonCapabilitiesFeature {
 			clear() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
 				capabilities.experimental ??= {};
+				const experimental = capabilities.experimental as Record<string, unknown>;
 				// Set an explicit flag to let the server know we support the window/showMessage request
 				// because there's no existing capability for this (yet) and some client do not support it.
 				// https://github.com/microsoft/language-server-protocol/issues/1635
-				capabilities.experimental.supportsWindowShowMessageRequest = true;
-				capabilities.experimental.commands = [
+				experimental.supportsWindowShowMessageRequest = true;
+				experimental.commands = [
 					"dart.goToLocation",
 				];
 			},
@@ -41,7 +42,8 @@ export class CommonCapabilitiesFeature {
 				}
 
 				// Track known requests.
-				const textDocumentRequests = capabilities.experimental?.textDocument as unknown;
+				const experimental = capabilities.experimental as { textDocument?: Record<string, unknown> } | undefined;
+				const textDocumentRequests = experimental?.textDocument;
 				if (textDocumentRequests) {
 					// TODO(dantup): These might not be unset if you downgrade to an old SDK and we silent-restart.
 					for (const requestName of Object.keys(textDocumentRequests)) {

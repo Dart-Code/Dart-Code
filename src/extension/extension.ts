@@ -779,8 +779,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		};
 		// Copy all fields and getters from privateApi into the existing object so that it works
 		// correctly through exports.
+		const exportedApiRecord = exportedApi as unknown as Record<string, unknown>;
 		Object.defineProperties(
-			(exportedApi as any)[internalApiSymbol] ??= {},
+			exportedApiRecord[internalApiSymbol] ??= {},
 			Object.getOwnPropertyDescriptors(privateApi)
 		);
 	}
@@ -802,7 +803,8 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 	addToLogHeader(() => `Dart Code extension: ${extensionVersion}`);
 	addToLogHeader(() => {
 		const ext = vs.extensions.getExtension(flutterExtensionIdentifier)!;
-		return `Flutter extension: ${ext.packageJSON.version} (${ext.isActive ? "" : "not "}activated)`;
+		const packageJson = ext.packageJSON as { version?: string };
+		return `Flutter extension: ${packageJson.version} (${ext.isActive ? "" : "not "}activated)`;
 	});
 	addToLogHeader(() => ``);
 	addToLogHeader(() => `App: ${vs.env.appName}`);

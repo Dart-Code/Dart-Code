@@ -182,8 +182,8 @@ export class LspAnalyzer extends Analyzer {
 
 	private buildMiddleware(): InteractiveMiddleware {
 		// Why need this 🤷‍♂️?
-		function isLanguageValuePair(input: any): input is { language: string; value: string } {
-			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
+		function isLanguageValuePair(input: unknown): input is { language: string; value: string } {
+			return typeof input === "object" && input !== null && "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
 		}
 
 		function cleanDocString<T extends vs.MarkedString | vs.MarkdownString | string>(input: T): T {
@@ -525,7 +525,8 @@ export class LspAnalyzer extends Analyzer {
 						writer: new StreamMessageWriter(streamInfo.writer, {
 							contentTypeEncoder: {
 								encode: (msg, options) => {
-									(msg as any).clientRequestTime = Date.now();
+									const timedMsg = msg as unknown as { clientRequestTime?: number };
+									timedMsg.clientRequestTime = Date.now();
 									return jsonEncoder.encode(msg, options);
 								},
 								name: "withTiming",
@@ -540,15 +541,17 @@ export class LspAnalyzer extends Analyzer {
 			clientOptions,
 		);
 
-		const p2c = (client as any)._p2c as { // eslint-disable-line no-underscore-dangle
-			asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined>
-			asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>>
+		interface ProtocolToCodeConverter {
+			asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined>;
+			asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>>;
 			asCommand(item: ls.Command): vs.Command;
 			asUri(uri: string): vs.Uri;
 			asRange(range: ls.Range): vs.Range;
 			asTextEdit(item: ls.TextEdit): vs.TextEdit;
 			asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined>;
-		};
+		}
+		const clientWithP2c = client as unknown as { _p2c: ProtocolToCodeConverter };
+		const p2c = clientWithP2c._p2c; // eslint-disable-line no-underscore-dangle
 		// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
 		//       insertTextFormat from the protocol through to the middleware to handle snippets.
 		//       This can be removed when we have a better way to do this.
@@ -569,7 +572,7 @@ export class LspAnalyzer extends Analyzer {
 		async function asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
 			const result = await originalAsCodeAction(item, token);
 			if (result && item?.edit !== undefined) {
-				(result as any).edit = await asWorkspaceEdit(item.edit, token);
+				result.edit = await asWorkspaceEdit(item.edit, token);
 			}
 			return result;
 		}
@@ -680,7 +683,8 @@ export class LspAnalyzer extends Analyzer {
 				const changes = changeset[1];
 				for (const change of changes) {
 					if (snippetTypes.has(`${fsPath(uri)}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
-						(change as any).isCustomSnippet = true;
+						const customChange = change as vs.TextEdit & { isCustomSnippet?: boolean };
+						customChange.isCustomSnippet = true;
 					}
 				}
 			}
