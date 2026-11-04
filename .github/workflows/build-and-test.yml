@@ -32,7 +32,7 @@ jobs:
     steps:
       - id: no_exclude
         name: Run all builds
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
         # On scheduled runs, manual workflow dispatches, and tag pushes, run the full matrix across
         # all OSes and SDK channels. We only exclude combinations that aren't valid:
         # - beta versions of "other IDEs" that don't have insiders versions
@@ -481,7 +481,7 @@ jobs:
       contents: none
     name: Notify Discord of Failure
     needs: build
-    if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event.merge_group.base_ref == format('refs/heads/{0}', github.event.repository.default_branch)) && github.repository_owner == 'Dart-Code'
+    if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.event_name == 'schedule' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event.merge_group.base_ref == format('refs/heads/{0}', github.event.repository.default_branch)) && github.repository_owner == 'Dart-Code'
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
