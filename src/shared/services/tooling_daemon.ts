@@ -176,7 +176,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public async registerService(service: Service.Editor, method: "hotRestart", capabilities: object | undefined, f: (params: HotRestartParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "openDevToolsPage", capabilities: object | undefined, f: (params: OpenDevToolsPageParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "navigateToCode", capabilities: object | undefined, f: (params: NavigateToCodeParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
-	public async registerService(service: Service, method: string, capabilities: object | undefined, f: (params: never) => PromiseOr<DtdResult>): Promise<void> {
+	public async registerService<T>(service: Service, method: string, capabilities: object | undefined, f: (params: T) => PromiseOr<DtdResult>): Promise<void> {
 		const serviceName = Service[service];
 		const resp = await this.callMethod(ServiceMethod.registerService, { service: serviceName, method, capabilities });
 		if (resp.type !== "Success") {

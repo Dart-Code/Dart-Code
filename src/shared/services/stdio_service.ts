@@ -11,7 +11,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	public process?: SpawnedProcess;
 	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
-	private readonly activeRequests: Record<string, [(result: never) => void | Promise<void>, (error: unknown) => void | Promise<void>, string] | "CANCELLED"> = {};
+	private readonly activeRequests: Record<string, [(result: unknown) => void | Promise<void>, (error: unknown) => void | Promise<void>, string] | "CANCELLED"> = {};
 	private messageBuffers: Buffer[] = [];
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
@@ -118,7 +118,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			}
 
 			// Stash the callbacks so we can call them later.
-			this.activeRequests[id.toString()] = [resolve, reject, method];
+			this.activeRequests[id.toString()] = [resolve as (result: unknown) => void, reject, method];
 
 			const req = this.buildRequest(id, method, params);
 			const json = this.messagesWrappedInBrackets
@@ -243,7 +243,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		if (error) {
 			await handler[1](error);
 		} else {
-			await handler[0](evt.result as never);
+			await handler[0](evt.result);
 		}
 	}
 
