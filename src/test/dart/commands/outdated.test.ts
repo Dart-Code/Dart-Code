@@ -1,11 +1,27 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { RunProcessResult } from "../../../shared/processes";
-import { activate, captureOutput, getPackages } from "../../helpers";
+import { activate, captureOutput, closeAllOpenFiles, getPackages, helloWorldPubspec, sb, setConfigForTest } from "../../helpers";
+import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("pub outdated", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
+
+	it("does nothing when pub is disabled", async () => {
+		await setConfigForTest("dart", "enablePub", false);
+		const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
+		await vs.commands.executeCommand("dart.listOutdatedPackages", helloWorldPubspec);
+		spawn.assertCalls([]);
+	});
+
+	it("does nothing when folder selection is cancelled", async () => {
+		await closeAllOpenFiles();
+		sb.stub(vs.window, "showQuickPick").resolves();
+		const spawn = ChildProcessSpawnStub.dartOrFlutterPub();
+		await vs.commands.executeCommand("dart.listOutdatedPackages");
+		spawn.assertCalls([]);
+	});
 
 	it("runs and prints output", async () => {
 		const buffer = captureOutput("dart (package:hello_world)");

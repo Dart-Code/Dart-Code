@@ -240,7 +240,7 @@ export class PackageCommands extends BaseSdkCommands {
 		watcher.onDidCreate(this.handlePubspecChange.bind(this));
 	}
 
-	private handlePubspecChange(uri: vs.Uri) {
+	public handlePubspecChange(uri: vs.Uri) {
 		if (!config.enablePub)
 			return;
 

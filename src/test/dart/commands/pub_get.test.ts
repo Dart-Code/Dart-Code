@@ -1,12 +1,78 @@
 import { strict as assert } from "assert";
+import * as path from "path";
 import * as sinon from "sinon";
-import { activate, delay, helloWorldPubspec, openFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
+import * as vs from "vscode";
+import { fsPath } from "../../../shared/utils/fs";
+import { activate, defer, delay, helloWorldFolder, helloWorldPubspec, openFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("pub get", () => {
 	before("activate", () => activate());
 	before("skip if Pub issue", function () {
 		if (privateApi.dartCapabilities.hasPackageConfigTimestampIssue)
 			this.skip();
+	});
+
+	describe("handlePubspecChange", () => {
+		// These tests run before any test that saves a pubspec in the editor below, so
+		// no prior manual save reason can cause the build-folder check to be skipped.
+
+		function pubspecIn(relativeDir: string): vs.Uri {
+			return vs.Uri.file(path.join(fsPath(helloWorldFolder), relativeDir, "pubspec.yaml"));
+		}
+
+		it("ignores pubspecs in hidden folders", async () => {
+			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
+			const infoLogs = sb.spy(privateApi.logger, "info");
+
+			privateApi.packageCommands.handlePubspecChange(pubspecIn(".hidden"));
+
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping pubspec change for ignored folder")));
+			assert.ok(fetchPackagesOrPrompt.notCalled);
+		});
+
+		it("ignores pubspecs in build folders that were not saved in the editor", async () => {
+			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
+			const infoLogs = sb.spy(privateApi.logger, "info");
+
+			privateApi.packageCommands.handlePubspecChange(pubspecIn("build"));
+
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping pubspec change for ignored folder")));
+			assert.ok(fetchPackagesOrPrompt.notCalled);
+		});
+
+		it("does not fetch when automatic pub get is disabled", async () => {
+			await setConfigForTest("dart", "runPubGetOnPubspecChanges", "never");
+			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
+			const infoLogs = sb.spy(privateApi.logger, "info");
+
+			privateApi.packageCommands.handlePubspecChange(helloWorldPubspec);
+
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes('Automatically running "pub get" is disabled')));
+			assert.ok(fetchPackagesOrPrompt.notCalled);
+		});
+
+		it("does not fetch when the workspace suppresses automatic pub", async () => {
+			sb.stub(privateApi.workspaceContext, "config").value({ ...privateApi.workspaceContext.config, disableAutomaticPub: true });
+			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
+			const infoLogs = sb.spy(privateApi.logger, "info");
+
+			privateApi.packageCommands.handlePubspecChange(helloWorldPubspec);
+
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes('Workspace suppresses automatic "pub"')));
+			assert.ok(fetchPackagesOrPrompt.notCalled);
+		});
+
+		it("does not fetch while project creation is in progress", async () => {
+			privateApi.commandState.numProjectCreationsInProgress++;
+			defer("Reset project creation count", () => privateApi.commandState.numProjectCreationsInProgress--);
+			const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").resolves();
+			const infoLogs = sb.spy(privateApi.logger, "info");
+
+			privateApi.packageCommands.handlePubspecChange(helloWorldPubspec);
+
+			assert.ok(infoLogs.getCalls().some((call) => String(call.args[0]).includes("Skipping package fetch because project creation is in progress")));
+			assert.ok(fetchPackagesOrPrompt.notCalled);
+		});
 	});
 
 	it("runs automatically when pubspec is saved", async () => {
