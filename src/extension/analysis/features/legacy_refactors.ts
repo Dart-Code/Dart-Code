@@ -88,9 +88,10 @@ export class LegacyRefactors {
 
 				try {
 					return await next(command, args);
-				} catch (e: any) {
-					if (e?.code === refactorFailedErrorCode) {
-						void vs.window.showErrorMessage(e.message as string);
+				} catch (e: unknown) {
+					const err = e as { code?: unknown; message: string } | undefined;
+					if (err?.code === refactorFailedErrorCode) {
+						void vs.window.showErrorMessage(err.message);
 						return;
 					} else {
 						throw e;

@@ -167,17 +167,15 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			return this.processUnhandledMessage(message);
 		}
 
-		let msg: any;
+		let msg: unknown;
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			msg = JSON.parse(message);
 
-			if (this.messagesWrappedInBrackets && msg?.length === 1)
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			if (this.messagesWrappedInBrackets && Array.isArray(msg) && msg.length === 1)
 				msg = msg[0];
-		} catch (e: any) {
+		} catch (e: unknown) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${String(e)})\n\n${(e as { stack?: string } | undefined)?.stack}\n\n${message}`);
 				return this.processUnhandledMessage(message);
 			} else {
 				throw e;
@@ -185,19 +183,20 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 
 		try {
-			if (msg && this.isNotification(msg))
-				void this.handleNotification(msg as T).catch((e) => this.logger.error(e));
-			else if (msg && this.isRequest(msg))
-				this.processServerRequest(msg as Request<any>).catch((e) => this.logger.error(e));
-			else if (msg && this.isResponse(msg))
-				this.handleResponse(msg as UnknownResponse).catch((e) => this.logger.error(e));
+			const msgObj = msg && typeof msg === "object" ? msg as Record<string, unknown> : undefined;
+			if (msgObj && this.isNotification(msgObj))
+				void this.handleNotification(msgObj as T).catch((e) => this.logger.error(e));
+			else if (msgObj && this.isRequest(msgObj))
+				this.processServerRequest(msgObj as unknown as Request<any>).catch((e) => this.logger.error(e));
+			else if (msgObj && this.isResponse(msgObj))
+				this.handleResponse(msgObj as unknown as UnknownResponse).catch((e) => this.logger.error(e));
 			else {
 				this.logger.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
 				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			}
-		} catch (e: any) {
+		} catch (e: unknown) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${String(e)})\n\n${(e as { stack?: string } | undefined)?.stack}\n\n${message}`);
 				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			} else {
 				throw e;
@@ -207,9 +206,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected abstract handleNotification(evt: T): Promise<void>;
 	protected async handleRequest(_method: string, _args: any): Promise<any> { }
-	protected isNotification(msg: any): boolean { return !!msg.event; }
-	protected isRequest(msg: any): boolean { return !!msg.method && !!msg.id; }
-	protected isResponse(msg: any): boolean { return !!msg.id; }
+	protected isNotification(msg: Record<string, unknown>): boolean { return !!msg.event; }
+	protected isRequest(msg: Record<string, unknown>): boolean { return !!msg.method && !!msg.id; }
+	protected isResponse(msg: Record<string, unknown>): boolean { return !!msg.id; }
 
 	private async processServerRequest(request: Request<any>) {
 		let result: unknown;
@@ -309,10 +308,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			try {
 				this.logTraffic(`Process ${this.description} is terminating process ${pid}`);
 				process.kill(pid);
-			} catch (e: any) {
+			} catch (e: unknown) {
 				// TODO: Logger knows the category!
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				this.logger.error({ message: e.toString() });
+				this.logger.error({ message: String(e) });
 			}
 		}
 		this.additionalPidsToTerminate.length = 0;

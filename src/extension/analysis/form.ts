@@ -553,9 +553,8 @@ export class InteractiveFormsFeature implements StaticFeature {
 		// - If no user answers were collected, execute it using the standard
 		//   "executeCommand" middleware.
 		const overwrite = async (cmd: string, args: any[], next: ExecuteCommandSignature) => {
-			const option = this.client.initializeResult?.capabilities?.experimental?.interactiveResolveProvider as
-				| interactiveResolveOptions
-				| undefined;
+			const experimental = this.client.initializeResult?.capabilities?.experimental as { interactiveResolveProvider?: interactiveResolveOptions } | undefined;
+			const option = experimental?.interactiveResolveProvider;
 
 			// Language server does not support interactive command execution.
 			if (!option || !Array.isArray(option.kinds) || !option.kinds.includes('command')) {
@@ -595,8 +594,8 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * Fills in the LSP client capabilities to support interactive refactoring prompts.
 	 */
 	public fillClientCapabilities(capabilities: ClientCapabilities): void {
-		capabilities.experimental ??= {};
-		capabilities.experimental.interactiveResolve = {
+		const experimental = (capabilities.experimental ??= {}) as { interactiveResolve?: InteractiveResolveClientCapabilities };
+		experimental.interactiveResolve = {
 			inputTypes: ['bool', 'file', 'enum', 'lazyEnum', 'number', 'string'],
 			validators: {
 				string: ['regex']

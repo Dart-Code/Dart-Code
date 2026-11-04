@@ -140,20 +140,20 @@ export function usingCustomScript(binPath: string, binArgs: string[], customScri
 	return { executable: binPath, args: binArgs };
 }
 
-export function errorMessage(error: any): string {
+export function errorMessage(error: unknown): string {
 	if (!error)
 		return "<empty error>";
 	else if (error instanceof Error)
 		return error.message;
-	else if (error.message)
+	else if (typeof error === "object" && "message" in error && error.message)
 		return error.message as string;
 	else if (typeof error === "string")
 		return error;
 	else
-		return `${error}`;
+		return `${String(error)}`; // eslint-disable-line @typescript-eslint/no-base-to-string
 }
 
-export function errorMessageWithStack(error: any): string {
+export function errorMessageWithStack(error: unknown): string {
 	return errorMessage(error)
 		+ (error instanceof Error && error.stack ? `\n${error.stack}` : "");
 }
@@ -238,9 +238,8 @@ export function disposeAll(disposables: IAmDisposable[], logger?: Logger): void 
 	for (const d of toDispose) {
 		try {
 			d.dispose();
-		} catch (e: any) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			logger?.error({ message: e.toString() });
+		} catch (e: unknown) {
+			logger?.error({ message: String(e) });
 			console.warn(e);
 		}
 	}
@@ -260,9 +259,8 @@ export async function disposeAllAsync(disposables: IAmDisposableAsync[], logger?
 			Promise.allSettled(toDispose.map(async (d) => {
 				try {
 					await d.dispose();
-				} catch (e: any) {
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-					logger?.error({ message: e.toString() });
+				} catch (e: unknown) {
+					logger?.error({ message: String(e) });
 					console.warn(e);
 				}
 			})),

@@ -96,8 +96,8 @@ export class AutoLaunch implements IAmDisposable {
 					await this.startDebugSession(wf, configuration as DebugConfiguration);
 				}
 			}
-		} catch (e: any) {
-			if (e.code === "ENOENT") {
+		} catch (e: unknown) {
+			if ((e as { code?: unknown } | undefined)?.code === "ENOENT") {
 				// File not found, silently ignore.
 				return;
 			}

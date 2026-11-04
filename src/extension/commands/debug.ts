@@ -282,7 +282,7 @@ export class DebugCommands implements IAmDisposable {
 				await vs.commands.executeCommand("dart.hotReload");
 			}
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.hotReload", async (args?: any) => {
+		this.disposables.push(vs.commands.registerCommand("dart.hotReload", async (args?: { onlyDart?: boolean; onlyFlutter?: boolean; reason?: string }) => {
 			if (!debugSessions.length)
 				return;
 			const onlyDart = !!args?.onlyDart;
@@ -762,7 +762,7 @@ export class DebugCommands implements IAmDisposable {
 			.catch((e) => this.logger.error(e));
 
 		const event = e.event;
-		const body = e.body as Record<string, any>;
+		const body = e.body as Record<string, unknown>;
 
 		if (event === "dart.webLaunchUrl") {
 			const launched = !!body.launched;
@@ -770,7 +770,7 @@ export class DebugCommands implements IAmDisposable {
 				try {
 					await envUtils.openInBrowser(body.url as string, this.logger);
 				} catch {
-					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${body.url}`);
+					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${String(body.url)}`);
 				}
 			}
 		} else if (event === "dart.exposeUrl") {
@@ -784,7 +784,7 @@ export class DebugCommands implements IAmDisposable {
 			}
 		} else if (event === "flutter.forwardedEvent") {
 			const event = body.event as string;
-			const params = body.params as Record<string, any>;
+			const params = body.params as Record<string, unknown>;
 			switch (event) {
 				case "app.webLaunchUrl": {
 					const url = params.url as string;
@@ -828,9 +828,9 @@ export class DebugCommands implements IAmDisposable {
 				}
 			}
 		} else if (event === "flutter.forwardedRequest") {
-			const id = body.id as unknown;
+			const id = body.id;
 			const method = body.method as string;
-			const params = body.params as Record<string, any>;
+			const params = body.params as Record<string, unknown>;
 			let result;
 			let error;
 			try {
@@ -955,11 +955,12 @@ export class DebugCommands implements IAmDisposable {
 				},
 			);
 		} else if (event === "dart.progressUpdate") {
-			session.progress[body.progressId]?.report(body.message as string);
+			session.progress[body.progressId as string]?.report(body.message as string);
 		} else if (event === "dart.progressEnd") {
-			const progress = session.progress[body.progressId];
+			const progressId = body.progressId as string;
+			const progress = session.progress[progressId];
 			if (progress) {
-				delete session.progress[body.progressId];
+				delete session.progress[progressId];
 				if (body.message) {
 					progress.report(body.message as string);
 					await new Promise((resolve) => setTimeout(resolve, 400));
