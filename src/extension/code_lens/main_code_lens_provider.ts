@@ -64,7 +64,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		return results.concat(templates.map((t) => this.createCodeLens(document, mainFunction, t.name, !t.noDebug, t)));
 	}
 
-	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: Record<string, string>): CodeLens {
+	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: Record<string, unknown>): CodeLens {
 		return new CodeLens(
 			lspToRange(mainFunction.codeRange),
 			{

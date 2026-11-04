@@ -29,7 +29,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	private connectedCompleter = new PromiseCompleter<ConnectionInfo | undefined>();
 	public get connected() { return this.connectedCompleter.promise; }
 
-	private readonly notificationsEmitters: Record<string, EventsEmitter<any>> = {};
+	private readonly notificationsEmitters: Record<string, EventsEmitter<unknown>> = {};
 
 	/// The set of services that have been seen registered over the Services stream
 	/// but not yet unregistered.
@@ -152,18 +152,18 @@ export class DartToolingDaemon implements IAmDisposable {
 		}
 	}
 
-	public onNotification(stream: string, eventKind: string, listener: (e: any) => any, thisArgs?: any): IAmDisposable {
+	public onNotification<T = unknown>(stream: string, eventKind: string, listener: (e: T) => unknown, thisArgs?: unknown): IAmDisposable {
 		if (!this.notificationsEmitters[stream])
 			this.notificationsEmitters[stream] = new EventsEmitter();
 
-		return this.notificationsEmitters[stream].listen(eventKind, listener, thisArgs);
+		return this.notificationsEmitters[stream].listen(eventKind, listener as (e: unknown) => unknown, thisArgs);
 	}
 
-	public onServiceRegistered(listener: (e: ServiceRegisteredEventData) => any, thisArgs?: any): IAmDisposable {
+	public onServiceRegistered(listener: (e: ServiceRegisteredEventData) => unknown, thisArgs?: unknown): IAmDisposable {
 		return this.onNotification("Service", "ServiceRegistered", (e) => void listener(e as ServiceRegisteredEventData), thisArgs);
 	}
 
-	public onServiceUnregistered(listener: (e: ServiceUnregisteredEventData) => any, thisArgs?: any): IAmDisposable {
+	public onServiceUnregistered(listener: (e: ServiceUnregisteredEventData) => unknown, thisArgs?: unknown): IAmDisposable {
 		return this.onNotification("Service", "ServiceUnregistered", (e) => void listener(e as ServiceUnregisteredEventData), thisArgs);
 	}
 
@@ -176,14 +176,14 @@ export class DartToolingDaemon implements IAmDisposable {
 	public async registerService(service: Service.Editor, method: "hotRestart", capabilities: object | undefined, f: (params: HotRestartParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "openDevToolsPage", capabilities: object | undefined, f: (params: OpenDevToolsPageParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "navigateToCode", capabilities: object | undefined, f: (params: NavigateToCodeParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
-	public async registerService(service: Service, method: string, capabilities: object | undefined, f: (params: any) => PromiseOr<DtdResult>): Promise<void> {
+	public async registerService<T>(service: Service, method: string, capabilities: object | undefined, f: (params: T) => PromiseOr<DtdResult>): Promise<void> {
 		const serviceName = Service[service];
 		const resp = await this.callMethod(ServiceMethod.registerService, { service: serviceName, method, capabilities });
 		if (resp.type !== "Success") {
 			throw new Error(`Failed to register service ${serviceName}.${method}: ${String(resp.type)}`);
 		}
 
-		this.serviceHandlers[`${serviceName}.${method}`] = f;
+		this.serviceHandlers[`${serviceName}.${method}`] = f as (params?: object) => PromiseOr<DtdResult>;
 	}
 
 	public callMethod(service: ServiceMethod.registerService, params: RegisterServiceParams): Promise<RegisterServiceResult>;

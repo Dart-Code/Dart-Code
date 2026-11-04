@@ -51,7 +51,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 			lookup.cwd = cwd;
 	}
 
-	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
+	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: unknown) {
 		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
 		if (event === "dart.testNotification") {
 			void this.handleNotification(debugSessionID, dartCodeDebugSessionID, body as Notification).catch((e) => this.logger.error(e));

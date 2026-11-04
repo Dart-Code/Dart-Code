@@ -39,7 +39,7 @@ export class WebClient {
 		});
 	}
 
-	private handleResponse(headers: http.OutgoingHttpHeaders, resp: http.IncomingMessage, resolve: (value: string | PromiseLike<string>) => void, reject: (reason?: any) => void, path: string | undefined): void {
+	private handleResponse(headers: http.OutgoingHttpHeaders, resp: http.IncomingMessage, resolve: (value: string | PromiseLike<string>) => void, reject: (reason?: unknown) => void, path: string | undefined): void {
 		resp.on("error", reject);
 		if (!resp?.statusCode) {
 			resp.resume();
@@ -56,8 +56,8 @@ export class WebClient {
 			resp.resume();
 			reject({ message: `Bad status code for ${path}: ${resp?.statusCode}: ${resp?.statusMessage}` });
 		} else {
-			const chunks: any[] = [];
-			resp.on("data", (b) => chunks.push(b));
+			const chunks: Buffer[] = [];
+			resp.on("data", (b: Buffer) => chunks.push(b));
 			resp.on("end", () => {
 				const buffer = Buffer.concat(chunks);
 				const encoding = resp.headers["content-encoding"];

@@ -98,5 +98,5 @@ interface TemplatedLaunchConfig {
 		path?: string;
 		title?: string;
 	};
-	[key: string]: any;
+	[key: string]: unknown;
 }

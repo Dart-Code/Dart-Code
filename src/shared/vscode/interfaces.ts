@@ -163,7 +163,7 @@ export interface InternalExtensionApi {
 		spawn(session: (DartDebugSessionInformation & { vmServiceUri: string }) | undefined, options: Record<string, unknown>, forceShow: boolean): Promise<{ url: string; dispose: () => void } | undefined>;
 		urlFor(page: string): Promise<string | undefined>;
 	};
-	trackerFactories: any;
+	trackerFactories: unknown;
 	debugProvider: DebugConfigurationProvider;
 	dynamicDebugProvider: DebugConfigurationProvider;
 	initialDebugProvider: DebugConfigurationProvider;

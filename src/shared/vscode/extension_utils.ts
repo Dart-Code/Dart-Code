@@ -11,7 +11,7 @@ export const isDevExtension = checkIsDevExtension();
 export const hasFlutterExtension = checkHasFlutterExtension();
 export const docsIconPathFormat = Uri.file(path.join(extensionPath, "media/doc-icons/")).toString() + "$1%402x.png";
 
-export function readJson(file: string): any {
+export function readJson(file: string): unknown {
 	return JSON.parse(fs.readFileSync(file).toString());
 }
 

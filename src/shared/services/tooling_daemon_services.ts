@@ -3,7 +3,7 @@ export class DtdError extends Error {
 	constructor(
 		public readonly code: number,
 		message: string,
-		public readonly data?: any,
+		public readonly data?: unknown,
 	) {
 		super(message);
 	}
@@ -11,7 +11,7 @@ export class DtdError extends Error {
 interface DtdErrorData {
 	code: number,
 	message: string,
-	data?: any,
+	data?: unknown,
 }
 type DtdSuccess = DtdResult & { type: "Success" };
 export interface DtdMessage { jsonrpc: "2.0", id?: string, method?: string, result?: DtdResult, error?: DtdErrorData, params?: unknown }
@@ -38,7 +38,7 @@ export interface DtdNotification {
 export interface ServiceRegisteredEventData {
 	service: string | undefined,
 	method: string,
-	capabilities?: any,
+	capabilities?: unknown,
 }
 
 export interface ServiceUnregisteredEventData {
@@ -177,7 +177,7 @@ export enum EventKind {
 
 export interface Event {
 	kind: EventKind;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 export interface DeviceAddedEvent extends Event {

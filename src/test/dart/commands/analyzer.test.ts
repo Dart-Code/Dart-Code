@@ -147,7 +147,7 @@ describe("analyzer", () => {
 			handler({ uri: "ftp://example.com/file" });
 
 			assert.ok(loggerError.calledOnce);
-			assert.ok(loggerError.firstCall.args[0].includes("Unable to open URI ftp://example.com/file as requested by LSP server. Unknown scheme."));
+			assert.ok((loggerError.firstCall.args[0] as string).includes("Unable to open URI ftp://example.com/file as requested by LSP server. Unknown scheme."));
 		});
 	});
 

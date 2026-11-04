@@ -88,7 +88,6 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 	const title = setting.label;
 	let placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const currentValue = setting.currentValue;
 	switch (setting.settingKind) {
 		case "STRING": {
