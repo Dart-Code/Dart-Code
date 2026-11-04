@@ -4,7 +4,7 @@ import { DartFileUriLink, findFileUriLinks, formatLineColFragment } from "../ter
 
 
 export class DartFileUriLinkProvider implements vs.TerminalLinkProvider<DartFileUriLink>, vs.DocumentLinkProvider<vs.DocumentLink> {
-	public async provideTerminalLinks(context: vs.TerminalLinkContext, _token: vs.CancellationToken): Promise<DartFileUriLink[]> {
+	public provideTerminalLinks(context: vs.TerminalLinkContext, _token: vs.CancellationToken): DartFileUriLink[] {
 		return this.getLinks(context.line);
 	}
 
@@ -17,8 +17,8 @@ export class DartFileUriLinkProvider implements vs.TerminalLinkProvider<DartFile
 		void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
 	}
 
-	public async provideDocumentLinks(document: vs.TextDocument, _token: vs.CancellationToken): Promise<vs.DocumentLink[]> {
-		const links = await this.getLinks(document.getText());
+	public provideDocumentLinks(document: vs.TextDocument, _token: vs.CancellationToken): vs.DocumentLink[] {
+		const links = this.getLinks(document.getText());
 
 		return links.map((link) => {
 			const range = new vs.Range(document.positionAt(link.startIndex), document.positionAt(link.startIndex + link.length));

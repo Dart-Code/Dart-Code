@@ -44,7 +44,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const coverageProfile = controller.createRunProfile("Run with Coverage", vs.TestRunProfileKind.Coverage, (request, token) =>
 			this.runTests(false, true, request, token), true, runnableWithCoverageTestTag);
 
-		coverageProfile.loadDetailedCoverage = async (testRun: vs.TestRun, fileCoverage: vs.FileCoverage, _token: vs.CancellationToken) => {
+		coverageProfile.loadDetailedCoverage = (testRun: vs.TestRun, fileCoverage: vs.FileCoverage, _token: vs.CancellationToken) => new Promise((resolve) => {
 			const dartFileCoverage = fileCoverage as DartFileCoverage;
 			const lineCoverage: vs.StatementCoverage[] = [];
 
@@ -54,8 +54,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				lineCoverage.push(new vs.StatementCoverage(dartFileCoverage.detail.coveredLines.has(lineNumber), location));
 			});
 
-			return lineCoverage;
-		};
+			resolve(lineCoverage);
+		});
 	}
 
 	private async resolveTestItem(item: vs.TestItem | undefined): Promise<void> {

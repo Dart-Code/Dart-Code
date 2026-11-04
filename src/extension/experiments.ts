@@ -71,7 +71,7 @@ class Experiment {
 
 	/// Activates the experiment. If returns false, resets the hasActivated flag so it
 	/// is not considered to have run.
-	protected async activate(_isFirstActivation: boolean): Promise<undefined | false> { return; }
+	protected activate(_isFirstActivation: boolean): Promise<undefined | false> { return Promise.resolve(undefined); }
 }
 
 class SdkDapExperiment extends Experiment {

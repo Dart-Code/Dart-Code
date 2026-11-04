@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { IAmDisposable, IAmDisposableAsync, Logger, SpawnedProcess } from "../interfaces";
 import { safeSpawn } from "../processes";
 import { Request, UnknownResponse } from "../services/interfaces";
-import { disposeAllAsync, PromiseCompleter } from "../utils";
+import { disposeAllAsync, PromiseCompleter, PromiseOr } from "../utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -158,13 +158,14 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
-	protected async processUnhandledMessage(_message: string): Promise<void> { }
+	protected processUnhandledMessage(_message: string): PromiseOr<void> { }
 
 	public async handleMessage(message: string): Promise<void> {
 		this.logTraffic(`<== ${message.trimRight()}\r\n`);
 
 		if (!this.shouldHandleMessage(message.trim())) {
-			return this.processUnhandledMessage(message);
+			await this.processUnhandledMessage(message);
+			return;
 		}
 
 		let msg: unknown;
@@ -177,7 +178,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
 				const err = e as { stack?: string } | undefined;
 				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${String(e)})\n\n${err?.stack}\n\n${message}`);
-				return this.processUnhandledMessage(message);
+				await this.processUnhandledMessage(message);
+				return;
 			} else {
 				throw e;
 			}
@@ -186,28 +188,28 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		try {
 			const msgObj = msg && typeof msg === "object" ? msg as Record<string, unknown> : undefined;
 			if (msgObj && this.isNotification(msgObj))
-				void this.handleNotification(msgObj as T).catch((e) => this.logger.error(e));
+				void new Promise((resolve) => resolve(this.handleNotification(msgObj as T))).catch((e) => this.logger.error(e));
 			else if (msgObj && this.isRequest(msgObj))
 				this.processServerRequest(msgObj as unknown as Request<unknown>).catch((e) => this.logger.error(e));
 			else if (msgObj && this.isResponse(msgObj))
 				this.handleResponse(msgObj as unknown as UnknownResponse).catch((e) => this.logger.error(e));
 			else {
 				this.logger.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
-				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
+				new Promise((resolve) => resolve(this.processUnhandledMessage(message))).catch((e) => this.logger.error(e));
 			}
 		} catch (handlingError: unknown) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
 				const err = handlingError as { stack?: string } | undefined;
 				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${String(handlingError)})\n\n${err?.stack}\n\n${message}`);
-				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
+				new Promise((resolve) => resolve(this.processUnhandledMessage(message))).catch((e) => this.logger.error(e));
 			} else {
 				throw handlingError;
 			}
 		}
 	}
 
-	protected abstract handleNotification(evt: T): Promise<void>;
-	protected async handleRequest(_method: string, _args: unknown): Promise<unknown> { return; }
+	protected abstract handleNotification(evt: T): PromiseOr<void>;
+	protected handleRequest(_method: string, _args: unknown): Promise<unknown> { return Promise.resolve(undefined); }
 	protected isNotification(msg: Record<string, unknown>): boolean { return !!msg.event; }
 	protected isRequest(msg: Record<string, unknown>): boolean { return !!msg.method && !!msg.id; }
 	protected isResponse(msg: Record<string, unknown>): boolean { return !!msg.id; }

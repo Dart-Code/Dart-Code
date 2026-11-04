@@ -3,7 +3,7 @@ import * as vs from "vscode";
 const fileUriPattern = new RegExp("(?<uri>file:\\/{3}\\S+[\\/]\\S+\\.dart)(?:(?:[: ]| line )(?<line>\\d+)(?::(?<col>\\d+))?)?", "mg");
 const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?:(?:[: ]| line )(?<line>\\d+)(?::(?<col>\\d+))?)?", "mg");
 
-export async function findPackageUriLinks(content: string, isKnownPackage: (packageName: string) => boolean): Promise<DartPackageUriLink[]> {
+export function findPackageUriLinks(content: string, isKnownPackage: (packageName: string) => boolean): DartPackageUriLink[] {
 	const results: DartPackageUriLink[] = [];
 	packageUriPattern.lastIndex = -1;
 	let result: RegExpExecArray | null;
@@ -39,7 +39,7 @@ export async function findPackageUriLinks(content: string, isKnownPackage: (pack
 	return results;
 }
 
-export async function findFileUriLinks(lineContent: string): Promise<DartFileUriLink[]> {
+export function findFileUriLinks(lineContent: string): DartFileUriLink[] {
 	const results: DartFileUriLink[] = [];
 	fileUriPattern.lastIndex = -1;
 	let result: RegExpExecArray | null;

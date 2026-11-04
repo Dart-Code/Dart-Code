@@ -105,7 +105,7 @@ export class LoggingCommands implements IAmDisposable {
 		await vs.window.showTextDocument(doc);
 	}
 
-	private async stopLogging(): Promise<void> {
+	private stopLogging(): void {
 		if (this.currentLogCompleter)
 			this.currentLogCompleter.resolve();
 	}

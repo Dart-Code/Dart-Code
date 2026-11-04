@@ -14,38 +14,38 @@ import { activate, currentDoc, emptyFile, fakeCancellationToken, helloWorldExamp
 describe("DartFileUriTerminalLinkProvider", () => {
 	beforeEach("activate", () => activate());
 
-	it("detects macOS/Linux links without drive letters", async function () {
+	it("detects macOS/Linux links without drive letters", function () {
 		if (isWin)
 			this.skip();
-		await expectLink("file:///foo/bar.dart", "/foo/bar.dart");
-		await expectLink("file:///foo/bar.dart:5:8", "/foo/bar.dart", 5, 8);
-		await expectLink("file:///foo/bar.dart 5:8", "/foo/bar.dart", 5, 8);
-		await expectLink("file:///foo/bar.dart line 5", "/foo/bar.dart", 5);
-		await expectLink("aaa file:///foo/bar.dart:5:8 bbb", "/foo/bar.dart", 5, 8);
+		expectLink("file:///foo/bar.dart", "/foo/bar.dart");
+		expectLink("file:///foo/bar.dart:5:8", "/foo/bar.dart", 5, 8);
+		expectLink("file:///foo/bar.dart 5:8", "/foo/bar.dart", 5, 8);
+		expectLink("file:///foo/bar.dart line 5", "/foo/bar.dart", 5);
+		expectLink("aaa file:///foo/bar.dart:5:8 bbb", "/foo/bar.dart", 5, 8);
 	});
 
-	it("detects Windows links with drive letters", async function () {
+	it("detects Windows links with drive letters", function () {
 		if (!isWin)
 			this.skip();
-		await expectLink("file:///C:/foo/bar.dart", "C:\\foo\\bar.dart");
-		await expectLink("file:///C:/foo/bar.dart:5:8", "C:\\foo\\bar.dart", 5, 8);
-		await expectLink("file:///C:/foo/bar.dart 5:8", "C:\\foo\\bar.dart", 5, 8);
-		await expectLink("file:///C:/foo/bar.dart line 5", "C:\\foo\\bar.dart", 5);
-		await expectLink("aaa file:///C:/foo/bar.dart:5:8 bbb", "C:\\foo\\bar.dart", 5, 8);
+		expectLink("file:///C:/foo/bar.dart", "C:\\foo\\bar.dart");
+		expectLink("file:///C:/foo/bar.dart:5:8", "C:\\foo\\bar.dart", 5, 8);
+		expectLink("file:///C:/foo/bar.dart 5:8", "C:\\foo\\bar.dart", 5, 8);
+		expectLink("file:///C:/foo/bar.dart line 5", "C:\\foo\\bar.dart", 5);
+		expectLink("aaa file:///C:/foo/bar.dart:5:8 bbb", "C:\\foo\\bar.dart", 5, 8);
 	});
 
-	it("detects Windows links with lowercase drive letters", async function () {
+	it("detects Windows links with lowercase drive letters", function () {
 		if (!isWin)
 			this.skip();
-		await expectLink("file:///c:/foo/bar.dart", "C:\\foo\\bar.dart");
-		await expectLink("file:///c:/foo/bar.dart:5:8", "C:\\foo\\bar.dart", 5, 8);
-		await expectLink("file:///c:/foo/bar.dart 5:8", "C:\\foo\\bar.dart", 5, 8);
-		await expectLink("file:///c:/foo/bar.dart line 5", "C:\\foo\\bar.dart", 5);
-		await expectLink("aaa file:///c:/foo/bar.dart:5:8 bbb", "C:\\foo\\bar.dart", 5, 8);
+		expectLink("file:///c:/foo/bar.dart", "C:\\foo\\bar.dart");
+		expectLink("file:///c:/foo/bar.dart:5:8", "C:\\foo\\bar.dart", 5, 8);
+		expectLink("file:///c:/foo/bar.dart 5:8", "C:\\foo\\bar.dart", 5, 8);
+		expectLink("file:///c:/foo/bar.dart line 5", "C:\\foo\\bar.dart", 5);
+		expectLink("aaa file:///c:/foo/bar.dart:5:8 bbb", "C:\\foo\\bar.dart", 5, 8);
 	});
 
-	async function expectLink(lineText: string, filePath: string, line?: number, col?: number) {
-		const results = await findFileUriLinks(lineText)
+	function expectLink(lineText: string, filePath: string, line?: number, col?: number) {
+		const results = findFileUriLinks(lineText)
 			?? findPackageUriLinks(lineText, (_) => true);
 		assert.equal(results.length, 1);
 		const result = results[0];

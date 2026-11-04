@@ -71,11 +71,11 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		void this.webviewView?.webview.postMessage({ command: "_dart-code.setUrls", urls });
 	}
 
-	public async setHtml(content: string | null) {
+	public setHtml(content: string | null) {
 		void this.webviewView?.webview.postMessage({ command: "_dart-code.setHtml", content });
 	}
 
-	public async reload() {
+	public reload() {
 		void this.webviewView?.webview.postMessage({ command: "refresh" });
 	}
 

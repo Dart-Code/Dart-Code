@@ -104,7 +104,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	protected async handleOpen() {
-		await super.handleOpen();
+		super.handleOpen();
 
 		this.onServiceRegistered(async (event) => {
 			const serviceMethod = event.service ? `${event.service}.${event.method}` : event.method;
@@ -335,7 +335,7 @@ class EditorServices implements IAmDisposable {
 					};
 				})
 				: undefined,
-			this.daemon.registerService(Service.Editor, "getActiveLocation", undefined, async () => ({
+			this.daemon.registerService(Service.Editor, "getActiveLocation", undefined, () => ({
 				...this.activeLocation,
 				type: "ActiveLocation",
 			})),

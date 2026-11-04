@@ -75,7 +75,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.connection = { socket, dtdUri, dtdSecret };
 	}
 
-	protected async handleOpen(): Promise<void> {
+	protected handleOpen(): void {
 		this.logger.info(`Connected to DTD`);
 		this.connectedCompleter.resolve(this.connection);
 
@@ -365,11 +365,11 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return false;
 	}
 
-	protected async handleNotification(_evt: UnknownNotification): Promise<void> {
+	protected handleNotification(_evt: UnknownNotification): void {
 		// We never get here because shouldHandleMessage is always false.
 	}
 
-	protected async processUnhandledMessage(message: string): Promise<void> {
+	protected processUnhandledMessage(message: string): void {
 		message = message.trim();
 		if (!this.hasReceivedConnectionInfo && message.startsWith("{") && message.endsWith("}")) {
 			try {

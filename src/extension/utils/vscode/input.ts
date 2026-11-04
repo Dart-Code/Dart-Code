@@ -35,7 +35,7 @@ export async function showInputBoxWithSettings(
 	];
 
 	const name = await new Promise<UserInputOrSettings | undefined>((resolve) => {
-		input.onDidTriggerButton(async () => {
+		input.onDidTriggerButton(() => {
 			resolve("SETTINGS");
 			input.hide();
 		});

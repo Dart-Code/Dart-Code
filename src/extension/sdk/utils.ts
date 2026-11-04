@@ -377,9 +377,9 @@ export class SdkUtils {
 		// runs some specific processing.
 		const workspaceFolders = getDartWorkspaceFolders();
 		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
+		const processWorkspaceType = (search: (logger: Logger, folder: string) => string | undefined, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): string | undefined => {
 			for (const folder of topLevelFolders) {
-				const root = await search(this.logger, folder);
+				const root = search(this.logger, folder);
 				if (root) {
 					process(this.logger, workspaceConfig, root);
 					return root;
@@ -388,9 +388,9 @@ export class SdkUtils {
 			return undefined;
 		};
 
-		await processWorkspaceType(findDartSdkRoot, processDartSdkRepository);
-		await processWorkspaceType(findBazelWorkspaceRoot, processBazelWorkspace);
-		const fuchsiaRoot = await processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
+		processWorkspaceType(findDartSdkRoot, processDartSdkRepository);
+		processWorkspaceType(findBazelWorkspaceRoot, processBazelWorkspace);
+		const fuchsiaRoot = processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
 
 		if (fuchsiaRoot) {
 			this.logger.info(`Found Fuchsia root at ${fuchsiaRoot}`);
@@ -739,20 +739,20 @@ export class SdkUtils {
 	}
 }
 
-async function findFuchsiaRoot(logger: Logger, folder: string): Promise<string | undefined> {
+function findFuchsiaRoot(logger: Logger, folder: string): string | undefined {
 	return findRootContaining(folder, ".jiri_root", "DIRECTORY");
 }
 
-async function findBazelWorkspaceRoot(logger: Logger, folder: string): Promise<string | undefined> {
+function findBazelWorkspaceRoot(logger: Logger, folder: string): string | undefined {
 	return findRootContaining(folder, "WORKSPACE", "FILE");
 }
 
-async function findGitRoot(logger: Logger, folder: string): Promise<string | undefined> {
+function findGitRoot(logger: Logger, folder: string): string | undefined {
 	return findRootContaining(folder, ".git", "ANY");
 }
 
-async function findDartSdkRoot(logger: Logger, folder: string): Promise<string | undefined> {
-	const gitRoot = await findGitRoot(logger, folder);
+function findDartSdkRoot(logger: Logger, folder: string): string | undefined {
+	const gitRoot = findGitRoot(logger, folder);
 	if (gitRoot && fs.existsSync(path.join(gitRoot, "README.dart-sdk")) && fs.existsSync(path.join(gitRoot, "DEPS")))
 		return gitRoot;
 	else

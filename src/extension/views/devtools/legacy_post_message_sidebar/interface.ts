@@ -9,7 +9,7 @@ import { Event } from "../../../../shared/events";
 
 export interface VsCodeApi {
 	capabilities: VsCodeCapabilities;
-	initialize(): Promise<void>;
+	initialize(): void;
 	devicesChanged: Event<VsCodeDevicesEvent>;
 	debugSessionsChanged: Event<VsCodeDebugSessionsEvent>;
 	executeCommand(command: string, args?: object[]): Promise<object | undefined>;

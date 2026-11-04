@@ -54,7 +54,11 @@ export class TestSessionCoordinator implements IAmDisposable {
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: unknown) {
 		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
 		if (event === "dart.testNotification") {
-			void this.handleNotification(debugSessionID, dartCodeDebugSessionID, body as Notification).catch((e) => this.logger.error(e));
+			try {
+				this.handleNotification(debugSessionID, dartCodeDebugSessionID, body as Notification);
+			} catch (e) {
+				this.logger.error(e);
+			}
 		}
 	}
 
@@ -73,7 +77,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 	}
 
-	public async handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, evt: Notification): Promise<void> {
+	public handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, evt: Notification): void {
 		switch (evt.type) {
 			// We won't get notifications that aren't directly tied to Suites because
 			// of how the DA works.

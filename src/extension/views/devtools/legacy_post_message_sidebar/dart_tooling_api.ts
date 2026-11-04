@@ -98,7 +98,8 @@ class VsCodeApiHandler extends ToolApi {
 		if (method === "getCapabilities") {
 			return this.api.capabilities;
 		} else if (method === "initialize") {
-			return await this.api.initialize();
+			this.api.initialize();
+			return undefined;
 		} else if (method === "selectDevice") {
 			return this.api.selectDevice(
 				nullToUndefined(params.id as string | undefined | null),
@@ -151,7 +152,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		selectDevice: true,
 	};
 
-	public async initialize() {
+	public initialize(): void {
 		// Trigger initial events to get the client the existing data from before they
 		// started listening.
 		void this.onDevicesChanged();

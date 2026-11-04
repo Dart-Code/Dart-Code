@@ -45,7 +45,7 @@ export class OpenInOtherEditorCommands implements IAmDisposable {
 		void vs.window.showErrorMessage("Unable to locate Android Studio executable");
 	}
 
-	private async openInXcode(resource: vs.Uri): Promise<void> {
+	private openInXcode(resource: vs.Uri): void {
 		const folder = fsPath(resource);
 		const files = fs
 			.readdirSync(folder, { withFileTypes: true })

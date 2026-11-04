@@ -556,8 +556,8 @@ export class LspAnalyzer extends Analyzer {
 		//       https://github.com/microsoft/vscode-languageserver-node/issues/1000
 		const originalAsCodeAction = p2c.asCodeAction; // eslint-disable-line @typescript-eslint/unbound-method
 
-		async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, _token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
-			if (!item) return;
+		function asWorkspaceEditSync(item: ls.WorkspaceEdit | undefined | null, _token?: vs.CancellationToken): vs.WorkspaceEdit | undefined {
+			if (!item) return undefined;
 
 			// Instead of the original asWorkspaceEdit, call our custom one that fixes keepWhitespace.
 			const result = asWorkspaceEditWithKeepWhitespaceSnippets(item);
@@ -570,7 +570,7 @@ export class LspAnalyzer extends Analyzer {
 		async function asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
 			const result = await originalAsCodeAction(item, token);
 			if (result && item?.edit !== undefined) {
-				result.edit = await asWorkspaceEdit(item.edit, token);
+				result.edit = asWorkspaceEditSync(item.edit, token);
 			}
 			return result;
 		}
@@ -642,7 +642,8 @@ export class LspAnalyzer extends Analyzer {
 			return result;
 		}
 
-		p2c.asWorkspaceEdit = asWorkspaceEdit;
+		// Wrap in a Promise to match the LSP client's ProtocolToCodeConverter interface while preserving rejection on synchronous throws.
+		p2c.asWorkspaceEdit = (item, token) => new Promise((resolve) => resolve(asWorkspaceEditSync(item, token)));
 		p2c.asCodeAction = asCodeAction;
 		p2c.asCodeActionResult = asCodeActionResult;
 
