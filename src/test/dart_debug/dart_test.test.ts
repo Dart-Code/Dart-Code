@@ -111,16 +111,16 @@ describe("dart test debugger", () => {
 
 		const variables = await dc.getTopFrameVariables("Exceptions");
 		assert.ok(variables);
-		const v = variables.find((v) => v.name === "message");
-		assert.ok(v);
-		assert.equal(v.evaluateName, "$_threadException.message");
+		const messageVariable = variables.find((v) => v.name === "message");
+		assert.ok(messageVariable);
+		assert.equal(messageVariable.evaluateName, "$_threadException.message");
 		const expectedStart = `"Expected: <2>\n  Actual: <1>`;
 		assert.ok(
-			v.value.startsWith(expectedStart),
+			messageVariable.value.startsWith(expectedStart),
 			`Exception didn't have expected prefix\n` +
 			`+ expected - actual\n` +
 			`+ ${JSON.stringify(expectedStart)}\n` +
-			`- ${JSON.stringify(v.value)}\n`,
+			`- ${JSON.stringify(messageVariable.value)}\n`,
 		);
 	});
 

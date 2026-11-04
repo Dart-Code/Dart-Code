@@ -162,18 +162,18 @@ export async function captureTestDebugConfiguration(fileUri: Uri, selectTest: (t
 
 /*
  * Runs the VS Code test controller for the supplied request and returns every launch
- * configuration that would have been started. `debug` selects the Debug profile.
+ * configuration that would have been started. `isDebug` selects the Debug profile.
  */
-export async function captureTestDebugConfigurations(createRequest: () => TestRunRequest, debug = false, token: CancellationToken = fakeCancellationToken): Promise<DebugConfiguration[]> {
+export async function captureTestDebugConfigurations(createRequest: () => TestRunRequest, isDebug = false, token: CancellationToken = fakeCancellationToken): Promise<DebugConfiguration[]> {
 	const controller = privateApi.testController!;
-	return captureStartDebuggingConfigs(() => controller.runTests(debug, false, createRequest(), token));
+	return captureStartDebuggingConfigs(() => controller.runTests(isDebug, false, createRequest(), token));
 }
 
 /*
  * Runs the VS Code test controller for items chosen from one suite and returns the
  * single launch configuration that would have been started.
  */
-export async function captureTestDebugConfigurationForItems(fileUri: Uri, selectItems: (suiteNode: TestItem) => TestItem[], debug = false): Promise<DebugConfiguration> {
+export async function captureTestDebugConfigurationForItems(fileUri: Uri, selectItems: (suiteNode: TestItem) => TestItem[], isDebug = false): Promise<DebugConfiguration> {
 	const editor = await openFile(fileUri);
 	await getExpectedOutline(editor.document);
 	// The test tree is cleared between tests, so rebuild the suite from the cached outline.
@@ -183,7 +183,7 @@ export async function captureTestDebugConfigurationForItems(fileUri: Uri, select
 	if (!suiteNode)
 		throw new Error(`Unable to find suite node for ${fileUri.toString()}`);
 
-	const configs = await captureTestDebugConfigurations(() => new TestRunRequest(selectItems(suiteNode)), debug);
+	const configs = await captureTestDebugConfigurations(() => new TestRunRequest(selectItems(suiteNode)), isDebug);
 	assert.equal(configs.length, 1);
 	return configs[0];
 }
@@ -205,27 +205,27 @@ export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables?.length, "No variables given to search");
-	const v = variables.find((v) => v.name === name);
+	const foundVariable = variables.find((v) => v.name === name);
 	assert.ok(
-		v,
+		foundVariable,
 		`Couldn't find variable ${name} in\n`
 		+ variables.map((v) => `        ${v.name}: ${v.value}`).join("\n"),
 	);
-	assert.equal(v.evaluateName, evaluateName);
+	assert.equal(foundVariable.evaluateName, evaluateName);
 	if (typeof value === "string")
-		assert.equal(v.value, value);
+		assert.equal(foundVariable.value, value);
 	else {
 		if (value.starts)
-			assert.equal(v.value.slice(0, value.starts.length), value.starts);
+			assert.equal(foundVariable.value.slice(0, value.starts.length), value.starts);
 		if (value.ends)
-			assert.equal(v.value.slice(-value.ends.length), value.ends);
+			assert.equal(foundVariable.value.slice(-value.ends.length), value.ends);
 	}
 }
 
 export function ensureNoVariable(variables: DebugProtocol.Variable[], name: string) {
 	assert.ok(variables, "No variables given to search");
-	const v = variables.find((v) => v.name === name);
-	assert.ok(!v, `Found unexpected variable ${name}!`);
+	const foundVariable = variables.find((v) => v.name === name);
+	assert.ok(!foundVariable, `Found unexpected variable ${name}!`);
 }
 
 export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], index: number, evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {

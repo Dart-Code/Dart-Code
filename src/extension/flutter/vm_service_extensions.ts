@@ -57,9 +57,9 @@ export class VmServiceExtensions {
 	}
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
-	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {
-		if (e.event === "dart.serviceExtensionAdded") {
-			this.handleServiceExtensionLoaded(session, e.body.extensionRPC as VmServiceExtension, e.body.isolateId as string | null | undefined);
+	public async handleDebugEvent(session: DartDebugSessionInformation, customEvent: vs.DebugSessionCustomEvent): Promise<void> {
+		if (customEvent.event === "dart.serviceExtensionAdded") {
+			this.handleServiceExtensionLoaded(session, customEvent.body.extensionRPC as VmServiceExtension, customEvent.body.isolateId as string | null | undefined);
 
 			const useAddPubRootDirectories = this.flutterCapabilities.supportsAddPubRootDirectories;
 			const pubRootDirectoriesService = useAddPubRootDirectories
@@ -67,10 +67,10 @@ export class VmServiceExtensions {
 				: VmServiceExtension.InspectorSetPubRootDirectories;
 
 			try {
-				if (e.body.extensionRPC === pubRootDirectoriesService) {
+				if (customEvent.body.extensionRPC === pubRootDirectoriesService) {
 					const params: Record<string, string> = {
 						// TODO: Is this OK???
-						isolateId: e.body.isolateId as string,
+						isolateId: customEvent.body.isolateId as string,
 					};
 
 					let argNum = 0;
@@ -78,17 +78,17 @@ export class VmServiceExtensions {
 						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(fsPath(workspaceFolder.uri));
 					}
 
-					await this.callServiceExtension(e.session, pubRootDirectoriesService, params);
+					await this.callServiceExtension(customEvent.session, pubRootDirectoriesService, params);
 				}
 			} catch (e) {
 				if (!this.shouldSilenceError(e)) {
 					this.logger.error(e);
 				}
 			}
-		} else if (e.event === "dart.serviceRegistered") {
-			this.handleServiceRegistered(e.body.service as VmService, e.body.method as string);
-		} else if (e.event === "flutter.serviceExtensionStateChanged") {
-			this.handleRemoteValueUpdate(e.body.extension as string, e.body.value);
+		} else if (customEvent.event === "dart.serviceRegistered") {
+			this.handleServiceRegistered(customEvent.body.service as VmService, customEvent.body.method as string);
+		} else if (customEvent.event === "flutter.serviceExtensionStateChanged") {
+			this.handleRemoteValueUpdate(customEvent.body.extension as string, customEvent.body.value);
 		}
 	}
 

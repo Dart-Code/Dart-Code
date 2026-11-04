@@ -763,8 +763,8 @@ async function runInteractiveFormTest(params: {
 			}
 			throw new Error(`Unknown request to mock client: ${method}`);
 		},
-		handleFailedRequest: (_type: any, _value: any, error: any, _token: any) => {
-			throw error;
+		handleFailedRequest: (_type: any, _value: any, requestError: any, _token: any) => {
+			throw requestError;
 		}
 	} as unknown as LanguageClient;
 

@@ -660,22 +660,22 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * hook if registered, falling back to sending a `'workspace/executeCommand'`
 	 * LSP request with the user's answered form.
 	 *
-	 * @param command The identifier of the actual command handler to execute.
-	 * @param args Arguments that the command should be invoked with.
-	 * @param formAnswers The finalized, server-validated answers collected from the user.
+	 * @param outerCommand The identifier of the actual command handler to execute.
+	 * @param outerArgs Arguments that the command should be invoked with.
+	 * @param outerFormAnswers The finalized, server-validated answers collected from the user.
 	 * @returns A provider result resolving to the command execution result.
 	 */
 	private interactiveExecuteCommand = (
-		command: string,
-		args: any[],
-		formAnswers: any[]
+		outerCommand: string,
+		outerArgs: any[],
+		outerFormAnswers: any[]
 	): vscode.ProviderResult<any> => {
-		const _interactiveExecuteCommand: InteractiveExecuteCommandSignature = (command, args, formAnswers) => {
+		const _interactiveExecuteCommand: InteractiveExecuteCommandSignature = (innerCommand, innerArgs, innerFormAnswers) => {
 			const requestType = new RequestType<InteractiveExecuteCommandParams, any, void>('workspace/executeCommand');
 			return this.client.sendRequest<any>('workspace/executeCommand', {
-				command: command,
-				arguments: args,
-				formAnswers: formAnswers
+				command: innerCommand,
+				arguments: innerArgs,
+				formAnswers: innerFormAnswers
 			} satisfies InteractiveExecuteCommandParams).then(undefined, (error) => {
 				return this.client.handleFailedRequest(requestType, undefined, error, undefined);
 			});
@@ -683,8 +683,8 @@ export class InteractiveFormsFeature implements StaticFeature {
 
 		const middleware = this.client.clientOptions.middleware as InteractiveMiddleware | undefined;
 		return middleware?.interactiveExecuteCommand
-			? middleware.interactiveExecuteCommand(command, args, formAnswers, _interactiveExecuteCommand)
-			: _interactiveExecuteCommand(command, args, formAnswers);
+			? middleware.interactiveExecuteCommand(outerCommand, outerArgs, outerFormAnswers, _interactiveExecuteCommand)
+			: _interactiveExecuteCommand(outerCommand, outerArgs, outerFormAnswers);
 	};
 
 	/**
@@ -708,15 +708,15 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * middleware hook if registered, falling back to sending a `'command/resolve'`
 	 * LSP request.
 	 *
-	 * @param param The command parameters and previous answers to resolve/validate.
+	 * @param outerParam The command parameters and previous answers to resolve/validate.
 	 * @returns A provider result resolving to the updated command execution parameters.
 	 */
 	private interactiveResolveCommand = (
-		param: InteractiveExecuteCommandParams
+		outerParam: InteractiveExecuteCommandParams
 	): vscode.ProviderResult<InteractiveExecuteCommandParams> => {
-		const _interactiveResolveCommand: InteractiveResolveCommandSignature = (param) => {
+		const _interactiveResolveCommand: InteractiveResolveCommandSignature = (innerParam) => {
 			const requestType = new RequestType<InteractiveExecuteCommandParams, any, void>('command/resolve');
-			return this.client.sendRequest<InteractiveExecuteCommandParams>('command/resolve', param).then(
+			return this.client.sendRequest<InteractiveExecuteCommandParams>('command/resolve', innerParam).then(
 				undefined,
 				(error) => {
 					return this.client.handleFailedRequest(requestType, undefined, error, undefined);
@@ -726,8 +726,8 @@ export class InteractiveFormsFeature implements StaticFeature {
 
 		const middleware = this.client.clientOptions.middleware as InteractiveMiddleware | undefined;
 		return middleware?.interactiveResolveCommand
-			? middleware.interactiveResolveCommand(param, _interactiveResolveCommand)
-			: _interactiveResolveCommand(param);
+			? middleware.interactiveResolveCommand(outerParam, _interactiveResolveCommand)
+			: _interactiveResolveCommand(outerParam);
 	};
 
 	/**
@@ -737,25 +737,25 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * It routes the query through the `interactiveListEnum` middleware hook if
 	 * registered, falling back to sending an `'interactive/listEnum'` LSP request.
 	 *
-	 * @param param The query parameters, including the data source name, static
+	 * @param outerParam The query parameters, including the data source name, static
 	 * config, and filter string.
 	 * @returns A provider result resolving to the matching list of form
 	 * enumeration entries.
 	 */
-	private interactiveListEnum = (param: InteractiveListEnumParams): vscode.ProviderResult<FormEnumEntry[]> => {
-		const _interactiveListEnum: InteractiveListEnumSignature = (param) => {
+	private interactiveListEnum = (outerParam: InteractiveListEnumParams): vscode.ProviderResult<FormEnumEntry[]> => {
+		const _interactiveListEnum: InteractiveListEnumSignature = (innerParam) => {
 			const requestType = new RequestType<InteractiveListEnumParams, FormEnumEntry[], void>(
 				'interactive/listEnum'
 			);
-			return this.client.sendRequest<FormEnumEntry[]>('interactive/listEnum', param).then(undefined, (error) => {
+			return this.client.sendRequest<FormEnumEntry[]>('interactive/listEnum', innerParam).then(undefined, (error) => {
 				return this.client.handleFailedRequest(requestType, undefined, error, undefined);
 			});
 		};
 
 		const middleware = this.client.clientOptions.middleware as InteractiveMiddleware | undefined;
 		return middleware?.interactiveListEnum
-			? middleware.interactiveListEnum(param, _interactiveListEnum)
-			: _interactiveListEnum(param);
+			? middleware.interactiveListEnum(outerParam, _interactiveListEnum)
+			: _interactiveListEnum(outerParam);
 	};
 
 	/**

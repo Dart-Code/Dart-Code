@@ -488,8 +488,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		workspaceContext,
 		config,
 		() => (vs.workspace.workspaceFolders ?? []).map((wf) => ({ name: wf.name, uri: wf.uri, path: fsPath(wf.uri) })),
-		(path: string) => {
-			const wf = vs.workspace.getWorkspaceFolder(vs.Uri.file(path));
+		(projectPath: string) => {
+			const wf = vs.workspace.getWorkspaceFolder(vs.Uri.file(projectPath));
 			return wf ? { name: wf.name, uri: wf.uri, path: fsPath(wf.uri) } : undefined;
 		}
 	);
@@ -798,7 +798,7 @@ function setupLog(logFile: string | undefined, category: LogCategory, autoDispos
 	}
 }
 
-function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
+function buildLogHeaders(headerLogger?: Logger, workspaceContext?: WorkspaceContext) {
 	clearLogHeader();
 	addToLogHeader(() => `Dart Code extension: ${extensionVersion}`);
 	addToLogHeader(() => {
@@ -830,7 +830,7 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 		addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}, NO_PROXY: ${process.env.NO_PROXY}`);
 
 	// Any time the log headers are rebuilt, we should re-log them.
-	logger?.info(getLogHeader());
+	headerLogger?.info(getLogHeader());
 }
 
 

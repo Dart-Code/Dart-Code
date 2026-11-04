@@ -427,7 +427,7 @@ export class DevToolsManager implements IAmDisposable {
 		};
 
 		// Handle new Path URL DevTools.
-		const path = queryParams.page ?? "";
+		const urlPath = queryParams.page ?? "";
 		delete queryParams.page;
 
 		if (vmServiceUri) {
@@ -461,7 +461,7 @@ export class DevToolsManager implements IAmDisposable {
 		].filter(notUndefined);
 
 		return {
-			viewUrl: `${baseUrl}${urlPathSeperator}${path}?${paramsString}`,
+			viewUrl: `${baseUrl}${urlPathSeperator}${urlPath}?${paramsString}`,
 			authUrls: authUrls?.length ? authUrls : undefined,
 		};
 	}

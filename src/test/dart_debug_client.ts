@@ -276,9 +276,9 @@ export class DartDebugClient extends DebugClient {
 	public async getTopFrameVariables(scope: "Exceptions" | "Locals", { frameId }: { frameId?: number } = {}): Promise<DebugProtocol.Variable[]> {
 		frameId ??= await this.getTopFrameId();
 		const scopes = await this.scopesRequest({ frameId });
-		const s = scopes.body.scopes.find((s) => s.name === scope);
-		assert.ok(s);
-		return this.getVariables(s.variablesReference);
+		const matchingScope = scopes.body.scopes.find((s) => s.name === scope);
+		assert.ok(matchingScope);
+		return this.getVariables(matchingScope.variablesReference);
 	}
 
 	public async getVariables(variablesReference: number): Promise<DebugProtocol.Variable[]> {

@@ -146,19 +146,19 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("dart.copyVmServiceUri", async () => {
 			const options: Array<vs.QuickPickItem & { session: DartDebugSessionInformation, vmServiceUri: string }> = [];
 
-			function addOption(s: DartDebugSessionInformation, vmServiceUri: string, vmServiceKindDescription: string | undefined) {
+			function addOption(session: DartDebugSessionInformation, vmServiceUri: string, vmServiceKindDescription: string | undefined) {
 				const description = [
-					s.session.workspaceFolder?.name,
-					s.session.configuration.deviceName,
-					`Started ${s.sessionStart.toLocaleTimeString()}`,
-				].filter((s) => s).join(", ");
+					session.session.workspaceFolder?.name,
+					session.session.configuration.deviceName,
+					`Started ${session.sessionStart.toLocaleTimeString()}`,
+				].filter((part) => part).join(", ");
 				options.push(
 					{
 						// TODO: add both vm service uri and description here somewhere
 						description,
 						detail: vmServiceKindDescription ? `${vmServiceUri} (${vmServiceKindDescription})` : vmServiceUri,
-						label: s.session.name,
-						session: s,
+						label: session.session.name,
+						session,
 						vmServiceUri,
 					}
 				);
@@ -757,12 +757,12 @@ export class DebugCommands implements IAmDisposable {
 		return true;
 	}
 
-	private async handleCustomEventWithSession(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent) {
-		this.vmServices.handleDebugEvent(session, e)
+	private async handleCustomEventWithSession(session: DartDebugSessionInformation, customEvent: vs.DebugSessionCustomEvent) {
+		this.vmServices.handleDebugEvent(session, customEvent)
 			.catch((e) => this.logger.error(e));
 
-		const event = e.event;
-		const body = e.body as Record<string, unknown>;
+		const event = customEvent.event;
+		const body = customEvent.body as Record<string, unknown>;
 
 		if (event === "dart.webLaunchUrl") {
 			const launched = !!body.launched;
@@ -783,9 +783,9 @@ export class DebugCommands implements IAmDisposable {
 				await session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
 			}
 		} else if (event === "flutter.forwardedEvent") {
-			const event = body.event as string;
+			const forwardedEvent = body.event as string;
 			const params = body.params as Record<string, unknown>;
-			switch (event) {
+			switch (forwardedEvent) {
 				case "app.webLaunchUrl": {
 					const url = params.url as string;
 					const launched = !!params.launched;
@@ -971,7 +971,7 @@ export class DebugCommands implements IAmDisposable {
 			if (this.suppressFlutterWidgetErrors || !config.showInspectorNotificationsForWidgetErrors)
 				return;
 
-			const data = e.body as LegacyWidgetErrorInspectData;
+			const data = customEvent.body as LegacyWidgetErrorInspectData;
 			if (data.devToolsUrl !== (await this.devTools.devtoolsUrl))
 				return;
 
@@ -1005,7 +1005,7 @@ export class DebugCommands implements IAmDisposable {
 			//   "summary":"A RenderFlex overflowed by 266 pixels on the right.",
 			//   "deepLinkUrl":"http://example.org/#/inspector?uri&inspectorRef=inspector-0"
 			// }
-			const data = e.body as DevToolsDeepLinkData;
+			const data = customEvent.body as DevToolsDeepLinkData;
 
 			// To avoid spam, when we show this dialog we will set a flag that prevents any more
 			// of these types of dialogs until it is dismissed or 5 seconds have passed.

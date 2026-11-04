@@ -210,10 +210,8 @@ export class LspAnalyzer extends Analyzer {
 			if (label.trimRight().endsWith(":"))
 				return true;
 
-			if (item.kind === vs.CompletionItemKind.Folder) {
-				const label = typeof item.label === "string" ? item.label : item.label.label;
+			if (item.kind === vs.CompletionItemKind.Folder)
 				return label.endsWith("/");
-			}
 
 			return false;
 		}

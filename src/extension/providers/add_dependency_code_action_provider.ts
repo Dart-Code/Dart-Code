@@ -91,13 +91,13 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 		// https://github.com/Dart-Code/Dart-Code/issues/4896
 		for (let i = 0; i < diagnosticsWithPackageNames.length; i++) {
 			const packageName = diagnosticsWithPackageNames[i].packageName;
-			const range = diagnosticsWithPackageNames[i].diagnostic.range;
+			const diagnosticRange = diagnosticsWithPackageNames[i].diagnostic.range;
 
 			for (let j = i + 1; j < diagnosticsWithPackageNames.length; j++) {
 				const packageName2 = diagnosticsWithPackageNames[j].packageName;
-				const range2 = diagnosticsWithPackageNames[j].diagnostic.range;
+				const diagnosticRange2 = diagnosticsWithPackageNames[j].diagnostic.range;
 
-				if (packageName === packageName2 && !range.intersection(range2)?.isEmpty) {
+				if (packageName === packageName2 && !diagnosticRange.intersection(diagnosticRange2)?.isEmpty) {
 					diagnosticsWithPackageNames.splice(j, 1);
 					j--;
 				}

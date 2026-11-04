@@ -227,8 +227,8 @@ export class TestCommands implements IAmDisposable {
 			return false;
 		const programUri = vs.Uri.file(programPath);
 		const programUriComparisonString = uriComparisonString(programUri);
-		const doc = vs.workspace.textDocuments.find((doc) => uriComparisonString(doc.uri) === programUriComparisonString);
-		const docIsDirty = doc?.isDirty ?? false;
+		const programDoc = vs.workspace.textDocuments.find((doc) => uriComparisonString(doc.uri) === programUriComparisonString);
+		const docIsDirty = programDoc?.isDirty ?? false;
 
 		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.

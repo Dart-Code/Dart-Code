@@ -296,7 +296,7 @@ export class PackageCommands extends BaseSdkCommands {
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 
-	public async fetchPackagesOrPrompt(uri: vs.Uri | undefined, options?: { alwaysPrompt?: boolean, upgradeOnSdkChange?: boolean }): Promise<void> {
+	public async fetchPackagesOrPrompt(triggeredByUri: vs.Uri | undefined, options?: { alwaysPrompt?: boolean, upgradeOnSdkChange?: boolean }): Promise<void> {
 		if (!config.enablePub)
 			return;
 
@@ -324,7 +324,7 @@ export class PackageCommands extends BaseSdkCommands {
 			const pubStatuses = getPubWorkspaceStatus(
 				this.sdks,
 				this.logger,
-				uniq(projectFolders).map((p) => vs.Uri.file(p)).filter((uri) => config.for(uri).promptToGetPackages)
+				uniq(projectFolders).map((projectFolder) => vs.Uri.file(projectFolder)).filter((uri) => config.for(uri).promptToGetPackages)
 			)
 				.filter((result) => result.pubRequired);
 			this.logger.info(`Found pub status for ${pubStatuses.length} folders:${pubStatuses.map((result) => `\n    ${fsPath(result.folderUri)} (pubRequired?: ${result.pubRequired}, reason: ${result.reason})`).join("")}`);
@@ -333,8 +333,8 @@ export class PackageCommands extends BaseSdkCommands {
 
 			if (options?.upgradeOnSdkChange && someProjectsRequirePubUpgrade)
 				await promptToRunPubUpgrade(pubStatuses);
-			else if (!forcePrompt && pubStatuses.length === 0 && uri)
-				await this.runPubGetWithRelatives(projectFolders, uri);
+			else if (!forcePrompt && pubStatuses.length === 0 && triggeredByUri)
+				await this.runPubGetWithRelatives(projectFolders, triggeredByUri);
 			else if (!forcePrompt && pubStatuses.length === 1)
 				await this.runPubGetWithRelatives(projectFolders, pubStatuses[0].folderUri);
 			else if (pubStatuses.length)
@@ -363,6 +363,6 @@ export class PackageCommands extends BaseSdkCommands {
 		}
 
 		projectsToFetch = uniq(projectsToFetch);
-		await runPubGet(projectsToFetch.map((path) => vs.Uri.file(path)));
+		await runPubGet(projectsToFetch.map((projectFolder) => vs.Uri.file(projectFolder)));
 	}
 }

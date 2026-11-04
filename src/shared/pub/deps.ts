@@ -30,39 +30,39 @@ export class PubDeps {
 		};
 	}
 
-	private _buildRoot(pkg: PubDepsJsonPackage, packages: PubDepsJsonPackageLookup): PubDepsTreeRootPackage {
+	private _buildRoot(rootPackage: PubDepsJsonPackage, packages: PubDepsJsonPackageLookup): PubDepsTreeRootPackage {
 		// If a node has a "directDependencies" node then we've got the new format
 		// (see https://github.com/dart-lang/pub/pull/4383).
 		//
 		// For the new format, we use:
-		//   directDependencies: `pkg.directDependencies`
-		//   devDependencies: `pkg.devDependencies`
-		//   transitiveDependencies: walk down `pkg.dependencies` collecting from child `dependencies` where not already seen
+		//   directDependencies: `rootPackage.directDependencies`
+		//   devDependencies: `rootPackage.devDependencies`
+		//   transitiveDependencies: walk down `rootPackage.dependencies` collecting from child `dependencies` where not already seen
 		//
 		// Otherwise, we use:
-		//   directDependencies: `pkg.dependencies.filter((dep) => dep?.kind === "direct")`
-		//   devDependencies: `pkg.devDependencies.filter((dep) => dep?.kind === "dev")`
-		//   transitiveDependencies: walk down `pkg.dependencies` collecting from child `dependencies` where not already seen
+		//   directDependencies: `rootPackage.dependencies.filter((dep) => dep?.kind === "direct")`
+		//   devDependencies: `rootPackage.devDependencies.filter((dep) => dep?.kind === "dev")`
+		//   transitiveDependencies: walk down `rootPackage.dependencies` collecting from child `dependencies` where not already seen
 
-		const isNewFormat = !!pkg.directDependencies;
+		const isNewFormat = !!rootPackage.directDependencies;
 
 
-		const allDependencies = pkg.dependencies?.map((name) => packages[name]).filter((pkg) => pkg) ?? [];
+		const allDependencies = rootPackage.dependencies?.map((name) => packages[name]).filter((dep) => dep) ?? [];
 		const directDependencies = isNewFormat
-			? pkg.directDependencies?.map((name) => packages[name]).filter((pkg) => pkg) ?? []
+			? rootPackage.directDependencies?.map((name) => packages[name]).filter((dep) => dep) ?? []
 			: allDependencies.filter((dep) => dep?.kind === "direct");
 		const devDependencies = isNewFormat
-			? pkg.devDependencies?.map((name) => packages[name]).filter((pkg) => pkg) ?? []
+			? rootPackage.devDependencies?.map((name) => packages[name]).filter((dep) => dep) ?? []
 			: allDependencies.filter((dep) => dep?.kind === "dev");
 		directDependencies.sort((d1, d2) => d1.name.localeCompare(d2.name));
 		devDependencies.sort((d1, d2) => d1.name.localeCompare(d2.name));
 
 		return {
-			dependencies: directDependencies.map((pkg) => this._buildDependency(pkg)),
-			devDependencies: devDependencies.map((pkg) => this._buildDependency(pkg)),
-			name: pkg.name,
-			transitiveDependencies: this._buildTransitiveDependencies(pkg, packages),
-			version: pkg.version,
+			dependencies: directDependencies.map((dep) => this._buildDependency(dep)),
+			devDependencies: devDependencies.map((dep) => this._buildDependency(dep)),
+			name: rootPackage.name,
+			transitiveDependencies: this._buildTransitiveDependencies(rootPackage, packages),
+			version: rootPackage.version,
 		};
 	}
 
@@ -73,8 +73,8 @@ export class PubDeps {
 		};
 	}
 
-	private _buildTransitiveDependencies(pkg: PubDepsJsonPackage, packages: PubDepsJsonPackageLookup): PubDepsTreePackageTransitiveDependency[] {
-		const pkgDependencies = [...(pkg.dependencies ?? []), ...(pkg.devDependencies ?? [])].map((name) => packages[name]).filter((pkg) => pkg);
+	private _buildTransitiveDependencies(rootPackage: PubDepsJsonPackage, packages: PubDepsJsonPackageLookup): PubDepsTreePackageTransitiveDependency[] {
+		const pkgDependencies = [...(rootPackage.dependencies ?? []), ...(rootPackage.devDependencies ?? [])].map((name) => packages[name]).filter((dep) => dep);
 		const results: Record<string, PubDepsTreePackageTransitiveDependency> = {};
 
 		// Queue is a list of pairs of packages to process, and the first (shortest) paths to get to them.
@@ -95,7 +95,7 @@ export class PubDeps {
 
 			// Loop over this packages dependencies, and if we've not previously been to them
 			// this is (one of) the shortest paths there.
-			const dependencies = (packages[pkgName]?.dependencies ?? []).map((name) => packages[name]).filter((pkg) => pkg); // We don't have dev deps for non-roots.
+			const dependencies = (packages[pkgName]?.dependencies ?? []).map((name) => packages[name]).filter((dep) => dep); // We don't have dev deps for non-roots.
 			for (const dependency of dependencies) {
 				if (results[dependency.name])
 					continue;

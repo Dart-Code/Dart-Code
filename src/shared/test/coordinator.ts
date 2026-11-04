@@ -141,10 +141,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.captureTestOutlne(evt.suite.path);
 	}
 
-	private captureTestOutlne(path: string) {
-		const visitor = new TestOutlineVisitor(this.logger, path);
-		this.suiteOutlineVisitors[path] = visitor;
-		const outline = this.fileTracker.getOutlineFor(URI.file(path));
+	private captureTestOutlne(suitePath: string) {
+		const visitor = new TestOutlineVisitor(this.logger, suitePath);
+		this.suiteOutlineVisitors[suitePath] = visitor;
+		const outline = this.fileTracker.getOutlineFor(URI.file(suitePath));
 		if (outline)
 			visitor.visit(outline);
 	}
@@ -161,12 +161,12 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForTestID[evt.test.id] = suite;
 
-		const { path, line, character } = this.getLocation(evt.test);
+		const { path: testPath, line, character } = this.getLocation(evt.test);
 
 		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
 		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
 
-		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
+		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), testPath, range, evt.time, true);
 	}
 
 	/**
@@ -182,11 +182,11 @@ export class TestSessionCoordinator implements IAmDisposable {
 			? item.root_url ?? undefined
 			: item.url ?? undefined;
 
-		let path: string | undefined;
+		let filePath: string | undefined;
 		let line: number | undefined;
 		let character: number | undefined;
 		if (url?.startsWith("file:")) {
-			path = maybeUriToFilePath(url);
+			filePath = maybeUriToFilePath(url);
 			if (useRootLocation) {
 				line = item.root_line ?? undefined;
 				character = item.root_column ?? undefined;
@@ -197,11 +197,11 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 
 		// If we don't have them all, don't use any.
-		if (!path || !line || !character) {
-			path = line = character = undefined;
+		if (!filePath || !line || !character) {
+			filePath = line = character = undefined;
 		}
 
-		return { path, line, character };
+		return { path: filePath, line, character };
 	}
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
@@ -234,10 +234,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 			return;
 		}
 
-		const { path, line, character } = this.getLocation(evt.group);
+		const { path: groupPath, line, character } = this.getLocation(evt.group);
 
 		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
-		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
+		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), groupPath, range, true);
 	}
 
 	private getRealGroupId(dartCodeDebugSessionID: string, groupID: number | undefined) {

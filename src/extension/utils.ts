@@ -29,10 +29,10 @@ export function isInsideFlutterProject(uri?: Uri): boolean {
 		return isFlutterWorkspaceFolder(workspace.getWorkspaceFolder(uri));
 }
 
-export function isPathInsideFlutterProject(path: string): boolean {
+export function isPathInsideFlutterProject(fileOrFolderPath: string): boolean {
 	// TODO(dantup): This can be called quite a lot when discovering tests, so consider
 	//  maintaining a model for the workspace.
-	const projectRoot = locateBestProjectRoot(path);
+	const projectRoot = locateBestProjectRoot(fileOrFolderPath);
 	if (!projectRoot)
 		return false;
 
@@ -89,8 +89,8 @@ export function isAnalyzableAndInWorkspace(file: { uri: Uri, isUntitled?: boolea
 	return isAnalyzable(file) && isWithinWorkspace(fsPath(file.uri));
 }
 
-export function isTestFileOrFolder(path: string | undefined): boolean {
-	return !!path && (isTestFile(path) || isTestFolder(path));
+export function isTestFileOrFolder(fileOrFolderPath: string | undefined): boolean {
+	return !!fileOrFolderPath && (isTestFile(fileOrFolderPath) || isTestFolder(fileOrFolderPath));
 }
 
 export function isTestFile(file: string): boolean {
@@ -114,19 +114,19 @@ export function isRunnableTestFile(file: string): boolean {
 	return !!file && file.toLowerCase().endsWith("_test.dart") && isDartFile(file);
 }
 
-export function isTestFolder(path: string | undefined): boolean {
-	return !!path
+export function isTestFolder(folderPath: string | undefined): boolean {
+	return !!folderPath
 		&& (
-			isInsideFolderNamed(path, "test")
-			|| isInsideFolderNamed(path, "integration_test")
-		) && existsAndIsDirectorySync(path);
+			isInsideFolderNamed(folderPath, "test")
+			|| isInsideFolderNamed(folderPath, "integration_test")
+		) && existsAndIsDirectorySync(folderPath);
 }
 
-export function projectCanUsePackageTest(folder: string, config: WorkspaceConfig): boolean {
+export function projectCanUsePackageTest(folder: string, workspaceConfig: WorkspaceConfig): boolean {
 	// Handle explicit flags.
-	if (config.supportsPackageTest === true)
+	if (workspaceConfig.supportsPackageTest === true)
 		return true;
-	else if (config.supportsPackageTest === false)
+	else if (workspaceConfig.supportsPackageTest === false)
 		return false;
 
 	return hasPubspec(folder);
@@ -145,8 +145,8 @@ export function hasTestFilter(args: string[]) {
 /// Although VS Code assigns an ID, we cannot get at it until after the debug session starts
 /// which might be after we recieve some events (since VS Code fires its event late - after all
 /// initialisation has completed).
-export function ensureDebugLaunchUniqueId(config: BasicDebugConfiguration): string {
-	const conf = config as BasicDebugConfiguration & { dartCodeDebugSessionID?: string };
+export function ensureDebugLaunchUniqueId(debugConfig: BasicDebugConfiguration): string {
+	const conf = debugConfig as BasicDebugConfiguration & { dartCodeDebugSessionID?: string };
 	if (!conf.dartCodeDebugSessionID) {
 		const dartCodeDebugSessionID = `session-${getRandomInt(0x10000, 0x100000).toString(16)}`;
 		conf.dartCodeDebugSessionID = dartCodeDebugSessionID;

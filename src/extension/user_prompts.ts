@@ -285,10 +285,10 @@ export async function checkForLargeNumberOfTodos(diagnostics: vs.DiagnosticColle
 
 	const threshold = 100;
 	let numTodos = 0;
-	diagnostics?.forEach((uri, diagnostics) => {
+	diagnostics?.forEach((uri, fileDiagnostics) => {
 		if (numTodos >= threshold)
 			return;
-		for (const diagnostic of diagnostics) {
+		for (const diagnostic of fileDiagnostics) {
 			if (diagnostic.code === "todo") {
 				numTodos++;
 				if (numTodos >= threshold)

@@ -189,10 +189,10 @@ describe("flutter test debugger", () => {
 
 		const variables = await dc.getTopFrameVariables("Exceptions");
 		assert.ok(variables);
-		const v = variables.find((v) => v.name === "message");
-		assert.ok(v);
-		assert.equal(v.evaluateName, "$_threadException.message");
-		assert.ok(v.value.startsWith(`"Expected: exactly one matching`));
+		const messageVariable = variables.find((v) => v.name === "message");
+		assert.ok(messageVariable);
+		assert.equal(messageVariable.evaluateName, "$_threadException.message");
+		assert.ok(messageVariable.value.startsWith(`"Expected: exactly one matching`));
 	});
 
 	it.skip("stops at the correct location on exception", async () => {

@@ -70,10 +70,10 @@ describe("capture logs command", () => {
 	});
 
 	it("does not start logging if cancelled", async () => {
-		const logger = await configureLog();
+		const log = await configureLog();
 
 		// Wait for the logging command to finish (which it should automatically because we aborted).
-		const logFilename = await logger.loggingCommand;
+		const logFilename = await log.loggingCommand;
 
 		assert.ok(!logFilename);
 	});
