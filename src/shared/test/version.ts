@@ -32,7 +32,8 @@ function getCapabilitiesFromVersionInPackageGraph(logger: Logger, packageFile: s
 
 		logger.warn(`Failed to parse pkg:test version number from ${packageGraphFile}: ${testVersion}`);
 	} catch (e: unknown) {
-		if ((e as { code?: unknown } | undefined)?.code !== "ENOENT")
+		const err = e as { code?: unknown } | undefined;
+		if (err?.code !== "ENOENT")
 			logger.warn(`Failed to read pkg:test version number from ${packageGraphFile}: ${String(e)}`);
 	}
 

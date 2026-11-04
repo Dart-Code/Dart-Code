@@ -24,7 +24,8 @@ export class InteractiveRefactors implements IAmDisposable {
 		return {
 			clear() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
-				const experimental = (capabilities.experimental ??= {}) as { dartCodeAction?: { commandParameterSupport?: { supportedKinds: SupportedParameterKind[] } } };
+				capabilities.experimental ??= {};
+				const experimental = capabilities.experimental as { dartCodeAction?: { commandParameterSupport?: { supportedKinds: SupportedParameterKind[] } } };
 				experimental.dartCodeAction ??= {};
 				experimental.dartCodeAction.commandParameterSupport = {
 					supportedKinds: Object.values(SupportedParameterKind),
@@ -81,8 +82,8 @@ export class InteractiveRefactors implements IAmDisposable {
 	/// Gets the parameters from the 'data' field of the CodeAction.
 	private getCommandParameters(action: CodeAction, argObject: Arguments): Parameter[] | undefined {
 		// 'data' is an LSP concept and not exposed in the VS Code type.
-		const data = (action as { data?: { parameters?: unknown } }).data;
-		const parameters = data?.parameters;
+		const lspAction = action as { data?: { parameters?: unknown } };
+		const parameters = lspAction.data?.parameters;
 
 		// Check the parameters look sensible - a list with a length that matches the original
 		// argument set.

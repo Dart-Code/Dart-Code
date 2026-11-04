@@ -594,7 +594,8 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * Fills in the LSP client capabilities to support interactive refactoring prompts.
 	 */
 	public fillClientCapabilities(capabilities: ClientCapabilities): void {
-		const experimental = (capabilities.experimental ??= {}) as { interactiveResolve?: InteractiveResolveClientCapabilities };
+		capabilities.experimental ??= {};
+		const experimental = capabilities.experimental as { interactiveResolve?: InteractiveResolveClientCapabilities };
 		experimental.interactiveResolve = {
 			inputTypes: ['bool', 'file', 'enum', 'lazyEnum', 'number', 'string'],
 			validators: {

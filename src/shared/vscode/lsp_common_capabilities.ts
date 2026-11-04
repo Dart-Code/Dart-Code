@@ -8,7 +8,8 @@ export class CommonCapabilitiesFeature {
 		return {
 			clear() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
-				const experimental = (capabilities.experimental ??= {}) as Record<string, unknown>;
+				capabilities.experimental ??= {};
+				const experimental = capabilities.experimental as Record<string, unknown>;
 				// Set an explicit flag to let the server know we support the window/showMessage request
 				// because there's no existing capability for this (yet) and some client do not support it.
 				// https://github.com/microsoft/language-server-protocol/issues/1635

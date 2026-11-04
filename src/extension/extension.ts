@@ -779,8 +779,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		};
 		// Copy all fields and getters from privateApi into the existing object so that it works
 		// correctly through exports.
+		const exportedApiRecord = exportedApi as unknown as Record<string, unknown>;
 		Object.defineProperties(
-			(exportedApi as unknown as Record<string, unknown>)[internalApiSymbol] ??= {},
+			exportedApiRecord[internalApiSymbol] ??= {},
 			Object.getOwnPropertyDescriptors(privateApi)
 		);
 	}

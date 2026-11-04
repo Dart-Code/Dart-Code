@@ -97,7 +97,8 @@ export class AutoLaunch implements IAmDisposable {
 				}
 			}
 		} catch (e: unknown) {
-			if ((e as { code?: unknown } | undefined)?.code === "ENOENT") {
+			const err = e as { code?: unknown } | undefined;
+			if (err?.code === "ENOENT") {
 				// File not found, silently ignore.
 				return;
 			}

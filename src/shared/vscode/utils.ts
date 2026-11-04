@@ -97,7 +97,8 @@ function getAnalysisOptionsExcludedFolders(
 				}
 			}
 		} catch (e: unknown) {
-			if ((e as { code?: unknown } | undefined)?.code !== "ENOENT") // Don't warn for missing files.
+			const err = e as { code?: unknown } | undefined;
+			if (err?.code !== "ENOENT") // Don't warn for missing files.
 				logger.error(`Failed to read ${analysisOptionsPath}: ${String(e)}`);
 		}
 	}

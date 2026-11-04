@@ -19,7 +19,8 @@ export class SnippetTextEditFeature implements IAmDisposable {
 		return {
 			clear() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
-				const experimental = (capabilities.experimental ??= {}) as { snippetTextEdit?: boolean };
+				capabilities.experimental ??= {};
+				const experimental = capabilities.experimental as { snippetTextEdit?: boolean };
 				if (snippetTextEditsEnabled) {
 					experimental.snippetTextEdit = true;
 				}
@@ -42,9 +43,9 @@ export class SnippetTextEditFeature implements IAmDisposable {
 					const entries = edit.entries();
 					if (entries.length === 1 && entries[0][1].length === 1) {
 						const uri = entries[0][0];
-						const textEdit = entries[0][1][0];
+						const textEdit = entries[0][1][0] as vs.TextEdit & { isCustomSnippet?: boolean };
 						// HACK: Check the injected "isCustomSnippet" field added in the asWorkspaceEdit overrides.
-						const hasSnippet = !!(textEdit as vs.TextEdit & { isCustomSnippet?: boolean }).isCustomSnippet;
+						const hasSnippet = !!textEdit.isCustomSnippet;
 
 						// HACK: Work around the server producing 0th choice tabstops that are not valid until a
 						// server fix lands.

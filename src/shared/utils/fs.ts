@@ -239,7 +239,8 @@ export function projectReferencesFlutter(folder?: string): boolean {
 			const pubspecContent = fs.readFileSync(pubspecPath);
 			return pubspecContentReferencesFlutter(pubspecContent.toString());
 		} catch (e: unknown) {
-			if ((e as { code?: unknown } | undefined)?.code !== "ENOENT") // Don't warn for missing files.
+			const err = e as { code?: unknown } | undefined;
+			if (err?.code !== "ENOENT") // Don't warn for missing files.
 				console.warn(`Failed to read ${pubspecPath}: ${String(e)}`);
 		}
 	}

@@ -525,7 +525,8 @@ export class LspAnalyzer extends Analyzer {
 						writer: new StreamMessageWriter(streamInfo.writer, {
 							contentTypeEncoder: {
 								encode: (msg, options) => {
-									(msg as unknown as { clientRequestTime?: number }).clientRequestTime = Date.now();
+									const timedMsg = msg as unknown as { clientRequestTime?: number };
+									timedMsg.clientRequestTime = Date.now();
 									return jsonEncoder.encode(msg, options);
 								},
 								name: "withTiming",
@@ -549,7 +550,8 @@ export class LspAnalyzer extends Analyzer {
 			asTextEdit(item: ls.TextEdit): vs.TextEdit;
 			asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined>;
 		}
-		const p2c = (client as unknown as { _p2c: ProtocolToCodeConverter })._p2c; // eslint-disable-line no-underscore-dangle
+		const clientWithP2c = client as unknown as { _p2c: ProtocolToCodeConverter };
+		const p2c = clientWithP2c._p2c; // eslint-disable-line no-underscore-dangle
 		// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
 		//       insertTextFormat from the protocol through to the middleware to handle snippets.
 		//       This can be removed when we have a better way to do this.
@@ -681,7 +683,8 @@ export class LspAnalyzer extends Analyzer {
 				const changes = changeset[1];
 				for (const change of changes) {
 					if (snippetTypes.has(`${fsPath(uri)}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
-						(change as vs.TextEdit & { isCustomSnippet?: boolean }).isCustomSnippet = true;
+						const customChange = change as vs.TextEdit & { isCustomSnippet?: boolean };
+						customChange.isCustomSnippet = true;
 					}
 				}
 			}

@@ -175,7 +175,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				msg = msg[0];
 		} catch (e: unknown) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${String(e)})\n\n${(e as { stack?: string } | undefined)?.stack}\n\n${message}`);
+				const err = e as { stack?: string } | undefined;
+				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${String(e)})\n\n${err?.stack}\n\n${message}`);
 				return this.processUnhandledMessage(message);
 			} else {
 				throw e;
@@ -196,7 +197,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			}
 		} catch (e: unknown) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${String(e)})\n\n${(e as { stack?: string } | undefined)?.stack}\n\n${message}`);
+				const err = e as { stack?: string } | undefined;
+				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${String(e)})\n\n${err?.stack}\n\n${message}`);
 				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			} else {
 				throw e;

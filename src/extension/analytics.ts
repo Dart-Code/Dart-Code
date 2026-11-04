@@ -132,7 +132,8 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 							else
 								this.logger.warn(`Unexpected GA debug response: ${json}`);
 						} catch (e: unknown) {
-							this.logger.warn(`Error in GA debug response: ${String((e as { message?: unknown } | undefined)?.message ?? e)} ${json}`);
+							const err = e as { message?: unknown } | undefined;
+							this.logger.warn(`Error in GA debug response: ${String(err?.message ?? e)} ${json}`);
 						}
 						resolve();
 					});
@@ -503,9 +504,10 @@ class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerF
 
 class DebugAdapterExceptionSettingTracker implements DebugAdapterTracker {
 	public lastExceptionOptions: string | undefined;
-	onWillReceiveMessage(message: { command?: string; arguments?: { filters?: string[] } }): void {
-		if (message.command === "setExceptionBreakpoints") {
-			const exceptionFilters = message.arguments?.filters ?? [];
+	onWillReceiveMessage(message: unknown): void {
+		if (message && typeof message === "object" && "command" in message && message.command === "setExceptionBreakpoints") {
+			const msg = message as { arguments?: { filters?: string[] } };
+			const exceptionFilters = msg.arguments?.filters ?? [];
 			this.lastExceptionOptions = exceptionFilters.length
 				? exceptionFilters.slice().sort().join(", ")
 				: "None";
