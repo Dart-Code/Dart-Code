@@ -1,3 +1,4 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import * as vs from "vscode";
 import { DartLaunchArgs } from "../../shared/debugging/interfaces";
 
@@ -28,9 +29,10 @@ export class DartDebugForcedDebugModeFactory implements vs.DebugAdapterTrackerFa
  * See https://github.com/Dart-Code/Dart-Code/issues/4878.
  */
 class DartDebugForcedDebugMode implements vs.DebugAdapterTracker {
-	onWillReceiveMessage(message: any): void {
-		if (message.command === "launch") {
-			message.arguments.noDebug = undefined;
+	onWillReceiveMessage(message: unknown): void {
+		const request = message as DebugProtocol.LaunchRequest;
+		if (request.command === "launch") {
+			request.arguments.noDebug = undefined;
 		}
 	}
 }

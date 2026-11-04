@@ -264,8 +264,8 @@ export class DebugCommands implements IAmDisposable {
 		}));
 
 		// Misc custom debug commands.
-		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.touchBar", (args: any) => vs.commands.executeCommand("_dart.hotReload.withSave", args)));
-		this.disposables.push(vs.commands.registerCommand("flutter.hotReload", (args: any) => vs.commands.executeCommand("dart.hotReload", args)));
+		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.touchBar", (args: unknown) => vs.commands.executeCommand("_dart.hotReload.withSave", args)));
+		this.disposables.push(vs.commands.registerCommand("flutter.hotReload", (args: unknown) => vs.commands.executeCommand("dart.hotReload", args)));
 		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.withSave", async () => {
 			try {
 				const hasDirtyFiles = !!vs.workspace.textDocuments.find((td) => td.isDirty);
@@ -301,7 +301,7 @@ export class DebugCommands implements IAmDisposable {
 					await s.session.customRequest("hotReload", args);
 			}));
 		}));
-		this.disposables.push(vs.commands.registerCommand("flutter.hotRestart", async (args?: any) => {
+		this.disposables.push(vs.commands.registerCommand("flutter.hotRestart", async (args?: unknown) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotRestartEmitter.fire();
@@ -482,7 +482,7 @@ export class DebugCommands implements IAmDisposable {
 		const launchFile = vs.workspace.getConfiguration("launch", workspaceFolder);
 		// If we're in a code-workspace that already has workspace-level launch configs,
 		// we should add to that. Otherwise add directly to the workspace folder.
-		const configInspect = launchFile.inspect<any[]>("configurations");
+		const configInspect = launchFile.inspect<vs.DebugConfiguration[]>("configurations");
 		const workspaceConfigs = configInspect?.workspaceValue ?? [];
 		const workspaceFolderConfigs = configInspect?.workspaceFolderValue ?? [];
 		const hasWorkspaceConfigs = !!vs.workspace.workspaceFile && !!workspaceConfigs.length;
@@ -683,9 +683,9 @@ export class DebugCommands implements IAmDisposable {
 
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
 		const event = e.event;
-		const body = e.body as Record<string, any>;
+		const body = e.body as Record<string, unknown>;
 		if (event === "dart.log") {
-			const message = body as LogMessage;
+			const message = e.body as LogMessage;
 			const logMessage = `[${e.session.name}] ${message.message}`;
 			const category = message.category ?? logMessage.includes("[VM]") ? LogCategory.VmService : LogCategory.DAP;
 			switch (message.severity) {
@@ -716,7 +716,7 @@ export class DebugCommands implements IAmDisposable {
 			this.debugMetrics.show();
 		} else if (event === "dart.toolEvent") {
 			const kind = body.kind as string;
-			const data = body.data as Record<string, any>;
+			const data = body.data as Record<string, unknown>;
 			switch (kind) {
 				case "navigate": {
 					const uri = (data.resolvedFileUri ?? data.resolvedUri ?? data.fileUri ?? data.uri ?? data.file) as string | undefined;

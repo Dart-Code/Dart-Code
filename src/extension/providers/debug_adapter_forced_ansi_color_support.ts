@@ -1,3 +1,4 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import * as vs from "vscode";
 
 /**
@@ -19,8 +20,9 @@ export class DartDebugForcedAnsiColorSupportFactory implements vs.DebugAdapterTr
  * See https://github.com/Dart-Code/Dart-Code/issues/5302 and https://github.com/microsoft/vscode/pull/227729.
  */
 class DartDebugForcedAnsiColorSupport implements vs.DebugAdapterTracker {
-	onDidSendMessage(message: any): void {
-		if (message?.command === "initialize" && message.type === "response" && message.body && message.body.supportsANSIStyling === undefined)
-			message.body.supportsANSIStyling = true;
+	onDidSendMessage(message: unknown): void {
+		const response = message as DebugProtocol.InitializeResponse | undefined;
+		if (response?.command === "initialize" && response.type === "response" && response.body && response.body.supportsANSIStyling === undefined)
+			response.body.supportsANSIStyling = true;
 	}
 }

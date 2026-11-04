@@ -57,9 +57,9 @@ export enum AnalyticsEvent {
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	constructor(readonly logger: Logger, readonly handleError: (e: unknown) => void) { }
 
-	sendEventData(eventName: string, data?: Record<string, any>): void {
+	sendEventData(eventName: string, data?: Record<string, unknown>): void {
 		if (!data) return;
-		this.send(data as AnalyticsData).catch((e) => this.handleError(e));
+		this.send(data as unknown as AnalyticsData).catch((e) => this.handleError(e));
 	}
 
 	sendErrorData(): void {
@@ -151,8 +151,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	}
 
 	private buildUserProperties(data: AnalyticsData) {
-		const dataMap = data as Record<string, any>;
-		const userProperties: Record<string, any> = {};
+		const userProperties: Record<string, { value: unknown }> = {};
 
 		function add(name: string, value: unknown) {
 			if (value)
@@ -163,16 +162,16 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("appName", data.appName ?? "Unknown");
 		add("closingLabels", data.closingLabels);
 
-		add("appVersionRaw", dataMap["common.extversion"]);
-		add("appVersion", simplifyVersion(dataMap["common.extversion"]));
-		add("codeVersionRaw", dataMap["common.vscodeversion"]);
-		add("codeVersion", simplifyVersion(dataMap["common.vscodeversion"]));
+		add("appVersionRaw", data["common.extversion"]);
+		add("appVersion", simplifyVersion(data["common.extversion"]));
+		add("codeVersionRaw", data["common.vscodeversion"]);
+		add("codeVersion", simplifyVersion(data["common.vscodeversion"]));
 		add("dartVersionRaw", data.dartVersion);
 		add("dartVersion", simplifyVersion(data.dartVersion));
 		add("flutterVersionRaw", data.flutterVersion);
 		add("flutterVersion", simplifyVersion(data.flutterVersion));
 
-		add("extensionName", dataMap["common.extname"]);
+		add("extensionName", data["common.extname"]);
 		add("flutterExtension", data.flutterExtension);
 		add("flutterHotReloadOnSave", data.flutterHotReloadOnSave);
 		add("flutterUiGuides", data.flutterUiGuides);
@@ -492,6 +491,11 @@ interface AnalyticsData {
 	exitCode?: number,
 	sessionDurationSeconds?: number,
 	totalSessionDurationSeconds?: number,
+
+	// Injected by VS Code TelemetryLogger.
+	"common.extname"?: string,
+	"common.extversion"?: string,
+	"common.vscodeversion"?: string,
 }
 
 class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {

@@ -286,9 +286,9 @@ export class DevToolsManager implements IAmDisposable {
 			return undefined; // Shouldn't get here...
 	}
 
-	private showError(e: any) {
+	private showError(e: unknown) {
 		this.logger.error(e);
-		void vs.window.showErrorMessage(`${e}`);
+		void vs.window.showErrorMessage(`${String(e)}`);
 	}
 
 	/// When a new Debug session starts, we can reconnect any views that are still open
@@ -515,13 +515,14 @@ export class DevToolsManager implements IAmDisposable {
 			);
 
 			return true;
-		} catch (e: any) {
-			this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${e.message}`);
+		} catch (e: unknown) {
+			const err = e as { message?: string } | undefined;
+			this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${err?.message}`);
 			void vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
 				if (res) {
 					const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
 					const tempPath = path.join(os.tmpdir(), fileName);
-					fs.writeFileSync(tempPath, `${e.message ?? e}`);
+					fs.writeFileSync(tempPath, `${err?.message ?? String(e)}`);
 					void workspace.openTextDocument(tempPath).then((document) => {
 						void window.showTextDocument(document);
 					});
@@ -735,10 +736,10 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 	// TODO: Remove this if we fix the DevTools server (and rev min version) to not use method for
 	// the server.started event.
-	protected isNotification(msg: any): boolean { return !!msg.event || msg.method === "server.started"; }
+	protected isNotification(msg: Record<string, unknown>): boolean { return !!msg.event || msg.method === "server.started"; }
 
 	protected async handleNotification(evt: UnknownNotification): Promise<void> {
-		switch ((evt as any).method ?? evt.event) {
+		switch ((evt as { method?: string }).method ?? evt.event) {
 			case "server.started":
 				await this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
 				break;
@@ -752,7 +753,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		return this.subscribe(this.serverStartedSubscriptions, subscriber);
 	}
 
-	public vmRegister(request: { uri: string }): Thenable<any> {
+	public vmRegister(request: { uri: string }): Thenable<unknown> {
 		return this.sendRequest("vm.register", request);
 	}
 
@@ -783,7 +784,7 @@ interface DevToolsOptions {
 
 interface ProjectExtensionResults {
 	extensions: ExtensionResult[];
-	parseErrors: Array<{ packageName: string, error: any }>;
+	parseErrors: Array<{ packageName: string, error: unknown }>;
 }
 
 interface ExtensionResult {

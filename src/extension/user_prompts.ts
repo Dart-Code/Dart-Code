@@ -166,8 +166,9 @@ async function promptToShowReleaseNotes(versionDisplay: string, versionLink: str
 	return true; // Always mark this as done; we don't want to prompt the user multiple times.
 }
 
-function error(err: any): void {
-	void vs.window.showErrorMessage(`${err.message ?? err}`);
+function error(err: unknown): void {
+	const message = (err as { message?: string } | undefined)?.message ?? String(err);
+	void vs.window.showErrorMessage(message);
 }
 
 export async function handleNewProjects(logger: Logger): Promise<void> {

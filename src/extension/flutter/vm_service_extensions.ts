@@ -92,8 +92,8 @@ export class VmServiceExtensions {
 		}
 	}
 
-	private shouldSilenceError(e: any): boolean {
-		return !!(isDartCodeTestRun && "message" in e && typeof e.message === "string" && e.message.includes("Service connection disposed"));
+	private shouldSilenceError(e: unknown): boolean {
+		return !!(isDartCodeTestRun && e && typeof e === "object" && "message" in e && typeof e.message === "string" && e.message.includes("Service connection disposed"));
 	}
 
 	private formatPathForPubRootDirectories(path: string): string {
@@ -153,7 +153,7 @@ export class VmServiceExtensions {
 		await this.callServiceExtension(session, method, params);
 	}
 
-	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: Record<string, unknown>): Promise<any> {
+	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: Record<string, unknown>): Promise<unknown> {
 		if (!params?.isolateId) {
 			params ??= {};
 			params.isolateId = this.loadedServiceExtensionIsolateIds.get(method);
