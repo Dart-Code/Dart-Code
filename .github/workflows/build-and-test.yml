@@ -3,6 +3,7 @@ name: Run Tests
 on:
   push:
     branches:
+      - main
       - master
     tags:
       - '**'
@@ -13,6 +14,7 @@ on:
   schedule:
      - cron: '0 6 * * 1' # 6am Monday
   workflow_dispatch:
+  workflow_call:
 
 jobs:
 
@@ -479,14 +481,14 @@ jobs:
       contents: none
     name: Notify Discord of Failure
     needs: build
-    if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.ref == 'refs/heads/master' || github.event.merge_group.base_ref == 'refs/heads/master') && github.repository == 'Dart-Code/Dart-Code'
+    if: failure() && (github.event_name == 'push' || github.event_name == 'merge_group' || github.event_name == 'schedule') && (github.event_name == 'schedule' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event.merge_group.base_ref == format('refs/heads/{0}', github.event.repository.default_branch)) && github.repository_owner == 'Dart-Code'
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
 
       - name: Send notification to Discord
-        run: 'Invoke-WebRequest -Headers @{ "Content-Type" = "application/json" } -Method Post -Body "{`"content`":`"Build failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/Dart-Code/Dart-Code/commit/$($env:GITHUB_SHA)/checks`"}" -Uri $env:DISCORD_WEBHOOK'
+        run: 'if ($env:DISCORD_WEBHOOK) { Invoke-WebRequest -Headers @{ "Content-Type" = "application/json" } -Method Post -Body "{`"content`":`"Build failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/$($env:GITHUB_REPOSITORY)/commit/$($env:GITHUB_SHA)/checks`"}" -Uri $env:DISCORD_WEBHOOK }'
         shell: pwsh
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
