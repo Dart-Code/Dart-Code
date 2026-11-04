@@ -317,7 +317,7 @@ describe("dart test debugger", () => {
 		// To test it, we'll run the whole suite, ensure the results are as expected, and then re-check it
 		// after running each test individually.
 
-		async function checkResults(description: string): Promise<void> {
+		function checkResults(description: string): void {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
@@ -329,7 +329,7 @@ describe("dart test debugger", () => {
 
 		await runWithoutDebugging(helloWorldTestTreeFile);
 		let numRuns = 1;
-		await checkResults(`After initial run`);
+		checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
 		const outline = await getExpectedOutline();
 		visitor.visit(outline);
@@ -344,12 +344,12 @@ describe("dart test debugger", () => {
 				// end, just stop at the $ to avoid failing on them.
 				dc.assertOutputContains("console", test.fullName.split("$")[0]),
 			);
-			await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
+			checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
 	});
 
 	it("merges same name items together", async () => {
-		async function checkResults(description: string): Promise<void> {
+		function checkResults(description: string): void {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = makeTestTextTree({ uriFilter: helloWorldTestDupeNameFile, sortByLabel: true }).join("\n");
@@ -360,7 +360,7 @@ describe("dart test debugger", () => {
 		}
 
 		await runWithoutDebugging(helloWorldTestDupeNameFile);
-		await checkResults(`After initial run`);
+		checkResults(`After initial run`);
 
 		const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
 		const editor = await vs.window.showTextDocument(doc);
@@ -383,13 +383,13 @@ describe("dart test debugger", () => {
 			const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(test)], true);
 			await runWithoutDebugging(execInfo.programUri, execInfo.args);
 		}
-		await checkResults(`After running tests`);
+		checkResults(`After running tests`);
 		// Re-run each group.
 		for (const group of visitor.tests.filter((t) => t.isGroup)) {
 			const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(group)], true);
 			await runWithoutDebugging(execInfo.programUri, execInfo.args);
 		}
-		await checkResults(`After running groups`);
+		checkResults(`After running groups`);
 	});
 
 	it("can hide skipped tests and groups from tree", async () => {
@@ -732,7 +732,7 @@ test/empty_test.dart
 			}
 		});
 
-		it("uses correct regex for --coverage-package", async function () {
+		it("uses correct regex for --coverage-package", function () {
 			const testCapabilities = getPackageTestCapabilitiesForDartProject(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
 			if (!testCapabilities.supportsCoveragePackage)
 				this.skip();

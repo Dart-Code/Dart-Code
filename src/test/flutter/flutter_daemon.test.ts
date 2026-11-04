@@ -41,6 +41,7 @@ describe("flutter daemon", () => {
 
 	it("surfaces startup work messages as progress notifications", async () => {
 		const report = sb.stub();
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		const withProgress = sb.stub(vs.window, "withProgress").callsFake(async (_options, task) => {
 			void task({ report }, fakeCancellationToken);
 			return undefined;
