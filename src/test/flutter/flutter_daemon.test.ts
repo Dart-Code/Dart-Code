@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { executableNames, flutterPath } from "../../shared/constants";
+import { flutterPath } from "../../shared/constants";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
 import { activate, defer, fakeCancellationToken, privateApi, sb, waitForResult } from "../helpers";
 import { ChildProcessSpawnStub } from "../mocks/child_process_spawn_stub";
@@ -13,6 +13,10 @@ describe("flutter daemon", () => {
 
 	beforeEach("prepare daemon", () => {
 		daemon = privateApi.flutterDaemon!;
+		// Because privateApi.flutterDaemon is the live daemon started during activate(),
+		// startTime is already set once connected. Reset these fields before each test so
+		// we can test pre-startup progress reporting (!hasStarted) and one-time startup
+		// error notifications, then restore them afterwards.
 		const originalStartTime = daemon.startTime;
 		const originalStartupReporter = daemon.startupReporter;
 		const originalHasShownStartupError = daemon.hasShownStartupError;
@@ -68,7 +72,7 @@ describe("flutter daemon", () => {
 	});
 
 	it("enables a platform globally using flutter config", async () => {
-		const spawn = new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "config"));
+		const spawn = ChildProcessSpawnStub.flutterConfig();
 		const flutterSdkPath = privateApi.workspaceContext.sdks.flutter!;
 
 		await daemon.enablePlatformGlobally("web");
@@ -81,10 +85,7 @@ describe("flutter daemon", () => {
 	});
 
 	it("treats a globally false config value as disabled", async () => {
-		const spawn = new ChildProcessSpawnStub(
-			(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "config"),
-			{ stdout: JSON.stringify({ "enable-linux": false }) },
-		);
+		const spawn = ChildProcessSpawnStub.flutterConfig({ stdout: JSON.stringify({ "enable-linux": false }) });
 		const flutterSdkPath = privateApi.workspaceContext.sdks.flutter!;
 
 		assert.equal(await daemon.checkIfPlatformGloballyDisabled("linux"), true);
@@ -96,10 +97,7 @@ describe("flutter daemon", () => {
 	});
 
 	it("does not treat an unset global config value as disabled", async () => {
-		new ChildProcessSpawnStub(
-			(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "config"),
-			{ stdout: JSON.stringify({}) },
-		);
+		ChildProcessSpawnStub.flutterConfig({ stdout: JSON.stringify({}) });
 
 		assert.equal(await daemon.checkIfPlatformGloballyDisabled("linux"), false);
 	});

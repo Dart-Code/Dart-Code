@@ -264,6 +264,9 @@ export default defineConfig([
 		files: ["src/test/**/*.ts"],
 		rules: {
 			"no-restricted-imports": ["error", {
+				// We need to re-include the extension pattern from above because overriding
+				// no-restricted-imports here (to allow debug imports in tests) replaces the
+				// top-level rule.
 				"patterns": [{
 					"group": ["**/../extension/**"],
 					"allowTypeImports": true,
