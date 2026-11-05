@@ -615,8 +615,8 @@ export class SdkUtils {
 		}
 	}
 
-	private async warnIfBadSDKCommandOutput(error: any, workDir: string, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean) {
-		const action = await window.showWarningMessage(`Failed to obtain the SDK from the command: ${error}. Working directory: ${workDir}.`, openSettingsAction);
+	private async warnIfBadSDKCommandOutput(error: unknown, workDir: string, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean) {
+		const action = await window.showWarningMessage(`Failed to obtain the SDK from the command: ${String(error)}. Working directory: ${workDir}.`, openSettingsAction);
 		if (openSettingsAction === action) {
 			await this.openSettingsFile(sdkConfigName, isWorkspaceSetting);
 		}

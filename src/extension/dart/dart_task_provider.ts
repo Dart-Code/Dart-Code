@@ -55,8 +55,8 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 	}
 
 	public async resolveTask(task: DartTask): Promise<vs.Task> {
-		const scope: any = task.scope;
-		const workspaceFolderPath = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
+		const scope = task.scope;
+		const workspaceFolderPath = scope && typeof scope === "object" && "uri" in scope ? fsPath(scope.uri) : undefined;
 		const definitionCwd = task.definition.cwd;
 		const cwd = workspaceFolderPath && definitionCwd ? path.join(workspaceFolderPath, definitionCwd) : task.definition.cwd ?? workspaceFolderPath;
 

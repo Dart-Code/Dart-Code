@@ -35,16 +35,19 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		setTimeout(() => this.startProgress(), 1000);
 	}
 
-	public onDidSendMessage(_message: any): void {
+	public onDidSendMessage(message: unknown): void {
 		// Things that trigger hiding the progress status:
 		// - launch response
 		// - Output events
 		// - Progress events
 		// - Any test being discovered / starting
 
-		const command = _message?.command as string | undefined;
-		const event = _message?.event as string | undefined;
-		const body = _message?.body as unknown;
+		if (!message || typeof message !== "object")
+			return;
+
+		const command = "command" in message && typeof message.command === "string" ? message.command : undefined;
+		const event = "event" in message && typeof message.event === "string" ? message.event : undefined;
+		const body = "body" in message ? message.body : undefined;
 		const stopProgress =
 			command === "launch"
 			|| event === "output"

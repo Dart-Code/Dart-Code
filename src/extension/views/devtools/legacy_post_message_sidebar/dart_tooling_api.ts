@@ -17,21 +17,25 @@ export class DartApi implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
 	private apis: Record<string, ToolApi> = {};
 
-	constructor(readonly commandSource: string, onReceiveMessage: vs.Event<any>, private readonly post: (message: any) => void, private readonly deviceManager: FlutterDeviceManager | undefined) {
+	constructor(readonly commandSource: string, onReceiveMessage: vs.Event<unknown>, private readonly post: (message: unknown) => void, private readonly deviceManager: FlutterDeviceManager | undefined) {
 		const addApi = (api: ToolApi) => this.apis[api.apiName] = api;
 		addApi(new VsCodeApiHandler(this, commandSource, deviceManager));
 
 		this.disposables.push(onReceiveMessage(this.handleMessage.bind(this)));
 	}
 
-	public postMessage(message: any): void {
+	public postMessage(message: Record<string, unknown>): void {
 		this.post({ jsonrpc: "2.0", ...message });
 	}
 
-	private async handleMessage(message: { id?: unknown; method?: unknown; params?: unknown }): Promise<void> {
+	private async handleMessage(rawMessage: unknown): Promise<void> {
 		if (apiDebugMode)
-			console.log(`VS CODE GOT: ${JSON.stringify(message)}`);
+			console.log(`VS CODE GOT: ${JSON.stringify(rawMessage)}`);
 
+		if (!rawMessage || typeof rawMessage !== "object")
+			return;
+
+		const message = rawMessage as { id?: unknown; method?: unknown; params?: Record<string, unknown> };
 		const method = message.method;
 		if (typeof method !== "string") return;
 
@@ -46,7 +50,7 @@ export class DartApi implements IAmDisposable {
 		}
 
 		try {
-			const result = await handler.handleRequest(methodName, message.params);
+			const result = await handler.handleRequest(methodName, message.params ?? {});
 			if (message.id !== undefined) {
 				this.postMessage({ id: message.id, result: result ?? null });
 			}
@@ -69,7 +73,7 @@ abstract class ToolApi {
 
 	constructor(private readonly dartApi: DartApi) { }
 
-	abstract handleRequest(method: string, params: any): Promise<unknown>;
+	abstract handleRequest(method: string, params: Record<string, unknown>): Promise<unknown>;
 
 	public sendEvent(method: string, params: unknown) {
 		this.dartApi.postMessage({ method: `${this.apiName}.${method}`, params });
@@ -91,7 +95,7 @@ class VsCodeApiHandler extends ToolApi {
 
 	readonly apiName = "vsCode";
 
-	public async handleRequest(method: string, params: any): Promise<any> {
+	public async handleRequest(method: string, params: Record<string, unknown>): Promise<unknown> {
 		// IMPORTANT: Optional values here could be either `null` or `undefined` so should be
 		//  converted with `nullToUndefined` to match type signatures elsewhere (otherwise
 		//  checks for `== undefined` may fail because the value was null).
@@ -220,7 +224,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		);
 	}
 
-	private onDebugSessionsChanged(): any {
+	private onDebugSessionsChanged(): void {
 		this.debugSessionsChangedEmitter.fire(
 			{
 				sessions: debugSessions.map((d) => this.asApiDebugSession(d)),

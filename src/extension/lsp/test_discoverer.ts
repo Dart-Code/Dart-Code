@@ -125,9 +125,10 @@ export class TestDiscoverer implements IAmDisposable {
 					.map((item) => this.discoverTestSuites(item.path, item.type === vs.FileType.Directory, level + 1));
 
 				await Promise.all(childPromises);
-			} catch (e: any) {
-				if (e.code !== "FileNotADirectory")
-					this.logger.error(`Failed to discover tests: ${e}`);
+			} catch (e: unknown) {
+				const err = e as { code?: unknown } | undefined;
+				if (err?.code !== "FileNotADirectory")
+					this.logger.error(`Failed to discover tests: ${String(e)}`);
 			}
 		}
 	}

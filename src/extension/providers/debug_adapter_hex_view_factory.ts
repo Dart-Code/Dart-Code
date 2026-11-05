@@ -1,3 +1,4 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import * as vs from "vscode";
 import { SUPPORTS_DEBUG_VALUE_FORMAT } from "../../shared/constants.contexts";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
@@ -60,21 +61,23 @@ class DartDebugAdapterHexView implements vs.DebugAdapterTracker {
 		this.factory.hexFormatters.delete(this);
 	}
 
-	onDidSendMessage(message: any): void {
-		if (!this.factory.supportsFormatting && message?.command === "initialize" && message?.body?.supportsValueFormattingOptions) {
-			this.factory.supportsFormatting = true;
-			void vs.commands.executeCommand("setContext", SUPPORTS_DEBUG_VALUE_FORMAT, true);
+	onDidSendMessage(message: unknown): void {
+		if (!this.factory.supportsFormatting && message && typeof message === "object" && "command" in message && message.command === "initialize") {
+			const response = message as DebugProtocol.InitializeResponse;
+			if (response.body?.supportsValueFormattingOptions) {
+				this.factory.supportsFormatting = true;
+				void vs.commands.executeCommand("setContext", SUPPORTS_DEBUG_VALUE_FORMAT, true);
+			}
 		}
 	}
 
-	onWillReceiveMessage(message: any): void {
-		if (this.factory.supportsFormatting && (message.command === "evaluate" || message.command === "variables")) {
-			message.arguments ??= {};
-			message.arguments.format ??= {};
+	onWillReceiveMessage(message: unknown): void {
+		if (this.factory.supportsFormatting && message && typeof message === "object" && "command" in message && (message.command === "evaluate" || message.command === "variables")) {
+			const request = message as DebugProtocol.EvaluateRequest | DebugProtocol.VariablesRequest;
+			request.arguments ??= {} as DebugProtocol.EvaluateArguments & DebugProtocol.VariablesArguments;
+			request.arguments.format ??= {};
 			// Don't override if we happen to be a future version of VS Code that supports this.
-			if (message.arguments.format.hex === undefined) {
-				message.arguments.format.hex = config.showDebuggerNumbersAsHex;
-			}
+			request.arguments.format.hex ??= config.showDebuggerNumbersAsHex;
 		}
 	}
 }

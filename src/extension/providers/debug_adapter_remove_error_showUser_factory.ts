@@ -1,3 +1,4 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import * as vs from "vscode";
 
 export class DartDebugAdapterRemoveErrorShowUserFactory implements vs.DebugAdapterTrackerFactory {
@@ -7,15 +8,18 @@ export class DartDebugAdapterRemoveErrorShowUserFactory implements vs.DebugAdapt
 }
 
 class DartDebugAdapterRemoveErrorShowUser implements vs.DebugAdapterTracker {
-	onDidSendMessage(message: any): void {
+	onDidSendMessage(message: unknown): void {
 		// Strip any showUser flags so that we use the VS Code default. The behaviour of this
 		// flag is not currently well defined and the DAP is sending showUser=true but that
 		// can result in additional prompts to users:
 		// - https://github.com/Dart-Code/Dart-Code/issues/4930
 		// - https://github.com/google/go-dap/issues/87
 		// - https://github.com/microsoft/vscode/issues/180488
-		if (message?.success === false && message?.body?.error?.showUser !== undefined) {
-			message.body.error.showUser = undefined;
+		if (message && typeof message === "object" && "success" in message && message.success === false) {
+			const response = message as DebugProtocol.ErrorResponse;
+			if (response.body?.error?.showUser !== undefined) {
+				response.body.error.showUser = undefined;
+			}
 		}
 	}
 }

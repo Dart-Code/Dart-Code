@@ -35,11 +35,11 @@ class DartDebugAdapterLogger implements DebugAdapterTracker {
 		this.logger.info(`Starting debug session ${this.session.id}`);
 	}
 
-	public onWillReceiveMessage(message: any): void {
+	public onWillReceiveMessage(message: unknown): void {
 		this.logger.info(`==> ${JSON.stringify(message)}`);
 	}
 
-	public onDidSendMessage(message: any): void {
+	public onDidSendMessage(message: unknown): void {
 		this.logger.info(`<== ${JSON.stringify(message)}`);
 	}
 

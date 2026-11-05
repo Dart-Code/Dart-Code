@@ -1,3 +1,4 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import * as vs from "vscode";
 
 /**
@@ -19,12 +20,17 @@ export class DartDebugForcedSingleThreadFactory implements vs.DebugAdapterTracke
  * See https://github.com/Dart-Code/Dart-Code/issues/5252 and https://github.com/microsoft/vscode/issues/224832.
  */
 class DartDebugForcedSingleThread implements vs.DebugAdapterTracker {
-	onDidSendMessage(message: any): void {
-		if (message?.type === "event" && message.body) {
-			if (message.event === "continued" && message.body.allThreadsContinued === undefined)
-				message.body.allThreadsContinued = false;
-			if (message.event === "stopped" && message.body.allThreadsStopped === undefined)
-				message.body.allThreadsStopped = false;
+	onDidSendMessage(message: unknown): void {
+		if (message && typeof message === "object" && "type" in message && message.type === "event" && "event" in message) {
+			if (message.event === "continued") {
+				const event = message as DebugProtocol.ContinuedEvent;
+				if (event.body && event.body.allThreadsContinued === undefined)
+					event.body.allThreadsContinued = false;
+			} else if (message.event === "stopped") {
+				const event = message as DebugProtocol.StoppedEvent;
+				if (event.body && event.body.allThreadsStopped === undefined)
+					event.body.allThreadsStopped = false;
+			}
 		}
 	}
 }

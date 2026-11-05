@@ -119,7 +119,7 @@ const loggers: IAmDisposableAsync[] = [];
 let ringLogger: IAmDisposable | undefined;
 const logger = new EmittingLogger();
 let extensionLog: IAmDisposable | undefined;
-const exportedApi: PublicDartExtensionApi & { [internalApiSymbol]?: any } = new PublicDartExtensionApiImpl();
+const exportedApi: PublicDartExtensionApi & { [internalApiSymbol]?: InternalExtensionApi } = new PublicDartExtensionApiImpl();
 
 // Keep a running in-memory buffer of last 500 log events we can give to the
 // user when something crashed even if they don't have disk-logging enabled.
@@ -626,7 +626,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			logger.warn(e);
 		}
 	}
-	if (vs.lm.registerTool as any) { // Since we didn't bump the min VS Code version, check for this explicitly.
+	if (vs.lm.registerTool as unknown) { // Since we didn't bump the min VS Code version, check for this explicitly.
 		try {
 			context.subscriptions.push(new McpTools(dartCapabilities, dartToolingDaemon));
 		} catch (e) {
