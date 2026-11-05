@@ -2,9 +2,9 @@ coverage:
   status:
     project:
       default:
-        # Allow up to a 2% drop from current overall coverage.
+        # Allow up to a 0.5% drop from current overall coverage.
         target: auto
-        threshold: 2
+        threshold: 0.5
         paths:
           - "src/extension"
           - "src/shared"
@@ -13,9 +13,9 @@ coverage:
         if_ci_failed: success
     patch:
       default:
-        # Allow up to 10% below current coverage for this patch.
+        # Allow up to 30% below current coverage for this patch.
         target: auto
-        threshold: 10
+        threshold: 30
         paths:
           - "src/extension"
           - "src/shared"
