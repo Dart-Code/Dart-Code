@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import { mock } from "node:test";
 import * as vscode from "vscode";
 import { ClientCapabilities, LanguageClient, LanguageClientOptions, ServerCapabilities } from "vscode-languageclient/node";
-import { FileExistence, FileType, FormField, InteractiveFormsFeature, ValidationSeverity } from "../../../extension/analysis/form";
+import { FileExistence, FileType, FormField, InteractiveFormsFeature, ValidationSeverity } from "../../../shared/vscode/form";
 
 describe("interactive forms", () => {
 	afterEach("reset mocks", () => mock.reset());

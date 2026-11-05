@@ -10,9 +10,9 @@ import { getPubExecutionInfo, RunProcessResult } from "../../shared/processes";
 import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
 import { getPackageOrFolderDisplayName } from "../../shared/vscode/display_names";
 import { OperationProgress } from "../../shared/vscode/interfaces";
+import { DartSdkManager, FlutterSdkManager } from "../../shared/vscode/sdk_manager";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
-import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import * as util from "../utils";
 import { getGlobalFlutterArgs, safeToolSpawn } from "../utils/processes";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
@@ -164,10 +164,10 @@ export class BaseSdkCommands implements IAmDisposable {
 export class SdkCommands extends BaseSdkCommands {
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
 		super(logger, context, workspace, dartCapabilities);
-		const dartSdkManager = new DartSdkManager(this.logger, this.workspace.sdks);
+		const dartSdkManager = new DartSdkManager(this.logger, config, this.workspace.sdks);
 		this.disposables.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
 		if (workspace.hasAnyFlutterProjects) {
-			const flutterSdkManager = new FlutterSdkManager(this.logger, workspace.sdks);
+			const flutterSdkManager = new FlutterSdkManager(this.logger, config, workspace.sdks);
 			this.disposables.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
 

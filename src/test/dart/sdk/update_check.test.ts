@@ -2,18 +2,17 @@ import { strict as assert } from "assert";
 import * as http from "http";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { config } from "../../../extension/config";
-import { checkForStandardDartSdkUpdates } from "../../../extension/sdk/update_check";
-import { getLatestSdkVersion } from "../../../extension/utils";
 import { DART_DOWNLOAD_URL } from "../../../shared/constants";
 import { WebClient } from "../../../shared/fetch";
 import { Logger } from "../../../shared/interfaces";
+import { checkForStandardDartSdkUpdates, getLatestSdkVersion, UpdateCheckConfig } from "../../../shared/vscode/update_check";
 import { envUtils } from "../../../shared/vscode/utils";
 import { WorkspaceContext } from "../../../shared/workspace";
 import { sb } from "../../helpers";
 
 describe("update_check", () => {
 	let logger: Logger & { error: sinon.SinonStub };
+	let updateConfig: UpdateCheckConfig;
 	let webClient: WebClient;
 	let fetchStub: sinon.SinonStub;
 	let showWarningMessage: sinon.SinonStub;
@@ -31,9 +30,12 @@ describe("update_check", () => {
 		fetchStub = sb.stub(webClient, "fetch");
 		showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(undefined);
 		openInBrowser = sb.stub(envUtils, "openInBrowser").resolves(true);
-		setCheckForSdkUpdates = sb.stub(config, "setCheckForSdkUpdates").resolves();
+		setCheckForSdkUpdates = sb.stub().resolves();
 		checkForSdkUpdatesValue = true;
-		sb.stub(config, "checkForSdkUpdates").get(() => checkForSdkUpdatesValue);
+		updateConfig = {
+			get checkForSdkUpdates() { return checkForSdkUpdatesValue; },
+			setCheckForSdkUpdates,
+		};
 	});
 
 	function createWorkspaceContext({
@@ -86,23 +88,23 @@ describe("update_check", () => {
 	describe("checkForStandardDartSdkUpdates", () => {
 		it("does nothing when checkForSdkUpdates config is false", async () => {
 			checkForSdkUpdatesValue = false;
-			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext(), webClient);
+			await checkForStandardDartSdkUpdates(logger, updateConfig, createWorkspaceContext(), webClient);
 			assert.equal(fetchStub.called, false);
 		});
 
 		it("does nothing when workspaceContext disables SDK update checks", async () => {
-			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext({ disableSdkUpdateChecks: true }), webClient);
+			await checkForStandardDartSdkUpdates(logger, updateConfig, createWorkspaceContext({ disableSdkUpdateChecks: true }), webClient);
 			assert.equal(fetchStub.called, false);
 		});
 
 		it("does nothing when Dart SDK is from Flutter", async () => {
-			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext({ dartSdkIsFromFlutter: true }), webClient);
+			await checkForStandardDartSdkUpdates(logger, updateConfig, createWorkspaceContext({ dartSdkIsFromFlutter: true }), webClient);
 			assert.equal(fetchStub.called, false);
 		});
 
 		it("does not prompt when current SDK is up to date", async () => {
 			fetchStub.resolves(JSON.stringify({ version: "3.0.0" }));
-			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext({ dartVersion: "3.0.0" }), webClient);
+			await checkForStandardDartSdkUpdates(logger, updateConfig, createWorkspaceContext({ dartVersion: "3.0.0" }), webClient);
 			assert.equal(showWarningMessage.called, false);
 		});
 
@@ -110,7 +112,7 @@ describe("update_check", () => {
 			fetchStub.resolves(JSON.stringify({ version: "3.5.0" }));
 			showWarningMessage.resolves("Go to Dart Downloads");
 
-			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext({ dartVersion: "3.0.0" }), webClient);
+			await checkForStandardDartSdkUpdates(logger, updateConfig, createWorkspaceContext({ dartVersion: "3.0.0" }), webClient);
 
 			assert.equal(showWarningMessage.calledOnce, true);
 			assert.ok((showWarningMessage.firstCall.args[0] as string).includes("Version 3.5.0 of the Dart SDK is available (you have 3.0.0)."));
@@ -121,7 +123,7 @@ describe("update_check", () => {
 			fetchStub.resolves(JSON.stringify({ version: "3.5.0" }));
 			showWarningMessage.resolves("Disable Update Checks");
 
-			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext({ dartVersion: "3.0.0" }), webClient);
+			await checkForStandardDartSdkUpdates(logger, updateConfig, createWorkspaceContext({ dartVersion: "3.0.0" }), webClient);
 
 			assert.equal(setCheckForSdkUpdates.calledOnceWithExactly(false), true);
 		});
@@ -130,7 +132,7 @@ describe("update_check", () => {
 			const error = new Error("Network failure");
 			fetchStub.rejects(error);
 
-			await checkForStandardDartSdkUpdates(logger, createWorkspaceContext(), webClient);
+			await checkForStandardDartSdkUpdates(logger, updateConfig, createWorkspaceContext(), webClient);
 
 			assert.equal(logger.error.calledOnceWithExactly(error), true);
 		});

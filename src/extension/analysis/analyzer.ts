@@ -14,8 +14,13 @@ import { CategoryLogger } from "../../shared/logging";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { fsPath } from "../../shared/utils/fs";
 import { AnalyzerUpdateDiagnosticInformationFeature } from "../../shared/vscode/analyzer_update_diagnostic_information";
+import { CachingMiddlewareFeature } from "../../shared/vscode/caching_middleware";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { cleanDartdoc, createMarkdownString, extensionVersion } from "../../shared/vscode/extension_utils";
+import {
+	InteractiveFormsFeature,
+	InteractiveMiddleware
+} from "../../shared/vscode/form";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { LspUriConverters } from "../../shared/vscode/lsp_uri_converters";
@@ -33,13 +38,8 @@ import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
-import { CachingMiddlewareFeature } from "./caching_middleware";
 import { LegacyRefactors } from "./features/legacy_refactors";
 import { FileTracker } from "./file_tracker";
-import {
-	InteractiveFormsFeature,
-	InteractiveMiddleware
-} from "./form";
 
 // Globals so we only show these errors once per session.
 let hasShownAnalysisServerVersionMismatchError = false;

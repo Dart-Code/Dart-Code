@@ -5,7 +5,6 @@ import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { ExtensionRestartReason, showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debugging/interfaces";
-import { WebClient } from "../shared/fetch";
 import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
 import { existsAndIsDirectorySync, existsAndIsFileSync, fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
@@ -165,15 +164,6 @@ export function isValidEntryFile(file: string | undefined) {
 	return isTestFile(file)
 		|| isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")
 		|| file.endsWith(`lib${path.sep}main.dart`);
-}
-
-export async function getLatestSdkVersion(webClient: WebClient): Promise<string> {
-	const resp = await webClient.fetch("https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION");
-	try {
-		return JSON.parse(resp).version as string;
-	} catch {
-		throw new Error(`Failed to parse latest Dart SDK Version from JSON: ${resp}`);
-	}
 }
 
 export function showLog(specificLog: string | undefined, logContents: string, tempLogPath?: string) {
