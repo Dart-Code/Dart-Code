@@ -230,7 +230,7 @@ describe("device_manager", () => {
 	});
 
 	it("will auto-select a non-ephemeral device if it is preferred", async () => {
-		await daemon.enablePlatform(desktop.platformType); // Ensure Desktop is valid before anything is cached.
+		daemon.enablePlatform(desktop.platformType); // Ensure Desktop is valid before anything is cached.
 		await daemon.connect(physicalAndroidMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
 
@@ -424,8 +424,8 @@ describe("device_manager", () => {
 	it("auto-selects web-server over non-ephemeral device when not running locally, and switches from web-server to chrome", async () => {
 		sb.stub(vsUtils, "isRunningLocally").value(false);
 
-		await daemon.enablePlatform("macos");
-		await daemon.enablePlatform("web");
+		daemon.enablePlatform("macos");
+		daemon.enablePlatform("web");
 		await daemon.connect(desktop, true);
 		assert.deepStrictEqual(dm.currentDevice, desktop);
 
@@ -968,18 +968,18 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 
 	public async enablePlatformGlobally(_platformType: string): Promise<void> { }
 
-	public async enablePlatform(platformType: string): Promise<void> {
+	public enablePlatform(platformType: string): void {
 		this.supportedPlatforms = this.supportedPlatforms ?? [];
 		this.supportedPlatforms.push(platformType);
 	}
 
-	public async checkIfPlatformGloballyDisabled(_platformType: string): Promise<boolean> {
-		return false;
+	public checkIfPlatformGloballyDisabled(_platformType: string): Promise<boolean> {
+		return Promise.resolve(false);
 	}
 
 	public async connect(d: f.Device, markTypeAsValid: boolean): Promise<void> {
 		if (markTypeAsValid && d.platformType)
-			await this.enablePlatform(d.platformType);
+			this.enablePlatform(d.platformType);
 
 		await this.notify(this.deviceAddedSubscriptions, d);
 	}
@@ -1004,8 +1004,8 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	}
 	public emulators: f.FlutterEmulator[] = [androidEmulator, androidBogusEmulatorId, androidBogusEmulatorName, androidEmulatorToOverride];
 
-	public async getEmulators(): Promise<f.FlutterEmulator[]> {
-		return this.emulators;
+	public getEmulators(): Promise<f.FlutterEmulator[]> {
+		return Promise.resolve(this.emulators);
 	}
 	public launchEmulator(_emulatorId: string, _coldBoot?: boolean): Thenable<void> {
 		throw new Error("Method not implemented.");
@@ -1030,13 +1030,11 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		return { platformTypes };
 	}
 
-	public async serveDevTools(): Promise<f.ServeDevToolsResponse> {
-		return { host: "", port: "" };
+	public serveDevTools(): Promise<f.ServeDevToolsResponse> {
+		return Promise.resolve({ host: "", port: "" });
 	}
 
-	public async shutdown(): Promise<void> {
-		return;
-	}
+	public async shutdown(): Promise<void> { }
 
 	// Subscription methods.
 

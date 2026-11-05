@@ -7,12 +7,12 @@ import { fsPath } from "../../shared/utils/fs";
 import { flutterTestDeviceId } from "../debug_helpers";
 import { createTempTestFile, getResolvedDebugConfiguration, setConfigForTest } from "../helpers";
 
-export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string; debuggerType?: DebuggerType | string; expectedDebuggerType: DebuggerType; }>, defaultFolder: Uri): Promise<void> {
+export function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string; debuggerType?: DebuggerType | string; expectedDebuggerType: DebuggerType; }>, defaultFolder: Uri): void {
 	for (const test of tests) {
 		let program = test.program;
 		const { cwd, debuggerType, expectedDebuggerType } = test;
 
-		describe(program, async () => {
+		describe(program, () => {
 			const isSpecialTestOutsideTest = program.endsWith("*");
 			program = program.endsWith("*") ? program.substring(0, program.length - 1) : program;
 

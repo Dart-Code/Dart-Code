@@ -105,6 +105,7 @@ describe("exposeUrl", () => {
 
 	describe("when asExternalUri forces https", () => {
 		beforeEach(() => {
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			sb.stub(vs.env, "asExternalUri").callsFake(async (uri: vs.Uri) => uri.with({
 				authority: uri.authority.replace("localhost", "localhostmapped").replace(":", ":8"),
 				scheme: "https",
@@ -124,6 +125,7 @@ describe("exposeUrl", () => {
 
 	describe("when asExternalUri fails to map portless URLs", () => {
 		beforeEach(() => {
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			sb.stub(vs.env, "asExternalUri").callsFake(async (uri: vs.Uri) => {
 				// VS Code doesn't map URIs if there isn't an explicit port
 				// so reproduce that here to ensure we account for it.

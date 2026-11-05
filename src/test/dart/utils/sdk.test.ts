@@ -226,6 +226,7 @@ describe("runCustomGetSDKCommand", () => {
 		};
 
 		// When isWorkspaceSetting is false, clicking "Open Settings" should open global settings.json and reveal dart.getDartSdkCommand.
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		const openedGlobal = new Promise<void>((resolve) => openGlobalSettings.callsFake(async () => resolve()));
 		await privateApi.sdkUtils?.runCustomGetSDKCommand(command, "dart.getDartSdkCommand", false);
 		await openedGlobal;
@@ -235,6 +236,7 @@ describe("runCustomGetSDKCommand", () => {
 		}));
 
 		// When isWorkspaceSetting is true, clicking "Open Settings" should open the workspace settings file and reveal dart.getFlutterSdkCommand.
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		const openedWorkspace = new Promise<void>((resolve) => openWorkspaceSettings.callsFake(async () => resolve()));
 		await privateApi.sdkUtils?.runCustomGetSDKCommand(command, "dart.getFlutterSdkCommand", true);
 		await openedWorkspace;
@@ -303,6 +305,7 @@ describe("SdkUtils", () => {
 
 	function waitForStubCall<T = void>(stub: sinon.SinonStub): Promise<T> {
 		return new Promise<T>((resolve) => {
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			stub.callsFake(async (arg: T) => {
 				resolve(arg);
 				return undefined;
@@ -887,6 +890,7 @@ describe("SdkUtils", () => {
 
 			// 1. Cancelled during "git --version" check (covers both normal exit and spawn error while cancelled).
 			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			showErrorMessage.onCall(1).callsFake(async () => {
 				throwOnGitCancel = true;
 				return "Download SDK";
@@ -997,6 +1001,7 @@ describe("SdkUtils", () => {
 			cancelClone = true;
 			cloneResult = { exitCode: 1, stderr: "cancelled" };
 			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			showErrorMessage.onCall(1).callsFake(async () => {
 				cloneResult = { error: new Error("cancelled error") };
 				return "Download SDK";
@@ -1044,6 +1049,7 @@ describe("SdkUtils", () => {
 			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK" as any);
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(cloneDir)]);
 			// Dismiss the "Add SDK to PATH" prompt with "No Thanks".
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			const showInfo = sb.stub(vs.window, "showInformationMessage").callsFake(async (msg: string) => {
 				if (msg === addSdkToPathPrompt("Flutter"))
 					return noThanksAction;

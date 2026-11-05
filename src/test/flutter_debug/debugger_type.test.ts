@@ -3,7 +3,7 @@ import { flutterTestDeviceIsWeb } from "../debug_helpers";
 import { activateWithoutAnalysis, flutterHelloWorldFolder } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
-describe(`flutter debugger type`, async () => {
+describe(`flutter debugger type`, () => {
 	beforeEach("Skip not-device-specific tests on web", function () {
 		if (flutterTestDeviceIsWeb)
 			this.skip();
@@ -51,5 +51,5 @@ describe(`flutter debugger type`, async () => {
 		{ program: "lib/temp.dart", debuggerType: DebuggerType.Dart, expectedDebuggerType: DebuggerType.Dart },
 	];
 
-	await runDebuggerTypeTests(tests, flutterHelloWorldFolder);
+	runDebuggerTypeTests(tests, flutterHelloWorldFolder);
 });

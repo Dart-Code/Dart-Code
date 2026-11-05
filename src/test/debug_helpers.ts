@@ -111,7 +111,8 @@ export function startFakeDebugSession(options?: {
 		name: configuration.name,
 		type: configuration.type,
 		workspaceFolder: undefined,
-		async getDebugProtocolBreakpoint() { return undefined; },
+		getDebugProtocolBreakpoint() { return Promise.resolve(undefined); },
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		async customRequest(command: string) {
 			if (command === "hotReload")
 				hotReloadCount++;

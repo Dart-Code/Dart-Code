@@ -1011,7 +1011,7 @@ export function ensureNoLocation(locations: vs.Location[], uri: vs.Uri, range: v
 	);
 }
 
-export async function checkCurrentEditorSelectionIsPosition(expectedUri: vs.Uri, expectedPosition: vs.Position): Promise<boolean> {
+export function checkCurrentEditorSelectionIsPosition(expectedUri: vs.Uri, expectedPosition: vs.Position): boolean {
 	const editor = currentEditor();
 	return fsPath(editor.document.uri) === fsPath(expectedUri)
 		&& editor.selection.start.line === expectedPosition.line

@@ -8,7 +8,7 @@ import { waitFor } from "../../shared/utils/promises";
 import { flutterTestDeviceId, flutterTestDeviceIsWeb } from "../debug_helpers";
 import { activate, flutterHelloWorldFolder, getResolvedDebugConfiguration, privateApi } from "../helpers";
 
-describe(`flutter debugger type`, async () => {
+describe(`flutter debugger type`, () => {
 	beforeEach(function () {
 		if (isWin)
 			this.skip();
@@ -38,16 +38,16 @@ describe(`flutter debugger type`, async () => {
 		},
 	];
 
-	await runDebuggerTypeTests(tests, flutterHelloWorldFolder);
+	runDebuggerTypeTests(tests, flutterHelloWorldFolder);
 });
 
 
-export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string | undefined; debugger: DebuggerType; }>, defaultFolder: Uri): Promise<void> {
+export function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string | undefined; debugger: DebuggerType; }>, defaultFolder: Uri): void {
 	for (const test of tests) {
 		const program = test.program;
 		const { cwd, debugger: expectedDebuggerType } = test;
 
-		describe(program, async () => {
+		describe(program, () => {
 			let absoluteCwd = cwd && !path.isAbsolute(cwd)
 				? path.normalize(path.join(fsPath(defaultFolder), cwd))
 				: cwd;

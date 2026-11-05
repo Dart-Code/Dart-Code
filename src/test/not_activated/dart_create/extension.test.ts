@@ -21,7 +21,7 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	// Skipped due to https://github.com/microsoft/vscode/issues/266221
-	it.skip("did not activate", async () => {
+	it.skip("did not activate", () => {
 		assert.equal(ext.isActive, false);
 	});
 });

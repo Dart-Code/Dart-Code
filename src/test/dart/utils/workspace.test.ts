@@ -76,6 +76,7 @@ describe("State storage wrappers", () => {
 			keys(): readonly string[] {
 				return Array.from(store.keys());
 			},
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			async update(key: string, value: unknown): Promise<void> {
 				if (value === undefined)
 					store.delete(key);

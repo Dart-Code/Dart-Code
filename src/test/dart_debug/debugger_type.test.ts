@@ -2,7 +2,7 @@ import { DebuggerType } from "../../shared/enums";
 import { activateWithoutAnalysis, helloWorldFolder } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
-describe("dart debugger type", async () => {
+describe("dart debugger type", () => {
 	beforeEach("activate", () => activateWithoutAnalysis(null));
 
 	const tests: Array<{ program: string, cwd?: string, debuggerType?: DebuggerType | string, expectedDebuggerType: DebuggerType }> = [
@@ -29,5 +29,5 @@ describe("dart debugger type", async () => {
 		{ program: "bin/temp.dart", debuggerType: "darttest", expectedDebuggerType: DebuggerType.DartTest },
 	];
 
-	await runDebuggerTypeTests(tests, helloWorldFolder);
+	runDebuggerTypeTests(tests, helloWorldFolder);
 });

@@ -9,7 +9,7 @@ import { activateWithoutAnalysis, delay, helloWorldMainFile, positionOf, private
 describe("dart tooling daemon", () => {
 	beforeEach("activate helloWorldMainFile", () => activateWithoutAnalysis(helloWorldMainFile));
 
-	beforeEach("skip if not supported", async function () {
+	beforeEach("skip if not supported", function () {
 		if (!privateApi.dartCapabilities.supportsToolingDaemon)
 			this.skip();
 	});
