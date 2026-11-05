@@ -103,12 +103,12 @@ export class DartDebugClient extends DebugClient {
 		}
 	}
 
-	public send(command: string, args?: unknown): Promise<any> {
+	public send<T extends DebugProtocol.Response>(command: string, args?: unknown): Promise<T> {
 		for (const tracker of this.currentTrackers) {
 			if (tracker.onWillReceiveMessage)
 				tracker.onWillReceiveMessage({ command, arguments: args });
 		}
-		return super.send(command, args);
+		return super.send(command, args) as Promise<T>;
 	}
 
 	public start(port?: number): Promise<void> {
@@ -234,7 +234,7 @@ export class DartDebugClient extends DebugClient {
 		}
 	}
 
-	public setBreakpointWithoutHitting(launchArgs: any, location: ILocation, expectedBPLocation?: IPartialLocation): Promise<any> {
+	public setBreakpointWithoutHitting(launchArgs: DebugProtocol.LaunchRequestArguments, location: ILocation, expectedBPLocation?: IPartialLocation): Promise<unknown> {
 		return this.hitBreakpoint(launchArgs, location, undefined, expectedBPLocation, true);
 	}
 

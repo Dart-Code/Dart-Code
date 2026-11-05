@@ -236,7 +236,7 @@ function assertCalledOnceWith(stub: sinon.SinonStub, ...expectedArgs: unknown[])
 		assert.fail(`Expected one call with ${inspect(expectedArgs, { depth: null })}; actual calls: ${inspect(stub.getCalls().map((call) => call.args as unknown[]), { depth: null })}`);
 }
 
-async function writeAutoLaunch(filePath: string, launchConfig?: any) {
+async function writeAutoLaunch(filePath: string, launchConfig?: Record<string, unknown>) {
 	const launchConfigs = launchConfig ? { configurations: [launchConfig] } : { configurations: [] };
 	await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs), { flush: true });
 }
@@ -246,7 +246,7 @@ function createAutoLaunch(overridePath?: string) {
 	defer("dispose AutoLaunch", () => autoLaunch.dispose());
 }
 
-async function triggerAutoLaunch(filePath: string, launchConfig?: any, overridePath?: string) {
+async function triggerAutoLaunch(filePath: string, launchConfig?: Record<string, unknown>, overridePath?: string) {
 	await writeAutoLaunch(filePath, launchConfig);
 	await delay(10); // Small delay to ensure file exists before we create AutoLaunch (although we do flush in writeAutoLaunch).
 

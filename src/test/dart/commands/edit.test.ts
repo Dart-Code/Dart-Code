@@ -17,7 +17,7 @@ describe("edit commands", () => {
 		});
 
 		it("writes recommended settings, shows notification, and opens settings when clicked", async () => {
-			const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(openSettingsAction as any);
+			const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(openSettingsAction);
 			const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 			const openSettingsJson = executeCommand.withArgs("workbench.action.openSettingsJson", sinon.match.any).resolves();
 

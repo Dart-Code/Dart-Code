@@ -25,7 +25,7 @@ describe("dart cli debugger", () => {
 		dc = createDebugClient(DebuggerType.Dart);
 	});
 
-	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { program: string | undefined, [key: string]: any }): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
+	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { program: string | undefined, [key: string]: unknown }): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
 		const config = await getAttachConfiguration(Object.assign({ vmServiceUri }, extraConfiguration));
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
@@ -946,7 +946,7 @@ void printSomething() {
 		const variables = await dc.getTopFrameVariables("Locals", { frameId });
 
 		for (const variable of variables) {
-			const evaluateName = (variable as any).evaluateName as string | undefined;
+			const evaluateName = variable.evaluateName;
 			if (!evaluateName)
 				continue;
 			const evaluateResult = await dc.evaluateForFrame(evaluateName, { frameId });

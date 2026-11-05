@@ -23,7 +23,7 @@ describe("pub add", () => {
 		} = {};
 		const quickPick = {
 			dispose: sb.stub(),
-			items: [] as any[],
+			items: [] as vs.QuickPickItem[],
 			onDidAccept: sb.stub().callsFake((handler: () => void) => {
 				handlers.onDidAccept = handler;
 				return { dispose: () => undefined };

@@ -63,13 +63,13 @@ describe("interactive refactors", () => {
 			},
 		];
 
-		const codeAction = new vs.CodeAction(refactorTitle, vs.CodeActionKind.RefactorInline);
+		const codeAction: vs.CodeAction & { data?: unknown } = new vs.CodeAction(refactorTitle, vs.CodeActionKind.RefactorInline);
 		codeAction.command = {
 			arguments: [refactorArgs],
 			command: testRefactorCommandName,
 			title: codeAction.title,
 		};
-		(codeAction as any).data = {
+		codeAction.data = {
 			parameters: refactorParams,
 		};
 		return codeAction;

@@ -1,11 +1,11 @@
 /* eslint-disable no-underscore-dangle */
 import * as fs from "fs";
-import { reporters, Runner } from "mocha";
+import { MochaOptions, reporters, Runner } from "mocha";
 
-declare const __coverage__: any;
+declare const __coverage__: unknown;
 
 export class CoverageReporter extends reporters.Base {
-	constructor(runner: Runner, _options: any) {
+	constructor(runner: Runner, _options?: MochaOptions) {
 		super(runner);
 
 		runner.once("end", () => {

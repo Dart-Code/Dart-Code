@@ -23,7 +23,7 @@ describe("dart_hover_provider", () => {
 			// TODO: Once VS Code updates (and we require that version), we may be able to simplify this.
 			// For the existing VS Code impl we get an array here, but for LSP we return '---' as a separator since
 			// we only get a single item. To treat them the same, join with `---` then split on `---`.
-			const sections = h.contents.map((c) => ((c as any).value as string).trim())
+			const sections = h.contents.map((c) => (typeof c === "string" ? c : c.value).trim())
 				.join("\n---\n")
 				.replace("\n```\n", "\n```\n---\n")
 				.replace("\n---\n---\n", "\n---\n") // Hacks just to make both LSP and non-LSP end up formatted the same.

@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import { commands, workspace } from "vscode";
 import * as ls from "vscode-languageclient";
+import { Analyzer } from "../../shared/analyzer";
 import { ExtensionRestartReason } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, privateApi, sb, waitForResult } from "../helpers";
@@ -31,7 +32,7 @@ describe("extension api", () => {
 
 	it("coalesces overlapping extension reloads without breaking the analyzer", async () => {
 		await activateWithoutAnalysis();
-		const initialAnalyzer = privateApi.analyzer;
+		const initialAnalyzer = privateApi.analyzer as Analyzer & { isDisposed?: boolean };
 		const warnSpy = sb.spy(privateApi.logger, "warn");
 
 		// Trigger two concurrent reloads; the second arrives while the first is still
@@ -44,11 +45,11 @@ describe("extension api", () => {
 
 		// The overlapping reload requests should have coalesced into a single reload,
 		// disposed the original analyzer, and replaced it with a new live analyzer.
-		const firstReloadAnalyzer = privateApi.analyzer;
+		const firstReloadAnalyzer = privateApi.analyzer as Analyzer & { isDisposed?: boolean };
 		assert.equal(warnSpy.withArgs(sinon.match("Performing extension reload")).callCount, 1);
-		assert.equal((initialAnalyzer as any).isDisposed, true);
+		assert.equal(initialAnalyzer.isDisposed, true);
 		assert.notStrictEqual(firstReloadAnalyzer, initialAnalyzer);
-		assert.equal((firstReloadAnalyzer as any).isDisposed, false);
+		assert.equal(firstReloadAnalyzer.isDisposed, false);
 
 		// Immediately trigger another reload while `firstReloadAnalyzer`'s LanguageClient
 		// is still starting up in the background (before `initialAnalysis` completes),
@@ -56,14 +57,15 @@ describe("extension api", () => {
 		// settle and stops it cleanly without colliding with the next analyzer's registrations.
 		assert.equal(firstReloadAnalyzer.client.state, ls.State.Starting);
 		await commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
-		assert.equal((firstReloadAnalyzer as any).isDisposed, true);
+		assert.equal(firstReloadAnalyzer.isDisposed, true);
 		assert.equal(firstReloadAnalyzer.client.state, ls.State.Stopped);
 		assert.deepEqual(
 			firstReloadAnalyzer.client.clientOptions.errorHandler!.closed(),
 			{ action: ls.CloseAction.DoNotRestart, handled: true },
 		);
-		assert.notStrictEqual(privateApi.analyzer, firstReloadAnalyzer);
-		assert.equal((privateApi.analyzer as any).isDisposed, false);
+		const secondReloadAnalyzer = privateApi.analyzer as Analyzer & { isDisposed?: boolean };
+		assert.notStrictEqual(secondReloadAnalyzer, firstReloadAnalyzer);
+		assert.equal(secondReloadAnalyzer.isDisposed, false);
 
 		// Wait for initial/current analysis on the newly reloaded analyzer and verify
 		// that it is functional and serving LSP requests (such as document outlines)
