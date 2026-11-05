@@ -10,17 +10,10 @@ import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
 import { activate, defer, deferUntilLast, getRandomTempFolder, helloWorldFolder, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
+import { FakeProcess } from "../../mocks/child_process_spawn_stub";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const childProcess = require("child_process") as typeof import("child_process");
-
-type FakeProcess = EventEmitter & {
-	exitCode?: number;
-	kill: () => boolean;
-	pid: number;
-	stderr: EventEmitter & { setEncoding?: () => void };
-	stdout: EventEmitter & { setEncoding?: () => void };
-};
 
 describe("pubspecContentReferencesFlutter", () => {
 	it("returns false for non-Flutter pubspec.yaml", () => {
