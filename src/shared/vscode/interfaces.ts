@@ -134,6 +134,7 @@ export interface InternalExtensionApi {
 		workspaceSdkPath: string | undefined;
 	};
 	context: Context;
+	createEditorServices(daemon: DartToolingDaemon, deviceManager: FlutterDeviceManager | undefined): { register(): Promise<void>, dispose(): void };
 	currentAnalysis: () => Promise<void>;
 	interactiveRefactors: InteractiveRefactors | undefined;
 	isInTestFileThatHasImplementation: boolean;
@@ -230,6 +231,15 @@ export interface InternalExtensionApi {
 	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined },
 	testModel: TestModel;
 	toolingDaemon: DartToolingDaemon | undefined;
+	/**
+	 * The bundled `DartToolingDaemon` class that `toolingDaemon` is an instance
+	 * of. This differs from the `DartToolingDaemon` that test code imports,
+	 * because the extension is bundled (out/dist) while tests run unpacked
+	 * (out/src). Tests must use this copy when stubbing the prototype (for
+	 * example `sb.stub(privateApi.dartToolingDaemonBase.prototype, "dispose")`)
+	 * for it to affect the shared daemon.
+	 */
+	dartToolingDaemonBase: typeof DartToolingDaemon;
 	webClient: WebClient;
 	workspaceContext: DartWorkspaceContext;
 	// Only available in test runs.

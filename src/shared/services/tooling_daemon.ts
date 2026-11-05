@@ -24,7 +24,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	private serviceHandlers: Record<string, (params?: object) => PromiseOr<DtdResult>> = {};
 
 	private hasShownTerminatedError = false;
-	private isShuttingDown = false;
+	protected isShuttingDown = false;
 
 	private connectedCompleter = new PromiseCompleter<ConnectionInfo | undefined>();
 	public get connected() { return this.connectedCompleter.promise; }
@@ -59,9 +59,11 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	private async connect() {
 		const dtdUri = await this.dtdProcess.dtdUri;
-		if (!dtdUri)
+		if (!dtdUri || this.isShuttingDown)
 			return;
 		const dtdSecret = await this.dtdProcess.dtdSecret;
+		if (this.isShuttingDown)
+			return;
 
 		this.logger.info(`Connecting to DTD at ${dtdUri}...`);
 		const socket = new ws.WebSocket(dtdUri, { followRedirects: true });
@@ -91,7 +93,7 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	protected async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
 		const connection = await this.connected;
-		if (connection) {
+		if (connection && !this.isShuttingDown) {
 			const secret = connection.dtdSecret;
 			await this.callMethod(ServiceMethod.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
 		}
@@ -99,7 +101,7 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	protected async sendActiveLocation(activeLocation: ActiveLocation): Promise<void> {
 		const connection = await this.connected;
-		if (connection)
+		if (connection && !this.isShuttingDown)
 			this.sendEvent(Stream.Editor, { kind: EventKind.activeLocationChanged, ...activeLocation });
 	}
 
@@ -227,8 +229,17 @@ export class DartToolingDaemon implements IAmDisposable {
 	public sendEvent(stream: Stream.Editor, params: DebugSessionStartedEvent | DebugSessionStoppedEvent | DebugSessionChangedEvent): void;
 	public sendEvent(stream: Stream.Editor, params: ActiveLocationChangedEvent): void;
 	public sendEvent(stream: Stream, params: Event): void {
-		if (!this.connection)
+		if (!this.connection) {
+			// During shutdown it's expected that events can't be sent (for example an
+			// async event handler that was in-flight when we were disposed), so just
+			// drop them. Otherwise this is an unexpected failure that should be
+			// surfaced.
+			if (this.isShuttingDown) {
+				this.logger.info(`Unable to send event to ${stream}, DTD connection is unavailable`);
+				return;
+			}
 			throw new Error(`Unable to send event to ${stream}, DTD connection is unavailable`);
+		}
 
 		this.send({
 			jsonrpc: "2.0",
@@ -252,6 +263,8 @@ export class DartToolingDaemon implements IAmDisposable {
 	}
 
 	private send(json: DtdMessage): void {
+		if (this.isShuttingDown)
+			return;
 		if (!this.connection)
 			throw new Error("Unable to send message, DTD connection is unavailable");
 
@@ -314,6 +327,7 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	public dispose(): void {
 		this.isShuttingDown = true;
+		this.connectedCompleter.resolve(undefined);
 		try {
 			this.connection?.socket?.close();
 			this.connection = undefined;

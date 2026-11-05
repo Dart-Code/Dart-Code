@@ -1,11 +1,14 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { ActiveLocation, ActiveLocationChangedEvent, EventKind, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
+import { LogMessage } from "../../../shared/interfaces";
+import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
+import { ActiveLocation, ActiveLocationChangedEvent, DtdResult, EventKind, Service, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
+import { PromiseCompleter } from "../../../shared/utils";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { getActiveRealFileEditor } from "../../../shared/vscode/editors";
-import { activate, closeAllOpenFiles, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, sb, setConfigForTest, waitForResult } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
 describe("dart tooling daemon", () => {
@@ -257,6 +260,139 @@ describe("dart tooling daemon", () => {
 					}
 				]
 			},
+		);
+	});
+
+	it("still throws when sending an event while not connected and not shutting down", () => {
+		// A daemon whose process cannot start never connects but is also not
+		// (yet) shutting down, so a sendEvent here is an unexpected failure that
+		// should still be surfaced rather than silently dropped.
+		const daemon = new DartToolingDaemon(
+			privateApi.logger,
+			{ dart: "does-not-exist", dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
+
+		assert.throws(() => daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceRemoved, deviceId: "fake" }));
+	});
+
+	it("drops and logs events sent while shutting down", () => {
+		// Events sent after the daemon starts shutting down (for example from an
+		// event handler that was in-flight during dispose) are expected failures
+		// and should be logged and dropped rather than thrown.
+		const daemon = new DartToolingDaemon(
+			privateApi.logger,
+			{ dart: "does-not-exist", dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
+		daemon.dispose();
+
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => { logListener.dispose(); });
+
+		daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceRemoved, deviceId: "fake" });
+		assert.ok(
+			logMessages.some((m) => m.includes("DTD connection is unavailable")),
+			"the dropped event was not logged",
+		);
+	});
+
+	it("does not send pending active-location events after dispose", async function () {
+		if (!privateApi.dartCapabilities.supportsLspOverDtd)
+			this.skip();
+
+		const dtdDebounceMs = 1;
+		await setConfigForTest("dart", "dtdEditorActiveLocationDelay", dtdDebounceMs);
+
+		const daemon = privateApi.toolingDaemon!;
+		await daemon.connected;
+
+		// Stub the base class dispose so calling dispose() below runs
+		// VsCodeDartToolingDaemon.dispose() (which cancels the debounce timer)
+		// without tearing down the shared daemon's DTD connection. The daemon is
+		// an instance of the bundled DartToolingDaemon (out/dist) which is a
+		// different module copy than the one this test file can import
+		// (out/src), so the prototype must be stubbed via the bundled class
+		// exposed on privateApi.
+		sb.stub(privateApi.dartToolingDaemonBase.prototype, "dispose");
+
+		const sendEvent = sb.spy(daemon, "sendEvent");
+		const editor = await openFile(helloWorldMainFile);
+		await waitForResult(() => sendEvent.called, "initial active-location event was not sent");
+		sendEvent.resetHistory();
+
+		// Disposing inside a selection listener registered after the daemon's
+		// own listener guarantees the debounced send is queued (by the daemon's
+		// listener, which runs first) but has not yet fired when dispose() runs.
+		let markerFired = false;
+		const marker = vs.window.onDidChangeTextEditorSelection(() => { markerFired = true; daemon.dispose(); });
+		defer("Dispose marker", () => { marker.dispose(); });
+		editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
+		await waitForResult(() => markerFired, "selection-change event did not fire");
+
+		await delay(dtdDebounceMs + 50);
+		assert.ok(
+			!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.activeLocationChanged),
+			"debounced active-location event was sent after dispose",
+		);
+	});
+
+	it("does not reject a service response that is in-flight during dispose", async () => {
+		const daemon = new DartToolingDaemon(
+			privateApi.logger,
+			privateApi.workspaceContext.sdks,
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
+		await daemon.connected;
+
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => { logListener.dispose(); });
+
+		// Register our own service whose handler we can suspend mid-flight. The
+		// DTD forwards requests to it back over our own socket because we are the
+		// registered provider.
+		const handlerGate = new PromiseCompleter<DtdResult & ActiveLocation>();
+		let handlerStarted = false;
+		await daemon.registerService(Service.Editor, "getActiveLocation", undefined, async () => {
+			handlerStarted = true;
+			return handlerGate.promise;
+		});
+
+		void daemon.callMethod(ServiceMethod.editorGetActiveLocation)
+			.catch(() => { /* The response is dropped during shutdown. */ });
+		await waitForResult(() => handlerStarted, "service handler did not start");
+
+		// Disposing while the handler is suspended means the response is sent
+		// after the connection is gone. Without the shutdown guard in send(),
+		// the response send throws and the error-path send throws again, which
+		// produced an unhandled rejection.
+		daemon.dispose();
+		handlerGate.resolve({ selections: [], textDocument: undefined, type: "ActiveLocation" });
+		await delay(1);
+
+		assert.ok(
+			!logMessages.some((m) => m.includes("Failed handling service request")),
+			"the in-flight service response was not dropped cleanly",
 		);
 	});
 });

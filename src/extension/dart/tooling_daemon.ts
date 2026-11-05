@@ -48,17 +48,18 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		context.subscriptions.push(this);
 
 		this.editorServices = new EditorServices(this, deviceManager);
+		this.disposables.push(this.editorServices);
 
-		this.setUpStatusBarAndCommand(context);
+		this.setUpStatusBarAndCommand();
 
 		// Subscribe to event + send current/initial folders.
-		context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => this.sendWorkspaceRootsToDaemon()));
+		this.disposables.push(workspace.onDidChangeWorkspaceFolders(() => this.sendWorkspaceRootsToDaemon()));
 		this.sendWorkspaceRootsToDaemon();
 
 		// Handle sending the current active location.
-		context.subscriptions.push(window.onDidChangeActiveTextEditor((e) => this.queueActiveLocationChange(e)));
-		context.subscriptions.push(window.onDidChangeTextEditorSelection((e) => this.queueActiveLocationChange(e.textEditor)));
-		context.subscriptions.push(workspace.onDidChangeTextDocument((e) => {
+		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.queueActiveLocationChange(e)));
+		this.disposables.push(window.onDidChangeTextEditorSelection((e) => this.queueActiveLocationChange(e.textEditor)));
+		this.disposables.push(workspace.onDidChangeTextDocument((e) => {
 			// If the active document changed, this is implicitly a location change because
 			// the document is different now.
 			if (e.document === window.activeTextEditor?.document)
@@ -70,14 +71,14 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		void this.connected.then(() => this.registerServices()).catch((e) => logger.error(e));
 	}
 
-	private setUpStatusBarAndCommand(context: ExtensionContext) {
+	private setUpStatusBarAndCommand() {
 		const copyUriCommand = {
 			command: "dart.copyDtdUri",
 			title: "copy uri",
 			tooltip: "Copies the DTD endpoint URI to the clipboard",
 		};
 
-		context.subscriptions.push(commands.registerCommand("dart.copyDtdUri", async () => {
+		this.disposables.push(commands.registerCommand("dart.copyDtdUri", async () => {
 			await env.clipboard.writeText((await this.dtdUri) ?? "<dtd not available>");
 
 			const statusBarItem = this.statusBarItem;
@@ -89,7 +90,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		statusBarItem.name = "Dart Tooling Daemon";
 		statusBarItem.text = "Dart Tooling Daemon Starting…";
 		void this.connected.then((connectionInfo) => {
-			if (connectionInfo) {
+			if (connectionInfo && !this.isShuttingDown) {
 				void commands.executeCommand("setContext", DTD_AVAILABLE, true);
 				statusBarItem.text = "Dart Tooling Daemon";
 				statusBarItem.command = copyUriCommand;
@@ -98,6 +99,9 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	private async registerServices() {
+		if (this.isShuttingDown)
+			return;
+
 		await Promise.all([
 			this.editorServices.register(),
 		]);
@@ -105,6 +109,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 
 	protected async handleOpen() {
 		super.handleOpen();
+		if (this.isShuttingDown)
+			return;
 
 		this.onServiceRegistered(async (event) => {
 			const serviceMethod = event.service ? `${event.service}.${event.method}` : event.method;
@@ -125,6 +131,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		// before this code ever runs, but the sequence of setup in extension.ts means we don't
 		// have a reference for it when this class is constructed.
 		const debugCommands = await this.debugCommandsCompleter.promise;
+		if (this.isShuttingDown)
+			return;
 
 		// Handle when VM Service URIs become available (this is not the same as a debug session starting
 		// because we cannot register until we have the VM Service URI).
@@ -158,9 +166,11 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	protected async registerVmService({ name, vmServiceUri }: { name: string, vmServiceUri: string }): Promise<void> {
 		try {
 			const connection = await this.connected;
-			if (connection) {
+			if (connection && !this.isShuttingDown) {
 				const secret = connection.dtdSecret;
 				let exposedUri: string | undefined = await envUtils.exposeUrl(vmServiceUri, this.logger);
+				if (this.isShuttingDown)
+					return;
 				if (vmServiceUri === exposedUri)
 					exposedUri = undefined;
 				await this.callMethod(ServiceMethod.registerVmService, {
@@ -178,7 +188,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	protected async unregisterVmService(vmServiceUri: string): Promise<void> {
 		try {
 			const connection = await this.connected;
-			if (connection) {
+			if (connection && !this.isShuttingDown) {
 				const secret = connection.dtdSecret;
 				await this.callMethod(ServiceMethod.unregisterVmService, {
 					secret,
@@ -275,13 +285,18 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	public dispose() {
+		if (this.sendActiveLocationDebounceTimer) {
+			clearTimeout(this.sendActiveLocationDebounceTimer);
+			this.sendActiveLocationDebounceTimer = undefined;
+		}
 		void commands.executeCommand("setContext", DTD_AVAILABLE, false);
 		super.dispose();
 	}
 }
 
-class EditorServices implements IAmDisposable {
+export class EditorServices implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
+	private disposed = false;
 
 	public activeLocation: ActiveLocation = {
 		textDocument: undefined,
@@ -294,9 +309,14 @@ class EditorServices implements IAmDisposable {
 	) { }
 
 	async register(): Promise<void> {
+		if (this.disposed)
+			return;
+
 		if (this.deviceManager) {
 			this.disposables.push(this.deviceManager.onDeviceAdded(async (device) => {
 				const supportedTypes = await this.deviceManager?.getSupportedPlatformsForWorkspace();
+				if (this.disposed)
+					return;
 				const isSupported = (d: Device) => this.deviceManager?.isSupported(supportedTypes, d) ?? true;
 				this.daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceAdded, device: this.asDtdEditorDevice(device, isSupported(device)) });
 			}, this));
@@ -305,6 +325,8 @@ class EditorServices implements IAmDisposable {
 			}, this));
 			this.disposables.push(this.deviceManager.onDeviceChanged(async (device) => {
 				const supportedTypes = await this.deviceManager?.getSupportedPlatformsForWorkspace();
+				if (this.disposed)
+					return;
 				const isSupported = (d: Device) => this.deviceManager?.isSupported(supportedTypes, d) ?? true;
 				this.daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceChanged, device: this.asDtdEditorDevice(device, isSupported(device)) });
 			}, this));
@@ -392,6 +414,7 @@ class EditorServices implements IAmDisposable {
 	}
 
 	public dispose(): void {
+		this.disposed = true;
 		disposeAll(this.disposables);
 	}
 
