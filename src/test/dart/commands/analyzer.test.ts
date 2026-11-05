@@ -114,8 +114,8 @@ describe("analyzer", () => {
 
 	describe("OpenUriNotification", () => {
 		function getOpenUriHandler(): (params: { uri: string }) => void {
-			const client = privateApi.analyzer.client;
-			const handlers = (client as any)._notificationHandlers as Map<string, (params: { uri: string }) => void>; // eslint-disable-line no-underscore-dangle
+			const client = privateApi.analyzer.client as unknown as { _notificationHandlers: Map<string, (params: { uri: string }) => void> };
+			const handlers = client._notificationHandlers; // eslint-disable-line no-underscore-dangle
 			return handlers.get(OpenUriNotification.type.method)!;
 		}
 
@@ -361,7 +361,7 @@ describe("analyzer", () => {
 					// 3. A non-`"dart"` section that should be returned untouched.
 					{ formatOnSave: true },
 				],
-			);
+			) as Array<Record<string, unknown>>;
 
 			assert.ok(Array.isArray(results));
 			assert.equal(results[0].maxCompletionItems, 100000);
@@ -502,12 +502,12 @@ describe("analyzer", () => {
 			assert.ok(result);
 
 			assert.ok(setSpy.calledOnce);
-			const setEdits = setSpy.firstCall.args[1] as Array<[vs.TextEdit | vs.SnippetTextEdit, vs.WorkspaceEditEntryMetadata | undefined]>;
+			const setEdits = setSpy.firstCall.args[1] as Array<[(vs.TextEdit & { isCustomSnippet?: boolean }) | vs.SnippetTextEdit, vs.WorkspaceEditEntryMetadata | undefined]>;
 			assert.equal(setEdits.length, 4);
 
 			assert.ok(setEdits[0][0] instanceof vs.TextEdit);
 			assert.equal(setEdits[0][0].newText, "annotatedText");
-			assert.equal((setEdits[0][0] as any).isCustomSnippet, undefined);
+			assert.equal(setEdits[0][0].isCustomSnippet, undefined);
 			assert.equal(setEdits[0][1]?.label, "Annotation 1");
 
 			assert.ok(setEdits[1][0] instanceof vs.SnippetTextEdit);
@@ -517,12 +517,12 @@ describe("analyzer", () => {
 
 			assert.ok(setEdits[2][0] instanceof vs.TextEdit);
 			assert.equal(setEdits[2][0].newText, "plainText");
-			assert.equal((setEdits[2][0] as any).isCustomSnippet, undefined);
+			assert.equal(setEdits[2][0].isCustomSnippet, undefined);
 			assert.equal(setEdits[2][1], undefined);
 
 			assert.ok(setEdits[3][0] instanceof vs.TextEdit);
 			assert.equal(setEdits[3][0].newText, "customSnippet($0)");
-			assert.equal((setEdits[3][0] as any).isCustomSnippet, true);
+			assert.equal(setEdits[3][0].isCustomSnippet, true);
 			assert.equal(setEdits[3][1], undefined);
 		});
 
@@ -545,12 +545,12 @@ describe("analyzer", () => {
 
 			const result = await p2c.asWorkspaceEdit(wsEdit);
 			assert.ok(result);
-			const edits = result.get(helloWorldMainFile);
+			const edits = result.get(helloWorldMainFile) as Array<vs.TextEdit & { isCustomSnippet?: boolean }>;
 			assert.equal(edits.length, 2);
 			assert.equal(edits[0].newText, "legacySnippet($1)");
-			assert.equal((edits[0] as any).isCustomSnippet, true);
+			assert.equal(edits[0].isCustomSnippet, true);
 			assert.equal(edits[1].newText, "legacyPlain");
-			assert.equal((edits[1] as any).isCustomSnippet, undefined);
+			assert.equal(edits[1].isCustomSnippet, undefined);
 		});
 
 		it("throws on unknown workspace edit change type", async () => {
@@ -593,9 +593,9 @@ describe("analyzer", () => {
 
 			const actionWithEdit = results[1] as vs.CodeAction;
 			assert.ok(actionWithEdit.edit);
-			const edits = actionWithEdit.edit.get(helloWorldMainFile);
+			const edits = actionWithEdit.edit.get(helloWorldMainFile) as Array<vs.TextEdit & { isCustomSnippet?: boolean }>;
 			assert.equal(edits.length, 1);
-			assert.equal((edits[0] as any).isCustomSnippet, true);
+			assert.equal(edits[0].isCustomSnippet, true);
 
 			const actionWithoutEdit = results[2] as vs.CodeAction;
 			assert.equal(actionWithoutEdit.edit, undefined);
@@ -604,7 +604,8 @@ describe("analyzer", () => {
 
 	describe("getAnalyzerArgs", () => {
 		function getConfig() {
-			return (privateApi.testModel as any).config as Record<string, unknown>;
+			const testModel = privateApi.testModel as unknown as { config: Record<string, unknown> };
+			return testModel.config;
 		}
 
 		it("throws and shows error when custom analyzerPath does not exist", () => {
@@ -797,10 +798,12 @@ describe("analyzer", () => {
 			sb.stub(privateApi.dartCapabilities, "supportsLspOverDtd").get(() => true);
 			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest").resolves(null);
 			const fakeDtd = { dtdUri: Promise.resolve("ws://127.0.0.1:1234/ws") } as unknown as DartToolingDaemon;
-			(privateApi.analyzer as any).dtd = fakeDtd;
-			defer("Restore dtd", () => (privateApi.analyzer as any).dtd = privateApi.toolingDaemon);
+			const analyzerWithDtd = privateApi.analyzer as unknown as { dtd: DartToolingDaemon | undefined };
+			analyzerWithDtd.dtd = fakeDtd;
+			defer("Restore dtd", () => analyzerWithDtd.dtd = privateApi.toolingDaemon);
 
-			const stateEmitter = (privateApi.analyzer.client as any)._stateChangeEmitter as vs.EventEmitter<ls.StateChangeEvent>; // eslint-disable-line no-underscore-dangle
+			const clientWithEmitter = privateApi.analyzer.client as unknown as { _stateChangeEmitter: vs.EventEmitter<ls.StateChangeEvent> };
+			const stateEmitter = clientWithEmitter._stateChangeEmitter; // eslint-disable-line no-underscore-dangle
 			stateEmitter.fire({ oldState: ls.State.Running, newState: ls.State.Stopped });
 			stateEmitter.fire({ oldState: ls.State.Stopped, newState: ls.State.Starting });
 			stateEmitter.fire({ oldState: ls.State.Starting, newState: ls.State.Running });
@@ -814,8 +817,10 @@ describe("analyzer", () => {
 			const statusEvents: Array<{ isAnalyzing: boolean }> = [];
 			const sub = privateApi.analyzer.onAnalysisStatusChange((e) => statusEvents.push(e));
 			defer("Dispose status subscription", () => sub.dispose());
-			const statusItem = (privateApi.analyzer as any).statusItem as vs.LanguageStatusItem;
-			const stateEmitter = (privateApi.analyzer.client as any)._stateChangeEmitter as vs.EventEmitter<ls.StateChangeEvent>; // eslint-disable-line no-underscore-dangle
+			const analyzerWithStatus = privateApi.analyzer as unknown as { statusItem: vs.LanguageStatusItem };
+			const statusItem = analyzerWithStatus.statusItem;
+			const clientWithEmitter = privateApi.analyzer.client as unknown as { _stateChangeEmitter: vs.EventEmitter<ls.StateChangeEvent> };
+			const stateEmitter = clientWithEmitter._stateChangeEmitter; // eslint-disable-line no-underscore-dangle
 
 			middleware.handleWorkDoneProgress!("ANALYZING", { kind: "begin", title: "Analyzing" }, () => undefined);
 			assert.equal(statusItem.busy, true);

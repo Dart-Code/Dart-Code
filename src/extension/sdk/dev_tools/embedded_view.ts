@@ -172,9 +172,10 @@ export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
 			`;
 
 		this.messageDisposable = this.panel.webview.onDidReceiveMessage(
-			async (message) => {
-				if (message.command === "launchUrl") {
-					await envUtils.openInBrowser(message.data.url as string);
+			async (message: unknown) => {
+				if (message && typeof message === "object" && "command" in message && message.command === "launchUrl") {
+					const msg = message as { command: string; data: { url: string } };
+					await envUtils.openInBrowser(msg.data.url);
 				}
 			},
 		);
