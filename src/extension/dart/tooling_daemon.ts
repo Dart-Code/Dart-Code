@@ -294,7 +294,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 }
 
-export class EditorServices implements IAmDisposable {
+class EditorServices implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
 	private disposed = false;
 

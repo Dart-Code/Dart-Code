@@ -11,7 +11,6 @@ import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IAmDisposableAsync, Logger, WritableWorkspaceConfig } from "../shared/interfaces";
 import { EmittingLogger, RingLog, captureLogs, logToConsole } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
-import { DartToolingDaemon } from "../shared/services/tooling_daemon";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
@@ -57,7 +56,7 @@ import { TestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHa
 import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
 import { HotReloadOnSaveHandler } from "./dart/hot_reload_save_handler";
-import { EditorServices, VsCodeDartToolingDaemon } from "./dart/tooling_daemon";
+import { VsCodeDartToolingDaemon } from "./dart/tooling_daemon";
 import { FlutterIconDecorations } from "./decorations/flutter_icon_decorations";
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { DiagnosticReport } from "./diagnostic_report";
@@ -738,7 +737,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			commandState,
 			config,
 			context: extContext,
-			createEditorServices: (dtd, dm) => new EditorServices(dtd, dm),
 			currentAnalysis: () => withTimeout(analyzer.onCurrentAnalysisComplete, "In-progress analysis did not complete", 120),
 			dartCapabilities,
 			dartCommands,
@@ -777,7 +775,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			testCoordinator,
 			testDiscoverer,
 			testModel,
-			dartToolingDaemonBase: DartToolingDaemon,
 			toolingDaemon: dartToolingDaemon,
 			trackerFactories,
 			webClient,
