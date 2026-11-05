@@ -260,10 +260,19 @@ export default defineConfig([
 		},
 	},
 	{
-		// Allow tests to import anything.
+		// Allow tests to import vscode and debug, but not extension runtime code.
 		files: ["src/test/**/*.ts"],
 		rules: {
-			"no-restricted-imports": "off",
+			"no-restricted-imports": ["error", {
+				// We need to re-include the extension pattern from above because overriding
+				// no-restricted-imports here (to allow debug imports in tests) replaces the
+				// top-level rule.
+				"patterns": [{
+					"group": ["**/../extension/**"],
+					"allowTypeImports": true,
+					"message": "Do not import extension code because the extension packing will mean duplicate definitions and state."
+				}]
+			}],
 		},
 	},
 ]);

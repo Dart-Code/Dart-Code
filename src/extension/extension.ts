@@ -8,7 +8,7 @@ import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableNam
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, OBSERVATORY_SUPPORTED_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IAmDisposableAsync, IFlutterDaemon, Logger, WritableWorkspaceConfig } from "../shared/interfaces";
+import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IAmDisposableAsync, Logger, WritableWorkspaceConfig } from "../shared/interfaces";
 import { EmittingLogger, RingLog, captureLogs, logToConsole } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
@@ -95,13 +95,14 @@ import * as util from "./utils";
 import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils/processes";
+import { getFolderToRunCommandIn } from "./utils/vscode/projects";
 import { FlutterPostMessageSidebar } from "./views/devtools/legacy_post_message_sidebar/sidebar";
 import { PropertyEditor } from "./views/devtools/property_editor";
 import { FlutterDtdSidebar } from "./views/devtools/sidebar";
 import { DartPackagesProvider } from "./views/packages_view";
 
 let maybeAnalyzer: LspAnalyzer | undefined;
-let flutterDaemon: IFlutterDaemon | undefined;
+let flutterDaemon: FlutterDaemon | undefined;
 let deviceManager: FlutterDeviceManager | undefined;
 const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
@@ -750,9 +751,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			fileTracker: analyzer.fileTracker,
 			flutterCapabilities,
 			flutterCommands,
+			flutterDaemon,
 			flutterUiGuideDecorations,
 			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
+			getFolderToRunCommandIn,
 			getLogHeader,
 			getOutputChannel,
 			getOutputChannelNames,

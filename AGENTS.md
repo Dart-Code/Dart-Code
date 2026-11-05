@@ -28,7 +28,7 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 
 - All code must be cross-platform, working on Windows, macOS and Linux. This means using things like `path.join()` and taking care when spawning processes.
 - Never access `.fsPath` (on `Uri`) or `.fileName` (on `TextDocument`) directly (enforced by lints). Always use the `fsPath()` helper in `src/shared/utils/fs.ts` (for example `fsPath(uri)` or `fsPath(doc.uri)`), which normalizes Windows drive letters and path casing.
-- Code in `src/extension/` and `src/debug/` must not be imported outside of their respective folders (enforced by lints).
+- Code in `src/extension/` and `src/debug/` must not be imported outside of their respective folders (enforced by lints). In particular, tests in `src/test/` must never import runtime code from `src/extension/` (which would compile an unpacked duplicate copy into `out/src/extension/`); instead, access extension internals through `privateApi` (`InternalExtensionApi` in `src/shared/vscode/interfaces.ts` and `src/extension/extension.ts`) or move shared/pure code to `src/shared/`.
 - Code in `src/shared/` must not contain global/singleton state or classes checked with `instanceof`, because `src/extension/` is bundled with Webpack (`out/dist/`) while tests run unpacked (`out/src/`), which would duplicate definitions and state during test runs.
 - All extension settings use the format `dart.*` or `dart.flutter*` and are accessed through a wrapper in `src/extension/config.ts`.
 - In tests, use the `defer()` helper (in `src/test/helpers.ts`) instead of `try`/`finally` when cleaning up or resetting state at the end of a test.

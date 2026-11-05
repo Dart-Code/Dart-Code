@@ -99,6 +99,13 @@ export class ChildProcessSpawnStub {
 		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) && ChildProcessSpawnStub.includesArg(args, "pub"));
 	}
 
+	static flutterConfig(options?: { stdout?: string, exitCode?: number }) {
+		return new ChildProcessSpawnStub(
+			(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "config"),
+			options,
+		);
+	}
+
 	static flutterPub() {
 		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "pub"));
 	}

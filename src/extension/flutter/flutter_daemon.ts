@@ -21,12 +21,12 @@ import { getFlutterConfigValue } from "../utils/misc";
 import { getGlobalFlutterArgs, getToolEnv, runToolProcess, safeToolSpawn } from "../utils/processes";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
-	private startTime: Date | undefined;
+	public startTime: Date | undefined;
 	private get hasStarted() { return !!this.startTime; };
 	private hasShownTerminatedError = false;
 	private hasLoggedDaemonTimeout = false;
 	private isShuttingDown = false;
-	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
+	public startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonResponsiveCompleter = new PromiseCompleter<void>();
 	private daemonResponsive = this.daemonResponsiveCompleter.promise;
 	private daemonInitializedCompleter = new PromiseCompleter<void>();
@@ -203,7 +203,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	private static readonly outOfDateWarning = new RegExp("WARNING: .* Flutter is (\\d+) days old");
 	private static readonly newVersionMessage = "A new version of Flutter is available";
-	private hasShownStartupError = false;
+	public hasShownStartupError = false;
 	protected async processUnhandledMessage(message: string): Promise<void> {
 		let upgradeMessage: string | undefined;
 		const matches = FlutterDaemon.outOfDateWarning.exec(message);

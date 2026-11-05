@@ -7,7 +7,7 @@ import { DartVsCodeLaunchArgs } from "../debugging/interfaces";
 import { DebuggerType, DebugOption, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { SdkTypeString } from "../constants";
-import { CustomScript, DartWorkspaceContext, DevToolsPage, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResults, SpawnedProcess } from "../interfaces";
+import { CustomScript, DartWorkspaceContext, DevToolsPage, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, IFlutterDaemon, Logger, SdkSearchResults, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { RunProcessResult } from "../processes";
 import { PubDeps } from "../pub/deps";
@@ -181,6 +181,12 @@ export interface InternalExtensionApi {
 	};
 	flutterCapabilities: FlutterCapabilities;
 	flutterCommands: FlutterCommandHandler;
+	flutterDaemon: (IFlutterDaemon & {
+		handleMessage(message: string): Promise<void>;
+		hasShownStartupError: boolean;
+		startTime: Date | undefined;
+		startupReporter: Progress<{ message?: string; increment?: number }> | undefined;
+	}) | undefined;
 	flutterUiGuideDecorations?: {
 		buildDecorations(doc: TextDocument, tabSize: number, guidesByLine: Record<number, Array<{ start: { line: number; character: number }; end: { line: number; character: number } }>>, color: ThemeColor): DecorationOptions[];
 		buildFromOutline(editor: TextEditor, outline: lsp.FlutterOutline | undefined): void;
@@ -189,6 +195,7 @@ export interface InternalExtensionApi {
 		renderGuides(editor: TextEditor, guides: Array<{ start: { line: number; character: number }; end: { line: number; character: number } }>): void;
 		tracker: { dispose(): void } | undefined;
 	};
+	getFolderToRunCommandIn: (logger: Logger, placeHolder: string, options?: { selection?: Uri; flutterOnly?: boolean; onlyShowWorkspaceRoots?: boolean }) => Promise<string | undefined>;
 	getLogHeader: () => string;
 	getOutputChannel: (name: string) => OutputChannel;
 	getOutputChannelNames: () => string[];

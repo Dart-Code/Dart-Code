@@ -1,22 +1,33 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { Analytics } from "../../extension/analytics";
-import { FlutterDaemon } from "../../extension/flutter/flutter_daemon";
-import * as misc from "../../extension/utils/misc";
-import * as processes from "../../extension/utils/processes";
-import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath } from "../../shared/constants";
-import { FlutterWorkspaceContext } from "../../shared/interfaces";
-import { activate, fakeCancellationToken, logger, privateApi, sb, waitForResult } from "../helpers";
+import { InternalExtensionApi } from "../../shared/vscode/interfaces";
+import { activate, defer, fakeCancellationToken, privateApi, sb, waitForResult } from "../helpers";
+import { ChildProcessSpawnStub } from "../mocks/child_process_spawn_stub";
 
 describe("flutter daemon", () => {
-	let daemon: TestFlutterDaemon;
+	let daemon: NonNullable<InternalExtensionApi["flutterDaemon"]>;
 
 	before("activate", () => activate());
 
-	beforeEach("create daemon", () => {
-		daemon = new TestFlutterDaemon(privateApi.workspaceContext as FlutterWorkspaceContext);
+	beforeEach("prepare daemon", () => {
+		daemon = privateApi.flutterDaemon!;
+		// Because privateApi.flutterDaemon is the live daemon started during activate(),
+		// startTime is already set once connected. Reset these fields before each test so
+		// we can test pre-startup progress reporting (!hasStarted) and one-time startup
+		// error notifications, then restore them afterwards.
+		const originalStartTime = daemon.startTime;
+		const originalStartupReporter = daemon.startupReporter;
+		const originalHasShownStartupError = daemon.hasShownStartupError;
+		daemon.startTime = undefined;
+		daemon.startupReporter = undefined;
+		daemon.hasShownStartupError = false;
+		defer("restore daemon state", () => {
+			daemon.startTime = originalStartTime;
+			daemon.startupReporter = originalStartupReporter;
+			daemon.hasShownStartupError = originalHasShownStartupError;
+		});
 	});
 
 	it("shows an upgrade warning for version update messages from stdout", async () => {
@@ -61,52 +72,33 @@ describe("flutter daemon", () => {
 	});
 
 	it("enables a platform globally using flutter config", async () => {
-		const runToolProcess = sb.stub(processes, "runToolProcess").resolves({
-			exitCode: 0,
-			stderr: "",
-			stdout: "",
-		});
+		const spawn = ChildProcessSpawnStub.flutterConfig();
 		const flutterSdkPath = privateApi.workspaceContext.sdks.flutter!;
 
 		await daemon.enablePlatformGlobally("web");
 
-		assert.ok(runToolProcess.calledOnceWithExactly(
-			daemon.logger,
-			flutterSdkPath,
-			path.join(flutterSdkPath, flutterPath),
-			["config", "--enable-web"],
-		));
+		spawn.assertCalls([{
+			cwd: flutterSdkPath,
+			bin: path.join(flutterSdkPath, flutterPath),
+			args: ["config", "--enable-web"],
+		}]);
 	});
 
 	it("treats a globally false config value as disabled", async () => {
-		const getFlutterConfigValue = sb.stub(misc, "getFlutterConfigValue").resolves(false);
+		const spawn = ChildProcessSpawnStub.flutterConfig({ stdout: JSON.stringify({ "enable-linux": false }) });
 		const flutterSdkPath = privateApi.workspaceContext.sdks.flutter!;
 
 		assert.equal(await daemon.checkIfPlatformGloballyDisabled("linux"), true);
-		assert.ok(getFlutterConfigValue.calledOnceWithExactly(daemon.logger, flutterSdkPath, flutterSdkPath, "enable-linux"));
+		spawn.assertCalls([{
+			cwd: flutterSdkPath,
+			bin: path.join(flutterSdkPath, flutterPath),
+			args: ["config", "--machine"],
+		}]);
 	});
 
 	it("does not treat an unset global config value as disabled", async () => {
-		sb.stub(misc, "getFlutterConfigValue").resolves(undefined);
+		ChildProcessSpawnStub.flutterConfig({ stdout: JSON.stringify({}) });
 
 		assert.equal(await daemon.checkIfPlatformGloballyDisabled("linux"), false);
 	});
 });
-
-class TestFlutterDaemon extends FlutterDaemon {
-	constructor(workspaceContext: FlutterWorkspaceContext) {
-		super(logger, {} as unknown as Analytics, workspaceContext, FlutterCapabilities.empty);
-	}
-
-	public sendStdOut(data: string | Buffer) {
-		this.handleStdOut(data);
-	}
-
-	protected createProcess(_workingDirectory: string | undefined, _binPath: string, _args: string[], _envOverrides: { envOverrides?: Record<string, string | undefined>, toolEnv?: Record<string, string | undefined> }) {
-		// Prevent tests from spawning a real daemon process.
-	}
-
-	protected createNcProcess(_port: number) {
-		// Prevent tests from spawning a real netcat process.
-	}
-}
