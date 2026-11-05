@@ -300,7 +300,7 @@ describe("dart test debugger", () => {
 
 		// Only the test from the example sub-project should have been selected.
 		assert.deepStrictEqual(
-			configs.map((config) => path.basename(config.program as string)),
+			configs.map((config) => path.basename(config.program!)),
 			["project_test.dart"],
 		);
 	});
@@ -522,7 +522,7 @@ hello_world
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(helloWorldTestSelective2File)}:fail two`)!);
 
 				const configs = await captureTestDebugConfigurations(() => new vs.TestRunRequest(testItems));
-				const launchText = configs.map((config) => [config.program, ...(config.args as string[] | undefined ?? []), ...(config.toolArgs as string[] | undefined ?? [])].join(" ")).join("\n");
+				const launchText = configs.map((config) => [config.program, ...(config.args ?? []), ...(config.toolArgs ?? [])].join(" ")).join("\n");
 
 				// One launch per file, and each requested test is identified either by name or line.
 				assert.equal(configs.length, 2);
@@ -553,14 +553,14 @@ hello_world
 		it("uses line numbers for a saved file when the test name contains $", async () => {
 			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test: TestOutlineInfo) => test.fullName.includes("$"));
 
-			assert.ok(config.program.includes("?line="), `Expected to run by line, got program ${config.program}`);
+			assert.ok(config.program!.includes("?line="), `Expected to run by line, got program ${config.program}`);
 			assert.ok(!config.toolArgs?.includes("--name"), `Expected no --name arg, got ${JSON.stringify(config.toolArgs)}`);
 		});
 
 		it("uses the test name for a saved file when the test name does not contain $", async () => {
 			const config = await captureTestDebugConfiguration(helloWorldTestMainFile, (test: TestOutlineInfo) => !test.fullName.includes("$") && !test.isGroup);
 
-			assert.ok(!config.program.includes("?line="), `Expected to run by name, got program ${config.program}`);
+			assert.ok(!config.program!.includes("?line="), `Expected to run by name, got program ${config.program}`);
 			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
 		});
 
@@ -570,7 +570,7 @@ hello_world
 			await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// unsaved\n"));
 			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test: TestOutlineInfo) => test.fullName.includes("$"));
 
-			assert.ok(!config.program.includes("?line="), `Expected to run by name, got program ${config.program}`);
+			assert.ok(!config.program!.includes("?line="), `Expected to run by name, got program ${config.program}`);
 			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
 		});
 	});
@@ -807,7 +807,7 @@ test/empty_test.dart
 		if (captureConfigOnly) {
 			const configs = await captureStartDebuggingConfigs(() => vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []))); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			assert.equal(configs.length, 1);
-			assert.ok((configs[0].program as string).endsWith(`?line=${testPos.line + lineDelta + 1}`), configs[0].program as string);
+			assert.ok(configs[0].program!.endsWith(`?line=${testPos.line + lineDelta + 1}`), configs[0].program);
 			return;
 		}
 

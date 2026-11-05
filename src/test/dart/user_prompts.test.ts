@@ -155,7 +155,7 @@ describe("Survey notification", async () => {
 	const immediatelyBeforeSurveyClosesDate = new Date("2001-01-20T08:00:00-08:00").getTime();
 	const immediatelyAfterSurveyClosesDate = new Date("2001-01-20T10:00:00-08:00").getTime();
 
-	const matchPrompt = sinon.match((v) => v.indexOf("Help improve Flutter! Take our test survey.") === 0);
+	const matchPrompt = sinon.match((v: string) => v.startsWith("Help improve Flutter! Take our test survey."));
 
 	it("is shown from a blank slate and updates context values", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");

@@ -105,10 +105,11 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "What is your nickname?");
 
 					// All inputs are allowed for optional fields.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), null);
 					assert.deepStrictEqual(options.validateInput(" "), null);
@@ -147,11 +148,12 @@ describe("interactive forms", () => {
 
 		describe("number", () => {
 			it("handles and validates required", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "How old are you?");
 					assert.equal(options.value, "25");
 
 					// Check validation.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput("not-a-number"), error("Please enter a valid number"));
 					assert.deepStrictEqual(options.validateInput(""), error("Please enter a number"));
@@ -181,11 +183,12 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "What is your favorite number?");
 
 					// All inputs are allowed for optional fields, but they
 					// must still be numbers.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), null);
 					assert.deepStrictEqual(options.validateInput(" "), null);
@@ -350,7 +353,7 @@ describe("interactive forms", () => {
 				const existingFolderUri = vscode.workspace.workspaceFolders![0].uri;
 				const nonExistentFileUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, "non_existent_file.txt");
 
-				const showOpenDialogMock = mock.method(vscode.window, "showOpenDialog", async (options: any) => {
+				const showOpenDialogMock = mock.method(vscode.window, "showOpenDialog", async (options: vscode.OpenDialogOptions) => {
 					assert.equal(options.defaultUri?.toString(), existingFolderUri.toString());
 					assert.equal(options.canSelectFiles, true);
 					assert.equal(options.canSelectFolders, false);
@@ -442,10 +445,11 @@ describe("interactive forms", () => {
 
 		describe("list", () => {
 			it("handles and validates required strings", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Tags (comma separated)");
 
 					// Check validation.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), error("Please enter at least one item"));
 					assert.deepStrictEqual(options.validateInput(" "), error("Please enter at least one item"));
@@ -492,10 +496,11 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional strings", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Tags (comma separated)");
 
 					// All inputs are allowed for optional fields.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), null);
 					assert.deepStrictEqual(options.validateInput("   "), null);
@@ -524,10 +529,11 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates required numbers", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Ages (comma separated)");
 
 					// Check validation.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), error("Please enter at least one item"));
 					assert.deepStrictEqual(options.validateInput(" "), error("Please enter at least one item"));
@@ -558,11 +564,12 @@ describe("interactive forms", () => {
 			});
 
 			it("handles and validates optional numbers", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "Ages (comma separated)");
 
 					// All inputs are allowed for optional fields, but they
 					// must still be numbers.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), null);
 					assert.deepStrictEqual(options.validateInput("   "), null);

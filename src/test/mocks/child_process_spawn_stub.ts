@@ -16,6 +16,14 @@ export interface SpawnedProcessCall {
 	args?: string[];
 }
 
+export interface FakeProcess extends EventEmitter {
+	exitCode?: number;
+	kill: () => boolean;
+	pid: number;
+	stderr: EventEmitter & { setEncoding?: () => void };
+	stdout: EventEmitter & { setEncoding?: () => void };
+}
+
 /**
  * A stub for `child_process.spawn` so tests can verify the processes
  * the extension tries to spawn without having to actually execute them
@@ -47,7 +55,7 @@ export class ChildProcessSpawnStub {
 
 			this.fakedCalls.push({ cwd: opts?.cwd?.toString(), bin, args });
 
-			const proc: any = new EventEmitter();
+			const proc = new EventEmitter() as FakeProcess;
 			proc.pid = 12345;
 			proc.stdout = new EventEmitter();
 			proc.stdout.setEncoding = () => undefined;
@@ -64,7 +72,7 @@ export class ChildProcessSpawnStub {
 				proc.emit("close", exitCode, null);
 			});
 
-			return proc as ChildProcess;
+			return proc;
 		});
 	}
 

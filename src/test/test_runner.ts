@@ -60,7 +60,7 @@ module.exports = {
 
 		// Set up source map support.
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		require("source-map-support").install();
+		(require("source-map-support") as { install: () => void }).install();
 
 		const testFilter = process.env.DART_CODE_TEST_FILTER;
 		const filters = testFilter ? JSON.parse(testFilter) as string[] : undefined;

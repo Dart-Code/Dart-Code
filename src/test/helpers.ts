@@ -357,7 +357,7 @@ export function stubCreateInputBox(valueToReturn: string) {
 	const createInputBox = sb.stub(vs.window, "createInputBox");
 	createInputBox.callsFake(function (this: any, ...args) {
 		// Call the underlying VS Code method to create the input box.
-		const input = (createInputBox as any).wrappedMethod.apply(this, args) as vs.InputBox;
+		const input = createInputBox.wrappedMethod.apply(this, args);
 
 		// Capture the onDidAccept method to capture the callback.
 		let acceptCallback: () => void;
@@ -1093,7 +1093,7 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 	assert.equal(actualResolvedFilterText.trim(), expectedResolvedFilterText.trim());
 
 	if (documentation)
-		assert.equal((completion.documentation as any).value.trim(), documentation);
+		assert.equal((completion.documentation as vs.MarkdownString).value.trim(), documentation);
 	return completion;
 }
 

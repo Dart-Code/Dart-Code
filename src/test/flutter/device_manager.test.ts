@@ -832,7 +832,7 @@ describe("device_manager", () => {
 		getPickableStub.resolves([emuItem]);
 
 		const showQuickPickStub = sb.stub(vs.window, "showQuickPick");
-		showQuickPickStub.onFirstCall().callsFake(async (_items, _options, token) => {
+		showQuickPickStub.onFirstCall().callsFake(async (_items, _options, token: vs.CancellationToken | undefined) => {
 			let cancelled = false;
 			token?.onCancellationRequested(() => cancelled = true);
 			await daemon.connect(physicalAndroidMobile, true);
