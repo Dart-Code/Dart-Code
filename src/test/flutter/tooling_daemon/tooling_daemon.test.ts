@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import { EditorServices } from "../../../extension/dart/tooling_daemon";
+import { FlutterDaemon } from "../../../extension/flutter/flutter_daemon";
 import * as f from "../../../shared/flutter/daemon_interfaces";
 import { LogMessage } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
@@ -22,12 +23,10 @@ describe("dart tooling daemon editor events", () => {
 			this.skip();
 	});
 
-	// Creates a locally constructed daemon + EditorServices pair that connects to
-	// its own DTD process. Unlike the extension's own privateApi.toolingDaemon
-	// singleton, these can be disposed inside tests without needing to reload
-	// the whole extension afterwards.
-	async function createDaemonAndEditorServices() {
-		const deviceManager = privateApi.deviceManager!;
+	// Creates a locally constructed daemon that connects to its own DTD process.
+	// Unlike the extension's own privateApi.toolingDaemon singleton, this can be
+	// disposed inside tests without needing to reload the whole extension.
+	async function createDaemon() {
 		const daemon = new DartToolingDaemon(
 			privateApi.logger,
 			privateApi.workspaceContext.sdks,
@@ -40,7 +39,12 @@ describe("dart tooling daemon editor events", () => {
 		);
 		defer("Dispose daemon", () => daemon.dispose());
 		await daemon.connected;
+		return daemon;
+	}
 
+	async function createDaemonAndEditorServices() {
+		const deviceManager = privateApi.deviceManager!;
+		const daemon = await createDaemon();
 		const editorServices = new EditorServices(daemon, deviceManager);
 		defer("Dispose EditorServices", () => { editorServices.dispose(); });
 		return { daemon, deviceManager, editorServices };
@@ -119,6 +123,56 @@ describe("dart tooling daemon editor events", () => {
 		assert.ok(
 			logMessages.some((m) => m.includes("DTD connection is unavailable")),
 			"the dropped event was not logged",
+		);
+	});
+
+	it("does not send a deviceChanged event that resolves after EditorServices was disposed", async () => {
+		const daemon = await createDaemon();
+
+		// Use a locally constructed device manager so the real
+		// onDeviceChanged event can be fired without going through
+		// enablePlatformType (which requires a real Flutter daemon).
+		const fakeDaemon = sb.createStubInstance(FlutterDaemon);
+		fakeDaemon.getEmulators.resolves([]);
+		const deviceManager = new TestDeviceManager(
+			privateApi.logger,
+			fakeDaemon,
+			{
+				flutterCustomEmulators: [],
+				flutterRememberSelectedDevice: false,
+				flutterSelectDeviceWhenConnected: false,
+				flutterShowEmulators: "local",
+				projectSearchDepth: 3,
+			},
+			privateApi.workspaceContext,
+			privateApi.context,
+		);
+		defer("Dispose device manager", () => deviceManager.dispose());
+
+		const editorServices = new EditorServices(daemon, deviceManager);
+		defer("Dispose EditorServices", () => { editorServices.dispose(); });
+		await editorServices.register();
+
+		const sendEvent = sb.spy(daemon, "sendEvent");
+		const listenerGate = new PromiseCompleter<f.PlatformType[]>();
+		sb.stub(deviceManager, "getSupportedPlatformsForWorkspace").returns(listenerGate.promise);
+
+		// Our listener is invoked after the EditorServices listener has started
+		// (and suspended on the gate above), so this marks it as in-flight.
+		let emitterFired = false;
+		const marker = deviceManager.onDeviceChanged(() => emitterFired = true);
+		defer("Dispose marker", () => { marker.dispose(); });
+
+		deviceManager.fireDeviceChanged(physicalAndroidMobile);
+		await waitForResult(() => emitterFired, "deviceChanged listener did not start");
+
+		editorServices.dispose();
+		listenerGate.resolve([]);
+
+		await delay(1);
+		assert.ok(
+			!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.deviceChanged),
+			"in-flight deviceChanged event was sent after EditorServices was disposed",
 		);
 	});
 
@@ -202,3 +256,10 @@ describe("dart tooling daemon editor events", () => {
 		);
 	});
 });
+
+// A device manager that exposes the protected device-changed emitter for tests.
+class TestDeviceManager extends FlutterDeviceManager {
+	public fireDeviceChanged(device: f.Device): void {
+		this.onDeviceChangedEmitter.fire(device);
+	}
+}
