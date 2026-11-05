@@ -2,7 +2,6 @@ import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import { commands, workspace } from "vscode";
 import * as ls from "vscode-languageclient";
-import { Analyzer } from "../../shared/analyzer";
 import { ExtensionRestartReason } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, privateApi, sb, waitForResult } from "../helpers";
@@ -32,7 +31,7 @@ describe("extension api", () => {
 
 	it("coalesces overlapping extension reloads without breaking the analyzer", async () => {
 		await activateWithoutAnalysis();
-		const initialAnalyzer = privateApi.analyzer as Analyzer & { isDisposed?: boolean };
+		const initialAnalyzer = privateApi.analyzer;
 		const warnSpy = sb.spy(privateApi.logger, "warn");
 
 		// Trigger two concurrent reloads; the second arrives while the first is still
@@ -45,7 +44,7 @@ describe("extension api", () => {
 
 		// The overlapping reload requests should have coalesced into a single reload,
 		// disposed the original analyzer, and replaced it with a new live analyzer.
-		const firstReloadAnalyzer = privateApi.analyzer as Analyzer & { isDisposed?: boolean };
+		const firstReloadAnalyzer = privateApi.analyzer;
 		assert.equal(warnSpy.withArgs(sinon.match("Performing extension reload")).callCount, 1);
 		assert.equal(initialAnalyzer.isDisposed, true);
 		assert.notStrictEqual(firstReloadAnalyzer, initialAnalyzer);
@@ -63,9 +62,8 @@ describe("extension api", () => {
 			firstReloadAnalyzer.client.clientOptions.errorHandler!.closed(),
 			{ action: ls.CloseAction.DoNotRestart, handled: true },
 		);
-		const secondReloadAnalyzer = privateApi.analyzer as Analyzer & { isDisposed?: boolean };
-		assert.notStrictEqual(secondReloadAnalyzer, firstReloadAnalyzer);
-		assert.equal(secondReloadAnalyzer.isDisposed, false);
+		assert.notStrictEqual(privateApi.analyzer, firstReloadAnalyzer);
+		assert.equal(privateApi.analyzer.isDisposed, false);
 
 		// Wait for initial/current analysis on the newly reloaded analyzer and verify
 		// that it is functional and serving LSP requests (such as document outlines)
