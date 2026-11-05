@@ -373,6 +373,7 @@ void main() => test("test inside ${newFilename}", () {});
 
 		let finishSecondBeforeFirst = true;
 		let sessions: vs.DebugSession[] = [];
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		sb.stub(vs.debug, "startDebugging").callsFake(async (_folder, launchConfig) => {
 			const session = { configuration: launchConfig as vs.DebugConfiguration } as unknown as vs.DebugSession;
 			sessions.push(session);
@@ -548,10 +549,12 @@ void main() => test("test inside ${newFilename}", () {});
 		sb.stub(vs.debug, "onDidTerminateDebugSession").callsFake(didTerminateEmitter.event);
 
 		const disconnectedSessionIds: string[] = [];
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		const stub = sb.stub(vs.debug, "startDebugging").callsFake(async (_folder, launchConfig) => {
 			const config = launchConfig as vs.DebugConfiguration;
 			const session = {
 				configuration: config,
+				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 				customRequest: async (command: string) => {
 					if (command === "disconnect") {
 						disconnectedSessionIds.push(config.dartCodeDebugSessionID as string);

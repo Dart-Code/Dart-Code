@@ -34,7 +34,7 @@ describe("capture logs command", () => {
 		};
 	}
 
-	async function logWithCommand(command: string) {
+	function logWithCommand(command: string) {
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
 		const loggingCommand = vs.commands.executeCommand<string>(command);
 
@@ -95,7 +95,7 @@ describe("capture logs command", () => {
 	});
 
 	it("only logs analyzer when using Analyzer logging", async () => {
-		const log = await logWithCommand("dart.startLoggingAnalysisServer");
+		const log = logWithCommand("dart.startLoggingAnalysisServer");
 
 		logger.info("This is a test"); // Should be logged
 		logger.info("This is an analyzer event", LogCategory.Analyzer); // Should be logged
@@ -111,7 +111,7 @@ describe("capture logs command", () => {
 	});
 
 	it("only logs debugging when using Debugging logging", async () => {
-		const log = await logWithCommand("dart.startLoggingDebugging");
+		const log = logWithCommand("dart.startLoggingDebugging");
 
 		logger.info("This is a test"); // Should be logged
 		logger.info("This is a vm service event", LogCategory.VmService); // Should be logged
@@ -129,7 +129,7 @@ describe("capture logs command", () => {
 	});
 
 	it("only logs extension when using ExtensionOnly logging", async () => {
-		const log = await logWithCommand("dart.startLoggingExtensionOnly");
+		const log = logWithCommand("dart.startLoggingExtensionOnly");
 
 		logger.info("This is a test"); // Should be logged
 		logger.info("This is a devtools event", LogCategory.DevTools); // Should be logged

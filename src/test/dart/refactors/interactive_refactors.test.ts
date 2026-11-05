@@ -11,7 +11,7 @@ describe("interactive refactors", () => {
 
 	beforeEach("activate", () => activate());
 
-	it("does not rewrite unrelated code actions", async () => {
+	it("does not rewrite unrelated code actions", () => {
 		const refactors = privateApi.interactiveRefactors!;
 
 		const codeActionWithCommand = new vs.CodeAction("e");
@@ -75,7 +75,7 @@ describe("interactive refactors", () => {
 		return codeAction;
 	}
 
-	it("rewrites interactive refactor code actions", async () => {
+	it("rewrites interactive refactor code actions", () => {
 		const refactors = privateApi.interactiveRefactors!;
 		const kind = "unknown_kind";
 		const defaultValue = "aaa";

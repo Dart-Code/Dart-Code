@@ -55,7 +55,7 @@ describe("pub deps", () => {
 	beforeEach("activate", () => activate(null));
 
 	describe("pub deps (pre-workspace format)", () => {
-		it("builds the correct tree", async () => {
+		it("builds the correct tree", () => {
 			const deps = new PubDeps(privateApi.logger, privateApi.workspaceContext);
 			const dependenciesTree = deps.buildTree(fakePreWorkspacePubDepsJsonSinglePackage, "my_package_2");
 			const textTree = makeTextTree(dependenciesTree);
@@ -76,7 +76,7 @@ my_package_2 (1.2.3)
 	});
 
 	describe("pub deps (post-workspace format)", () => {
-		it("builds the correct tree for a single (non-workspace) package", async () => {
+		it("builds the correct tree for a single (non-workspace) package", () => {
 			const deps = new PubDeps(privateApi.logger, privateApi.workspaceContext);
 			const dependenciesTree = deps.buildTree(fakePreWorkspacePubDepsJsonSinglePackage, "my_package_2");
 			const textTree = makeTextTree(dependenciesTree);
@@ -95,7 +95,7 @@ my_package_2 (1.2.3)
 			`.trim());
 		});
 
-		it("builds the correct tree for a workspace", async () => {
+		it("builds the correct tree for a workspace", () => {
 			const deps = new PubDeps(privateApi.logger, privateApi.workspaceContext);
 			let dependenciesTree = deps.buildTree(fakePostWorkspacePubDepsJsonWorkspace, "my_package_1");
 			assert.equal(makeTextTree(dependenciesTree), `

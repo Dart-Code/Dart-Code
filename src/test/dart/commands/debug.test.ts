@@ -55,6 +55,7 @@ describe("debug commands", () => {
 	});
 
 	it("dart.promptForVmService prompts with the expected UI and normalizes ports", async () => {
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
 			assert.equal(options?.ignoreFocusOut, true);
 			assert.equal(options?.placeHolder, "Paste a VM Service URI or a port number");
@@ -127,6 +128,7 @@ describe("debug commands", () => {
 	it("getDebugSession prompts when multiple sessions are active", async () => {
 		const firstSession = startFakeDebugSession({ debuggerType: DebuggerType.Dart, id: "session-1", name: "First Session" });
 		const secondSession = startFakeDebugSession({ debuggerType: DebuggerType.Flutter, id: "session-2", name: "Second Session" });
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 		const showQuickPick = sb.stub(vs.window, "showQuickPick").callsFake(async (items, options) => {
 			const sessionItems = items as Array<{ session: unknown }> | undefined;
 			assert.equal(options?.placeHolder, "Which debug session?");
@@ -770,6 +772,7 @@ describe("debug commands", () => {
 
 			// Multiple options (exposed URI differs from vmServiceUri).
 			exposeUrl.resolves("wss://exposed.example.com/ws");
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			showQuickPick.callsFake(async (items, options) => {
 				const uriItems = items as vs.QuickPickItem[] | undefined;
 				assert.equal(options?.placeHolder, "Which debug session / VM Service URI?");

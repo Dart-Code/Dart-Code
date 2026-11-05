@@ -26,7 +26,7 @@ describe("packages tree data", () => {
 			sb.stub(projectFinder, "findAllProjectFolders")
 				.resolves(["/path/to/my_package_1", "/path/to/my_package_2"]);
 			sb.stub(deps, "getJson")
-				.callsFake(async (projectPath: string) => projectPath.endsWith("my_package_2") ? fakePreWorkspacePubDepsJsonSinglePackage : fakePreWorkspacePubDepsJsonBasic);
+				.callsFake((projectPath: string) => Promise.resolve(projectPath.endsWith("my_package_2") ? fakePreWorkspacePubDepsJsonSinglePackage : fakePreWorkspacePubDepsJsonBasic));
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 
 			const textTree = (await makeTextTreeUsingCustomTree(undefined, privateApi.packagesTreeProvider)).join("\n");
@@ -64,7 +64,7 @@ my_package_2
 			sb.stub(projectFinder, "findAllProjectFolders")
 				.resolves(["/path/to/workspace", "/path/to/workspace/my_package_1", "/path/to/workspace/my_package_2"]);
 			sb.stub(deps, "getJson")
-				.callsFake(async (_projectPath: string) => fakePostWorkspacePubDepsJsonWorkspace);
+				.resolves(fakePostWorkspacePubDepsJsonWorkspace);
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 
 			const textTree = (await makeTextTreeUsingCustomTree(undefined, privateApi.packagesTreeProvider)).join("\n");

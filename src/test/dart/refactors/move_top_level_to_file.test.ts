@@ -49,6 +49,7 @@ class B {}
 
 		it("can move a simple class", async () => {
 			// Stub the quick-pick to select the "Create New File" option.
+			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			sb.stub(vs.window, "showQuickPick").callsFake(async (items: vs.QuickPickItem[]) => {
 				const expectedLabel = "Create New File";
 				const selection = items.find((item) => item.label.includes(expectedLabel));

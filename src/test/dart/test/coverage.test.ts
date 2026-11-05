@@ -5,7 +5,7 @@ import { activate, privateApi } from "../../helpers";
 describe("coverage", () => {
 	beforeEach("activate", () => activate());
 
-	it("parses line and branch data correctly", async () => {
+	it("parses line and branch data correctly", () => {
 		const content = `
 SF:lib\\main.dart
 DA:1,1
@@ -47,7 +47,7 @@ end_of_record
 		assert.deepStrictEqual(result2.coveredLines, new Set<number>([]));
 	});
 
-	it("handles absolute Windows file paths with colons after drive letters", async () => {
+	it("handles absolute Windows file paths with colons after drive letters", () => {
 		const content = `
 SF:C:\\lib\\main.dart
 DA:1,1
