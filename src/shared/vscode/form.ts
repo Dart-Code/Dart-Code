@@ -7,7 +7,6 @@
 /* eslint-disable object-shorthand */
 /* eslint-disable quotes */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/prefer-function-type */
 
 /* ---------------------------------------------------------
@@ -160,7 +159,7 @@ export interface FormFieldTypeLazyEnum {
 	// Config contains the static settings for the source.
 	// The client treats this as opaque data and echoes it back in the
 	// 'interactive/listEnum' request.
-	config?: any;
+	config?: unknown;
 }
 
 // FormFieldTypeList defines a homogenous list of items.
@@ -206,7 +205,7 @@ export interface FormField {
 
 	// Default specifies an optional initial value for the answer.
 	// If Type is FormFieldTypeEnum, this value must be present in the enum's values array.
-	default?: any;
+	default?: unknown;
 
 	// Error provides a validation message from the language server.
 	// If empty or undefined, the current answer is considered valid.
@@ -220,7 +219,7 @@ export interface FormAnswer {
 	id: string;
 
 	// The user's answer value.
-	value: any;
+	value: unknown;
 }
 
 // InteractiveParams facilitates a multi-step, interactive dialogue between the
@@ -307,7 +306,7 @@ export interface InteractiveExecuteCommandParams extends InteractiveParams {
 	/**
 	 * Arguments that the command should be invoked with.
 	 */
-	arguments?: any[];
+	arguments?: unknown[];
 }
 
 /**
@@ -331,7 +330,7 @@ export interface InteractiveListEnumParams {
 	 * The client treats this as opaque data and echoes it back in the
 	 * 'interactive/listEnum' request.
 	 */
-	config?: any;
+	config?: unknown;
 
 	/**
 	 * A query string to filter enum entries by.
@@ -432,7 +431,7 @@ export interface InteractiveResolveCommandMiddleware {
  * server-validated inputs.
  */
 export interface InteractiveExecuteCommandSignature {
-	(this: void, command: string, args: any[], formAnswers: any[]): vscode.ProviderResult<any>;
+	(this: void, command: string, args: unknown[], formAnswers: FormAnswer[]): vscode.ProviderResult<unknown>;
 }
 
 /**
@@ -449,10 +448,10 @@ export interface InteractiveExecuteCommandMiddleware {
 	interactiveExecuteCommand?: (
 		this: void,
 		command: string,
-		args: any[],
-		formAnswers: any[],
+		args: unknown[],
+		formAnswers: FormAnswer[],
 		next: InteractiveExecuteCommandSignature
-	) => vscode.ProviderResult<any>;
+	) => vscode.ProviderResult<unknown>;
 }
 
 export interface InteractiveListEnumSignature {
@@ -552,7 +551,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 		//   "interactiveExecuteCommand" middleware.
 		// - If no user answers were collected, execute it using the standard
 		//   "executeCommand" middleware.
-		const overwrite = async (cmd: string, args: any[], next: ExecuteCommandSignature) => {
+		const overwrite = async (cmd: string, args: unknown[], next: ExecuteCommandSignature) => {
 			const experimental = this.client.initializeResult?.capabilities?.experimental as { interactiveResolveProvider?: interactiveResolveOptions } | undefined;
 			const option = experimental?.interactiveResolveProvider;
 
@@ -667,12 +666,12 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 */
 	private interactiveExecuteCommand = (
 		outerCommand: string,
-		outerArgs: any[],
-		outerFormAnswers: any[]
-	): vscode.ProviderResult<any> => {
+		outerArgs: unknown[],
+		outerFormAnswers: FormAnswer[]
+	): vscode.ProviderResult<unknown> => {
 		const _interactiveExecuteCommand: InteractiveExecuteCommandSignature = (innerCommand, innerArgs, innerFormAnswers) => {
-			const requestType = new RequestType<InteractiveExecuteCommandParams, any, void>('workspace/executeCommand');
-			return this.client.sendRequest<any>('workspace/executeCommand', {
+			const requestType = new RequestType<InteractiveExecuteCommandParams, unknown, void>('workspace/executeCommand');
+			return this.client.sendRequest<unknown>('workspace/executeCommand', {
 				command: innerCommand,
 				arguments: innerArgs,
 				formAnswers: innerFormAnswers
@@ -715,7 +714,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 		outerParam: InteractiveExecuteCommandParams
 	): vscode.ProviderResult<InteractiveExecuteCommandParams> => {
 		const _interactiveResolveCommand: InteractiveResolveCommandSignature = (innerParam) => {
-			const requestType = new RequestType<InteractiveExecuteCommandParams, any, void>('command/resolve');
+			const requestType = new RequestType<InteractiveExecuteCommandParams, InteractiveExecuteCommandParams, void>('command/resolve');
 			return this.client.sendRequest<InteractiveExecuteCommandParams>('command/resolve', innerParam).then(
 				undefined,
 				(error) => {
@@ -781,7 +780,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 			return undefined;
 		}
 
-		const previousAnswers = new Map<string, any>();
+		const previousAnswers = new Map<string, unknown>();
 		if (formAnswers) {
 			for (const answer of formAnswers) {
 				previousAnswers.set(answer.id, answer.value);
@@ -820,7 +819,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 	/**
 	 * Opens a Quick Pick that dynamically fetches options from the Language Server.
 	 */
-	private async pickLazyEnum(description: string, source: string, config: any = {}): Promise<string | undefined> {
+	private async pickLazyEnum(description: string, source: string, config: unknown = {}): Promise<string | undefined> {
 		return new Promise((resolve) => {
 			const quickPick = vscode.window.createQuickPick<vscode.QuickPickItem & { value: string }>();
 
@@ -968,7 +967,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * Returns `undefined` if an input is cancelled.
 	 * Returns `null` if an answer was skipped/no answer (for example an empty input).
 	 */
-	private async promptForField(field: FormField, prevAnswer: any): Promise<any> {
+	private async promptForField(field: FormField, prevAnswer: unknown): Promise<unknown> {
 		const fieldType = field.type;
 
 		switch (fieldType.kind) {
@@ -1162,9 +1161,9 @@ export class InteractiveFormsFeature implements StaticFeature {
 			case 'number': {
 				let value: string | undefined;
 				if (prevAnswer !== undefined && prevAnswer !== null) {
-					value = String(prevAnswer);
+					value = String(prevAnswer as number | string);
 				} else if (field.default !== undefined && field.default !== null) {
-					value = String(field.default);
+					value = String(field.default as number | string);
 				}
 				const numResult = await vscode.window.showInputBox({
 					prompt: field.description,

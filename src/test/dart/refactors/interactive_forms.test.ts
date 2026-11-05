@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import { mock } from "node:test";
 import * as vscode from "vscode";
 import { ClientCapabilities, LanguageClient, LanguageClientOptions, ServerCapabilities } from "vscode-languageclient/node";
-import { FileExistence, FileType, FormField, InteractiveFormsFeature, ValidationSeverity } from "../../../shared/vscode/form";
+import { FileExistence, FileType, FormField, InteractiveFormsFeature, StringValidator, ValidationSeverity } from "../../../shared/vscode/form";
 
 describe("interactive forms", () => {
 	afterEach("reset mocks", () => mock.reset());
@@ -89,7 +89,7 @@ describe("interactive forms", () => {
 									},
 									{
 										kind: "unknown_future_validator",
-									} as any,
+									} as unknown as StringValidator,
 								]
 							},
 							required: true,
@@ -223,7 +223,7 @@ describe("interactive forms", () => {
 		describe("boolean", () => {
 			it("handles using QuickPick", async () => {
 				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
-				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", async (items: any, options: any) => {
+				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", async (items: vscode.QuickPickItem[], options: vscode.QuickPickOptions) => {
 					assert.equal(options.placeHolder, "Enable feature?");
 					assert.deepEqual(items, [
 						{ label: "Yes", value: true },
@@ -253,7 +253,7 @@ describe("interactive forms", () => {
 		describe("enum", () => {
 			it("handles using QuickPick", async () => {
 				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
-				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", async (items: any, options: any) => {
+				const showQuickPickMock = mock.method(vscode.window, "showQuickPick", async (items: vscode.QuickPickItem[], options: vscode.QuickPickOptions) => {
 					assert.equal(options.placeHolder, "Select environment");
 					assert.deepEqual(items, [
 						{ label: "Production environment", description: "prod", value: "prod" },
@@ -297,7 +297,7 @@ describe("interactive forms", () => {
 					placeholder: "",
 					matchOnDescription: false,
 					busy: false,
-					items: [] as any[],
+					items: [] as Array<vscode.QuickPickItem & { value: string }>,
 					onDidChangeValue: (cb: (v: string) => void) => {
 						onDidChangeValueCallbacks.push(cb);
 						return { dispose: () => { } };
@@ -315,7 +315,7 @@ describe("interactive forms", () => {
 						onDidHideCallbacks.forEach((cb) => cb());
 					},
 					dispose: () => { },
-					selectedItems: [] as any[]
+					selectedItems: [] as Array<vscode.QuickPickItem & { value: string }>
 				};
 
 				const createQuickPickMock = mock.method(vscode.window, "createQuickPick", () => quickPickMock);
@@ -394,7 +394,7 @@ describe("interactive forms", () => {
 
 			it("handles for new resource using showSaveDialog", async () => {
 				// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
-				const showSaveDialogMock = mock.method(vscode.window, "showSaveDialog", async (options: any) => {
+				const showSaveDialogMock = mock.method(vscode.window, "showSaveDialog", async (options: vscode.SaveDialogOptions) => {
 					assert.equal(options.title, "Create new output file");
 					return vscode.Uri.parse("file:///workspace/output.dart");
 				});
@@ -658,7 +658,7 @@ describe("interactive forms", () => {
 
 			assert.ok(flow);
 			assert.equal(showInputBoxMock.mock.callCount(), 1);
-			const warnings = showWarningMessageMock.mock.calls.map((c: any) => c.arguments[0] as string);
+			const warnings = showWarningMessageMock.mock.calls.map((c) => c.arguments[0]!);
 			assert.ok(warnings.includes("Question 1: Username is already taken"));
 		});
 
@@ -682,7 +682,7 @@ describe("interactive forms", () => {
 			assert.equal(flow.result, undefined);
 			assert.equal(flow.resolveCallCount, 5);
 
-			const warnings = showWarningMessageMock.mock.calls.map((c: any) => c.arguments[0] as string);
+			const warnings = showWarningMessageMock.mock.calls.map((c) => c.arguments[0]!);
 			assert.ok(warnings.some((w: string) => w.includes("exceeds the maximum allowed attempts")));
 		});
 
@@ -737,7 +737,7 @@ async function runInteractiveFormTest(params: {
 
 	// Capture the params send to the underlying execute command for test
 	// validation.
-	let executeCallRequestParams: Record<string, any> | null = null;
+	let executeCallRequestParams: Record<string, unknown> | null = null;
 
 	const serverCapabilities = params.serverCapabilities ?? {
 		experimental: {
@@ -784,7 +784,7 @@ async function runInteractiveFormTest(params: {
 			}
 			throw new Error(`Unknown request to mock client: ${method}`);
 		},
-		handleFailedRequest: (_type: any, _value: any, requestError: any, _token: any) => {
+		handleFailedRequest: (_type: unknown, _value: unknown, requestError: unknown, _token: unknown) => {
 			throw requestError;
 		}
 	} as unknown as LanguageClient;
