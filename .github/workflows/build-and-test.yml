@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - 'patch-*'
     tags:
       - '**'
   pull_request:
@@ -14,7 +15,14 @@ on:
   schedule:
      - cron: '0 6 * * 1' # 6am Monday
   workflow_dispatch:
+  # Called by release.yml after publishing a stable release to run the full test
+  # suite against the newly pushed release tag (since tags pushed with GITHUB_TOKEN
+  # do not trigger on: push workflows automatically).
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
 
 jobs:
 
@@ -32,15 +40,16 @@ jobs:
     steps:
       - id: no_exclude
         name: Run all builds
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-        # On scheduled runs, manual workflow dispatches, and tag pushes, run the full matrix across
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || inputs.ref != ''
+        # On scheduled runs, manual workflow dispatches, reusable workflow calls (which inherit
+        # workflow_dispatch and pass inputs.ref), and tag pushes, run the full matrix across
         # all OSes and SDK channels. We only exclude combinations that aren't valid:
         # - beta versions of "other IDEs" that don't have insiders versions
         # - non-Linux / beta versions of flutter_snap
         run: echo 'excludes=[{"build-version":"beta","bot":"dart-antigravity"},{"build-version":"beta","bot":"dart_debug-antigravity"},{"build-version":"beta","bot":"flutter_snap"},{"os":"windows-latest","bot":"flutter_snap"},{"os":"macos-latest","bot":"flutter_snap"}]' >> $GITHUB_OUTPUT
       - id: exclude_master
         name: Exclude beta and non-Linux builds on master
-        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') && inputs.ref == ''
         # On pushes to master (which occur once per combined batch from the merge queue), run all
         # bots on Linux stable, excluding only:
         # - all betas
@@ -49,7 +58,7 @@ jobs:
         run: echo 'excludes=[{"build-version":"beta"},{"os":"windows-latest"},{"os":"macos-latest"}]' >> $GITHUB_OUTPUT
       - id: exclude_pr
         name: Exclude beta, non-Linux, and secondary bots on PRs
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && inputs.ref == ''
         # To speed up CI on every PR, in addition to excluding beta, Windows, and macOS, we also
         # exclude secondary/slower bots (Antigravity, flutter_snap, flutter_debug_chrome, and
         # flutter_repo) that cover less common configurations or duplicate coverage from the main
@@ -58,7 +67,7 @@ jobs:
         run: echo 'excludes=[{"build-version":"beta"},{"os":"windows-latest"},{"os":"macos-latest"},{"bot":"dart-antigravity"},{"bot":"dart_debug-antigravity"},{"bot":"flutter_snap"},{"bot":"flutter_debug_chrome"},{"bot":"flutter_repo"}]' >> $GITHUB_OUTPUT
       - id: exclude_merge_group
         name: Exclude all builds except misc if running on merge queue
-        if: github.event_name == 'merge_group'
+        if: github.event_name == 'merge_group' && inputs.ref == ''
         # GitHub's merge queue dispatches a merge_group event for every individual PR in the queue,
         # only batching the final push to master. Exclude everything except misc (stable,
         # ubuntu-latest), which will just run lint/build/grammar tests, and let the full Linux
@@ -91,6 +100,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       # upload-artifact fails if the path does not exist (it only supports
       # silent failure for no-files-found, but the path must exist), so
@@ -355,6 +366,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Run Lychee Link Checker
         uses: lycheeverse/lychee-action@v2
@@ -370,7 +383,8 @@ jobs:
             package.json
 
   # A single action based on the test outcome that can be used
-  # as a required status check.
+  # as a required status check. link_check is intentionally excluded
+  # so external website link failures do not block PR merges.
   merge-guard:
     permissions:
       contents: none
@@ -462,6 +476,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Download coverage
         uses: actions/download-artifact@v8
