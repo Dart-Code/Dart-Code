@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { isWin } from "../../../shared/constants";
+import { ExtensionRestartReason, isWin } from "../../../shared/constants";
 import { LogMessage } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { ActiveLocation, ActiveLocationChangedEvent, DtdResult, EventKind, Service, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
@@ -301,7 +301,7 @@ describe("dart tooling daemon", () => {
 
 		const logMessages: string[] = [];
 		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
-		defer("Dispose log listener", () => { logListener.dispose(); });
+		defer("Dispose log listener", () => logListener.dispose());
 
 		daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceRemoved, deviceId: "fake" });
 		assert.ok(
@@ -314,20 +314,13 @@ describe("dart tooling daemon", () => {
 		if (!privateApi.dartCapabilities.supportsLspOverDtd)
 			this.skip();
 
+		defer("Reload extension", () => vs.commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test));
+
 		const dtdDebounceMs = 1;
 		await setConfigForTest("dart", "dtdEditorActiveLocationDelay", dtdDebounceMs);
 
 		const daemon = privateApi.toolingDaemon!;
 		await daemon.connected;
-
-		// Stub the base class dispose so calling dispose() below runs
-		// VsCodeDartToolingDaemon.dispose() (which cancels the debounce timer)
-		// without tearing down the shared daemon's DTD connection. The daemon is
-		// an instance of the bundled DartToolingDaemon (out/dist) which is a
-		// different module copy than the one this test file can import
-		// (out/src), so the prototype must be stubbed via the bundled class
-		// exposed on privateApi.
-		sb.stub(privateApi.dartToolingDaemonBase.prototype, "dispose");
 
 		const sendEvent = sb.spy(daemon, "sendEvent");
 		const editor = await openFile(helloWorldMainFile);
@@ -339,7 +332,7 @@ describe("dart tooling daemon", () => {
 		// listener, which runs first) but has not yet fired when dispose() runs.
 		let markerFired = false;
 		const marker = vs.window.onDidChangeTextEditorSelection(() => { markerFired = true; daemon.dispose(); });
-		defer("Dispose marker", () => { marker.dispose(); });
+		defer("Dispose marker", () => marker.dispose());
 		editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
 		await waitForResult(() => markerFired, "selection-change event did not fire");
 
@@ -366,7 +359,7 @@ describe("dart tooling daemon", () => {
 
 		const logMessages: string[] = [];
 		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
-		defer("Dispose log listener", () => { logListener.dispose(); });
+		defer("Dispose log listener", () => logListener.dispose());
 
 		// Register our own service whose handler we can suspend mid-flight. The
 		// DTD forwards requests to it back over our own socket because we are the
