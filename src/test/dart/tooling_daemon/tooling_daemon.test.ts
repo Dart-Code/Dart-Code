@@ -1,11 +1,14 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { ActiveLocation, ActiveLocationChangedEvent, EventKind, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
+import { LogMessage } from "../../../shared/interfaces";
+import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
+import { ActiveLocation, ActiveLocationChangedEvent, DtdResult, EventKind, Service, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
+import { PromiseCompleter } from "../../../shared/utils";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { getActiveRealFileEditor } from "../../../shared/vscode/editors";
-import { activate, closeAllOpenFiles, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, sb, setConfigForTest, waitForResult } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
 describe("dart tooling daemon", () => {
@@ -259,6 +262,128 @@ describe("dart tooling daemon", () => {
 			},
 		);
 	});
+
+	it("still throws when sending an event while not connected and not shutting down", () => {
+		// A daemon whose process cannot start never connects but is also not
+		// (yet) shutting down, so a sendEvent here is an unexpected failure that
+		// should still be surfaced rather than silently dropped.
+		const daemon = new DartToolingDaemon(
+			privateApi.logger,
+			{ dart: "does-not-exist", dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
+
+		assert.throws(() => daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceRemoved, deviceId: "fake" }));
+	});
+
+	it("drops and logs events sent while shutting down", () => {
+		// Events sent after the daemon starts shutting down (for example from an
+		// event handler that was in-flight during dispose) are expected failures
+		// and should be logged and dropped rather than thrown.
+		const daemon = new DartToolingDaemon(
+			privateApi.logger,
+			{ dart: "does-not-exist", dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
+		daemon.dispose();
+
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => { logListener.dispose(); });
+
+		daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceRemoved, deviceId: "fake" });
+		assert.ok(
+			logMessages.some((m) => m.includes("DTD connection is unavailable")),
+			"the dropped event was not logged",
+		);
+	});
+
+	it("does not send pending active-location events after dispose", async () => {
+		const daemon = new TestDartToolingDaemon(
+			privateApi.logger,
+			privateApi.workspaceContext.sdks,
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
+		await daemon.connected;
+
+		const sendEvent = sb.spy(daemon, "sendEvent");
+
+		// sendActiveLocation() awaits `connected` before sending; disposing while
+		// that await is suspended exercises the same race as the debounced
+		// active-location listener firing during shutdown.
+		const pending = daemon.sendActiveLocationForTest({ selections: [], textDocument: undefined });
+		daemon.dispose();
+		await pending;
+
+		assert.ok(
+			!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.activeLocationChanged),
+			"active-location event was sent after dispose",
+		);
+	});
+
+	it("does not reject a service response that is in-flight during dispose", async () => {
+		const daemon = new DartToolingDaemon(
+			privateApi.logger,
+			privateApi.workspaceContext.sdks,
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
+		await daemon.connected;
+
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => { logListener.dispose(); });
+
+		// Register our own service whose handler we can suspend mid-flight. The
+		// DTD forwards requests to it back over our own socket because we are the
+		// registered provider.
+		const handlerGate = new PromiseCompleter<DtdResult & ActiveLocation>();
+		let handlerStarted = false;
+		await daemon.registerService(Service.Editor, "getActiveLocation", undefined, async () => {
+			handlerStarted = true;
+			return handlerGate.promise;
+		});
+
+		void daemon.callMethod(ServiceMethod.editorGetActiveLocation)
+			.catch(() => { /* The response is dropped during shutdown. */ });
+		await waitForResult(() => handlerStarted, "service handler did not start");
+
+		// Disposing while the handler is suspended means the response is sent
+		// after the connection is gone. Without the shutdown guard in send(),
+		// the response send throws and the error-path send throws again, which
+		// produced an unhandled rejection.
+		daemon.dispose();
+		handlerGate.resolve({ selections: [], textDocument: undefined, type: "ActiveLocation" });
+		await delay(1);
+
+		assert.ok(
+			!logMessages.some((m) => m.includes("Failed handling service request")),
+			"the in-flight service response was not dropped cleanly",
+		);
+	});
 });
 
 function simplify(e: ActiveLocation) {
@@ -266,4 +391,10 @@ function simplify(e: ActiveLocation) {
 		filePath: fsPath(vs.Uri.parse(e.textDocument!.uri)),
 		selections: e.selections
 	};
+}
+
+class TestDartToolingDaemon extends DartToolingDaemon {
+	public sendActiveLocationForTest(activeLocation: ActiveLocation): Promise<void> {
+		return this.sendActiveLocation(activeLocation);
+	}
 }

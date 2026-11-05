@@ -169,6 +169,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			if (connection && !this.isShuttingDown) {
 				const secret = connection.dtdSecret;
 				let exposedUri: string | undefined = await envUtils.exposeUrl(vmServiceUri, this.logger);
+				if (this.isShuttingDown)
+					return;
 				if (vmServiceUri === exposedUri)
 					exposedUri = undefined;
 				await this.callMethod(ServiceMethod.registerVmService, {
@@ -292,7 +294,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 }
 
-class EditorServices implements IAmDisposable {
+export class EditorServices implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
 	private disposed = false;
 
