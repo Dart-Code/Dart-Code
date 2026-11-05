@@ -59,7 +59,6 @@ export class LspAnalyzer extends Analyzer {
 	public readonly refactors: InteractiveRefactors;
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
-	private isDisposed = false;
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly dtd: DartToolingDaemon | undefined, private readonly analytics: Analytics) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
@@ -69,7 +68,6 @@ export class LspAnalyzer extends Analyzer {
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		this.disposables.push({
 			dispose: async () => {
-				this.isDisposed = true;
 				// If the client is still starting, calling `stop()` immediately will throw
 				// ("Client is not running and can't be stopped") and leave `clientStartPromise`
 				// to finish initializing and registering duplicate commands/providers in the

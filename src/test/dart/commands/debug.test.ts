@@ -162,7 +162,7 @@ describe("debug commands", () => {
 		privateApi.debugCommands.hasPromptedAboutDebugSettings = false;
 
 		const applyNewDebugOption = sb.stub(privateApi.debugCommands, "applyNewDebugOption");
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves("Debug all code" as any);
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves("Debug all code");
 		const breakpoint = new vs.SourceBreakpoint(new vs.Location(myPackageThingFile, new vs.Position(0, 0)), true);
 
 		privateApi.debugCommands.currentDebugOption = DebugOption.MyCode;
@@ -183,7 +183,7 @@ describe("debug commands", () => {
 		privateApi.debugCommands.hasPromptedAboutDebugSettings = true;
 
 		const applyNewDebugOption = sb.stub(privateApi.debugCommands, "applyNewDebugOption");
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves("Debug all code" as any);
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves("Debug all code");
 		const breakpoint = new vs.SourceBreakpoint(new vs.Location(myPackageThingFile, new vs.Position(0, 0)), true);
 
 		privateApi.debugCommands.currentDebugOption = DebugOption.MyCode;
@@ -399,7 +399,7 @@ describe("debug commands", () => {
 			assert.ok(showWarningMessage.notCalled);
 
 			// Prompt with URL and select "More Info".
-			showWarningMessage.resolves(moreInfoAction as any);
+			showWarningMessage.resolves(moreInfoAction);
 			privateApi.debugCommands.handleDebugSessionCustomEvent({
 				body: {
 					event: "app.warning",
@@ -427,7 +427,7 @@ describe("debug commands", () => {
 
 			// Prompt without URL and select "Do Not Show Again".
 			showWarningMessage.resetHistory();
-			showWarningMessage.resolves(doNotShowAgainAction as any);
+			showWarningMessage.resolves(doNotShowAgainAction);
 			privateApi.debugCommands.handleDebugSessionCustomEvent({
 				body: {
 					event: "app.warning",
@@ -726,7 +726,7 @@ describe("debug commands", () => {
 
 			// New dart.flutter.devToolsDeepLink: Do Not Ask Again.
 			showWarningMessage.resetHistory();
-			showWarningMessage.resolves(doNotAskAgainAction as any);
+			showWarningMessage.resolves(doNotAskAgainAction);
 			privateApi.debugCommands.handleDebugSessionCustomEvent({
 				body: {
 					deepLinkUrl: "http://example.org/#/inspector?uri&inspectorRef=inspector-0",

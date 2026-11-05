@@ -10,6 +10,7 @@ import { resolvedPromise } from "./utils/promises";
 
 export abstract class Analyzer implements IAmDisposableAsync {
 	protected disposables: IAmDisposableAsync[] = [];
+	public isDisposed = false;
 
 	public abstract readonly client: LanguageClient;
 
@@ -57,6 +58,7 @@ export abstract class Analyzer implements IAmDisposableAsync {
 	}
 
 	public dispose(): Promise<void> {
+		this.isDisposed = true;
 		return disposeAllAsync(this.disposables);
 	}
 }

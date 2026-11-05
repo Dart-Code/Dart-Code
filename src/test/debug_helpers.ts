@@ -19,7 +19,7 @@ import { currentTestName, defer, delay, fakeCancellationToken, findSuiteNode, ge
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester"; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
 
-export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: Record<string, any>): Promise<DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments> {
+export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: Record<string, unknown>): Promise<DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments> {
 	if (dc.debuggerType === DebuggerType.Flutter || dc.debuggerType === DebuggerType.FlutterTest) {
 		extraConfiguration = Object.assign(
 			{ deviceId: flutterTestDeviceId },
@@ -189,7 +189,7 @@ export async function captureTestDebugConfigurationForItems(fileUri: Uri, select
 }
 
 /// Waits for all the provided promises, but throws if the debugger terminates before they complete.
-export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array<Promise<any>>) {
+export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array<Promise<unknown>>) {
 	let didCompleteSuccessfully = false;
 	return Promise.race([
 		(async () => {
@@ -236,7 +236,7 @@ export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], ind
 }
 
 export async function ensureVariableEvaluateName(dc: DartDebugClient, variable: DebugProtocol.Variable, { frameId }: { frameId?: number } = {}) {
-	const evaluateName = (variable as any).evaluateName as string | undefined;
+	const evaluateName = variable.evaluateName;
 	if (!evaluateName)
 		return;
 	frameId ??= await dc.getTopFrameId();

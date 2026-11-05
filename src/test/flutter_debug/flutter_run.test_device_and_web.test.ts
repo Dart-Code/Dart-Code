@@ -696,7 +696,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const variables = await dc.getTopFrameVariables("Locals", { frameId });
 
 		for (const variable of variables) {
-			const evaluateName = (variable as any).evaluateName as string | undefined;
+			const evaluateName = variable.evaluateName;
 			if (!evaluateName)
 				continue;
 			const evaluateResult = await dc.evaluateForFrame(evaluateName, { frameId });

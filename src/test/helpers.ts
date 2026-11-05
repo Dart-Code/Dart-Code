@@ -7,7 +7,7 @@ import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { FlutterOutline, Outline } from "../shared/analysis/lsp/custom_protocol";
 import { dartCodeExtensionIdentifier, isDartCodeTestRun, isWin } from "../shared/constants";
-import { DartLaunchArgs } from "../shared/debugging/interfaces";
+import { BasicDebugConfiguration, DartLaunchArgs } from "../shared/debugging/interfaces";
 import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
@@ -355,7 +355,7 @@ export function stubCreateInputBox(valueToReturn: string) {
 		promptedValue: undefined as string | undefined,
 	};
 	const createInputBox = sb.stub(vs.window, "createInputBox");
-	createInputBox.callsFake(function (this: any, ...args) {
+	createInputBox.callsFake(function (this: unknown, ...args) {
 		// Call the underlying VS Code method to create the input box.
 		const input = createInputBox.wrappedMethod.apply(this, args);
 
@@ -628,7 +628,7 @@ afterEach("wait for any debug sessions to end", async () => {
 });
 
 interface DeferredFunction {
-	callback: (result?: "failed" | "passed" | "pending") => PromiseOr<any>;
+	callback: (result?: "failed" | "passed" | "pending") => PromiseOr<unknown>;
 	description: string;
 }
 
@@ -656,10 +656,10 @@ afterEach("run deferred functions", async function () {
 		throw firstError;
 	logger.info(`Done running deferred functions!`);
 });
-export function defer(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<any>): void {
+export function defer(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<unknown>): void {
 	deferredItems.push({ description: `${description} (${currentTestName})`, callback });
 }
-export function deferUntilLast(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<any>): void {
+export function deferUntilLast(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<unknown>): void {
 	deferredToLastItems.push({ description: `${description} (${currentTestName})`, callback });
 }
 
@@ -1226,7 +1226,7 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>): 
 	await nextAnalysis;
 }
 
-export async function getResolvedDebugConfiguration(extraConfiguration?: { program: string | undefined, [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
+export async function getResolvedDebugConfiguration(extraConfiguration?: { program?: string, [key: string]: unknown } | BasicDebugConfiguration): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
 	const debugConfig: vs.DebugConfiguration = Object.assign({}, {
 		name: `Dart & Flutter (${currentTestName})`,
 		request: "launch",
@@ -1235,7 +1235,7 @@ export async function getResolvedDebugConfiguration(extraConfiguration?: { progr
 	return await privateApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs;
 }
 
-export async function getLaunchConfiguration(script?: URI | string, extraConfiguration?: Record<string, any>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
+export async function getLaunchConfiguration(script?: URI | string, extraConfiguration?: Record<string, unknown>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	if (script && typeof script !== "string")
 		script = getProgramString(script);
 	const launchConfig = Object.assign({}, {
@@ -1244,7 +1244,7 @@ export async function getLaunchConfiguration(script?: URI | string, extraConfigu
 	return await getResolvedDebugConfiguration(launchConfig);
 }
 
-export async function getAttachConfiguration(extraConfiguration?: Record<string, any>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
+export async function getAttachConfiguration(extraConfiguration?: Record<string, unknown>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	const attachConfig = Object.assign({}, {
 		program: undefined,
 		request: "attach",
@@ -1407,7 +1407,7 @@ export function watchPromise<T>(name: string, maybePromise: Promise<T> | T): Pro
 	return promise;
 }
 
-export async function setConfigForTest(section: string, key: string, value: any): Promise<void> {
+export async function setConfigForTest(section: string, key: string, value: unknown): Promise<void> {
 	const conf = vs.workspace.getConfiguration(section);
 	const values = conf.inspect(key);
 	const oldValue = values?.globalValue;
@@ -1415,9 +1415,9 @@ export async function setConfigForTest(section: string, key: string, value: any)
 	defer("Restore test config", () => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
 }
 
-export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any[]) {
+export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: unknown[]) {
 	const launchConfig = vs.workspace.getConfiguration("launch", workspaceUri);
-	const originalConfigs = launchConfig.get<any[]>("configurations") ?? [];
+	const originalConfigs = launchConfig.get<unknown[]>("configurations") ?? [];
 	logger.info(`Adding ${configs?.length} launch configs to the ${originalConfigs?.length} that already existed!`);
 	const newConfigs = originalConfigs.slice().concat(configs);
 	await launchConfig.update("configurations", newConfigs);
@@ -1606,8 +1606,8 @@ export async function makeTextTreeUsingCustomTree(parent: vs.TreeItem | vs.Uri |
 		const description = treeItem.description ? ` [${treeItem.description}]` : "";
 		const iconUri = treeItem.iconPath ? treeItem.iconPath instanceof vs.Uri
 			? treeItem.iconPath
-			: "dark" in (treeItem.iconPath as any)
-				? (treeItem.iconPath as any).dark as string | vs.Uri
+			: typeof treeItem.iconPath === "object" && "dark" in treeItem.iconPath
+				? treeItem.iconPath.dark
 				: undefined
 			: undefined;
 		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("-dark", "") : undefined;

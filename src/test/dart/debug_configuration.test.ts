@@ -234,7 +234,7 @@ describe("dart cli debugger", () => {
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 
 			// Selecting "Show Errors" opens the problems view and aborts the launch.
-			showErrorMessage.resolves(showErrorsAction as any);
+			showErrorMessage.resolves(showErrorsAction);
 			const abortedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldMainFile),
 			});
@@ -242,7 +242,7 @@ describe("dart cli debugger", () => {
 			assert.ok(showErrorsCmd.calledOnce);
 
 			// Selecting "Debug Anyway" continues with the launch.
-			showErrorMessage.resolves(runAnywayAction as any);
+			showErrorMessage.resolves(runAnywayAction);
 			const continuedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldMainFile),
 			});

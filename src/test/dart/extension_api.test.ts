@@ -46,9 +46,9 @@ describe("extension api", () => {
 		// disposed the original analyzer, and replaced it with a new live analyzer.
 		const firstReloadAnalyzer = privateApi.analyzer;
 		assert.equal(warnSpy.withArgs(sinon.match("Performing extension reload")).callCount, 1);
-		assert.equal((initialAnalyzer as any).isDisposed, true);
+		assert.equal(initialAnalyzer.isDisposed, true);
 		assert.notStrictEqual(firstReloadAnalyzer, initialAnalyzer);
-		assert.equal((firstReloadAnalyzer as any).isDisposed, false);
+		assert.equal(firstReloadAnalyzer.isDisposed, false);
 
 		// Immediately trigger another reload while `firstReloadAnalyzer`'s LanguageClient
 		// is still starting up in the background (before `initialAnalysis` completes),
@@ -56,14 +56,14 @@ describe("extension api", () => {
 		// settle and stops it cleanly without colliding with the next analyzer's registrations.
 		assert.equal(firstReloadAnalyzer.client.state, ls.State.Starting);
 		await commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
-		assert.equal((firstReloadAnalyzer as any).isDisposed, true);
+		assert.equal(firstReloadAnalyzer.isDisposed, true);
 		assert.equal(firstReloadAnalyzer.client.state, ls.State.Stopped);
 		assert.deepEqual(
 			firstReloadAnalyzer.client.clientOptions.errorHandler!.closed(),
 			{ action: ls.CloseAction.DoNotRestart, handled: true },
 		);
 		assert.notStrictEqual(privateApi.analyzer, firstReloadAnalyzer);
-		assert.equal((privateApi.analyzer as any).isDisposed, false);
+		assert.equal(privateApi.analyzer.isDisposed, false);
 
 		// Wait for initial/current analysis on the newly reloaded analyzer and verify
 		// that it is functional and serving LSP requests (such as document outlines)

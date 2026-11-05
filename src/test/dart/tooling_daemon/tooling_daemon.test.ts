@@ -77,9 +77,10 @@ describe("dart tooling daemon", () => {
 		try {
 			const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri: flutterHelloWorldMainFile.toString() });
 			assert.fail(`DTD returned content outside of workspace: (${flutterHelloWorldMainFile.toString()} / ${result.content.length} bytes)`);
-		} catch (e: any) {
-			assert.equal(e.code, 142);
-			assert.equal(e.message, "Permission denied");
+		} catch (e) {
+			const error = e as { code?: number; message?: string };
+			assert.equal(error.code, 142);
+			assert.equal(error.message, "Permission denied");
 		}
 	});
 
@@ -111,7 +112,10 @@ describe("dart tooling daemon", () => {
 
 		await assert.rejects(
 			daemon.callMethod(ServiceMethod.editorNavigateToCode, { uri: "https://dart.dev" }),
-			(error: any) => error?.code === 144,
+			(e: unknown) => {
+				const error = e as { code?: number } | undefined;
+				return error?.code === 144;
+			},
 		);
 	});
 

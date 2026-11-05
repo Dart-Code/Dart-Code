@@ -25,7 +25,7 @@ describe("file change warnings", () => {
 
 	it("opens more info when requested for outside-workspace edits", async () => {
 		await setConfigForTest("dart", "warnWhenEditingFilesOutsideWorkspace", true);
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(moreInfoAction as any);
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(moreInfoAction);
 		const openExternal = sb.stub(vs.env, "openExternal").resolves(true);
 		const file = createExternalTestFile(path.join("outside_workspace", "lib", "more_info.dart"), "void main() {}\n");
 
@@ -38,7 +38,7 @@ describe("file change warnings", () => {
 
 	it("uses the pub cache warning and can disable future prompts", async () => {
 		await setConfigForTest("dart", "warnWhenEditingFilesInPubCache", true);
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves("Don't Warn Me" as any);
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves("Don't Warn Me");
 		const file = createExternalTestFile(path.join("cache_root", "hosted", "pub.dev", "example_pkg", "lib", "cached.dart"), "void main() {}\n");
 
 		await saveTrivialChangeToFile(file);

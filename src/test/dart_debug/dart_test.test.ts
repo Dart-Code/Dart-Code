@@ -820,10 +820,10 @@ test/empty_test.dart
 		const testDoneNotifications = customEvents.filter(isTestDoneSuccessNotification);
 		assert.equal(testDoneNotifications.length, 1);
 		const testDoneNotification = testDoneNotifications[0];
-		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
+		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body as unknown), undefined, 4));
 	}
 
-	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<any>>): Promise<void> {
+	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<unknown>>): Promise<void> {
 		const fileUriWithoutQuery = file.with({ query: "" });
 		await openFile(fileUriWithoutQuery);
 		const config = await startDebugger(dc, file, { args, noDebug: true });

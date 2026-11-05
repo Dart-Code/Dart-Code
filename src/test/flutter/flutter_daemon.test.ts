@@ -95,7 +95,7 @@ describe("flutter daemon", () => {
 
 class TestFlutterDaemon extends FlutterDaemon {
 	constructor(workspaceContext: FlutterWorkspaceContext) {
-		super(logger, {} as any as Analytics, workspaceContext, FlutterCapabilities.empty);
+		super(logger, {} as unknown as Analytics, workspaceContext, FlutterCapabilities.empty);
 	}
 
 	public sendStdOut(data: string | Buffer) {
