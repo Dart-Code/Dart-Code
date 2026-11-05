@@ -588,7 +588,7 @@ export class DevToolsManager implements IAmDisposable {
 				resolve(`http://${n.host}:${n.port}/`);
 			});
 
-			service.process?.on("close", async (code) => {
+			service.process?.on("close", (code) => {
 				this.devtoolsUrl = undefined;
 				this.setNotStartedStatusBar();
 				if (code && code !== 0 && !this.isShuttingDown) {

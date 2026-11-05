@@ -19,19 +19,19 @@ describe("stdio_service", () => {
 			service.sendStdOut(`${packet}`);
 		}
 
-		it(`handles simple JSON notifications terminated with ${JSON.stringify(terminator)}`, async () => {
+		it(`handles simple JSON notifications terminated with ${JSON.stringify(terminator)}`, () => {
 			sendMessages(event1);
 
 			assert.deepStrictEqual(service.notifications, [event1]);
 		});
 
-		it(`handles batches of multiple JSON notifications separated with ${JSON.stringify(terminator)}`, async () => {
+		it(`handles batches of multiple JSON notifications separated with ${JSON.stringify(terminator)}`, () => {
 			sendMessages(event1, event2);
 
 			assert.deepStrictEqual(service.notifications, [event1, event2]);
 		});
 
-		it(`handles messages split across multiple packets terminated with ${JSON.stringify(terminator)}`, async () => {
+		it(`handles messages split across multiple packets terminated with ${JSON.stringify(terminator)}`, () => {
 			const eventJson = JSON.stringify(event1);
 			sendRaw(eventJson.substring(0, 5));
 			sendRaw(eventJson.substring(5));
@@ -40,7 +40,7 @@ describe("stdio_service", () => {
 			assert.deepStrictEqual(service.notifications, [event1]);
 		});
 
-		it(`processes unhandled messages terminated with ${JSON.stringify(terminator)}`, async () => {
+		it(`processes unhandled messages terminated with ${JSON.stringify(terminator)}`, () => {
 			sendRaw(`this is a string${terminator}this is a string${terminator}`);
 
 			assert.deepStrictEqual(service.unhandledMessages, [`this is a string\n`, `this is a string\n`]);

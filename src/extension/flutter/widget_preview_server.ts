@@ -70,7 +70,7 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 		return message.startsWith("[{") && message.endsWith("}]");
 	}
 
-	protected async handleNotification(evt: UnknownNotification): Promise<void> {
+	protected handleNotification(evt: UnknownNotification): void {
 		switch (evt.event) {
 			case "widget_preview.started":
 				this.previewUrlCompleter.resolve(evt.params.url as string);

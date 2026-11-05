@@ -14,7 +14,7 @@ abstract class LspGoToCommand implements IAmDisposable {
 
 	constructor(protected readonly analyzer: LspAnalyzer) { }
 
-	protected async goToLocations(locations: ls.Location | ls.Location[], sourceUri: vs.Uri, sourcePosition: vs.Position): Promise<void> {
+	protected goToLocations(locations: ls.Location | ls.Location[], sourceUri: vs.Uri, sourcePosition: vs.Position): void {
 		if (!Array.isArray(locations))
 			locations = [locations];
 
@@ -49,7 +49,7 @@ abstract class LspGoToRequestCommand extends LspGoToCommand {
 		if (!locations)
 			return;
 
-		await this.goToLocations(locations, editor.document.uri, editor.selection.start);
+		this.goToLocations(locations, editor.document.uri, editor.selection.start);
 	}
 
 	abstract getLocations(params: ls.TextDocumentPositionParams): Promise<ls.Location | ls.Location[] | null>;

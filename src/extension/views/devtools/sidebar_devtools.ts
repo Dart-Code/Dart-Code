@@ -69,7 +69,7 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 		if (this.page.isStaticTool)
 			return;
 
-		void this.webViewProvider.setHtml(this.notConnectedHtml);
+		this.webViewProvider.setHtml(this.notConnectedHtml);
 	}
 
 	public async setUrls(urls: WebViewUrls, forceShow: boolean): Promise<void> {
@@ -86,8 +86,8 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 		}
 	}
 
-	public async reload(): Promise<void> {
-		await this.webViewProvider.reload();
+	public reload(): void {
+		this.webViewProvider.reload();
 	}
 
 	public dispose(): void {

@@ -187,12 +187,14 @@ class PublicSdkImpl implements PublicSdk {
 		return this.runDart(folder, ["pub", ...args], options);
 	}
 
-	public async startDart(folder: string, args: string[]): Promise<PublicStartResult> {
-		if (!data.sdks?.dart)
-			throw new Error("Dart SDK not available");
-		const dartExecutable = path.join(data.sdks.dart, dartVMPath);
+	public startDart(folder: string, args: string[]): Promise<PublicStartResult> {
+		return new Promise((resolve) => {
+			if (!data.sdks?.dart)
+				throw new Error("Dart SDK not available");
+			const dartExecutable = path.join(data.sdks.dart, dartVMPath);
 
-		return safeToolSpawn(folder, dartExecutable, args);
+			resolve(safeToolSpawn(folder, dartExecutable, args));
+		});
 	}
 }
 

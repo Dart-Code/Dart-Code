@@ -25,7 +25,7 @@ export class FlutterIconDecorations implements IAmDisposable {
 		});
 		this.computer = new IconRangeComputerLsp(logger);
 
-		this.subscriptions.push(this.analyzer.fileTracker.onFlutterOutline(async (op) => {
+		this.subscriptions.push(this.analyzer.fileTracker.onFlutterOutline((op) => {
 			if (this.activeEditor && fsPath(this.activeEditor.document.uri) === fsPath(vs.Uri.parse(op.uri))) {
 				this.update(op.outline);
 			}

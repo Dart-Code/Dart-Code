@@ -22,7 +22,7 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 		}));
 	}
 
-	public async provideMcpServerDefinitions(_token: vs.CancellationToken): Promise<vs.McpServerDefinition[]> {
+	public provideMcpServerDefinitions(_token: vs.CancellationToken): vs.ProviderResult<vs.McpServerDefinition[]> {
 		// Dart SDK doesn't support it.
 		if (!this.dartCapabilities.supportsMcpServer)
 			return [];

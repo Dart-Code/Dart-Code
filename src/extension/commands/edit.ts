@@ -67,7 +67,7 @@ export class EditCommands implements IAmDisposable {
 		}
 	}
 
-	private async printSelectionToTerminal() {
+	private printSelectionToTerminal() {
 		const editor = getActiveRealFileEditor();
 		const selection = editor?.selection;
 		const text = editor?.document?.getText(selection);
