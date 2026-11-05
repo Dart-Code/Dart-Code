@@ -4,12 +4,10 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as url from "url";
 import * as vs from "vscode";
-import { getFolderToRunCommandIn } from "../../../extension/utils/vscode/projects";
 import { iUnderstandAction } from "../../../shared/constants";
 import { MissingPackageMap, PackageMap, PackageMapLoader } from "../../../shared/pub/package_map";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
 import { getPubWorkspaceOrPackageFolderInfo, getPubWorkspaceStatus, promptToRunPubGet, promptToRunPubUpgrade, PubPackageStatus } from "../../../shared/vscode/pub";
-import * as sharedVscodeUtils from "../../../shared/vscode/utils";
 import { activate, activateWithoutAnalysis, closeAllOpenFiles, defer, fixPath, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldPubspec, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
 import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
@@ -561,10 +559,10 @@ describe("pub package commands", () => {
 		});
 
 		it("shows each pub workspace only once with a package count suffix", async () => {
-			sb.stub(sharedVscodeUtils, "getAllProjectFolders").resolves([workspaceProject1, workspaceProject2, standalone1]);
+			sb.stub(vs.workspace, "workspaceFolders").value([workspaceProject1, workspaceProject2, standalone1].map((p, index) => ({ index, name: path.basename(p), uri: vs.Uri.file(p) })));
 			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot });
 
-			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
+			const folder = await privateApi.getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
 
 			assert.ok(showQuickPick.calledOnce);
 			const workspaceFolder = vs.workspace.getWorkspaceFolder(vs.Uri.file(workspaceRoot));
@@ -579,7 +577,7 @@ describe("pub package commands", () => {
 		});
 
 		it("includes a pub workspace root that is outside opened workspace folders", async () => {
-			sb.stub(sharedVscodeUtils, "getAllProjectFolders").resolves([workspaceProject1, workspaceProject2, standalone1]);
+			sb.stub(vs.workspace, "workspaceFolders").value([workspaceProject1, workspaceProject2, standalone1].map((p, index) => ({ index, name: path.basename(p), uri: vs.Uri.file(p) })));
 			const getWorkspaceFolder = sb.stub(vs.workspace, "getWorkspaceFolder").callsFake((uri: vs.Uri) => {
 				const folderPath = fsPath(uri);
 				if (folderPath === workspaceRoot)
@@ -590,7 +588,7 @@ describe("pub package commands", () => {
 			});
 			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot });
 
-			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
+			const folder = await privateApi.getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
 
 			assert.ok(getWorkspaceFolder.called);
 			assert.ok(showQuickPick.calledOnce);
@@ -603,10 +601,10 @@ describe("pub package commands", () => {
 		});
 
 		it("does not prompt if all discovered projects collapse to a single pub workspace", async () => {
-			sb.stub(sharedVscodeUtils, "getAllProjectFolders").resolves([workspaceProject1, workspaceProject2]);
+			sb.stub(vs.workspace, "workspaceFolders").value([workspaceProject1, workspaceProject2].map((p, index) => ({ index, name: path.basename(p), uri: vs.Uri.file(p) })));
 			const showQuickPick = sb.stub(vs.window, "showQuickPick");
 
-			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
+			const folder = await privateApi.getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
 
 			assert.equal(showQuickPick.called, false);
 			assert.equal(folder, workspaceRoot);

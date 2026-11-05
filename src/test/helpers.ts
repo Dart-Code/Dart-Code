@@ -21,7 +21,7 @@ import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
-import { PublicDartExtensionApi } from "../extension/api/interfaces";
+import type { PublicDartExtensionApi } from "../extension/api/interfaces";
 import { extensionVersion } from "../shared/vscode/extension_utils";
 import { locateBestProjectRoot } from "../shared/vscode/project";
 
