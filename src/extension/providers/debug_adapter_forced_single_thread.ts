@@ -21,12 +21,16 @@ export class DartDebugForcedSingleThreadFactory implements vs.DebugAdapterTracke
  */
 class DartDebugForcedSingleThread implements vs.DebugAdapterTracker {
 	onDidSendMessage(message: unknown): void {
-		const event = message as DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent | undefined;
-		if (event?.type === "event" && event.body) {
-			if (event.event === "continued" && (event as DebugProtocol.ContinuedEvent).body.allThreadsContinued === undefined)
-				(event as DebugProtocol.ContinuedEvent).body.allThreadsContinued = false;
-			if (event.event === "stopped" && (event as DebugProtocol.StoppedEvent).body.allThreadsStopped === undefined)
-				(event as DebugProtocol.StoppedEvent).body.allThreadsStopped = false;
+		if (message && typeof message === "object" && "type" in message && message.type === "event" && "event" in message) {
+			if (message.event === "continued") {
+				const event = message as DebugProtocol.ContinuedEvent;
+				if (event.body && event.body.allThreadsContinued === undefined)
+					event.body.allThreadsContinued = false;
+			} else if (message.event === "stopped") {
+				const event = message as DebugProtocol.StoppedEvent;
+				if (event.body && event.body.allThreadsStopped === undefined)
+					event.body.allThreadsStopped = false;
+			}
 		}
 	}
 }

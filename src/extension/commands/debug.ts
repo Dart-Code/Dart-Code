@@ -685,7 +685,7 @@ export class DebugCommands implements IAmDisposable {
 		const event = e.event;
 		const body = e.body as Record<string, unknown>;
 		if (event === "dart.log") {
-			const message = e.body as LogMessage;
+			const message = body as unknown as LogMessage;
 			const logMessage = `[${e.session.name}] ${message.message}`;
 			const category = message.category ?? logMessage.includes("[VM]") ? LogCategory.VmService : LogCategory.DAP;
 			switch (message.severity) {

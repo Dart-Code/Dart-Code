@@ -42,10 +42,12 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		// - Progress events
 		// - Any test being discovered / starting
 
-		const msg = message as { command?: string; event?: string; body?: unknown } | undefined;
-		const command = msg?.command;
-		const event = msg?.event;
-		const body = msg?.body;
+		if (!message || typeof message !== "object")
+			return;
+
+		const command = "command" in message && typeof message.command === "string" ? message.command : undefined;
+		const event = "event" in message && typeof message.event === "string" ? message.event : undefined;
+		const body = "body" in message ? message.body : undefined;
 		const stopProgress =
 			command === "launch"
 			|| event === "output"

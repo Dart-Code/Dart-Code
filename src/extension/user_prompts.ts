@@ -167,8 +167,8 @@ async function promptToShowReleaseNotes(versionDisplay: string, versionLink: str
 }
 
 function error(err: unknown): void {
-	const message = (err as { message?: string } | undefined)?.message ?? String(err);
-	void vs.window.showErrorMessage(message);
+	const errorObj = err as { message?: unknown } | undefined;
+	void vs.window.showErrorMessage(`${String(errorObj?.message ?? err)}`);
 }
 
 export async function handleNewProjects(logger: Logger): Promise<void> {

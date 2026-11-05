@@ -62,16 +62,18 @@ class DartDebugAdapterHexView implements vs.DebugAdapterTracker {
 	}
 
 	onDidSendMessage(message: unknown): void {
-		const response = message as DebugProtocol.InitializeResponse | undefined;
-		if (!this.factory.supportsFormatting && response?.command === "initialize" && response?.body?.supportsValueFormattingOptions) {
-			this.factory.supportsFormatting = true;
-			void vs.commands.executeCommand("setContext", SUPPORTS_DEBUG_VALUE_FORMAT, true);
+		if (!this.factory.supportsFormatting && message && typeof message === "object" && "command" in message && message.command === "initialize") {
+			const response = message as DebugProtocol.InitializeResponse;
+			if (response.body?.supportsValueFormattingOptions) {
+				this.factory.supportsFormatting = true;
+				void vs.commands.executeCommand("setContext", SUPPORTS_DEBUG_VALUE_FORMAT, true);
+			}
 		}
 	}
 
 	onWillReceiveMessage(message: unknown): void {
-		const request = message as DebugProtocol.EvaluateRequest | DebugProtocol.VariablesRequest;
-		if (this.factory.supportsFormatting && (request.command === "evaluate" || request.command === "variables")) {
+		if (this.factory.supportsFormatting && message && typeof message === "object" && "command" in message && (message.command === "evaluate" || message.command === "variables")) {
+			const request = message as DebugProtocol.EvaluateRequest | DebugProtocol.VariablesRequest;
 			request.arguments ??= {} as DebugProtocol.EvaluateArguments & DebugProtocol.VariablesArguments;
 			request.arguments.format ??= {};
 			// Don't override if we happen to be a future version of VS Code that supports this.

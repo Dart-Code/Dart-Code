@@ -32,6 +32,9 @@ export class DartApi implements IAmDisposable {
 		if (apiDebugMode)
 			console.log(`VS CODE GOT: ${JSON.stringify(rawMessage)}`);
 
+		if (!rawMessage || typeof rawMessage !== "object")
+			return;
+
 		const message = rawMessage as { id?: unknown; method?: unknown; params?: Record<string, unknown> };
 		const method = message.method;
 		if (typeof method !== "string") return;

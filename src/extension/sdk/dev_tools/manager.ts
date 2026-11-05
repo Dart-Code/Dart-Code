@@ -739,7 +739,8 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	protected isNotification(msg: Record<string, unknown>): boolean { return !!msg.event || msg.method === "server.started"; }
 
 	protected async handleNotification(evt: UnknownNotification): Promise<void> {
-		switch ((evt as { method?: string }).method ?? evt.event) {
+		const notification = evt as UnknownNotification & { method?: string };
+		switch (notification.method ?? evt.event) {
 			case "server.started":
 				await this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
 				break;

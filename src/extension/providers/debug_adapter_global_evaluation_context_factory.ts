@@ -11,15 +11,17 @@ export class DartDebugAdapterGlobalEvaluationContextFactory implements vs.DebugA
 
 class DartDebugAdapterGlobalEvaluationContext implements vs.DebugAdapterTracker {
 	onWillReceiveMessage(message: unknown): void {
-		const request = message as DebugProtocol.EvaluateRequest;
-		if (request.command === "evaluate" && request.arguments?.context === "repl") {
-			const doc = getActiveRealFileEditor()?.document;
-			if (doc && isDartDocument(doc)) {
-				// Don't escape colons in drive letters, as the shipped DAP code here
-				// will call `lookupPackageUris` on this URI and it won't match. Also normalize
-				// the drive letter because otherwise it might not work for Windows -> Android
-				// (see https://github.com/Dart-Code/Dart-Code/issues/5237).
-				request.arguments.context = forceWindowsDriveLetterToUppercaseInUriString(doc.uri.toString(true));
+		if (message && typeof message === "object" && "command" in message && message.command === "evaluate") {
+			const request = message as DebugProtocol.EvaluateRequest;
+			if (request.arguments?.context === "repl") {
+				const doc = getActiveRealFileEditor()?.document;
+				if (doc && isDartDocument(doc)) {
+					// Don't escape colons in drive letters, as the shipped DAP code here
+					// will call `lookupPackageUris` on this URI and it won't match. Also normalize
+					// the drive letter because otherwise it might not work for Windows -> Android
+					// (see https://github.com/Dart-Code/Dart-Code/issues/5237).
+					request.arguments.context = forceWindowsDriveLetterToUppercaseInUriString(doc.uri.toString(true));
+				}
 			}
 		}
 	}

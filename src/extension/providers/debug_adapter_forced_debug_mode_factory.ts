@@ -30,8 +30,8 @@ export class DartDebugForcedDebugModeFactory implements vs.DebugAdapterTrackerFa
  */
 class DartDebugForcedDebugMode implements vs.DebugAdapterTracker {
 	onWillReceiveMessage(message: unknown): void {
-		const request = message as DebugProtocol.LaunchRequest;
-		if (request.command === "launch") {
+		if (message && typeof message === "object" && "command" in message && message.command === "launch") {
+			const request = message as DebugProtocol.LaunchRequest;
 			request.arguments.noDebug = undefined;
 		}
 	}

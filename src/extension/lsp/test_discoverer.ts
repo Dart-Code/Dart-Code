@@ -126,7 +126,8 @@ export class TestDiscoverer implements IAmDisposable {
 
 				await Promise.all(childPromises);
 			} catch (e: unknown) {
-				if ((e as { code?: unknown } | undefined)?.code !== "FileNotADirectory")
+				const err = e as { code?: unknown } | undefined;
+				if (err?.code !== "FileNotADirectory")
 					this.logger.error(`Failed to discover tests: ${String(e)}`);
 			}
 		}
