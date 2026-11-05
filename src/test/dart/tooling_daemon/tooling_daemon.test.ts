@@ -310,32 +310,43 @@ describe("dart tooling daemon", () => {
 		);
 	});
 
-	it("does not send pending active-location events after dispose", async () => {
-		const daemon = new TestDartToolingDaemon(
-			privateApi.logger,
-			privateApi.workspaceContext.sdks,
-			privateApi.dartCapabilities,
-			undefined,
-			[],
-			1000,
-			() => ({}),
-			async () => { },
-		);
-		defer("Dispose daemon", () => daemon.dispose());
+	it("does not send pending active-location events after dispose", async function () {
+		if (!privateApi.dartCapabilities.supportsLspOverDtd)
+			this.skip();
+
+		const dtdDebounceMs = 1;
+		await setConfigForTest("dart", "dtdEditorActiveLocationDelay", dtdDebounceMs);
+
+		const daemon = privateApi.toolingDaemon!;
 		await daemon.connected;
 
+		// Stub the base class dispose so calling dispose() below runs
+		// VsCodeDartToolingDaemon.dispose() (which cancels the debounce timer)
+		// without tearing down the shared daemon's DTD connection. The daemon is
+		// an instance of the bundled DartToolingDaemon (out/dist) which is a
+		// different module copy than the one this test file can import
+		// (out/src), so the prototype must be stubbed via the bundled class
+		// exposed on privateApi.
+		sb.stub(privateApi.dartToolingDaemonBase.prototype, "dispose");
+
 		const sendEvent = sb.spy(daemon, "sendEvent");
+		const editor = await openFile(helloWorldMainFile);
+		await waitForResult(() => sendEvent.called, "initial active-location event was not sent");
+		sendEvent.resetHistory();
 
-		// sendActiveLocation() awaits `connected` before sending; disposing while
-		// that await is suspended exercises the same race as the debounced
-		// active-location listener firing during shutdown.
-		const pending = daemon.sendActiveLocationForTest({ selections: [], textDocument: undefined });
-		daemon.dispose();
-		await pending;
+		// Disposing inside a selection listener registered after the daemon's
+		// own listener guarantees the debounced send is queued (by the daemon's
+		// listener, which runs first) but has not yet fired when dispose() runs.
+		let markerFired = false;
+		const marker = vs.window.onDidChangeTextEditorSelection(() => { markerFired = true; daemon.dispose(); });
+		defer("Dispose marker", () => { marker.dispose(); });
+		editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
+		await waitForResult(() => markerFired, "selection-change event did not fire");
 
+		await delay(dtdDebounceMs + 50);
 		assert.ok(
 			!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.activeLocationChanged),
-			"active-location event was sent after dispose",
+			"debounced active-location event was sent after dispose",
 		);
 	});
 
@@ -391,10 +402,4 @@ function simplify(e: ActiveLocation) {
 		filePath: fsPath(vs.Uri.parse(e.textDocument!.uri)),
 		selections: e.selections
 	};
-}
-
-class TestDartToolingDaemon extends DartToolingDaemon {
-	public sendActiveLocationForTest(activeLocation: ActiveLocation): Promise<void> {
-		return this.sendActiveLocation(activeLocation);
-	}
 }

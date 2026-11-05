@@ -1,6 +1,5 @@
 import { strict as assert } from "assert";
-import { EditorServices } from "../../../extension/dart/tooling_daemon";
-import { FlutterDaemon } from "../../../extension/flutter/flutter_daemon";
+import * as vs from "vscode";
 import * as f from "../../../shared/flutter/daemon_interfaces";
 import { LogMessage } from "../../../shared/interfaces";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
@@ -15,7 +14,7 @@ import { physicalAndroidMobile } from "../flutter_test_devices";
 describe("dart tooling daemon editor events", () => {
 	beforeEach("activate", () => activateWithoutAnalysis());
 
-	beforeEach("skip if not supported", async function () {
+	beforeEach("skip if not supported", function () {
 		// This workspace is a Flutter project so deviceManager should always be
 		// initialized on activation. If it isn't, these tests should fail rather
 		// than silently skip.
@@ -42,10 +41,14 @@ describe("dart tooling daemon editor events", () => {
 		return daemon;
 	}
 
-	async function createDaemonAndEditorServices() {
+	// Creates EditorServices bound to the shared daemon and device manager.
+	// registerService is stubbed so registering our services doesn't collide
+	// with the services the real daemon already registered.
+	function createEditorServices() {
+		const daemon = privateApi.toolingDaemon!;
 		const deviceManager = privateApi.deviceManager!;
-		const daemon = await createDaemon();
-		const editorServices = new EditorServices(daemon, deviceManager);
+		sb.stub(daemon, "registerService").resolves();
+		const editorServices = privateApi.createEditorServices(daemon, deviceManager);
 		defer("Dispose EditorServices", () => { editorServices.dispose(); });
 		return { daemon, deviceManager, editorServices };
 	}
@@ -83,7 +86,12 @@ describe("dart tooling daemon editor events", () => {
 	});
 
 	it("does not produce an unhandled rejection when an event is in-flight during dispose", async () => {
-		const { daemon, deviceManager, editorServices } = await createDaemonAndEditorServices();
+		// This test disposes the daemon, so it needs its own isolated instance
+		// rather than the shared privateApi.toolingDaemon.
+		const daemon = await createDaemon();
+		const deviceManager = privateApi.deviceManager!;
+		const editorServices = privateApi.createEditorServices(daemon, deviceManager);
+		defer("Dispose EditorServices", () => { editorServices.dispose(); });
 		await editorServices.register();
 
 		const sendEvent = sb.spy(daemon, "sendEvent");
@@ -127,30 +135,17 @@ describe("dart tooling daemon editor events", () => {
 	});
 
 	it("does not send a deviceChanged event that resolves after EditorServices was disposed", async () => {
-		const daemon = await createDaemon();
+		const { daemon, deviceManager, editorServices } = createEditorServices();
 
-		// Use a locally constructed device manager so the real
-		// onDeviceChanged event can be fired without going through
-		// enablePlatformType (which requires a real Flutter daemon).
-		const fakeDaemon = sb.createStubInstance(FlutterDaemon);
-		fakeDaemon.getEmulators.resolves([]);
-		const deviceManager = new TestDeviceManager(
-			privateApi.logger,
-			fakeDaemon,
-			{
-				flutterCustomEmulators: [],
-				flutterRememberSelectedDevice: false,
-				flutterSelectDeviceWhenConnected: false,
-				flutterShowEmulators: "local",
-				projectSearchDepth: 3,
-			},
-			privateApi.workspaceContext,
-			privateApi.context,
-		);
-		defer("Dispose device manager", () => deviceManager.dispose());
+		// Replace onDeviceChanged with our own emitter so the event can be
+		// fired without going through enablePlatformType (which requires a
+		// real Flutter daemon). This also means the event only reaches our
+		// EditorServices' listeners and not the shared daemon's own listeners
+		// (which were already registered on the real emitter).
+		const onDeviceChanged = new vs.EventEmitter<f.Device>();
+		defer("Dispose emitter", () => { onDeviceChanged.dispose(); });
+		sb.stub(deviceManager, "onDeviceChanged").value(onDeviceChanged.event);
 
-		const editorServices = new EditorServices(daemon, deviceManager);
-		defer("Dispose EditorServices", () => { editorServices.dispose(); });
 		await editorServices.register();
 
 		const sendEvent = sb.spy(daemon, "sendEvent");
@@ -163,7 +158,7 @@ describe("dart tooling daemon editor events", () => {
 		const marker = deviceManager.onDeviceChanged(() => emitterFired = true);
 		defer("Dispose marker", () => { marker.dispose(); });
 
-		deviceManager.fireDeviceChanged(physicalAndroidMobile);
+		onDeviceChanged.fire(physicalAndroidMobile);
 		await waitForResult(() => emitterFired, "deviceChanged listener did not start");
 
 		editorServices.dispose();
@@ -177,24 +172,29 @@ describe("dart tooling daemon editor events", () => {
 	});
 
 	it("does not send events from listeners that were in-flight when EditorServices was disposed", async () => {
-		const { daemon, deviceManager, editorServices } = await createDaemonAndEditorServices();
+		const { daemon, deviceManager, editorServices } = createEditorServices();
+
+		// Use our own emitter so the event only reaches our EditorServices'
+		// listeners and not the shared daemon's own listeners (which were
+		// already registered on the real emitter).
+		const onDeviceAdded = new vs.EventEmitter<f.Device>();
+		defer("Dispose emitter", () => { onDeviceAdded.dispose(); });
+		sb.stub(deviceManager, "onDeviceAdded").value(onDeviceAdded.event);
+
 		await editorServices.register();
 
 		const sendEvent = sb.spy(daemon, "sendEvent");
-		const getSupportedPlatforms = sb.stub(deviceManager, "getSupportedPlatformsForWorkspace");
-		getSupportedPlatforms.onCall(0).resolves([]);
 		const listenerGate = new PromiseCompleter<f.PlatformType[]>();
-		getSupportedPlatforms.returns(listenerGate.promise);
+		sb.stub(deviceManager, "getSupportedPlatformsForWorkspace").returns(listenerGate.promise);
 
-		// Our listener is invoked after the EditorServices listeners have started
-		// (and suspended on the gate above), so this marks them as in-flight.
+		// Our listener is invoked after the EditorServices listener has started
+		// (and suspended on the gate above), so this marks it as in-flight.
 		let emitterFired = false;
 		const marker = deviceManager.onDeviceAdded(() => emitterFired = true);
 		defer("Dispose marker", () => { marker.dispose(); });
 
-		trackTestDevice(deviceManager);
-		void deviceManager.deviceAdded(physicalAndroidMobile);
-		await waitForResult(() => emitterFired && getSupportedPlatforms.callCount >= 2, "device event listeners did not start");
+		onDeviceAdded.fire(physicalAndroidMobile);
+		await waitForResult(() => emitterFired, "device event listeners did not start");
 
 		// Disposing EditorServices while a listener is suspended on
 		// getSupportedPlatformsForWorkspace() should cause it to return without
@@ -210,15 +210,19 @@ describe("dart tooling daemon editor events", () => {
 	});
 
 	it("unsubscribes device event listeners when disposed", async () => {
-		const { daemon, deviceManager, editorServices } = await createDaemonAndEditorServices();
+		const { daemon, deviceManager, editorServices } = createEditorServices();
+
+		const onDeviceAdded = new vs.EventEmitter<f.Device>();
+		defer("Dispose emitter", () => { onDeviceAdded.dispose(); });
+		sb.stub(deviceManager, "onDeviceAdded").value(onDeviceAdded.event);
+
 		await editorServices.register();
 
 		const sendEvent = sb.spy(daemon, "sendEvent");
 		sb.stub(deviceManager, "getSupportedPlatformsForWorkspace").resolves(["android"]);
 
 		// Verify the listener actually fires before disposing.
-		trackTestDevice(deviceManager);
-		void deviceManager.deviceAdded(physicalAndroidMobile);
+		onDeviceAdded.fire(physicalAndroidMobile);
 		await waitForResult(
 			() => sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.deviceAdded),
 			"deviceAdded event was not sent before dispose",
@@ -226,7 +230,7 @@ describe("dart tooling daemon editor events", () => {
 		sendEvent.resetHistory();
 
 		editorServices.dispose();
-		void deviceManager.deviceAdded(physicalAndroidMobile);
+		onDeviceAdded.fire(physicalAndroidMobile);
 		// Allow time for any listener that leaked to run.
 		await delay(1);
 		assert.ok(
@@ -236,7 +240,11 @@ describe("dart tooling daemon editor events", () => {
 	});
 
 	it("does not register event listeners if disposed before register() runs", async () => {
-		const { daemon, deviceManager, editorServices } = await createDaemonAndEditorServices();
+		const { daemon, deviceManager, editorServices } = createEditorServices();
+
+		const onDeviceAdded = new vs.EventEmitter<f.Device>();
+		defer("Dispose emitter", () => { onDeviceAdded.dispose(); });
+		sb.stub(deviceManager, "onDeviceAdded").value(onDeviceAdded.event);
 
 		const sendEvent = sb.spy(daemon, "sendEvent");
 		sb.stub(deviceManager, "getSupportedPlatformsForWorkspace").resolves(["android"]);
@@ -246,8 +254,7 @@ describe("dart tooling daemon editor events", () => {
 		editorServices.dispose();
 		await editorServices.register();
 
-		trackTestDevice(deviceManager);
-		void deviceManager.deviceAdded(physicalAndroidMobile);
+		onDeviceAdded.fire(physicalAndroidMobile);
 		// Allow time for any listener that was registered to run.
 		await delay(1);
 		assert.ok(
@@ -256,10 +263,3 @@ describe("dart tooling daemon editor events", () => {
 		);
 	});
 });
-
-// A device manager that exposes the protected device-changed emitter for tests.
-class TestDeviceManager extends FlutterDeviceManager {
-	public fireDeviceChanged(device: f.Device): void {
-		this.onDeviceChangedEmitter.fire(device);
-	}
-}
