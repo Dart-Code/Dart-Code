@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import { ClientCapabilities, FeatureState, LanguageClient, ProvideDocumentSymbolsSignature, StaticFeature } from "vscode-languageclient/node";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { VersionedDocumentCache } from "../../shared/vscode/document_cache";
+import { IAmDisposable } from "../interfaces";
+import { disposeAll } from "../utils";
+import { VersionedDocumentCache } from "./document_cache";
 
 type DocumentSymbolsResult = vs.SymbolInformation[] | vs.DocumentSymbol[] | null | undefined;
 

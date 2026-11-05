@@ -1,14 +1,26 @@
 import { window } from "vscode";
-import { DART_DOWNLOAD_URL } from "../../shared/constants";
-import { WebClient } from "../../shared/fetch";
-import { Logger } from "../../shared/interfaces";
-import { versionIsAtLeast } from "../../shared/utils";
-import { envUtils } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
-import { config } from "../config";
-import { getLatestSdkVersion } from "../utils";
+import { DART_DOWNLOAD_URL } from "../constants";
+import { WebClient } from "../fetch";
+import { Logger } from "../interfaces";
+import { versionIsAtLeast } from "../utils";
+import { WorkspaceContext } from "../workspace";
+import { envUtils } from "./utils";
 
-export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceContext: WorkspaceContext, webClient: WebClient): Promise<void> {
+export interface UpdateCheckConfig {
+	readonly checkForSdkUpdates: boolean;
+	setCheckForSdkUpdates(value: boolean): Promise<void>;
+}
+
+export async function getLatestSdkVersion(webClient: WebClient): Promise<string> {
+	const resp = await webClient.fetch("https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION");
+	try {
+		return (JSON.parse(resp) as { version: string }).version;
+	} catch {
+		throw new Error(`Failed to parse latest Dart SDK Version from JSON: ${resp}`);
+	}
+}
+
+export async function checkForStandardDartSdkUpdates(logger: Logger, config: UpdateCheckConfig, workspaceContext: WorkspaceContext, webClient: WebClient): Promise<void> {
 	if (!config.checkForSdkUpdates || workspaceContext.config.disableSdkUpdateChecks)
 		return;
 

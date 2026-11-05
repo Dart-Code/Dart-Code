@@ -26,6 +26,7 @@ import { locateBestProjectRoot } from "../shared/vscode/project";
 import { getPubWorkspaceFolderOrPackageFolderPath } from "../shared/vscode/pub";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
+import { checkForStandardDartSdkUpdates } from "../shared/vscode/update_check";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { ProjectFinder, clearCaches, createWatcher, envUtils, getDartWorkspaceFolders, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
@@ -87,7 +88,6 @@ import { PubGlobal } from "./pub/global";
 import { ExtensionRecommentations } from "./recommendations/recommendations";
 import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
-import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
 import { VsCodeTestController } from "./test/vs_test_controller";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
@@ -258,7 +258,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
-		void checkForStandardDartSdkUpdates(logger, workspaceContext, webClient);
+		void checkForStandardDartSdkUpdates(logger, config, workspaceContext, webClient);
 	}
 
 	if (sdks.flutterVersion) {

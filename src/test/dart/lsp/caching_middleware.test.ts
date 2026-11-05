@@ -2,8 +2,8 @@ import { strict as assert } from "assert";
 import { mock } from "node:test";
 import * as vs from "vscode";
 import { LanguageClient, LanguageClientOptions } from "vscode-languageclient/node";
-import { CachingMiddlewareFeature } from "../../../extension/analysis/caching_middleware";
 import { PromiseCompleter } from "../../../shared/utils";
+import { CachingMiddlewareFeature } from "../../../shared/vscode/caching_middleware";
 import { defer, fakeCancellationToken } from "../../helpers";
 
 describe("caching middleware", () => {
