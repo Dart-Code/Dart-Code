@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - 'patch-*'
     tags:
       - '**'
   pull_request:
@@ -15,6 +16,10 @@ on:
      - cron: '0 6 * * 1' # 6am Monday
   workflow_dispatch:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
 
 jobs:
 
@@ -32,8 +37,9 @@ jobs:
     steps:
       - id: no_exclude
         name: Run all builds
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-        # On scheduled runs, manual workflow dispatches, and tag pushes, run the full matrix across
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || inputs.ref != ''
+        # On scheduled runs, manual workflow dispatches, reusable workflow calls (which inherit
+        # workflow_dispatch and pass inputs.ref), and tag pushes, run the full matrix across
         # all OSes and SDK channels. We only exclude combinations that aren't valid:
         # - beta versions of "other IDEs" that don't have insiders versions
         # - non-Linux / beta versions of flutter_snap
@@ -91,6 +97,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       # upload-artifact fails if the path does not exist (it only supports
       # silent failure for no-files-found, but the path must exist), so
@@ -355,6 +363,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Run Lychee Link Checker
         uses: lycheeverse/lychee-action@v2
@@ -370,7 +380,8 @@ jobs:
             package.json
 
   # A single action based on the test outcome that can be used
-  # as a required status check.
+  # as a required status check. link_check is intentionally excluded
+  # so external website link failures do not block PR merges.
   merge-guard:
     permissions:
       contents: none
@@ -462,6 +473,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Download coverage
         uses: actions/download-artifact@v8
