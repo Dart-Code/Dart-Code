@@ -32,10 +32,9 @@ jobs:
     steps:
       - id: no_exclude
         name: Run all builds
-        if: github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && !startsWith(github.ref, 'refs/heads/version-bump/'))
-        # On scheduled runs, manual workflow dispatches (except automated dispatches on version-bump/*
-        # PR branches), and tag pushes, run the full matrix across all OSes and SDK channels. We only
-        # exclude combinations that aren't valid:
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        # On scheduled runs, manual workflow dispatches, and tag pushes, run the full matrix across
+        # all OSes and SDK channels. We only exclude combinations that aren't valid:
         # - beta versions of "other IDEs" that don't have insiders versions
         # - non-Linux / beta versions of flutter_snap
         run: echo 'excludes=[{"build-version":"beta","bot":"dart-antigravity"},{"build-version":"beta","bot":"dart_debug-antigravity"},{"build-version":"beta","bot":"flutter_snap"},{"os":"windows-latest","bot":"flutter_snap"},{"os":"macos-latest","bot":"flutter_snap"}]' >> $GITHUB_OUTPUT
@@ -50,9 +49,8 @@ jobs:
         run: echo 'excludes=[{"build-version":"beta"},{"os":"windows-latest"},{"os":"macos-latest"}]' >> $GITHUB_OUTPUT
       - id: exclude_pr
         name: Exclude beta, non-Linux, and secondary bots on PRs
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/version-bump/'))
-        # To speed up CI on every PR (including automated workflow_dispatch runs on version-bump/*
-        # PR branches), in addition to excluding beta, Windows, and macOS, we also
+        if: github.event_name == 'pull_request'
+        # To speed up CI on every PR, in addition to excluding beta, Windows, and macOS, we also
         # exclude secondary/slower bots (Antigravity, flutter_snap, flutter_debug_chrome, and
         # flutter_repo) that cover less common configurations or duplicate coverage from the main
         # bots. These still run on normal merges to master (which are combined in the merge queue)
