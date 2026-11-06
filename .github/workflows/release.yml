@@ -63,7 +63,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref_name }}
           fetch-depth: 0
           submodules: recursive
 
