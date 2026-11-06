@@ -67,8 +67,13 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		}));
 		this.queueActiveLocationChange(window.activeTextEditor);
 
-		// Register services that we support.
-		void this.connected.then(() => this.registerServices()).catch((e) => logger.error(e));
+		// Register services that we support. Failures during shutdown (when the
+		// connection is gone and pending requests are rejected) are expected and
+		// shouldn't produce error logging.
+		void this.connected.then(() => this.registerServices()).catch((e) => {
+			if (!this.isShuttingDown)
+				logger.error(e);
+		});
 	}
 
 	private setUpStatusBarAndCommand() {
@@ -123,7 +128,14 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			}
 		});
 
-		await this.streamListen("Service");
+		try {
+			await this.streamListen("Service");
+		} catch (e) {
+			// If the connection drops mid-shutdown this call can never complete,
+			// so rejections here are expected and shouldn't surface.
+			if (!this.isShuttingDown)
+				throw e;
+		}
 	}
 
 	public async setUpVmServiceRegistrations() {
@@ -181,7 +193,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 				});
 			}
 		} catch (e) {
-			this.logger.error(`Failed to register VM Service ${vmServiceUri}: ${String(e)}`);
+			if (!this.isShuttingDown)
+				this.logger.error(`Failed to register VM Service ${vmServiceUri}: ${String(e)}`);
 		}
 	}
 
@@ -196,7 +209,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 				});
 			}
 		} catch (e) {
-			this.logger.error(`Failed to unregister VM Service ${vmServiceUri}: ${String(e)}`);
+			if (!this.isShuttingDown)
+				this.logger.error(`Failed to unregister VM Service ${vmServiceUri}: ${String(e)}`);
 		}
 	}
 
