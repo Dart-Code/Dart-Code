@@ -270,9 +270,9 @@ export class PackageCommands extends BaseSdkCommands {
 			return;
 		}
 
-		// Don't do anything if we're in the middle of creating projects, as packages
-		// may  be fetched automatically.
-		if (commandState.numProjectCreationsInProgress > 0) {
+		// Don't do anything for non-editor changes if we're in the middle of creating
+		// projects, as packages may be fetched automatically.
+		if (!isManualSave && commandState.numProjectCreationsInProgress > 0) {
 			this.logger.info("Skipping package fetch because project creation is in progress");
 			return;
 		}
