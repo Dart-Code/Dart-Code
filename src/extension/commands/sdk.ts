@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, ExtensionRestartReason, flutterPath, thirtySecondsInMs } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason, fiveSecondsInMs, flutterPath, thirtySecondsInMs } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -237,7 +237,12 @@ export function markProjectCreationStarted(): void {
 	commandState.numProjectCreationsInProgress++;
 }
 export function markProjectCreationEnded(): void {
-	commandState.numProjectCreationsInProgress--;
+	// File system watcher events for files written during `dart create` or `flutter create`
+	// (such as `example/pubspec.yaml` in a plugin project) may arrive in the extension host
+	// slightly after the creation process exits. Delay decrementing the counter so those
+	// late events still see project creation as in-progress and don't trigger a redundant
+	// automatic `pub get`.
+	setTimeout(() => commandState.numProjectCreationsInProgress--, fiveSecondsInMs).unref();
 }
 
 class ChainedProcess {
