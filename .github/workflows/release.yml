@@ -314,10 +314,6 @@ jobs:
               --body "Automated version bump after releasing v$VERSION."
           fi
 
-          # PRs created with GITHUB_TOKEN do not trigger on: pull_request workflows automatically,
-          # so dispatch Run Tests on the PR branch so Merge Guard runs and allows merging.
-          gh workflow run build-and-test.yml --ref "$BRANCH_NAME"
-
       - name: Print retry instructions on failure
         if: failure() && steps.publish.outcome == 'success'
         env:
