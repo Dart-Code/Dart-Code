@@ -1,0 +1,327 @@
+name: Release
+run-name: Release ${{ inputs.release_type }}${{ inputs.version && format(' v{0}', inputs.version) || '' }}${{ inputs.dry_run && ' (dry run)' || '' }}
+
+# Publishes a single release (pre-release or stable) to the VS Code Marketplace,
+# tags the commit, and (for stable releases) creates a GitHub Release with the VSIX.
+#
+# Note: When publishing a '.0' stable release (e.g. 3.148.0), the workflow opens a PR
+# to bump package.json to the next '-dev' version (e.g. 3.150.0-dev). To publish the
+# first pre-release for the next cycle (e.g. 3.149.YYYYMMDD), either merge that PR
+# first (so the version is auto-calculated) or pass the version explicitly.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type (pre-release or stable)"
+        required: true
+        type: choice
+        options:
+          - pre-release
+          - stable
+        default: pre-release
+      version:
+        description: "Version to publish (X.Y.Z). Required for stable; leave blank for pre-release to auto-calculate."
+        required: false
+        type: string
+        default: ""
+      skip_ci_check:
+        description: "Skip verifying that CI checks on the target commit passed"
+        required: false
+        type: boolean
+        default: false
+      dry_run:
+        description: "Dry run (skip publishing to VS Code Marketplace, but still commit/tag/release)"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  release:
+
+    name: Release Extension
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+      # actions: write is required to read CI runs (gh run list) and to dispatch the
+      # standalone post-release test workflow run (gh workflow run).
+      actions: write
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Node v22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Compute and validate version
+        id: version
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          # Versioning convention:
+          # - Stable releases always use EVEN minor versions (e.g. 3.148.0, or patch 3.146.1).
+          # - Pre-releases always use ODD minor versions with the UTC date as patch (e.g. 3.147.20261105),
+          #   because the VS Code Marketplace does not support semver pre-release suffixes like '-dev'.
+          # - Between releases, package.json on the default branch sits at the next EVEN minor version
+          #   with a '-dev' suffix (e.g. 3.148.0-dev).
+          PKG_PUBLISHER=$(node -p "require('./package.json').publisher")
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+
+          if [ -z "$INPUT_VERSION" ]; then
+            if [ "$RELEASE_TYPE" = "stable" ]; then
+              echo "::error::An explicit version (X.Y.Z) is required for stable releases. Re-run the workflow and provide the target version (e.g. 3.148.0)."
+              exit 1
+            fi
+            if [[ ! "$PKG_VERSION" =~ ^([0-9]+)\.([0-9]+)\.0-dev$ ]]; then
+              echo "::error::Cannot auto-calculate pre-release version because package.json version is '$PKG_VERSION' (expected 'X.Y.0-dev'). Update package.json or provide an explicit version input."
+              exit 1
+            fi
+            # Subtract 1 from the even '-dev' minor version in package.json to get the odd pre-release
+            # minor version, and use today's UTC date (YYYYMMDD) as the patch number.
+            VERSION="${BASH_REMATCH[1]}.$(( ${BASH_REMATCH[2]} - 1 )).$(date -u +%Y%m%d)"
+          else
+            VERSION="$INPUT_VERSION"
+          fi
+
+          if [[ ! "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Version '$VERSION' must match 'X.Y.Z' (three numeric components, e.g. 3.148.0)."
+            exit 1
+          fi
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+
+          if [ "$RELEASE_TYPE" = "stable" ] && [ $((MINOR % 2)) -ne 0 ]; then
+            echo "::error::Stable version '$VERSION' must have an EVEN minor version (found $MINOR). Check the version number or switch 'release_type' to 'pre-release'."
+            exit 1
+          fi
+          if [ "$RELEASE_TYPE" = "pre-release" ] && [ $((MINOR % 2)) -ne 1 ]; then
+            echo "::error::Pre-release version '$VERSION' must have an ODD minor version (found $MINOR). Check the version number or switch 'release_type' to 'stable'."
+            exit 1
+          fi
+
+          # Intentionally fail if the tag already exists rather than attempting complex in-place
+          # retry recovery after git push. If 'gh release create' fails after the tag is pushed,
+          # the release can be created manually from the pushed tag and uploaded VSIX workflow
+          # artifact (or the tag/commit can be deleted before re-running).
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Git tag 'v$VERSION' already exists. Check that the version number is correct, or if you are retrying a failed release, delete the existing 'v$VERSION' tag (and any partial GitHub Release) or create the GitHub Release manually from the pushed tag and uploaded VSIX artifact."
+            exit 1
+          fi
+
+          # After a '.0' stable minor release (e.g. 3.148.0), advance package.json to the next even
+          # minor '-dev' version (Y + 2, e.g. 3.150.0-dev). Patch releases (PATCH > 0) do not advance '-dev'.
+          NEXT_DEV_VERSION=""
+          if [ "$RELEASE_TYPE" = "stable" ] && [ "$PATCH" -eq 0 ]; then
+            NEXT_DEV_VERSION="${MAJOR}.$((MINOR + 2)).0-dev"
+          fi
+
+          VSIX="${PKG_NAME}-${VERSION}.vsix"
+          {
+            echo "version=$VERSION"
+            echo "vsix=$VSIX"
+            echo "pkg_publisher=$PKG_PUBLISHER"
+            echo "pkg_name=$PKG_NAME"
+            echo "next_dev_version=$NEXT_DEV_VERSION"
+          } >> "$GITHUB_OUTPUT"
+          echo "Prepared $RELEASE_TYPE v$VERSION ($VSIX)"
+
+      - name: Verify Merge Queue is empty
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          TOTAL_COUNT=$(gh api graphql \
+            -f query='query($o:String!,$r:String!,$b:String!){repository(owner:$o,name:$r){mergeQueue(branch:$b){entries{totalCount}}}}' \
+            -f o="$REPO_OWNER" -f r="$REPO_NAME" -f b="$GITHUB_REF_NAME" \
+            --jq '.data.repository.mergeQueue.entries.totalCount // 0')
+          if [ "$TOTAL_COUNT" -gt 0 ]; then
+            echo "::error::Merge queue on '$GITHUB_REF_NAME' is not empty ($TOTAL_COUNT PR(s) currently queued). Wait for queued PRs to finish merging or remove them from the queue before releasing."
+            exit 1
+          fi
+
+      - name: Verify CI passed on target commit
+        if: inputs.skip_ci_check != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET_SHA=$(git rev-parse HEAD)
+          RUN_JSON=$(gh run list --workflow=build-and-test.yml --commit="$TARGET_SHA" --json event,status,conclusion,url \
+            --jq '[.[] | select(.event != "merge_group")][0]')
+
+          if [ -z "$RUN_JSON" ] || [ "$RUN_JSON" = "null" ]; then
+            echo "::error::No 'Run Tests' (build-and-test.yml) run found for commit $TARGET_SHA. Wait for CI to start and finish, or re-run the Release workflow with 'skip_ci_check' enabled to override."
+            exit 1
+          fi
+
+          RUN_STATUS=$(echo "$RUN_JSON" | jq -r '.status')
+          RUN_CONCLUSION=$(echo "$RUN_JSON" | jq -r '.conclusion')
+          RUN_URL=$(echo "$RUN_JSON" | jq -r '.url')
+
+          if [ "$RUN_STATUS" != "completed" ]; then
+            echo "::error::'Run Tests' on commit $TARGET_SHA is still in progress (status: $RUN_STATUS, $RUN_URL). Wait for it to complete and click 'Re-run failed jobs' on this release, or trigger a new Release run with 'skip_ci_check' enabled to override."
+            exit 1
+          fi
+
+          if [ "$RUN_CONCLUSION" != "success" ]; then
+            echo "::error::'Run Tests' on commit $TARGET_SHA did not pass (conclusion: $RUN_CONCLUSION, $RUN_URL). Fix or re-run the failed CI jobs, or trigger a new Release run with 'skip_ci_check' enabled to override."
+            exit 1
+          fi
+
+          echo "Verified 'Run Tests' succeeded on commit $TARGET_SHA ($RUN_URL)."
+
+      - name: npm ci
+        run: npm ci
+
+      - name: npm run lint
+        run: npm run lint
+
+      - name: Package extension (.vsix)
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          VERSION: ${{ steps.version.outputs.version }}
+          VSIX: ${{ steps.version.outputs.vsix }}
+        run: |
+          npm version "$VERSION" --no-git-tag-version
+          if [ "$RELEASE_TYPE" = "pre-release" ]; then
+            npx @vscode/vsce package --pre-release -o "$VSIX"
+          else
+            npx @vscode/vsce package -o "$VSIX"
+          fi
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.version.outputs.vsix }}
+          path: ${{ steps.version.outputs.vsix }}
+          overwrite: true
+          if-no-files-found: error
+
+      - name: Publish to VS Code Marketplace
+        id: publish
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          VSIX: ${{ steps.version.outputs.vsix }}
+        run: |
+          PRE_FLAG=""
+          if [ "$RELEASE_TYPE" = "pre-release" ]; then
+            PRE_FLAG="--pre-release"
+          fi
+
+          if [ "$DRY_RUN" = "true" ]; then
+            if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+              echo "::error::OIDC token environment variables are missing (check id-token: write permission)."
+              exit 1
+            fi
+            echo "[Dry Run] Would execute: npx @vscode/vsce publish --oidc --skip-duplicate $PRE_FLAG --packagePath $VSIX"
+          else
+            npx @vscode/vsce publish --oidc --skip-duplicate $PRE_FLAG --packagePath "$VSIX"
+          fi
+
+      - name: Commit and push tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Use the standard GitHub Actions bot identity (user ID 41898282) so commits are
+          # attributed to github-actions[bot] on GitHub.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git commit -am "Publish v$VERSION"
+          git tag "v$VERSION"
+          git push origin "refs/tags/v$VERSION"
+
+      - name: Create GitHub Release (stable only)
+        if: inputs.release_type == 'stable'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          VSIX: ${{ steps.version.outputs.vsix }}
+          PKG_PUBLISHER: ${{ steps.version.outputs.pkg_publisher }}
+          PKG_NAME: ${{ steps.version.outputs.pkg_name }}
+        run: |
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2 | tr '.' '-')
+          if [ "$PKG_NAME" = "dart-code" ]; then
+            RELEASE_TITLE="Dart Code v$VERSION"
+            INSTALL_TEXT="Dart Code"
+          elif [ "$PKG_NAME" = "flutter" ]; then
+            RELEASE_TITLE="v$VERSION"
+            INSTALL_TEXT="The Flutter extension"
+          else
+            RELEASE_TITLE="v$VERSION"
+            INSTALL_TEXT="The $PKG_NAME extension"
+          fi
+
+          sed 's/^          //' <<EOF | gh release create "v$VERSION" "$VSIX" --title "$RELEASE_TITLE" --notes-file -
+          ## Installation
+
+          $INSTALL_TEXT can be [installed from the Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=$PKG_PUBLISHER.$PKG_NAME).
+
+          Release notes are available at [dartcode.org/releases/v$MAJOR_MINOR/](https://dartcode.org/releases/v$MAJOR_MINOR/)
+          EOF
+
+      # Tags pushed with GITHUB_TOKEN do not trigger on: push workflows automatically,
+      # so explicitly dispatch a standalone Run Tests workflow run for the new release tag.
+      - name: Trigger full test suite on release tag (stable only)
+        if: inputs.release_type == 'stable'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh workflow run build-and-test.yml --ref "v$VERSION"
+
+      # Protected branches with a Merge Queue reject direct pushes from GITHUB_TOKEN,
+      # so open a PR to advance package.json to the next '-dev' version.
+      - name: Open PR for next -dev version (stable .0 releases only)
+        if: steps.version.outputs.next_dev_version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          NEXT_DEV_VERSION: ${{ steps.version.outputs.next_dev_version }}
+        run: |
+          BRANCH_NAME="version-bump/$NEXT_DEV_VERSION"
+          git checkout -B "$BRANCH_NAME" HEAD~1
+          npm version "$NEXT_DEV_VERSION" --no-git-tag-version
+          git commit -am "Set version to $NEXT_DEV_VERSION"
+          git push --force origin "HEAD:refs/heads/$BRANCH_NAME"
+
+          if ! gh pr view "$BRANCH_NAME" >/dev/null 2>&1; then
+            gh pr create \
+              --base "$GITHUB_REF_NAME" \
+              --head "$BRANCH_NAME" \
+              --title "Set version to $NEXT_DEV_VERSION" \
+              --body "Automated version bump after releasing v$VERSION."
+          fi
+
+          # PRs created with GITHUB_TOKEN do not trigger on: pull_request workflows automatically,
+          # so dispatch Run Tests on the PR branch so Merge Guard runs and allows merging.
+          gh workflow run build-and-test.yml --ref "$BRANCH_NAME"
+
+      - name: Print retry instructions on failure
+        if: failure() && steps.publish.outcome == 'success'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "::warning::A step failed after v$VERSION was published to the VS Code Marketplace. Because 'vsce publish' uses '--skip-duplicate', it is safe to re-run this job (if the tag 'v$VERSION' or GitHub Release was already created, delete it first with 'gh release delete v$VERSION --yes' / 'git push --delete origin v$VERSION')."
