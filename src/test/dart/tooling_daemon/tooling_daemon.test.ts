@@ -540,6 +540,22 @@ describe("dart tooling daemon", () => {
 		// so continuations don't wait forever.
 		assert.equal(await daemon.connected, undefined);
 	});
+
+	it("logs errors thrown from handleOpen instead of leaving unhandled rejections", async () => {
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => { logListener.dispose(); });
+
+		// The subclass rejects from handleOpen on the real "open" event. Without
+		// a catch on the open listener, that rejection is unobserved; with it,
+		// the failure is logged and the returned promise settles.
+		const daemon = createDaemon(FailingOpenDaemon);
+		await daemon.connected;
+		await waitForResult(
+			() => logMessages.some((m) => m.includes("simulated handleOpen failure")),
+			"handleOpen failure was not logged",
+		);
+	});
 });
 
 function simplify(e: ActiveLocation) {
@@ -571,5 +587,12 @@ class TestDartToolingDaemon extends DartToolingDaemon {
 
 	public sendActiveLocationForTest(activeLocation: ActiveLocation): Promise<void> {
 		return this.sendActiveLocation(activeLocation);
+	}
+}
+
+class FailingOpenDaemon extends DartToolingDaemon {
+	protected handleOpen(): Promise<void> {
+		super.handleOpen();
+		return Promise.reject(new Error("simulated handleOpen failure"));
 	}
 }

@@ -68,7 +68,13 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.logger.info(`Connecting to DTD at ${dtdUri}...`);
 		const socket = new ws.WebSocket(dtdUri, { followRedirects: true });
 		attachPing(socket);
-		socket.on("open", () => this.handleOpen());
+		socket.on("open", () => {
+			// handleOpen() may return a rejected promise (for example if a service
+			// registration fails because the socket dropped). Catch and log rather
+			// than leaving an unhandled rejection, since the listener's return
+			// value is not observed by the socket.
+			void Promise.resolve(this.handleOpen()).catch((e) => this.logger.error(`Failed handling DTD socket open event: ${String(e)}`));
+		});
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		socket.on("message", (data) => this.handleData(data.toString()));
 		socket.on("close", () => this.handleWebSocketClose());
