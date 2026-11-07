@@ -1,17 +1,14 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, captureOutput, defer, getPackages } from "../../helpers";
+import { activate, captureOutput } from "../../helpers";
+import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("flutter clean", () => {
-	before("activate", () => activate());
-	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
 	describe("all", () => {
 		it("cleans all packages", async () => {
-			// Since this wipes out the packages, attempt to restore them so that every future test doesn't need to explicitly
-			// call getPackages().
-			defer("restore packages", () => getPackages());
+			ChildProcessSpawnStub.flutterClean();
 
 			const rootBuffer = captureOutput("flutter (package:flutter_hello_world)");
 			const exampleBuffer = captureOutput("flutter (package:flutter_hello_world_example (example))");

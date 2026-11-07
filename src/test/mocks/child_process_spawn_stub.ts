@@ -95,8 +95,8 @@ export class ChildProcessSpawnStub {
 		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) && ChildProcessSpawnStub.includesArg(args, "doc"));
 	}
 
-	static dartPub() {
-		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) && ChildProcessSpawnStub.includesArg(args, "pub"));
+	static dartPub(options?: { stdout?: string, exitCode?: number }) {
+		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) && ChildProcessSpawnStub.includesArg(args, "pub"), options);
 	}
 
 	static flutterConfig(options?: { stdout?: string, exitCode?: number }) {
@@ -106,12 +106,23 @@ export class ChildProcessSpawnStub {
 		);
 	}
 
-	static flutterPub() {
-		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "pub"));
+	static flutterClean() {
+		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "clean"));
 	}
 
-	static dartOrFlutterPub() {
-		return new ChildProcessSpawnStub((bin, args) => (ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) || ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter)) && ChildProcessSpawnStub.includesArg(args, "pub"));
+	static flutterDoctor(options?: { stdout?: string, exitCode?: number }) {
+		return new ChildProcessSpawnStub(
+			(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "doctor"),
+			options,
+		);
+	}
+
+	static flutterPub(options?: { stdout?: string, exitCode?: number }) {
+		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "pub"), options);
+	}
+
+	static dartOrFlutterPub(options?: { stdout?: string, exitCode?: number }) {
+		return new ChildProcessSpawnStub((bin, args) => (ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) || ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter)) && ChildProcessSpawnStub.includesArg(args, "pub"), options);
 	}
 
 	public get calls(): SpawnedProcessCall[] {
