@@ -128,14 +128,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			}
 		});
 
-		try {
-			await this.streamListen("Service");
-		} catch (e) {
-			// If the connection drops mid-shutdown this call can never complete,
-			// so rejections here are expected and shouldn't surface.
-			if (!this.isShuttingDown)
-				throw e;
-		}
+		await this.tryCallMethod(ServiceMethod.streamListen, { streamId: "Service" });
 	}
 
 	public async setUpVmServiceRegistrations() {
@@ -176,42 +169,43 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 
 
 	protected async registerVmService({ name, vmServiceUri }: { name: string, vmServiceUri: string }): Promise<void> {
+		// `await this.connected` resolves to the initial connection object even
+		// if the socket has since closed, so check the live connection instead.
+		await this.connected;
+		if (!this.connection || this.isShuttingDown)
+			return;
+
+		const secret = this.connection.dtdSecret;
+		let exposedUri: string | undefined;
 		try {
-			const connection = await this.connected;
-			if (connection && !this.isShuttingDown) {
-				const secret = connection.dtdSecret;
-				let exposedUri: string | undefined = await envUtils.exposeUrl(vmServiceUri, this.logger);
-				if (this.isShuttingDown)
-					return;
-				if (vmServiceUri === exposedUri)
-					exposedUri = undefined;
-				await this.callMethod(ServiceMethod.registerVmService, {
-					exposedUri,
-					name,
-					secret,
-					uri: vmServiceUri,
-				});
-			}
+			exposedUri = await envUtils.exposeUrl(vmServiceUri, this.logger);
 		} catch (e) {
 			if (!this.isShuttingDown)
-				this.logger.error(`Failed to register VM Service ${vmServiceUri}: ${String(e)}`);
+				this.logger.error(`Failed to expose VM Service URI ${vmServiceUri}: ${String(e)}`);
+			return;
 		}
+		if (this.isShuttingDown)
+			return;
+		if (vmServiceUri === exposedUri)
+			exposedUri = undefined;
+		await this.tryCallMethod(ServiceMethod.registerVmService, {
+			exposedUri,
+			name,
+			secret,
+			uri: vmServiceUri,
+		});
 	}
 
 	protected async unregisterVmService(vmServiceUri: string): Promise<void> {
-		try {
-			const connection = await this.connected;
-			if (connection && !this.isShuttingDown) {
-				const secret = connection.dtdSecret;
-				await this.callMethod(ServiceMethod.unregisterVmService, {
-					secret,
-					uri: vmServiceUri,
-				});
-			}
-		} catch (e) {
-			if (!this.isShuttingDown)
-				this.logger.error(`Failed to unregister VM Service ${vmServiceUri}: ${String(e)}`);
-		}
+		await this.connected;
+		if (!this.connection || this.isShuttingDown)
+			return;
+
+		const secret = this.connection.dtdSecret;
+		await this.tryCallMethod(ServiceMethod.unregisterVmService, {
+			secret,
+			uri: vmServiceUri,
+		});
 	}
 
 	protected handleProcessExit(codes: ProcessExitCodes) {

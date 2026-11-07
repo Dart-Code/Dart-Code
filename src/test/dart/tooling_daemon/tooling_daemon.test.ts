@@ -409,41 +409,67 @@ describe("dart tooling daemon", () => {
 		return daemon as InstanceType<T>;
 	}
 
-	it("rejects pending callMethod requests when disposed", async () => {
-		const daemon = createDaemon();
+	it("rejects pending requests and swallows fire-and-forget errors when disposed", async () => {
+		const daemon = createDaemon(TestDartToolingDaemon);
 		await daemon.connected;
+
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => logListener.dispose());
 
 		// The request cannot be answered once the daemon is disposed, so the
 		// promise should reject rather than remain pending forever.
 		const pending = daemon.callMethod(ServiceMethod.getIDEWorkspaceRoots);
+		// sendWorkspaceFolders() is called fire-and-forget from real code paths,
+		// so its callMethod rejection during dispose should be swallowed rather
+		// than rejected or logged.
+		const pendingFolders = daemon.sendWorkspaceFoldersForTest([]);
 		daemon.dispose();
 		await assert.rejects(pending, /DTD connection is unavailable/);
+		await pendingFolders;
+
+		await delay(1);
+		assert.ok(
+			!logMessages.some((m) => m.includes("DTD connection is unavailable")),
+			`shutdown rejections produced error logging: ${logMessages.join(" | ")}`,
+		);
 	});
 
-	it("rejects pending callMethod requests when the socket closes unexpectedly", async () => {
+	it("handles an unexpected socket close", async () => {
 		const daemon = createDaemon(TestDartToolingDaemon);
 		await daemon.connected;
 
-		// Terminating the real socket in the same tick that sent the request
-		// guarantees it is still pending (no response could have arrived), and
-		// fires the real "close" event - the same path as an unexpected
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => logListener.dispose());
+
+		// Terminating the real socket in the same tick that sent the requests
+		// guarantees they are still pending (no response could have arrived),
+		// and fires the real "close" event - the same path as an unexpected
 		// network disconnect.
 		const pending = daemon.callMethod(ServiceMethod.getIDEWorkspaceRoots);
+		const pendingFolders = daemon.sendWorkspaceFoldersForTest([]);
 		daemon.terminateSocketForTest();
 		await assert.rejects(pending, /DTD connection is unavailable/);
-	});
+		// Unlike during shutdown, the fire-and-forget rejection caused by an
+		// unexpected disconnect should still be surfaced as an error log (but
+		// resolved rather than rethrown, because there is nobody to propagate to).
+		await pendingFolders;
 
-	it("reports events sent on a closed socket as a clean unavailable error", async () => {
-		const daemon = createDaemon(TestDartToolingDaemon);
-		await daemon.connected;
-
-		daemon.terminateSocketForTest();
 		await waitForResult(() => !daemon.hasConnection, "connection was not cleared after socket close");
 		// With the connection cleared, sends should fail with the expected
 		// "unavailable" error rather than a raw WebSocket "not open" error.
 		assert.throws(
 			() => daemon.sendEvent(Stream.Editor, { kind: EventKind.deviceRemoved, deviceId: "fake" }),
 			/DTD connection is unavailable/,
+		);
+		// And the fire-and-forget send helpers should skip cleanly rather than
+		// attempt to send on the dead socket.
+		await daemon.sendActiveLocationForTest({ textDocument: undefined, selections: [] });
+
+		assert.ok(
+			logMessages.some((m) => m.includes("Failed to call FileSystem.setIDEWorkspaceRoots")),
+			`unexpected disconnect was not logged: ${logMessages.join(" | ")}`,
 		);
 	});
 
@@ -465,10 +491,25 @@ describe("dart tooling daemon", () => {
 			return new Promise<void>((resolve) => server.close(() => resolve()));
 		});
 
-		const daemon = createDaemon(TestDartToolingDaemon);
-		await daemon.connected;
+		// The test injects its own CONNECTING socket, so the daemon doesn't need
+		// a real DTD process or connection.
+		const daemon = new TestDartToolingDaemon(
+			privateApi.logger,
+			{ dart: "does-not-exist", dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
 		daemon.setConnectionForTest(socket);
 		assert.equal(socket.readyState, ws.WebSocket.CONNECTING);
+
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Dispose log listener", () => logListener.dispose());
 
 		const sendSpy = sb.spy(socket, "send");
 		assert.throws(
@@ -479,62 +520,35 @@ describe("dart tooling daemon", () => {
 			daemon.callMethod(ServiceMethod.getIDEWorkspaceRoots),
 			/DTD connection is unavailable/,
 		);
+		// The fire-and-forget helpers must not reject on a non-OPEN socket, but
+		// because we're not shutting down the failure should still be logged.
+		await daemon.sendActiveLocationForTest({ textDocument: undefined, selections: [] });
+		await daemon.sendWorkspaceFoldersForTest([]);
+		assert.ok(
+			logMessages.some((m) => m.includes("Failed to send active location")),
+			`active-location failure was not logged: ${logMessages.join(" | ")}`,
+		);
+		assert.ok(
+			logMessages.some((m) => m.includes("Failed to call FileSystem.setIDEWorkspaceRoots")),
+			`workspace-folders failure was not logged: ${logMessages.join(" | ")}`,
+		);
 		assert.equal(sendSpy.callCount, 0, "a send reached the non-OPEN socket");
 	});
 
-	it("does not reject or log errors for fire-and-forget requests during shutdown", async () => {
-		const daemon = createDaemon(TestDartToolingDaemon);
-		await daemon.connected;
-
-		const logMessages: string[] = [];
-		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
-		defer("Dispose log listener", () => { logListener.dispose(); });
-
-		// sendWorkspaceFolders() is called fire-and-forget from real code paths,
-		// so its callMethod rejection during dispose should be swallowed rather
-		// than rejected or logged.
-		const pending = daemon.sendWorkspaceFoldersForTest([]);
-		daemon.dispose();
-		await pending;
-
-		await delay(1);
-		assert.ok(
-			!logMessages.some((m) => m.includes("DTD connection is unavailable")),
-			`shutdown rejections produced error logging: ${logMessages.join(" | ")}`,
-		);
-	});
-
-	it("logs errors for fire-and-forget requests on unexpected disconnect", async () => {
-		const daemon = createDaemon(TestDartToolingDaemon);
-		await daemon.connected;
-
-		const logMessages: string[] = [];
-		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
-		defer("Dispose log listener", () => { logListener.dispose(); });
-
-		// Unlike during shutdown, a rejection caused by an unexpected disconnect
-		// should still be surfaced as an error log (but resolved rather than
-		// rethrown, because fire-and-forget callers have nobody to propagate to).
-		// Terminating in the same tick guarantees the request is still pending.
-		const pendingFolders = daemon.sendWorkspaceFoldersForTest([]);
-		daemon.terminateSocketForTest();
-		await waitForResult(() => !daemon.hasConnection, "connection was not cleared after socket close");
-		await pendingFolders;
-
-		await daemon.sendActiveLocationForTest({ textDocument: undefined, selections: [] });
-
-		assert.ok(
-			logMessages.some((m) => m.includes("Failed to send workspace folders")),
-			`unexpected disconnect was not logged: ${logMessages.join(" | ")}`,
-		);
-		assert.ok(
-			logMessages.some((m) => m.includes("Failed to send active location")),
-			`closed-socket send failure was not logged: ${logMessages.join(" | ")}`,
-		);
-	});
-
 	it("resolves connected when disposed before connecting", async () => {
-		const daemon = createDaemon();
+		// This test disposes before the process even starts, so it doesn't need
+		// a real SDK.
+		const daemon = new DartToolingDaemon(
+			privateApi.logger,
+			{ dart: "does-not-exist", dartSdkIsFromFlutter: false, isPreReleaseSdk: false },
+			privateApi.dartCapabilities,
+			undefined,
+			[],
+			1000,
+			() => ({}),
+			async () => { },
+		);
+		defer("Dispose daemon", () => daemon.dispose());
 		daemon.dispose();
 		// `connected` must settle even if dispose runs before the socket opened,
 		// so continuations don't wait forever.
@@ -544,7 +558,7 @@ describe("dart tooling daemon", () => {
 	it("logs errors thrown from handleOpen instead of leaving unhandled rejections", async () => {
 		const logMessages: string[] = [];
 		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
-		defer("Dispose log listener", () => { logListener.dispose(); });
+		defer("Dispose log listener", () => logListener.dispose());
 
 		// The subclass rejects from handleOpen on the real "open" event. Without
 		// a catch on the open listener, that rejection is unobserved; with it,
@@ -579,6 +593,9 @@ class TestDartToolingDaemon extends DartToolingDaemon {
 		// otherwise closing a CONNECTING socket produces an uncaught error event.
 		socket.on("error", () => { });
 		this.connection = { socket, dtdUri: "ws://127.0.0.1", dtdSecret: "" };
+		// A connection exists, so anything awaiting `connected` should proceed
+		// (the real connect() resolves this when the socket opens).
+		this.connectedCompleter.resolve(this.connection);
 	}
 
 	public sendWorkspaceFoldersForTest(workspaceFolderUris: string[]): Promise<void> {
