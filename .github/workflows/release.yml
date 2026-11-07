@@ -64,6 +64,10 @@ jobs:
 
     steps:
 
+      # Check out the exact commit SHA (github.sha) that was at the tip of the selected
+      # branch when the workflow was triggered (rather than passing 'ref', which would
+      # resolve the branch head dynamically). This guarantees that re-running a failed
+      # job always packages and tags the exact same commit.
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
@@ -75,18 +79,18 @@ jobs:
         with:
           node-version: 22
 
+      # Compute and validate the release version:
+      # - Stable releases require an explicit X.Y.Z version input with an EVEN minor version.
+      # - Pre-releases use an explicit version input or derive X.(Y-1).YYYYMMDD from X.Y.0-dev
+      #   in package.json, and require an ODD minor version.
+      # - Verify the release tag (vX.Y.Z) does not already exist.
+      # - For '.0' stable releases, also compute the next '-dev' version (X.(Y+2).0-dev).
       - name: Compute and validate version
         id: version
         env:
           RELEASE_TYPE: ${{ inputs.release_type }}
           INPUT_VERSION: ${{ inputs.version }}
         run: |
-          # Versioning convention:
-          # - Stable releases always use EVEN minor versions (e.g. 3.148.0, or patch 3.146.1).
-          # - Pre-releases always use ODD minor versions with the UTC date as patch (e.g. 3.147.20261105),
-          #   because the VS Code Marketplace does not support semver pre-release suffixes like '-dev'.
-          # - Between releases, package.json on the default branch sits at the next EVEN minor version
-          #   with a '-dev' suffix (e.g. 3.148.0-dev).
           PKG_PUBLISHER=$(node -p "require('./package.json').publisher")
           PKG_NAME=$(node -p "require('./package.json').name")
           PKG_VERSION=$(node -p "require('./package.json').version")
@@ -124,10 +128,7 @@ jobs:
             exit 1
           fi
 
-          # Intentionally fail if the tag already exists rather than attempting complex in-place
-          # retry recovery after git push. If 'gh release create' fails after the tag is pushed,
-          # the release can be created manually from the pushed tag and uploaded VSIX workflow
-          # artifact (or the tag/commit can be deleted before re-running).
+          # Fail if the tag already exists rather than attempting in-place recovery after git push.
           if git rev-parse "v$VERSION" >/dev/null 2>&1; then
             echo "::error::Git tag 'v$VERSION' already exists. Check that the version number is correct, or if you are retrying a failed release, delete the existing 'v$VERSION' tag (and any partial GitHub Release) or create the GitHub Release manually from the pushed tag and uploaded VSIX artifact."
             exit 1
@@ -150,6 +151,8 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Prepared $RELEASE_TYPE v$VERSION ($VSIX)"
 
+      # Check that no pull requests are currently queued in the target branch's Merge Queue
+      # so a release isn't cut while changes are mid-merge.
       - name: Verify Merge Queue is empty
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -165,6 +168,8 @@ jobs:
             exit 1
           fi
 
+      # Unless bypassed via skip_ci_check, verify that the test workflow (build-and-test.yml)
+      # has completed and passed on the target commit.
       - name: Verify CI passed on target commit
         if: inputs.skip_ci_check != true
         env:
@@ -195,6 +200,8 @@ jobs:
 
           echo "Verified 'Run Tests' succeeded on commit $TARGET_SHA ($RUN_URL)."
 
+      # Install dependencies, run the linter, update package.json/package-lock.json to the
+      # release version, and package the .vsix (flagged as pre-release when appropriate).
       - name: npm ci
         run: npm ci
 
@@ -214,6 +221,8 @@ jobs:
             npx @vscode/vsce package -o "$VSIX"
           fi
 
+      # Upload the packaged .vsix as a workflow artifact so it is preserved for inspection
+      # or manual recovery if a later step fails.
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v7
         with:
@@ -222,6 +231,9 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+      # Publish the packaged .vsix to the VS Code Marketplace using OIDC Trusted Publishing
+      # (--oidc). Passing --skip-duplicate ignores duplicate version errors so the job can be
+      # safely re-run if a subsequent step fails after Marketplace publication succeeds.
       - name: Publish to VS Code Marketplace
         id: publish
         env:
@@ -244,6 +256,9 @@ jobs:
             npx @vscode/vsce publish --oidc --skip-duplicate $PRE_FLAG --packagePath "$VSIX"
           fi
 
+      # Commit the updated package.json/package-lock.json and push the release tag (refs/tags/vX.Y.Z).
+      # Because the default branch is protected by a Merge Queue, we push only the tag rather than
+      # pushing directly to the branch; the tag permanently retains the release commit in the repo.
       - name: Commit and push tag
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -257,6 +272,8 @@ jobs:
           git tag "v$VERSION"
           git push origin "refs/tags/v$VERSION"
 
+      # Create a GitHub Release for stable releases with the .vsix attached and release notes
+      # linking to the VS Code Marketplace and dartcode.org.
       - name: Create GitHub Release (stable only)
         if: inputs.release_type == 'stable'
         env:
@@ -286,8 +303,9 @@ jobs:
           Release notes are available at [dartcode.org/releases/v$MAJOR_MINOR/](https://dartcode.org/releases/v$MAJOR_MINOR/)
           EOF
 
-      # Tags pushed with GITHUB_TOKEN do not trigger on: push workflows automatically,
-      # so explicitly dispatch a standalone Run Tests workflow run for the new release tag.
+      # Because tags pushed by GITHUB_TOKEN do not trigger 'on: push' workflows automatically,
+      # explicitly dispatch a run of build-and-test.yml against the new release tag to run the
+      # full test matrix across all OSes and SDK channels.
       - name: Trigger full test suite on release tag (stable only)
         if: inputs.release_type == 'stable'
         env:
@@ -295,8 +313,9 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: gh workflow run build-and-test.yml --ref "v$VERSION"
 
-      # Protected branches with a Merge Queue reject direct pushes from GITHUB_TOKEN,
-      # so open a PR to advance package.json to the next '-dev' version.
+      # For '.0' stable releases, branch from the commit prior to the 'Publish vX.Y.Z' commit
+      # (HEAD~1) and open a pull request to advance package.json to the next '-dev' version
+      # (since Merge Queue branch protection prevents pushing directly to the base branch).
       - name: Open PR for next -dev version (stable .0 releases only)
         if: steps.version.outputs.next_dev_version != ''
         env:
@@ -318,6 +337,9 @@ jobs:
               --body "Automated version bump after releasing v$VERSION."
           fi
 
+      # If any step fails after the extension has already been published to the Marketplace,
+      # log recovery instructions reminding the maintainer that the job can be safely re-run
+      # because Marketplace publishing ignores duplicate versions.
       - name: Print retry instructions on failure
         if: failure() && steps.publish.outcome == 'success'
         env:
