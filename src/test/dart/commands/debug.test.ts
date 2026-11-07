@@ -129,7 +129,7 @@ describe("debug commands", () => {
 		const firstSession = startFakeDebugSession({ debuggerType: DebuggerType.Dart, id: "session-1", name: "First Session" });
 		const secondSession = startFakeDebugSession({ debuggerType: DebuggerType.Flutter, id: "session-2", name: "Second Session" });
 		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
-		const showQuickPick = sb.stub(vs.window, "showQuickPick").callsFake(async (items, options) => {
+		const showQuickPick = sb.stub(vs.window, "showQuickPick").callsFake(async (items, options?: vs.QuickPickOptions) => {
 			const sessionItems = items as Array<{ session: unknown }> | undefined;
 			assert.equal(options?.placeHolder, "Which debug session?");
 			assert.equal(sessionItems?.length, 2);
@@ -773,7 +773,7 @@ describe("debug commands", () => {
 			// Multiple options (exposed URI differs from vmServiceUri).
 			exposeUrl.resolves("wss://exposed.example.com/ws");
 			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
-			showQuickPick.callsFake(async (items, options) => {
+			showQuickPick.callsFake(async (items, options?: vs.QuickPickOptions) => {
 				const uriItems = items as vs.QuickPickItem[] | undefined;
 				assert.equal(options?.placeHolder, "Which debug session / VM Service URI?");
 				assert.equal(uriItems?.length, 2);

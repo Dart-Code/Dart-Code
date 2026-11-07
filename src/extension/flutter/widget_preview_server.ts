@@ -71,12 +71,13 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 	}
 
 	protected handleNotification(evt: UnknownNotification): void {
+		const params = evt.params as Record<string, unknown>;
 		switch (evt.event) {
 			case "widget_preview.started":
-				this.previewUrlCompleter.resolve(evt.params.url as string);
+				this.previewUrlCompleter.resolve(params.url as string);
 				break;
 			case "widget_preview.initializing": {
-				const pid = evt.params.pid as number | undefined;
+				const pid = params.pid as number | undefined;
 				if (pid)
 					this.additionalPidsToTerminate.push(pid);
 				break;
