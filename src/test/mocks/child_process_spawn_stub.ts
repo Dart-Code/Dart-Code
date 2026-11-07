@@ -106,6 +106,17 @@ export class ChildProcessSpawnStub {
 		);
 	}
 
+	static flutterClean() {
+		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "clean"));
+	}
+
+	static flutterDoctor(options?: { stdout?: string, exitCode?: number }) {
+		return new ChildProcessSpawnStub(
+			(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "doctor"),
+			options,
+		);
+	}
+
 	static flutterPub(options?: { stdout?: string, exitCode?: number }) {
 		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "pub"), options);
 	}

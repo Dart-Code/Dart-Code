@@ -1,20 +1,14 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { executableNames } from "../../../shared/constants";
 import { activate, captureOutput } from "../../helpers";
 import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("flutter clean", () => {
-	before("activate", () => activate());
 	beforeEach("activate", () => activate());
 
 	describe("all", () => {
 		it("cleans all packages", async () => {
-			// The spawn is stubbed, so nothing is really deleted and there is no
-			// need to restore packages afterwards.
-			new ChildProcessSpawnStub(
-				(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "clean"),
-			);
+			ChildProcessSpawnStub.flutterClean();
 
 			const rootBuffer = captureOutput("flutter (package:flutter_hello_world)");
 			const exampleBuffer = captureOutput("flutter (package:flutter_hello_world_example (example))");

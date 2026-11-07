@@ -16,6 +16,7 @@ describe("flutter packages outdated", () => {
 
 		const output = buffer.join("").trim();
 		assert.equal(output.startsWith(`--\n\n[package:flutter_hello_world] flutter --suppress-analytics pub outdated`), true);
+		assert.notEqual(output.indexOf("Outdated dependencies"), -1);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });

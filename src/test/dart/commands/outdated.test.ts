@@ -30,6 +30,7 @@ describe("pub outdated", () => {
 
 		const output = buffer.join("").trim();
 		assert.equal(output.startsWith(`--\n\n[package:hello_world] dart pub outdated`), true);
+		assert.notEqual(output.indexOf("Outdated dependencies"), -1);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });
