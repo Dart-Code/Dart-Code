@@ -1,11 +1,10 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { RunProcessResult } from "../../../shared/processes";
-import { activate, captureOutput, closeAllOpenFiles, getPackages, helloWorldPubspec, sb, setConfigForTest } from "../../helpers";
+import { activate, captureOutput, closeAllOpenFiles, helloWorldPubspec, sb, setConfigForTest } from "../../helpers";
 import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("pub outdated", () => {
-	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
 	it("does nothing when pub is disabled", async () => {
@@ -25,6 +24,7 @@ describe("pub outdated", () => {
 
 	it("runs and prints output", async () => {
 		const buffer = captureOutput("dart (package:hello_world)");
+		ChildProcessSpawnStub.dartPub({ stdout: "Outdated dependencies\n" });
 		const result: RunProcessResult = await vs.commands.executeCommand("pub.outdated");
 		assert.equal(result.exitCode, 0);
 

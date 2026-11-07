@@ -1,7 +1,9 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { executableNames } from "../../../shared/constants";
 import { RunProcessResult } from "../../../shared/processes";
 import { activate, captureOutput } from "../../helpers";
+import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("flutter doctor", () => {
 
@@ -9,6 +11,10 @@ describe("flutter doctor", () => {
 
 	it("runs and prints output", async () => {
 		const buffer = captureOutput("flutter");
+		new ChildProcessSpawnStub(
+			(bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "doctor"),
+			{ stdout: "Doctor summary (to see all details, run flutter doctor -v):\n[✓] Flutter (Channel stable, 1.2.3, on Microsoft Windows)\n" },
+		);
 		const result: RunProcessResult = await vs.commands.executeCommand("flutter.doctor");
 		assert.equal(result.exitCode, 0);
 
