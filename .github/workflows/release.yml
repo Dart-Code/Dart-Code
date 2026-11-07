@@ -4,6 +4,10 @@ run-name: Release ${{ inputs.release_type }}${{ inputs.version && format(' v{0}'
 # Publishes a single release (pre-release or stable) to the VS Code Marketplace,
 # tags the commit, and (for stable releases) creates a GitHub Release with the VSIX.
 #
+# Documentation (keep in sync when modifying this workflow):
+# - docs/releasing.md: Step-by-step instructions for performing a release.
+# - docs/release-process.md: Technical details on how this release workflow works.
+#
 # Note: When publishing a '.0' stable release (e.g. 3.148.0), the workflow opens a PR
 # to bump package.json to the next '-dev' version (e.g. 3.150.0-dev). To publish the
 # first pre-release for the next cycle (e.g. 3.149.YYYYMMDD), either merge that PR
