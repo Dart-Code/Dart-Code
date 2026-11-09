@@ -2,7 +2,8 @@ name: Mark stale issues
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    # 1:50am UTC daily (scheduled early and off-hour due to GitHub cron delays).
+    - cron: '50 1 * * *'
 
 permissions:
   contents: read

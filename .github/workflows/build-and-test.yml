@@ -13,7 +13,8 @@ on:
   merge_group:
     types: [ checks_requested ]
   schedule:
-     - cron: '0 6 * * 1' # 6am Monday
+     # 1:50am UTC Monday (scheduled early and off-hour due to GitHub cron delays).
+     - cron: '50 1 * * 1'
   workflow_dispatch:
 
 jobs:
