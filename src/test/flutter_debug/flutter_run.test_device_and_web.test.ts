@@ -52,7 +52,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
-		dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
+		dc.on("stopped", (e: DebugProtocol.StoppedEvent) => { if (e.body?.reason !== "entry") didStop = true; });
 
 		const expectHotReload = true;
 		const expectOtherServices = false;
@@ -738,7 +738,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
-		dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
+		dc.on("stopped", (e: DebugProtocol.StoppedEvent) => { if (e.body?.reason !== "entry") didStop = true; });
 
 		// Start the app and wait for the exception to occur and print.
 		await waitAllThrowIfTerminates(dc,

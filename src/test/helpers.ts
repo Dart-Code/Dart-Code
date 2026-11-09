@@ -8,7 +8,7 @@ import { URI } from "vscode-uri";
 import { FlutterOutline, Outline } from "../shared/analysis/lsp/custom_protocol";
 import { dartCodeExtensionIdentifier, isDartCodeTestRun, isWin } from "../shared/constants";
 import { BasicDebugConfiguration, DartLaunchArgs } from "../shared/debugging/interfaces";
-import { LogCategory, TestStatus } from "../shared/enums";
+import { DebuggerType, LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
@@ -1226,13 +1226,13 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>): 
 	await nextAnalysis;
 }
 
-export async function getResolvedDebugConfiguration(extraConfiguration?: { program?: string, [key: string]: unknown } | BasicDebugConfiguration): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
+export async function getResolvedDebugConfiguration(extraConfiguration?: { program?: string, [key: string]: unknown } | BasicDebugConfiguration): Promise<(vs.DebugConfiguration & DartLaunchArgs & { debuggerType: DebuggerType })> {
 	const debugConfig: vs.DebugConfiguration = Object.assign({}, {
 		name: `Dart & Flutter (${currentTestName})`,
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await privateApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs;
+	return await privateApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs & { debuggerType: DebuggerType };
 }
 
 export async function getLaunchConfiguration(script?: URI | string, extraConfiguration?: Record<string, unknown>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {

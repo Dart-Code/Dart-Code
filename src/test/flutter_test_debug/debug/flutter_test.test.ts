@@ -314,8 +314,9 @@ describe("flutter test debugger", () => {
 
 				const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 				assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-				assert.equal(runAction.command!.arguments![0].fullName, "Hello world test");
-				assert.equal(runAction.command!.arguments![0].isGroup, false);
+				const testNode = runAction.command!.arguments![0] as { fullName: string; isGroup: boolean };
+				assert.equal(testNode.fullName, "Hello world test");
+				assert.equal(testNode.isGroup, false);
 
 				// To avoid spawning `flutter test` for every combination, we run this test end-to-end
 				// when running by name (`!runByLine`) and only verify the launch configuration when
@@ -355,8 +356,9 @@ describe("flutter test debugger", () => {
 
 				const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 				assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-				assert.equal(runAction.command!.arguments![0].fullName, "multi\nline\ntest");
-				assert.equal(runAction.command!.arguments![0].isGroup, false);
+				const testNode = runAction.command!.arguments![0] as { fullName: string; isGroup: boolean };
+				assert.equal(testNode.fullName, "multi\nline\ntest");
+				assert.equal(testNode.isGroup, false);
 
 				// Verify the generated launch config rather than spawning another `flutter test` process
 				// (end-to-end execution from CodeLens is already covered by the other tests in this loop).
@@ -387,8 +389,9 @@ describe("flutter test debugger", () => {
 
 				const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 				assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-				assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
-				assert.equal(runAction.command!.arguments![0].isGroup, false);
+				const testNode = runAction.command!.arguments![0] as { fullName: string; isGroup: boolean };
+				assert.equal(testNode.fullName, "Skipped test");
+				assert.equal(testNode.isGroup, false);
 
 				// To avoid spawning `flutter test` for every combination, we only verify the launch
 				// configuration here when running by name (`!runByLine`, since "can run tests from codelens"

@@ -70,9 +70,6 @@ export default defineConfig([
 					"message": "Do not import debugger code because it is expected to run in another process."
 				}]
 			}],
-			// Temporary exclusions after tslint -> eslint migration
-			"@typescript-eslint/no-unsafe-member-access": "off",
-			// End temporary exclusions
 			"arrow-body-style": "error",
 			"arrow-parens": [
 				"error",

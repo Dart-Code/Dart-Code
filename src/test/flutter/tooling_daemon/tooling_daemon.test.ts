@@ -36,13 +36,20 @@ describe("dart tooling daemon editor events", () => {
 
 		void deviceManager.deviceAdded(physicalAndroidMobile);
 		await waitForResult(
-			() => sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.deviceAdded),
+			() => sendEvent.getCalls().some((call) => {
+				const event = call.args[1] as { kind?: EventKind } | undefined;
+				return event?.kind === EventKind.deviceAdded;
+			}),
 			"deviceAdded event was not sent to the daemon",
 		);
 
-		const event = sendEvent.getCalls().find((call) => call.args[1]?.kind === EventKind.deviceAdded)!.args;
-		assert.equal(event[0], Stream.Editor);
-		assert.equal(event[1].device.id, physicalAndroidMobile.id);
+		const deviceAddedCall = sendEvent.getCalls().find((call) => {
+			const event = call.args[1] as { kind?: EventKind } | undefined;
+			return event?.kind === EventKind.deviceAdded;
+		})!;
+		const eventArgs = deviceAddedCall.args as [Stream, { device: { id: string } }];
+		assert.equal(eventArgs[0], Stream.Editor);
+		assert.equal(eventArgs[1].device.id, physicalAndroidMobile.id);
 	});
 
 	it("does not send in-flight or subsequent device events when the daemon is disposed", async () => {
