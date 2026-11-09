@@ -496,6 +496,15 @@ export function mkDirRecursive(folder: string) {
 		fs.mkdirSync(folder);
 }
 
+export const validLogFilePattern = /[^.\\/]\.[a-zA-Z0-9]{3,4}$/;
+
+export function prepareLogFilePath(file?: string): string | undefined {
+	if (!file || !path.isAbsolute(file) || !validLogFilePattern.test(file) || existsAndIsDirectorySync(file))
+		return undefined;
+
+	return createFolderForFile(file);
+}
+
 export function createFolderForFile(file?: string): string | undefined {
 	try {
 		if (!file || !path.isAbsolute(file))
@@ -510,6 +519,8 @@ export function createFolderForFile(file?: string): string | undefined {
 		const folder = path.dirname(file);
 		if (!fs.existsSync(folder))
 			mkDirRecursive(folder);
+		else if (!existsAndIsDirectorySync(folder))
+			return undefined;
 
 		return file;
 	} catch {
