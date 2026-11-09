@@ -48,9 +48,9 @@ describe("dart tests", () => {
 		const exactGroupWithTestName = model.groupDiscovered(session, suitePath, TestSource.Outline, 4, "paired test alpha", undefined, suitePath, undefined);
 		// Even when the dynamic pattern appears first, an exact same-kind sibling
 		// must keep the result node as a sibling rather than capture it.
-		model.groupDiscovered(session, suitePath, TestSource.Outline, 20, "group $name", undefined, suitePath, undefined);
-		model.groupDiscovered(session, suitePath, TestSource.Outline, 21, "alpha", undefined, suitePath, undefined);
-		const exactGroupAfterDynamic = model.groupDiscovered(session, suitePath, TestSource.Result, 22, "alpha", undefined, suitePath, undefined);
+		model.groupDiscovered(session, suitePath, TestSource.Outline, 20, "exact $name", undefined, suitePath, undefined);
+		model.groupDiscovered(session, suitePath, TestSource.Outline, 21, "exact alpha", undefined, suitePath, undefined);
+		const exactGroupAfterDynamic = model.groupDiscovered(session, suitePath, TestSource.Result, 22, "exact alpha", undefined, suitePath, undefined);
 
 		// Matching also applies below a real GroupNode, reached via groupID.
 		const nestedParent = model.groupDiscovered(session, suitePath, TestSource.Outline, 30, "nested parent", undefined, suitePath, undefined);
