@@ -1408,19 +1408,19 @@
 			],
 			"explorer/context": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.outdated"
 				},
 				{
