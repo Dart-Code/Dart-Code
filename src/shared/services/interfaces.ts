@@ -18,4 +18,4 @@ interface Notification<T> {
 	params: T;
 }
 
-export type UnknownNotification = Notification<any>;
+export type UnknownNotification = Notification<unknown>;

@@ -46,8 +46,9 @@ export class WebRun extends StdIOService<UnknownNotification> {
 
 	protected async handleNotification(evt: UnknownNotification): Promise<void> {
 		// Always send errors up, no matter where they're from.
-		if (evt.params.error) {
-			await this.notify(this.errorSubscriptions, evt.params.error as string);
+		const params = evt.params as { error?: string };
+		if (params.error) {
+			await this.notify(this.errorSubscriptions, params.error);
 		}
 		switch (evt.event) {
 			case "daemon.connected":
