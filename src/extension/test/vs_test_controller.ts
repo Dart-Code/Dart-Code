@@ -77,11 +77,12 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public handleDebugSessionEnd(e: vs.DebugSession): void {
-		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
+		const debugSessionID = e.configuration.dartCodeDebugSessionID as string;
+		const run = this.testRuns[debugSessionID];
 		if (run && !run.wasStartedByTestRunner)
 			run.run.end();
 
-		this.testRuns[e.configuration.dartCodeDebugSessionID] = undefined;
+		this.testRuns[debugSessionID] = undefined;
 
 		if (e.configuration.coverageFilePath && run)
 			this.parseCoverage(run.run, e.configuration.cwd as string | undefined, e.configuration.coverageFilePath as string);

@@ -58,8 +58,11 @@ export class VmServiceExtensions {
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
 	public async handleDebugEvent(session: DartDebugSessionInformation, customEvent: vs.DebugSessionCustomEvent): Promise<void> {
+		const body = customEvent.body as Record<string, unknown>;
 		if (customEvent.event === "dart.serviceExtensionAdded") {
-			this.handleServiceExtensionLoaded(session, customEvent.body.extensionRPC as VmServiceExtension, customEvent.body.isolateId as string | null | undefined);
+			const extensionRPC = body.extensionRPC as VmServiceExtension;
+			const isolateId = body.isolateId as string | null | undefined;
+			this.handleServiceExtensionLoaded(session, extensionRPC, isolateId);
 
 			const useAddPubRootDirectories = this.flutterCapabilities.supportsAddPubRootDirectories;
 			const pubRootDirectoriesService = useAddPubRootDirectories
@@ -67,10 +70,10 @@ export class VmServiceExtensions {
 				: VmServiceExtension.InspectorSetPubRootDirectories;
 
 			try {
-				if (customEvent.body.extensionRPC === pubRootDirectoriesService) {
+				if (extensionRPC === pubRootDirectoriesService) {
 					const params: Record<string, string> = {
 						// TODO: Is this OK???
-						isolateId: customEvent.body.isolateId as string,
+						isolateId: isolateId!,
 					};
 
 					let argNum = 0;
@@ -86,9 +89,9 @@ export class VmServiceExtensions {
 				}
 			}
 		} else if (customEvent.event === "dart.serviceRegistered") {
-			this.handleServiceRegistered(customEvent.body.service as VmService, customEvent.body.method as string);
+			this.handleServiceRegistered(body.service as VmService, body.method as string);
 		} else if (customEvent.event === "flutter.serviceExtensionStateChanged") {
-			this.handleRemoteValueUpdate(customEvent.body.extension as string, customEvent.body.value);
+			this.handleRemoteValueUpdate(body.extension as string, body.value);
 		}
 	}
 

@@ -14,9 +14,10 @@ export class ClosingLabelsFeature implements StaticFeature {
 
 	public fillClientCapabilities(capabilities: ClientCapabilities): void {
 		capabilities.experimental ??= {};
+		const experimental = capabilities.experimental as { closingLabels?: Record<string, never> };
 		// In Oct 2026, we switched to preferring a capability for these instead
 		// of initializationOption.
-		capabilities.experimental.closingLabels =
+		experimental.closingLabels =
 			config.closingLabels
 				? {}
 				: undefined;

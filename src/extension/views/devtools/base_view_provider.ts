@@ -24,9 +24,10 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		if (this.webviewView !== webviewView) {
 			this.webviewView = webviewView;
 			this.disposables.push(this.webviewView.webview.onDidReceiveMessage(
-				async (message) => {
-					if (message.command === "launchUrl") {
-						await envUtils.openInBrowser(message.data.url as string);
+				async (message: unknown) => {
+					if (message && typeof message === "object" && "command" in message && message.command === "launchUrl") {
+						const msg = message as { command: string; data: { url: string } };
+						await envUtils.openInBrowser(msg.data.url);
 					}
 				},
 			));
