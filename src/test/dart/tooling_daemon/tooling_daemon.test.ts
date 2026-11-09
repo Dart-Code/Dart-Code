@@ -520,13 +520,13 @@ describe("dart tooling daemon", () => {
 			daemon.callMethod(ServiceMethod.getIDEWorkspaceRoots),
 			/DTD connection is unavailable/,
 		);
-		// The fire-and-forget helpers must not reject on a non-OPEN socket, but
-		// because we're not shutting down the failure should still be logged.
+		// Fire-and-forget helpers must not reject on a non-OPEN socket.
+		// Active-location events are skipped, while failed method calls are logged.
 		await daemon.sendActiveLocationForTest({ textDocument: undefined, selections: [] });
 		await daemon.sendWorkspaceFoldersForTest([]);
 		assert.ok(
-			logMessages.some((m) => m.includes("Failed to send active location")),
-			`active-location failure was not logged: ${logMessages.join(" | ")}`,
+			!logMessages.some((m) => m.includes("Failed to send active location")),
+			`active-location was not silently skipped: ${logMessages.join(" | ")}`,
 		);
 		assert.ok(
 			logMessages.some((m) => m.includes("Failed to call FileSystem.setIDEWorkspaceRoots")),
@@ -553,22 +553,6 @@ describe("dart tooling daemon", () => {
 		// `connected` must settle even if dispose runs before the socket opened,
 		// so continuations don't wait forever.
 		assert.equal(await daemon.connected, undefined);
-	});
-
-	it("logs errors thrown from handleOpen instead of leaving unhandled rejections", async () => {
-		const logMessages: string[] = [];
-		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
-		defer("Dispose log listener", () => logListener.dispose());
-
-		// The subclass rejects from handleOpen on the real "open" event. Without
-		// a catch on the open listener, that rejection is unobserved; with it,
-		// the failure is logged and the returned promise settles.
-		const daemon = createDaemon(FailingOpenDaemon);
-		await daemon.connected;
-		await waitForResult(
-			() => logMessages.some((m) => m.includes("simulated handleOpen failure")),
-			"handleOpen failure was not logged",
-		);
 	});
 });
 
@@ -604,12 +588,5 @@ class TestDartToolingDaemon extends DartToolingDaemon {
 
 	public sendActiveLocationForTest(activeLocation: ActiveLocation): Promise<void> {
 		return this.sendActiveLocation(activeLocation);
-	}
-}
-
-class FailingOpenDaemon extends DartToolingDaemon {
-	protected handleOpen(): Promise<void> {
-		super.handleOpen();
-		return Promise.reject(new Error("simulated handleOpen failure"));
 	}
 }

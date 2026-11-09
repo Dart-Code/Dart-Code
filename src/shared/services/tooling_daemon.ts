@@ -68,13 +68,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.logger.info(`Connecting to DTD at ${dtdUri}...`);
 		const socket = new ws.WebSocket(dtdUri, { followRedirects: true });
 		attachPing(socket);
-		socket.on("open", () => {
-			// handleOpen() may return a rejected promise (for example if a service
-			// registration fails because the socket dropped). Catch and log rather
-			// than leaving an unhandled rejection, since the listener's return
-			// value is not observed by the socket.
-			void Promise.resolve(this.handleOpen()).catch((e) => this.logger.error(`Failed handling DTD socket open event: ${String(e)}`));
-		});
+		socket.on("open", () => this.handleOpen());
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		socket.on("message", (data) => this.handleData(data.toString()));
 		socket.on("close", () => this.handleWebSocketClose());
@@ -111,18 +105,8 @@ export class DartToolingDaemon implements IAmDisposable {
 		// `await this.connected` resolves to the initial connection object even
 		// if the socket has since closed, so check the live connection instead.
 		await this.connected;
-		if (!this.connection || this.isShuttingDown)
-			return;
-		try {
+		if (this.hasOpenSocket && !this.isShuttingDown)
 			this.sendEvent(Stream.Editor, { kind: EventKind.activeLocationChanged, ...activeLocation });
-		} catch (e) {
-			// This is called fire-and-forget, so a non-OPEN socket (for example
-			// one that is CLOSING after an unexpected disconnect) must not
-			// produce an unhandled rejection. Like tryCallMethod, failures are
-			// logged unless shutting down.
-			if (!this.isShuttingDown)
-				this.logger.error(`Failed to send active location to DTD: ${String(e)}`);
-		}
 	}
 
 	private async handleData(data: string) {
