@@ -110,6 +110,10 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 	const time = (detailed = false) => detailed ? `[${(new Date()).toTimeString()}] ` : `[${(new Date()).toLocaleTimeString()}] `;
 	createFolderForFile(file);
 	let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
+	logStream.on("error", (e) => {
+		logStream = undefined;
+		logger.warn(`Failed to write to log file ${file}: ${e}`);
+	});
 	if (header)
 		logStream.write(header);
 
@@ -145,8 +149,11 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 				if (logStream) {
 					logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file ended${os.EOL}`);
 					logStream.once("finish", resolve);
+					logStream.once("error", () => resolve());
 					logStream.end();
 					logStream = undefined;
+				} else {
+					resolve();
 				}
 			});
 		},

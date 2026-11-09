@@ -1,11 +1,12 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
-import { Uri } from "vscode";
+import { ConfigurationTarget, Uri, workspace } from "vscode";
 import { isWin } from "../../../shared/constants";
-import { nullLogger } from "../../../shared/logging";
-import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getDartToolDir, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
-import { createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, testProjectsFolder, tryDelete } from "../../helpers";
+import { LogCategory } from "../../../shared/enums";
+import { captureLogs, EmittingLogger, nullLogger } from "../../../shared/logging";
+import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getDartToolDir, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, prepareLogFilePath, uriComparisonString } from "../../../shared/utils/fs";
+import { activateWithoutAnalysis, createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, privateApi, setConfigForTest, testProjectsFolder, tryDelete, waitForResult } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
 	it("handles empty array", () => {
@@ -391,5 +392,96 @@ describe("getDartToolDir", () => {
 
 		assert.equal(getDartToolDir({}, true), undefined);
 		assert.equal(getDartToolDir({}, false), undefined);
+	});
+});
+
+describe("prepareLogFilePath and createFolderForFile", () => {
+	let tempFolder: string;
+
+	beforeEach(() => {
+		tempFolder = getRandomTempFolder();
+		defer("delete temp folder", () => tryDelete(tempFolder));
+	});
+
+	it("rejects empty, relative, or incomplete paths without creating folders", () => {
+		assert.equal(prepareLogFilePath(undefined), undefined);
+		assert.equal(prepareLogFilePath(""), undefined);
+		assert.equal(prepareLogFilePath("relative/log.txt"), undefined);
+
+		const parentFolder = path.join(tempFolder, "should_not_be_created");
+		assert.equal(prepareLogFilePath(`${parentFolder}${path.sep}`), undefined);
+		assert.equal(prepareLogFilePath(path.join(parentFolder, "log")), undefined);
+		assert.equal(prepareLogFilePath(path.join(parentFolder, "log.")), undefined);
+		assert.equal(prepareLogFilePath(path.join(parentFolder, "log.t")), undefined);
+		assert.equal(prepareLogFilePath(path.join(parentFolder, "log.tx")), undefined);
+		assert.equal(prepareLogFilePath(path.join(parentFolder, "log.longext")), undefined);
+		assert.equal(prepareLogFilePath(path.join(parentFolder, ".txt")), undefined);
+		assert.equal(prepareLogFilePath(path.join(parentFolder, "log..txt")), undefined);
+		assert.equal(fs.existsSync(parentFolder), false);
+	});
+
+	it("rejects paths that already exist on disk as a directory", () => {
+		const existingDir = path.join(tempFolder, "existing.log");
+		mkDirRecursive(existingDir);
+		assert.equal(prepareLogFilePath(existingDir), undefined);
+	});
+
+	it("rejects paths whose parent exists on disk as a file", () => {
+		mkDirRecursive(tempFolder);
+		const existingFile = path.join(tempFolder, "existing_file");
+		fs.writeFileSync(existingFile, "");
+
+		const invalidChild = path.join(existingFile, "log.txt");
+		assert.equal(createFolderForFile(invalidChild), undefined);
+		assert.equal(prepareLogFilePath(invalidChild), undefined);
+	});
+
+	it("accepts valid 3 or 4 character extensions and creates parent folders", () => {
+		const txtFile = path.join(tempFolder, "nested", "sub", "analyzer.txt");
+		assert.equal(prepareLogFilePath(txtFile), txtFile);
+		assert.equal(existsAndIsDirectorySync(path.dirname(txtFile)), true);
+
+		const jsonFile = path.join(tempFolder, "nested2", "dap.json");
+		assert.equal(prepareLogFilePath(jsonFile), jsonFile);
+		assert.equal(existsAndIsDirectorySync(path.dirname(jsonFile)), true);
+
+		const varFile = path.join(tempFolder, "not_created_yet", "${name}.log");
+		assert.equal(prepareLogFilePath(varFile), varFile);
+		assert.equal(fs.existsSync(path.dirname(varFile)), false);
+	});
+
+	it("validates *LogFile settings via config getters", async () => {
+		await activateWithoutAnalysis();
+
+		const configWithLog = privateApi.config as { analyzerLogFile?: string };
+		const partialDir = path.join(tempFolder, "partial_dir");
+		await setConfigForTest("dart", "analyzerLogFile", `${partialDir}${path.sep}`);
+		assert.equal(configWithLog.analyzerLogFile, undefined);
+		assert.equal(fs.existsSync(partialDir), false);
+
+		await workspace.getConfiguration("dart").update("analyzerLogFile", path.join(partialDir, "analyzer.lo"), ConfigurationTarget.Global);
+		assert.equal(configWithLog.analyzerLogFile, undefined);
+		assert.equal(fs.existsSync(partialDir), false);
+
+		const validLogFile = path.join(partialDir, "analyzer.log");
+		await workspace.getConfiguration("dart").update("analyzerLogFile", validLogFile, ConfigurationTarget.Global);
+		assert.equal(configWithLog.analyzerLogFile, validLogFile);
+		assert.equal(existsAndIsDirectorySync(partialDir), true);
+	});
+
+	it("captureLogs handles stream errors and disposes without hanging when path is a directory", async () => {
+		mkDirRecursive(tempFolder);
+		const emittingLogger = new EmittingLogger();
+		const warnings: string[] = [];
+		const sub = emittingLogger.onLog((m) => {
+			if (m.message.includes("Failed to write to log file"))
+				warnings.push(m.message);
+		});
+		defer("dispose log listener", () => sub.dispose());
+
+		const fileLogger = captureLogs(emittingLogger, tempFolder, "Header\n", 2000, [LogCategory.Analyzer]);
+		await waitForResult(() => warnings.length > 0);
+		emittingLogger.info("Test message after stream error", LogCategory.Analyzer);
+		await fileLogger.dispose();
 	});
 });
