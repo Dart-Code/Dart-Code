@@ -10,7 +10,9 @@ This document provides the step-by-step instructions for performing a pre-releas
 
 ---
 
-> **Important:** Trigger and approve **one release at a time**. Because all runs share the `release` concurrency group and environment, queuing multiple unapproved runs at once will cause newer waiting runs to cancel older waiting runs.
+> **Important:**
+> - **Trigger and approve one release at a time.** Because all runs share the `release` concurrency group and environment, queuing multiple unapproved runs at once will cause newer waiting runs to cancel older waiting runs.
+> - **Uncheck `Dry run` when publishing a real release.** The **Dry run** (`dry_run`) workflow input defaults to `true`. When enabled, the workflow skips publishing to the VS Code Marketplace (logging the `vsce publish` command it would have run), while still performing all other steps (packaging the `.vsix` artifact, pushing the git tag, creating the GitHub Release, and opening the version-bump PR). You must uncheck **Dry run** (`false`) to publish to the Marketplace.
 
 ## 1. Publishing a Pre-Release
 
@@ -18,6 +20,7 @@ This document provides the step-by-step instructions for performing a pre-releas
    - **Release type**: `pre-release`
    - **Version**: Leave blank to auto-calculate `X.(Y-1).YYYYMMDD` from `package.json` (or enter an explicit `X.Y.Z` with an odd minor version).
    - **Skip CI check**: Leave unchecked (`false`) unless overriding a known CI flake.
+   - **Dry run**: Uncheck (`false`) to publish to the VS Code Marketplace.
 2. Open the triggered workflow run and click **Review deployments → Approve and deploy** for the `release` environment.
 3. Once completed, verify the pre-release version appears on the VS Code Marketplace and tag `vX.Y.YYYYMMDD` exists in the repository.
 
@@ -31,6 +34,8 @@ At the end of a release cycle (for example, when `package.json` on `master` is `
    - Go to **Actions → Release → Run workflow** on `master`:
      - **Release type**: `stable`
      - **Version**: `3.148.0` (must be explicitly provided)
+     - **Skip CI check**: Leave unchecked (`false`) unless overriding a known CI flake.
+     - **Dry run**: Uncheck (`false`) to publish to the VS Code Marketplace.
    - Approve the `release` environment deployment when prompted.
    - Wait for the workflow to complete. It will publish `3.148.0` to the Marketplace, push tag `v3.148.0`, create the GitHub Release, trigger the full test suite on `v3.148.0`, and open a Pull Request titled **`Set version to 3.150.0-dev`**.
 2. **Merge the `Set version to 3.150.0-dev` PR**:
@@ -42,6 +47,8 @@ At the end of a release cycle (for example, when `package.json` on `master` is `
    - Once the `Set version to 3.150.0-dev` PR has merged and `Run Tests` on `master` has passed, go to **Actions → Release → Run workflow** on `master`:
      - **Release type**: `pre-release`
      - **Version**: Leave blank (auto-calculates `3.149.YYYYMMDD` from `3.150.0-dev`).
+     - **Skip CI check**: Leave unchecked (`false`).
+     - **Dry run**: Uncheck (`false`) to publish to the VS Code Marketplace.
    - *(Tip: If you don't want to wait for the `3.150.0-dev` PR to finish merging first, you can trigger the `pre-release` workflow immediately by typing the explicit version `3.149.YYYYMMDD` into the **Version** input.)*
 
 *(Repeat the same steps in **`Dart-Code/Flutter`** so both extensions stay on matching version numbers.)*
@@ -65,7 +72,7 @@ To publish a hotfix/patch release (for example, `3.148.1`) without including new
 3. **Run the `Release` workflow from the `patch-*` branch**:
    - Go to **Actions → Release → Run workflow**.
    - Select **`patch-3-148-1`** from the **Use workflow from** branch dropdown.
-   - Set **Release type** to `stable` and **Version** to `3.148.1`.
+   - Set **Release type** to `stable`, **Version** to `3.148.1`, and uncheck **Dry run** (`false`).
    - Approve the `release` environment deployment.
 4. **Clean up**:
    - The workflow will publish `3.148.1` to the Marketplace, push tag `v3.148.1`, create the GitHub Release, and trigger the full test suite on `v3.148.1`. (No `-dev` version-bump PR is opened for patch releases.)

@@ -64,10 +64,11 @@ jobs:
 
     steps:
 
-      # Check out the exact commit SHA (github.sha) that was at the tip of the selected
-      # branch when the workflow was triggered (rather than passing 'ref', which would
-      # resolve the branch head dynamically). This guarantees that re-running a failed
-      # job always packages and tags the exact same commit.
+      # By default (when 'ref' is omitted), actions/checkout checks out the exact commit SHA
+      # (github.sha) that was at the tip of the selected branch when the workflow was triggered
+      # (whereas passing a branch name via 'ref' would resolve the branch head dynamically at
+      # checkout time). Leaving 'ref' unset guarantees that re-running a failed job always
+      # packages and tags the exact same commit.
       - name: Checkout repository
         uses: actions/checkout@v7
         with:

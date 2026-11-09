@@ -40,8 +40,8 @@ Each run of [`.github/workflows/release.yml`](../.github/workflows/release.yml) 
 When triggered manually and approved in the `release` environment, the workflow performs the following steps in order:
 
 1. **Checkout the target commit**:
-   - Checks out the exact commit SHA (`github.sha`) that was at the tip of the selected branch when the workflow was triggered (including submodules and full history/tags), rather than resolving the branch head dynamically at checkout time.
-   - Pinning to the triggered commit SHA ensures that re-running a failed job always packages and tags the exact same commit, even if new commits have landed on the branch in the meantime.
+   - By default (when `ref` is omitted), `actions/checkout` checks out the exact commit SHA (`github.sha`) that was at the tip of the selected branch when the workflow was triggered (including submodules and full history/tags), rather than passing a branch name via `ref` which would resolve the branch head dynamically at checkout time.
+   - Leaving `ref` unset ensures that re-running a failed job always packages and tags the exact same commit, even if new commits have landed on the branch in the meantime.
 2. **Compute and validate the release version**:
    - **Pre-releases**: Uses the explicit version input if provided; otherwise derives `X.(Y-1).YYYYMMDD` from `X.Y.0-dev` in `package.json`. Enforces that the minor version is **odd**.
    - **Stable releases**: Requires an explicit `X.Y.Z` version input and enforces that the minor version is **even**.
@@ -56,7 +56,8 @@ When triggered manually and approved in the `release` environment, the workflow 
    - Installs dependencies, runs the linter, updates `package.json` and `package-lock.json` to the release version, and builds the `.vsix` package (flagged as a pre-release when appropriate).
    - Uploads the packaged `.vsix` as a workflow artifact so it is preserved for inspection or manual recovery if a later step fails.
 6. **Publish to the VS Code Marketplace**:
-   - Publishes the packaged `.vsix` to the VS Code Marketplace using OIDC Trusted Publishing (or logs what would be published when run in dry-run mode).
+   - Publishes the packaged `.vsix` to the VS Code Marketplace using OIDC Trusted Publishing.
+   - If the `dry_run` input is `true` (the default), skips Marketplace publication after verifying OIDC token environment variables are present and logs the `vsce publish` command that would have been executed (all subsequent git tag, GitHub Release, and PR steps still run).
    - Duplicate version errors are ignored so that if a later step fails after Marketplace publication succeeds, the job can be safely re-run without failing on the already-published version.
 7. **Commit and push the release tag**:
    - Commits the updated `package.json` and `package-lock.json` as `Publish vX.Y.Z`, creates the git tag `vX.Y.Z`, and pushes the tag to the repository.
