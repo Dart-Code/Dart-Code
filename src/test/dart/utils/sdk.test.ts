@@ -214,7 +214,7 @@ describe("runCustomGetSDKCommand", () => {
 	});
 
 	it("opens workspace or global settings when Open Settings is clicked on error", async () => {
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction as any);
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction);
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openGlobalSettings = executeCommand.withArgs("workbench.action.openSettingsJson", sinon.match.any);
 		const openWorkspaceSettings = executeCommand.withArgs("workbench.action.openWorkspaceSettingsFile", sinon.match.any);
@@ -296,7 +296,7 @@ describe("SdkUtils", () => {
 		deferUntilLast("clear pending timers", () => timers.forEach((t) => clearTimeout(t)));
 	});
 
-	async function setWorkspaceConfigForTest(section: string, key: string, value: any): Promise<void> {
+	async function setWorkspaceConfigForTest(section: string, key: string, value: unknown): Promise<void> {
 		const conf = vs.workspace.getConfiguration(section);
 		const values = conf.inspect(key);
 		const oldValue = values?.workspaceValue;
@@ -436,7 +436,7 @@ describe("SdkUtils", () => {
 			const badSdkPath = path.join(createTempDir(), "not-an-sdk");
 			await setConfigForTest("dart", "sdkPath", badSdkPath);
 
-			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction as any);
+			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction);
 			const openGlobalSettings = executeCommandStub.withArgs("workbench.action.openSettingsJson", sinon.match.any);
 			const openedSettings = waitForStubCall(openGlobalSettings);
 
@@ -458,7 +458,7 @@ describe("SdkUtils", () => {
 			const badSdkPath = path.join(createTempDir(), "not-an-sdk");
 			await setWorkspaceConfigForTest("dart", "sdkPath", badSdkPath);
 
-			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction as any);
+			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(openSettingsAction);
 			const openWorkspaceSettings = executeCommandStub.withArgs("workbench.action.openWorkspaceSettingsFile", sinon.match.any);
 			const openedSettings = waitForStubCall(openWorkspaceSettings);
 
@@ -479,7 +479,7 @@ describe("SdkUtils", () => {
 		it("showFluttersDartSdkActivationFailure prompts to reload extension", async () => {
 			// When a Flutter SDK is found but its embedded Dart SDK is missing, showFluttersDartSdkActivationFailure
 			// instructs the user to run 'flutter doctor' and offers a "Reload" button that restarts the extension.
-			const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves("Reload" as any);
+			const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves("Reload");
 			const reloaded = waitForStubCall(reloadExtensionStub);
 
 			privateApi.sdkUtils!.showFluttersDartSdkActivationFailure();
@@ -502,7 +502,7 @@ describe("SdkUtils", () => {
 			const dartSdkDir = path.join(tempDir, "dart-sdk");
 			createFakeDartSdk(dartSdkDir);
 
-			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves("Locate SDK" as any);
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves("Locate SDK");
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(dartSdkDir)]);
 			const reloaded = waitForStubCall(reloadExtensionStub);
 
@@ -523,7 +523,7 @@ describe("SdkUtils", () => {
 			const flutterSdkDir = path.join(tempDir, "flutter-sdk");
 			createFakeFlutterSdk(flutterSdkDir);
 
-			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves("Locate SDK" as any);
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves("Locate SDK");
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(flutterSdkDir)]);
 			const reloaded = waitForStubCall(reloadExtensionStub);
 
@@ -543,8 +543,8 @@ describe("SdkUtils", () => {
 			const validFolder = vs.Uri.file("/valid/sdk");
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
-			showErrorMessage.onFirstCall().resolves("Locate SDK" as any);
-			showErrorMessage.onSecondCall().resolves("Locate SDK" as any);
+			showErrorMessage.onFirstCall().resolves("Locate SDK");
+			showErrorMessage.onSecondCall().resolves("Locate SDK");
 
 			const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
 			showOpenDialog.onFirstCall().resolves([invalidFolder]);
@@ -576,7 +576,7 @@ describe("SdkUtils", () => {
 		it("Download SDK opens DART_DOWNLOAD_URL in browser for Dart", async () => {
 			// Unlike Flutter (which attempts to clone via Git), clicking "Download SDK" for a missing Dart SDK
 			// directly opens DART_DOWNLOAD_URL in the browser.
-			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK" as any);
+			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK");
 			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
@@ -591,7 +591,7 @@ describe("SdkUtils", () => {
 
 		it("Show Log opens ring log contents", async () => {
 			// Clicking "Show Log" on the missing SDK error prompt opens a document containing the startup ringLog.
-			sb.stub(vs.window, "showErrorMessage").resolves(showLogAction as any);
+			sb.stub(vs.window, "showErrorMessage").resolves(showLogAction);
 			const showTextDocument = sb.stub(vs.window, "showTextDocument");
 			const shownDoc = waitForStubCall(showTextDocument);
 
@@ -609,8 +609,8 @@ describe("SdkUtils", () => {
 		it("handleMissingSdks registers fallback commands that trigger activation failure prompts with commandToReRun", () => {
 			// When SDKs are missing at activation, handleMissingSdks registers fallback handlers for SDK-dependent
 			// commands so invoking any of them shows the relevant missing SDK prompt and passes the command ID to re-run.
-			const registeredCommands = new Map<string, (...args: any[]) => any>();
-			sb.stub(vs.commands, "registerCommand").callsFake((cmd: string, cb: (...args: any[]) => any) => {
+			const registeredCommands = new Map<string, (...args: unknown[]) => unknown>();
+			sb.stub(vs.commands, "registerCommand").callsFake((cmd: string, cb: (...args: unknown[]) => unknown) => {
 				registeredCommands.set(cmd, cb);
 				return { dispose: () => undefined };
 			});
@@ -819,8 +819,8 @@ describe("SdkUtils", () => {
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 
 			// 1. Non-zero exit code from "git --version" -> shows error message; clicking "Setup Instructions" opens FLUTTER_DOWNLOAD_URL.
-			showErrorMessage.onCall(0).resolves("Download SDK" as any);
-			showErrorMessage.onCall(1).resolves("Setup Instructions" as any);
+			showErrorMessage.onCall(0).resolves("Download SDK");
+			showErrorMessage.onCall(1).resolves("Setup Instructions");
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Flutter",
@@ -839,7 +839,7 @@ describe("SdkUtils", () => {
 			// 2. Spawn error from "git --version" -> shows the same error message; dismissing it returns to the outer prompt.
 			showErrorMessage.resetHistory();
 			gitResult = { error: new Error("ENOENT") };
-			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(0).resolves("Download SDK");
 			showErrorMessage.onCall(1).resolves(undefined);
 			showErrorMessage.onCall(2).resolves(undefined);
 
@@ -890,7 +890,7 @@ describe("SdkUtils", () => {
 			const showOpenDialog = sb.stub(vs.window, "showOpenDialog").resolves(undefined);
 
 			// 1. Cancelled during "git --version" check (covers both normal exit and spawn error while cancelled).
-			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(0).resolves("Download SDK");
 			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			showErrorMessage.onCall(1).callsFake(async () => {
 				throwOnGitCancel = true;
@@ -912,7 +912,7 @@ describe("SdkUtils", () => {
 			cancelGitCheck = false;
 			throwOnGitCancel = false;
 			showErrorMessage.resetHistory();
-			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(0).resolves("Download SDK");
 			showErrorMessage.onCall(1).resolves(undefined);
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
@@ -958,9 +958,9 @@ describe("SdkUtils", () => {
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 
 			// 1. Non-zero exit code from git clone -> shows stderr error and setup instructions prompt.
-			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(0).resolves("Download SDK");
 			showErrorMessage.onCall(1).resolves(undefined);
-			showErrorMessage.onCall(2).resolves("Setup Instructions" as any);
+			showErrorMessage.onCall(2).resolves("Setup Instructions");
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
 				"Flutter",
@@ -980,7 +980,7 @@ describe("SdkUtils", () => {
 			const loggerErrorSpy = sb.spy(privateApi.logger, "error");
 			showErrorMessage.resetHistory();
 			cloneResult = { error: new Error("clone spawn error") };
-			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(0).resolves("Download SDK");
 			showErrorMessage.onCall(1).resolves(undefined);
 			showErrorMessage.onCall(2).resolves(undefined);
 
@@ -1001,7 +1001,7 @@ describe("SdkUtils", () => {
 			showErrorMessage.resetHistory();
 			cancelClone = true;
 			cloneResult = { exitCode: 1, stderr: "cancelled" };
-			showErrorMessage.onCall(0).resolves("Download SDK" as any);
+			showErrorMessage.onCall(0).resolves("Download SDK");
 			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
 			showErrorMessage.onCall(1).callsFake(async () => {
 				cloneResult = { error: new Error("cancelled error") };
@@ -1047,7 +1047,7 @@ describe("SdkUtils", () => {
 				return undefined;
 			});
 
-			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK" as any);
+			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK");
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(cloneDir)]);
 			// Dismiss the "Add SDK to PATH" prompt with "No Thanks".
 			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.

@@ -71,7 +71,6 @@ export default defineConfig([
 				}]
 			}],
 			// Temporary exclusions after tslint -> eslint migration
-			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/no-unsafe-member-access": "off",
 			// End temporary exclusions
 			"arrow-body-style": "error",

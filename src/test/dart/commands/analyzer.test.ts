@@ -388,7 +388,7 @@ describe("analyzer", () => {
 		it("getDiagnosticServerPort returns undefined when cancelled", async () => {
 			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest");
 			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
-			sendRequest.withArgs(DiagnosticServerRequest.type, sinon.match.any).callsFake(async (_type: any, token: vs.CancellationToken) => {
+			sendRequest.withArgs(DiagnosticServerRequest.type, sinon.match.any).callsFake(async (_type: unknown, token: vs.CancellationToken) => {
 				const cancellable = token as { cancel?: () => void };
 				if (typeof cancellable.cancel === "function")
 					cancellable.cancel();
@@ -537,7 +537,7 @@ describe("analyzer", () => {
 							range: ls.Range.create(0, 0, 0, 3),
 							newText: "legacySnippet($1)",
 							insertTextFormat: ls.InsertTextFormat.Snippet,
-						} as any,
+						} as ls.TextEdit,
 						ls.TextEdit.replace(ls.Range.create(1, 0, 1, 3), "legacyPlain"),
 					],
 				},
@@ -556,7 +556,7 @@ describe("analyzer", () => {
 		it("throws on unknown workspace edit change type", async () => {
 			const p2c = getP2c();
 			const invalidEdit: ls.WorkspaceEdit = {
-				documentChanges: [{ kind: "unknownChangeKind" } as any],
+				documentChanges: [{ kind: "unknownChangeKind" } as unknown as ls.CreateFile],
 			};
 
 			await assert.rejects(() => p2c.asWorkspaceEdit(invalidEdit), /Unknown workspace edit change received/);
@@ -577,7 +577,7 @@ describe("analyzer", () => {
 									range: ls.Range.create(0, 0, 0, 1),
 									newText: "actionSnippet($0)",
 									insertTextFormat: ls.InsertTextFormat.Snippet,
-								} as any,
+								} as ls.TextEdit,
 							],
 						},
 					},
@@ -711,7 +711,7 @@ describe("analyzer", () => {
 			let resolveFirstPrompt: (() => void) | undefined;
 			const firstPromptPromise = new Promise<void>((resolve) => { resolveFirstPrompt = resolve; });
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
-			showErrorMessage.onFirstCall().returns(firstPromptPromise as any);
+			showErrorMessage.onFirstCall().returns(firstPromptPromise);
 			showErrorMessage.resolves();
 
 			let isDuringStartup = false;
