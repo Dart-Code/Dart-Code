@@ -1,8 +1,9 @@
 name: Release
 run-name: Release ${{ inputs.release_type }}${{ inputs.version && format(' v{0}', inputs.version) || '' }}${{ inputs.dry_run && ' (dry run)' || '' }}
 
-# Publishes a single release (pre-release or stable) to the VS Code Marketplace,
-# tags the commit, and (for stable releases) creates a GitHub Release with the VSIX.
+# Publishes a single release (pre-release or stable) to the VS Code Marketplace
+# and Open VSX Registry, tags the commit, and (for stable releases) creates a
+# GitHub Release with the VSIX.
 #
 # Documentation (keep in sync when modifying this workflow):
 # - docs/releasing.md: Step-by-step instructions for performing a release.
@@ -35,7 +36,7 @@ on:
         type: boolean
         default: false
       dry_run:
-        description: "Dry run (skip publishing to VS Code Marketplace, but still commit/tag/release)"
+        description: "Dry run (skip publishing to VS Code Marketplace and Open VSX, but still commit/tag/release)"
         required: false
         type: boolean
         default: true
@@ -236,7 +237,7 @@ jobs:
       # (--oidc). Passing --skip-duplicate ignores duplicate version errors so the job can be
       # safely re-run if a subsequent step fails after Marketplace publication succeeds.
       - name: Publish to VS Code Marketplace
-        id: publish
+        id: publish_vscode
         env:
           DRY_RUN: ${{ inputs.dry_run }}
           RELEASE_TYPE: ${{ inputs.release_type }}
@@ -255,6 +256,27 @@ jobs:
             echo "[Dry Run] Would execute: npx @vscode/vsce publish --oidc --skip-duplicate $PRE_FLAG --packagePath $VSIX"
           else
             npx @vscode/vsce publish --oidc --skip-duplicate $PRE_FLAG --packagePath "$VSIX"
+          fi
+
+      # Publish the packaged .vsix to the Open VSX Registry using OIDC Trusted Publishing
+      # (--trusted-publishing). Passing --skip-duplicate ignores duplicate version errors so the job
+      # can be safely re-run if a subsequent step fails after Open VSX publication succeeds.
+      # Note: --pre-release is not passed here because ovsx reads the PreRelease flag embedded in the
+      # .vsix manifest by 'vsce package' (passing --pre-release with a prepackaged .vsix logs a warning).
+      - name: Publish to Open VSX
+        id: publish_openvsx
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          VSIX: ${{ steps.version.outputs.vsix }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+              echo "::error::OIDC token environment variables are missing (check id-token: write permission)."
+              exit 1
+            fi
+            echo "[Dry Run] Would execute: npx ovsx publish --trusted-publishing --skip-duplicate --packagePath $VSIX"
+          else
+            npx ovsx publish --trusted-publishing --skip-duplicate --packagePath "$VSIX"
           fi
 
       # Commit the updated package.json/package-lock.json and push the release tag (refs/tags/vX.Y.Z).
@@ -338,12 +360,12 @@ jobs:
               --body "Automated version bump after releasing v$VERSION."
           fi
 
-      # If any step fails after the extension has already been published to the Marketplace,
-      # log recovery instructions reminding the maintainer that the job can be safely re-run
-      # because Marketplace publishing ignores duplicate versions.
+      # If any step fails after the extension has already been published to the VS Code Marketplace
+      # or Open VSX, log recovery instructions reminding the maintainer that the job can be safely
+      # re-run because both publish steps ignore duplicate versions.
       - name: Print retry instructions on failure
-        if: failure() && steps.publish.outcome == 'success'
+        if: failure() && (steps.publish_vscode.outcome == 'success' || steps.publish_openvsx.outcome == 'success')
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          echo "::warning::A step failed after v$VERSION was published to the VS Code Marketplace. Because 'vsce publish' uses '--skip-duplicate', it is safe to re-run this job (if the tag 'v$VERSION' or GitHub Release was already created, delete it first with 'gh release delete v$VERSION --yes' / 'git push --delete origin v$VERSION')."
+          echo "::warning::A step failed after v$VERSION was published to the VS Code Marketplace and/or Open VSX. Because 'vsce publish' and 'ovsx publish' both use '--skip-duplicate', it is safe to re-run this job (if the tag 'v$VERSION' or GitHub Release was already created, delete it first with 'gh release delete v$VERSION --yes' / 'git push --delete origin v$VERSION')."
