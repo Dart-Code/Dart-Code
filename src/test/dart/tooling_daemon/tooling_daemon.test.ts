@@ -395,8 +395,8 @@ describe("dart tooling daemon", () => {
 	});
 
 	// Creates a locally constructed daemon connected to its own DTD process so
-	// tests can exercise disconnect/dispose behaviour without affecting the
-	// extension's own daemon (privateApi.toolingDaemon).
+	// tests can exercise message handling and disconnect/dispose behaviour
+	// without affecting the extension's own daemon (privateApi.toolingDaemon).
 	function createDaemon<T extends typeof DartToolingDaemon>(daemonClass?: T): InstanceType<T> {
 		const daemon = new (daemonClass ?? DartToolingDaemon)(
 			privateApi.logger,
@@ -557,6 +557,50 @@ describe("dart tooling daemon", () => {
 		// so continuations don't wait forever.
 		assert.equal(await daemon.connected, undefined);
 	});
+
+	it("logs a failure handling a malformed message instead of leaving an unhandled rejection", async () => {
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Remove log listener", () => logListener.dispose());
+		const daemon = createDaemon(MessageEmittingDaemon);
+		await daemon.connected;
+
+		// Emit a malformed frame on the real socket. Without a catch on the
+		// message listener, the JSON.parse failure is an unobserved rejection;
+		// with it, the failure is logged and the socket stays usable.
+		daemon.emitMessageForTest("this is not valid json");
+		await waitForResult(
+			() => logMessages.some((m) => m.includes("Failed handling DTD message")),
+			"malformed message failure was not logged",
+		);
+
+		const result = await daemon.callMethod(ServiceMethod.getIDEWorkspaceRoots);
+		assert.ok(Array.isArray(result.ideWorkspaceRoots));
+	});
+
+	it("logs a failure from a throwing notification listener instead of leaving an unhandled rejection", async () => {
+		const logMessages: string[] = [];
+		const logListener = privateApi.logger.onLog((msg: LogMessage) => logMessages.push(msg.message));
+		defer("Remove log listener", () => logListener.dispose());
+		const daemon = createDaemon(MessageEmittingDaemon);
+		await daemon.connected;
+
+		const notificationListener = daemon.onNotification("Service", "serviceRegistered", () => {
+			throw new Error("simulated notification listener failure");
+		});
+		defer("Dispose notification listener", () => notificationListener.dispose());
+
+		daemon.emitMessageForTest(JSON.stringify({
+			jsonrpc: "2.0",
+			method: "streamNotify",
+			params: { streamId: "Service", eventKind: "serviceRegistered", eventData: {} },
+		}));
+
+		await waitForResult(
+			() => logMessages.some((m) => m.includes("Failed handling DTD message")),
+			"notification listener failure was not logged",
+		);
+	});
 });
 
 function simplify(e: ActiveLocation) {
@@ -591,5 +635,11 @@ class TestDartToolingDaemon extends DartToolingDaemon {
 
 	public sendActiveLocationForTest(activeLocation: ActiveLocation): Promise<void> {
 		return this.sendActiveLocation(activeLocation);
+	}
+}
+
+class MessageEmittingDaemon extends DartToolingDaemon {
+	public emitMessageForTest(data: string): void {
+		this.connection?.socket.emit("message", Buffer.from(data));
 	}
 }

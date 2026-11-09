@@ -69,8 +69,14 @@ export class DartToolingDaemon implements IAmDisposable {
 		const socket = new ws.WebSocket(dtdUri, { followRedirects: true });
 		attachPing(socket);
 		socket.on("open", () => this.handleOpen());
-		// eslint-disable-next-line @typescript-eslint/no-base-to-string
-		socket.on("message", (data) => this.handleData(data.toString()));
+		socket.on("message", (data) => {
+			// handleData() is async and its promise is not observed by the
+			// socket; catch failures (for example malformed messages or a
+			// throwing notification listener) so they are logged rather than
+			// left as unhandled rejections.
+			// eslint-disable-next-line @typescript-eslint/no-base-to-string
+			void this.handleData(data.toString()).catch((e) => this.logger.error(`Failed handling DTD message: ${String(e)}`));
+		});
 		socket.on("close", () => this.handleWebSocketClose());
 		socket.on("error", (e) => this.handleError(e));
 
