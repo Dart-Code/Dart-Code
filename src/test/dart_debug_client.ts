@@ -57,7 +57,7 @@ export class DartDebugClient extends DebugClient {
 		customEventsToForward.forEach((evt) => this.on(evt, (e: DebugSessionCustomEvent) => this.handleCustomEvent(e)));
 
 		// Log important events to make troubleshooting tests easier.
-		this.on("output", (event) => {
+		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			logger.info(`[${event.body.category}] ${event.body.output}`);
 		});
 		this.on("terminated", () => {
@@ -207,7 +207,7 @@ export class DartDebugClient extends DebugClient {
 			const stoppedEvent = watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped", "waiting for stop event on attach to paused"));
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
 			logger.info("Waiting for stopped (step/entry) event...");
-			const event = await stoppedEvent;
+			const event = await stoppedEvent as DebugProtocol.StoppedEvent;
 			// Allow either step (old DC DA) or entry (SDK DA).
 			if (event.body.reason !== "step")
 				assert.equal(event.body.reason, "entry");

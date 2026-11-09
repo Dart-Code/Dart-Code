@@ -1,3 +1,4 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
@@ -357,7 +358,7 @@ describe(`flutter run debugger (only test device)`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
 		let didStop = false;
-		dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
+		dc.on("stopped", (e: DebugProtocol.StoppedEvent) => { if (e.body?.reason !== "entry") didStop = true; });
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")

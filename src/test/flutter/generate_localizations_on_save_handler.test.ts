@@ -21,7 +21,8 @@ describe("generate localizations on save", () => {
 
 		await waitFor(() => genL10nCommand.calledOnce);
 		assert.equal(genL10nCommand.firstCall.args[0], "flutter.task.genl10n");
-		assert.equal(fsPath(genL10nCommand.firstCall.args[1][0] as vs.Uri), fsPath(arbFile));
+		const genL10nUris = genL10nCommand.firstCall.args[1] as vs.Uri[];
+		assert.equal(fsPath(genL10nUris[0]), fsPath(arbFile));
 	});
 
 	it("does not run gen_l10n when the setting is never", async () => {

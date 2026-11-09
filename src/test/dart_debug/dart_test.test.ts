@@ -212,7 +212,10 @@ describe("dart test debugger", () => {
 		dc.removeListener("dart.testNotification", eventHandler);
 
 		const testEvents = events.filter((e) => e.event === "dart.testNotification");
-		const suiteEvents = testEvents.filter((e) => e.body.type === "suite");
+		const suiteEvents = testEvents.filter((e) => {
+			const body = e.body as { type?: string };
+			return body.type === "suite";
+		});
 		const suiteNames = suiteEvents.map((e) => path.basename((e.body as SuiteNotification).suite.path));
 		suiteNames.sort();
 
@@ -800,8 +803,9 @@ test/empty_test.dart
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
 		if (testName) {
-			assert.equal(runAction.command!.arguments![0].fullName, testName);
-			assert.equal(runAction.command!.arguments![0].isGroup, false);
+			const testNode = runAction.command!.arguments![0] as { fullName: string; isGroup: boolean };
+			assert.equal(testNode.fullName, testName);
+			assert.equal(testNode.isGroup, false);
 		}
 
 		if (captureConfigOnly) {
