@@ -146,7 +146,7 @@ export default defineConfig([
 			],
 			"prefer-const": "error",
 			"quote-props": [
-				"warn",
+				"error",
 				"consistent-as-needed"
 			],
 			"spaced-comment": [
@@ -192,22 +192,8 @@ export default defineConfig([
 			],
 			"@typescript-eslint/class-literal-property-style": "off",
 			"@typescript-eslint/consistent-type-definitions": "error",
-			"@typescript-eslint/member-delimiter-style": [
-				// TODO: Set this back to "error" when fixed.
-				"off",
-				{
-					"multiline": {
-						"delimiter": "semi",
-						"requireLast": true
-					},
-					"singleline": {
-						"delimiter": "semi",
-						"requireLast": false
-					}
-				}
-			],
 			"@typescript-eslint/no-empty-function": "off",
-			"@typescript-eslint/no-inferrable-types": "warn",
+			"@typescript-eslint/no-inferrable-types": "error",
 			"@typescript-eslint/no-misused-promises": [
 				"error",
 				{
@@ -218,7 +204,7 @@ export default defineConfig([
 			"@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
 			"@typescript-eslint/prefer-for-of": "error",
 			"@typescript-eslint/prefer-function-type": "error",
-			"@typescript-eslint/prefer-includes": "warn",
+			"@typescript-eslint/prefer-includes": "error",
 			"@typescript-eslint/triple-slash-reference": [
 				"error",
 				{
