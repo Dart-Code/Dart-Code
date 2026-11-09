@@ -12,7 +12,7 @@ This document provides the step-by-step instructions for performing a pre-releas
 
 > **Important:**
 > - **Trigger and approve one release at a time.** Because all runs share the `release` concurrency group and environment, queuing multiple unapproved runs at once will cause newer waiting runs to cancel older waiting runs.
-> - **Uncheck `Dry run` when publishing a real release.** The **Dry run** (`dry_run`) workflow input defaults to `true`. When enabled, the workflow skips publishing to the VS Code Marketplace (logging the `vsce publish` command it would have run), while still performing all other steps (packaging the `.vsix` artifact, pushing the git tag, creating the GitHub Release, and opening the version-bump PR). You must uncheck **Dry run** (`false`) to publish to the Marketplace.
+> - **Uncheck `Dry run` when publishing a real release.** The **Dry run** option defaults to `true` (which runs all steps except publishing to the VS Code Marketplace). You must uncheck **Dry run** to publish to the Marketplace.
 
 ## 1. Publishing a Pre-Release
 
@@ -85,8 +85,8 @@ To publish a hotfix/patch release (for example, `3.148.1`) without including new
 - **If the workflow fails *before* `Publish to VS Code Marketplace`**:
   - Nothing has been published or pushed. Fix the underlying issue (or wait for CI / Merge Queue) and either click **Re-run failed jobs** or trigger a new workflow run.
 - **If the workflow fails *after* `Publish to VS Code Marketplace` succeeded**:
-  - Because `vsce publish` uses `--skip-duplicate`, **it is safe to re-run the workflow job** — the Marketplace upload step will safely no-op.
-  - Because `Checkout repository` pins to the workflow run's original commit (`github.sha`), clicking **Re-run failed jobs** will package and tag the exact same commit even if new commits have landed on `master` in the meantime.
+  - Because the publish step ignores duplicate versions, **it is safe to re-run the workflow job** — the Marketplace upload step will be skipped if the version was already published.
+  - Clicking **Re-run failed jobs** will package and tag the exact same commit that was originally triggered, even if new commits have landed on the branch in the meantime.
   - If the failure happened *after* `Commit and push tag` (or `Create GitHub Release`) already ran, delete the partial GitHub Release and/or remote tag first so the duplicate-tag check passes on retry:
     ```bash
     gh release delete v<VERSION> --yes

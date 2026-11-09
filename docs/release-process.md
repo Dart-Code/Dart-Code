@@ -24,12 +24,12 @@ When a `.0` stable release is published (such as `3.148.0`), any Marketplace use
 
 ## 2. Environment, Concurrency, and Trusted Publishing
 
-Each run of [`.github/workflows/release.yml`](../.github/workflows/release.yml) publishes a single release (`pre-release` or `stable`) inside a single job (`release`) configured with:
+Each run of [`.github/workflows/release.yml`](../.github/workflows/release.yml) publishes a single release (`pre-release` or `stable`) configured with:
 
 - **GitHub Environment (`release`)**: Configured in repository settings (**Settings → Environments → `release`**) with required reviewers (`DanTup`), so the job pauses for manual approval before running. Deployment branches are unrestricted so both `master` and `patch-*` branches can deploy.
-- **Concurrency group (`release`)**: Configured with `cancel-in-progress: false` so an in-progress release is never interrupted. (Note: GitHub Actions only holds one pending/waiting run per concurrency group, so queuing multiple unapproved runs will cancel older waiting runs.)
+- **Concurrency group (`release`)**: Configured not to cancel in-progress runs so an active release is never interrupted. (Note: GitHub Actions only holds one waiting run per concurrency group, so queuing multiple unapproved runs will cancel older waiting runs.)
 - **VS Code Marketplace Trusted Publishing (OIDC)**:
-  - The workflow requests a GitHub Actions OIDC token (`id-token: write`) and exchanges it with the VS Code Marketplace for a short-lived session token, avoiding the need to store a long-lived Personal Access Token (`VSCE_PAT`).
+  - The workflow uses GitHub Actions OIDC to exchange a short-lived token with the VS Code Marketplace, avoiding the need to store a long-lived Personal Access Token.
   - On the VS Code Marketplace (**Manage Publishers → `Dart-Code` → Trusted Publishing**), each repository (`Dart-Code/Dart-Code` and `Dart-Code/Flutter`) has a Trusted Publishing policy restricting token exchange to `release.yml` and the `release` environment.
   - Note that Marketplace Trusted Publishing policies are scoped to the **Publisher** (`Dart-Code`), not individual extensions. For this reason, the test repository (`Dart-Code/Test-Extension`) uses a separate Marketplace publisher (`Dart-Code-Testing`) so it cannot publish production extensions.
 
@@ -40,13 +40,13 @@ Each run of [`.github/workflows/release.yml`](../.github/workflows/release.yml) 
 When triggered manually and approved in the `release` environment, the workflow performs the following steps in order:
 
 1. **Checkout the target commit**:
-   - By default (when `ref` is omitted), `actions/checkout` checks out the exact commit SHA (`github.sha`) that was at the tip of the selected branch when the workflow was triggered (including submodules and full history/tags), rather than passing a branch name via `ref` which would resolve the branch head dynamically at checkout time.
-   - Leaving `ref` unset ensures that re-running a failed job always packages and tags the exact same commit, even if new commits have landed on the branch in the meantime.
+   - Checks out the commit that was at the tip of the selected branch when the workflow was triggered (including submodules and full history/tags), rather than the latest branch head at checkout time.
+   - This ensures that re-running a failed job always packages and tags the exact same commit, even if new commits have landed on the branch in the meantime.
 2. **Compute and validate the release version**:
    - **Pre-releases**: Uses the explicit version input if provided; otherwise derives `X.(Y-1).YYYYMMDD` from `X.Y.0-dev` in `package.json`. Enforces that the minor version is **odd**.
    - **Stable releases**: Requires an explicit `X.Y.Z` version input and enforces that the minor version is **even**.
    - Verifies that the release tag (`vX.Y.Z`) does not already exist in the repository.
-   - For `.0` stable releases (`Z == 0`), also computes the next development version (`X.(Y+2).0-dev`) for the post-release version bump.
+   - For `.0` stable releases, also computes the next development version (`X.(Y+2).0-dev`) for the post-release version bump.
 3. **Verify the Merge Queue is empty**:
    - Checks that no pull requests are currently queued in the target branch's Merge Queue so a release isn't cut while changes are mid-merge.
 4. **Verify CI passed on the target commit**:
@@ -56,18 +56,17 @@ When triggered manually and approved in the `release` environment, the workflow 
    - Installs dependencies, runs the linter, updates `package.json` and `package-lock.json` to the release version, and builds the `.vsix` package (flagged as a pre-release when appropriate).
    - Uploads the packaged `.vsix` as a workflow artifact so it is preserved for inspection or manual recovery if a later step fails.
 6. **Publish to the VS Code Marketplace**:
-   - Publishes the packaged `.vsix` to the VS Code Marketplace using OIDC Trusted Publishing.
-   - If the `dry_run` input is `true` (the default), skips Marketplace publication after verifying OIDC token environment variables are present and logs the `vsce publish` command that would have been executed (all subsequent git tag, GitHub Release, and PR steps still run).
+   - Publishes the packaged `.vsix` to the VS Code Marketplace using OIDC Trusted Publishing (or skips Marketplace publication when `dry_run` is enabled, which is the default).
    - Duplicate version errors are ignored so that if a later step fails after Marketplace publication succeeds, the job can be safely re-run without failing on the already-published version.
 7. **Commit and push the release tag**:
    - Commits the updated `package.json` and `package-lock.json` as `Publish vX.Y.Z`, creates the git tag `vX.Y.Z`, and pushes the tag to the repository.
-   - Because `master` is protected by a Merge Queue, the workflow pushes only the tag (`refs/tags/vX.Y.Z`) rather than pushing directly to the branch. The tag permanently retains the release commit (and any ancestor commits on a `patch-*` branch) in the repository.
+   - Because `master` is protected by a Merge Queue, the workflow pushes only the tag rather than pushing directly to the branch. The tag permanently retains the release commit (and any ancestor commits on a `patch-*` branch) in the repository.
 8. **Create a GitHub Release (`stable` only)**:
-   - Creates a GitHub Release for `vX.Y.Z` with the `.vsix` attached and release notes linking to the VS Code Marketplace and the release notes on `dartcode.org/releases/vX-Y/`.
+   - Creates a GitHub Release for `vX.Y.Z` with the `.vsix` attached and release notes linking to the VS Code Marketplace and `dartcode.org/releases/vX-Y/`.
 9. **Trigger the full test suite on the release tag (`stable` only)**:
-   - Because tags pushed by `GITHUB_TOKEN` do not trigger `on: push` workflows automatically, the workflow explicitly dispatches a run of `build-and-test.yml` against the new `vX.Y.Z` tag (`actions: write`), which runs the full test matrix across all OSes and SDK channels.
+   - Because tags pushed by `GITHUB_TOKEN` do not trigger `on: push` workflows automatically, the workflow explicitly dispatches a run of `build-and-test.yml` against the new `vX.Y.Z` tag to run the full test matrix.
 10. **Open a pull request for the next `-dev` version (`.0` `stable` releases only)**:
-    - Branches `version-bump/X.(Y+2).0-dev` from the commit prior to the `Publish vX.Y.Z` commit, updates `package.json` and `package-lock.json` to the next `-dev` version, pushes the branch, and opens a pull request against the base branch (requires **Allow GitHub Actions to create and approve pull requests** in repository settings).
-    - Because GitHub treats PRs opened by `github-actions[bot]` as requiring contributor workflow approval when *"Require approval for first-time contributors"* is enabled, the `pull_request` check on this PR waits in the **"Workflows awaiting approval"** state until a maintainer clicks **Approve and run**.
+    - Branches `version-bump/X.(Y+2).0-dev` from the commit prior to the `Publish vX.Y.Z` commit, updates `package.json` and `package-lock.json` to the next `-dev` version, and opens a pull request against the base branch (requires **Allow GitHub Actions to create and approve pull requests** in repository settings).
+    - Because GitHub treats PRs opened by `github-actions[bot]` as requiring contributor workflow approval when *"Require approval for first-time contributors"* is enabled, a maintainer must click **Approve and run** on the PR for its CI checks to start.
 11. **Report recovery instructions on partial failure**:
     - If any step fails after the extension has already been published to the Marketplace, logs a warning reminding the maintainer that the job can be safely re-run (after cleaning up any partial tag or GitHub Release) because Marketplace publishing ignores duplicate versions.
