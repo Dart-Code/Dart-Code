@@ -68,22 +68,22 @@ describe("dart tests", () => {
 		const matchingGroupDespiteExactTest = model.groupDiscovered(session, suitePath, TestSource.Result, 17, "paired group alpha", undefined, suitePath, undefined);
 		const matchingTestDespiteExactGroup = model.testDiscovered(session, suitePath, TestSource.Result, 13, "paired test alpha", undefined, suitePath, undefined, undefined);
 
-		assert.equal(prefixMatch.parent, suite.node, "static group prefixes should not capture runtime groups");
-		assert.equal(partialDynamicGroupMatch.parent, suite.node, "dynamic group patterns should match the full name");
-		assert.equal(matchingDynamicGroup.parent, dynamicGroup);
-		assert.equal(wrongKindForGroup.parent, suite.node, "a dynamic TestNode must not capture a runtime GroupNode");
-		assert.equal(matchingDynamicTest.parent, dynamicTest);
-		assert.equal(wrongKindForTest.parent, suite.node, "a dynamic GroupNode must not capture a runtime TestNode");
-		assert.equal(resultNodeShouldNotMatch.parent, suite.node, "Result nodes must not be used as dynamic patterns");
-		assert.equal(matchingGroupDespiteExactTest.parent, dynamicGroupWithExactTest, "an exact-name TestNode must not block a dynamic GroupNode");
-		assert.equal(matchingTestDespiteExactGroup.parent, dynamicTestWithExactGroup, "an exact-name GroupNode must not block a dynamic TestNode");
-		assert.equal(exactGroupAfterDynamic.parent, suite.node, "an exact same-kind sibling must take precedence over a preceding dynamic group");
-		assert.equal(nestedParent.parent, suite.node);
-		assert.equal(nestedResult.parent, nestedDynamicTest, "dynamic matching should also work within a GroupNode");
-		assert.equal(exactTestWithGroupName.parent, suite.node);
-		assert.equal(exactGroupWithTestName.parent, suite.node);
-		assert.equal(staticGroup.parent, suite.node);
-		assert.equal(dynamicTestWithGroupName.parent, suite.node);
+		assert.equal(prefixMatch.parent === suite.node, true, "static group prefixes should not capture runtime groups");
+		assert.equal(partialDynamicGroupMatch.parent === suite.node, true, "dynamic group patterns should match the full name");
+		assert.equal(matchingDynamicGroup.parent === dynamicGroup, true);
+		assert.equal(wrongKindForGroup.parent === suite.node, true, "a dynamic TestNode must not capture a runtime GroupNode");
+		assert.equal(matchingDynamicTest.parent === dynamicTest, true);
+		assert.equal(wrongKindForTest.parent === suite.node, true, "a dynamic GroupNode must not capture a runtime TestNode");
+		assert.equal(resultNodeShouldNotMatch.parent === suite.node, true, "Result nodes must not be used as dynamic patterns");
+		assert.equal(matchingGroupDespiteExactTest.parent === dynamicGroupWithExactTest, true, "an exact-name TestNode must not block a dynamic GroupNode");
+		assert.equal(matchingTestDespiteExactGroup.parent === dynamicTestWithExactGroup, true, "an exact-name GroupNode must not block a dynamic TestNode");
+		assert.equal(exactGroupAfterDynamic.parent === suite.node, true, "an exact same-kind sibling must take precedence over a preceding dynamic group");
+		assert.equal(nestedParent.parent === suite.node, true);
+		assert.equal(nestedResult.parent === nestedDynamicTest, true, "dynamic matching should also work within a GroupNode");
+		assert.equal(exactTestWithGroupName.parent === suite.node, true);
+		assert.equal(exactGroupWithTestName.parent === suite.node, true);
+		assert.equal(staticGroup.parent === suite.node, true);
+		assert.equal(dynamicTestWithGroupName.parent === suite.node, true);
 	});
 
 	it("handles renaming of discovered tests", async () => {
