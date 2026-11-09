@@ -113,7 +113,7 @@ let extensionThisSessionStart = extensionTotalSessionStart; // Reset during ever
 
 let previousSettingsObject: Record<string, string | number | boolean | undefined> | undefined;
 let pendingConfigReloadTimer: NodeJS.Timeout | undefined;
-let pendingConfigChangeTimestamp: number | undefined;
+let pendingSdkConfigChangeTimestamp: number | undefined;
 let reloadPromise: Promise<void> | undefined;
 let experiments: KnownExperiments;
 
@@ -570,7 +570,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
 
 	// Handle config changes so we can reanalyze if necessary.
-	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => debouncedHandleConfigurationChange()));
+	context.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => debouncedHandleConfigurationChange(e)));
 
 	// Wire up handling of On-Save handlers.
 	context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands, flutterCapabilities));
@@ -845,16 +845,17 @@ function buildLogHeaders(headerLogger?: Logger, workspaceContext?: WorkspaceCont
 }
 
 
-function debouncedHandleConfigurationChange() {
-	pendingConfigChangeTimestamp ??= Date.now();
+function debouncedHandleConfigurationChange(e: vs.ConfigurationChangeEvent) {
+	if (e.affectsConfiguration("dart.sdkPath") || e.affectsConfiguration("dart.flutterSdkPath"))
+		pendingSdkConfigChangeTimestamp ??= Date.now();
 	clearTimeout(pendingConfigReloadTimer);
 	pendingConfigReloadTimer = setTimeout(handleConfigurationChange, config.configChangeDebounceDelayMs);
 }
 
 function handleConfigurationChange() {
 	pendingConfigReloadTimer = undefined;
-	const changeTimestamp = pendingConfigChangeTimestamp ?? Date.now();
-	pendingConfigChangeTimestamp = undefined;
+	const sdkChangeTimestamp = pendingSdkConfigChangeTimestamp ?? Date.now();
+	pendingSdkConfigChangeTimestamp = undefined;
 
 	// TODOs
 	// SDK
@@ -876,7 +877,7 @@ function handleConfigurationChange() {
 		// could be negatively affecting performance (we'll start an analysis server, terminate it, start another). In this case, prompt users to try
 		// file issues so we can try to track down what's causing it.
 		if (changedSettingsNames.includes("sdkPath") || changedSettingsNames.includes("flutterSdkPath")) {
-			const sessionDurationMs = changeTimestamp - extensionThisSessionStart;
+			const sessionDurationMs = sdkChangeTimestamp - extensionThisSessionStart;
 			if (sessionDurationMs <= 1500) {
 				const ringLogContents = ringLog.toString();
 				const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
@@ -978,7 +979,7 @@ export async function deactivate(isRestart = false, reason: ExtensionRestartReas
 	// so config-change events firing during deactivation do not schedule another reload.
 	clearTimeout(pendingConfigReloadTimer);
 	pendingConfigReloadTimer = undefined;
-	pendingConfigChangeTimestamp = undefined;
+	pendingSdkConfigChangeTimestamp = undefined;
 	previousSettingsObject = undefined;
 
 	// Record session durations.

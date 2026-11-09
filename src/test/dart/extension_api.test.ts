@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
-import { commands, workspace } from "vscode";
+import { ConfigurationTarget, commands, workspace } from "vscode";
 import * as ls from "vscode-languageclient";
 import { ExtensionRestartReason } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
@@ -87,7 +87,7 @@ describe("extension api", () => {
 		// Change a restart-requiring setting and revert it before the 150ms debounce expires.
 		const origClosingLabels = workspace.getConfiguration("dart").get<boolean>("closingLabels");
 		await setConfigForTest("dart", "closingLabels", !origClosingLabels);
-		await setConfigForTest("dart", "closingLabels", origClosingLabels);
+		await workspace.getConfiguration("dart").update("closingLabels", origClosingLabels, ConfigurationTarget.Global);
 		await delay(250);
 		assert.equal(reloadStub.callCount, 0);
 
@@ -96,7 +96,7 @@ describe("extension api", () => {
 		const tempFolder = getRandomTempFolder();
 		defer("delete temp folder", () => tryDelete(tempFolder));
 		await setConfigForTest("dart", "analyzerLogFile", path.join(tempFolder, "analyzer1.log"));
-		await setConfigForTest("dart", "analyzerLogFile", path.join(tempFolder, "analyzer2.log"));
+		await workspace.getConfiguration("dart").update("analyzerLogFile", path.join(tempFolder, "analyzer2.log"), ConfigurationTarget.Global);
 		await setConfigForTest("dart", "devToolsLogFile", path.join(tempFolder, "devtools.log"));
 
 		await waitForResult(() => reloadStub.callCount === 1);
@@ -107,8 +107,8 @@ describe("extension api", () => {
 		));
 
 		// Reset back to undefined and wait for the debounced config handler to settle while stubbed.
-		await setConfigForTest("dart", "analyzerLogFile", undefined);
-		await setConfigForTest("dart", "devToolsLogFile", undefined);
+		await workspace.getConfiguration("dart").update("analyzerLogFile", undefined, ConfigurationTarget.Global);
+		await workspace.getConfiguration("dart").update("devToolsLogFile", undefined, ConfigurationTarget.Global);
 		await waitForResult(() => reloadStub.callCount === 2);
 	});
 
@@ -130,8 +130,8 @@ describe("extension api", () => {
 
 		// Restore settings and wait for the reload back to defaults to complete before finishing the test.
 		const initialAnalyzer = privateApi.analyzer;
-		await setConfigForTest("dart", "extensionLogFile", undefined);
-		await setConfigForTest("dart", "analyzerLogFile", undefined);
+		await workspace.getConfiguration("dart").update("extensionLogFile", undefined, ConfigurationTarget.Global);
+		await workspace.getConfiguration("dart").update("analyzerLogFile", undefined, ConfigurationTarget.Global);
 		await waitForResult(() => privateApi.analyzer !== initialAnalyzer && !privateApi.analyzer.isDisposed);
 	});
 
