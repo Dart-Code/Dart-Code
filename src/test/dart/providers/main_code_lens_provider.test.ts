@@ -26,11 +26,13 @@ describe("main_code_lens", () => {
 
 		const runAction = codeLensForTarget.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "dart.startWithoutDebugging");
-		assert.equal(fsPath(runAction.command!.arguments![0].resource as vs.Uri), fsPath(helloWorldMainFile));
+		const runArg = runAction.command!.arguments![0] as { resource: vs.Uri };
+		assert.equal(fsPath(runArg.resource), fsPath(helloWorldMainFile));
 
 		const debugAction = codeLensForTarget.find((cl) => cl.command!.title === "Debug");
 		assert.equal(debugAction!.command!.command, "dart.startDebugging");
-		assert.equal(fsPath(debugAction!.command!.arguments![0].resource as vs.Uri), fsPath(helloWorldMainFile));
+		const debugArg = debugAction!.command!.arguments![0] as { resource: vs.Uri };
+		assert.equal(fsPath(debugArg.resource), fsPath(helloWorldMainFile));
 	});
 
 	it("uses default templates for run/debug actions for main function", async function () {
@@ -50,10 +52,12 @@ describe("main_code_lens", () => {
 			this.skip();
 
 		const runAction = codeLensForTarget.find((cl) => cl.command!.title === "Run")!;
-		assert.equal(runAction.command!.arguments![0].launchTemplate.env.LAUNCH_ENV_VAR, "default");
+		const runArg = runAction.command!.arguments![0] as { launchTemplate: { env: Record<string, string> } };
+		assert.equal(runArg.launchTemplate.env.LAUNCH_ENV_VAR, "default");
 
 		const debugAction = codeLensForTarget.find((cl) => cl.command!.title === "Debug")!;
-		assert.equal(debugAction.command!.arguments![0].launchTemplate.env.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
+		const debugArg = debugAction.command!.arguments![0] as { launchTemplate: { env: Record<string, string> } };
+		assert.equal(debugArg.launchTemplate.env.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
 	});
 
 	for (const debugType of [
@@ -98,8 +102,9 @@ describe("main_code_lens", () => {
 
 				const action = codeLensForTarget.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;
 				assert.equal(action.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
-				assert.equal(fsPath(action.command!.arguments![0].resource as vs.Uri), fsPath(testConfig.fileUri));
-				assert.equal(action.command!.arguments![0].launchTemplate.console, "terminal");
+				const arg = action.command!.arguments![0] as { resource: vs.Uri; launchTemplate: { console: string } };
+				assert.equal(fsPath(arg.resource), fsPath(testConfig.fileUri));
+				assert.equal(arg.launchTemplate.console, "terminal");
 			});
 
 			it(`replaces default ${debugType.type} action with custom templated actions from launch templates for ${testConfig.type}`, async function () {
@@ -136,8 +141,9 @@ describe("main_code_lens", () => {
 
 				const action = codeLensForTarget.find((cl) => cl.command!.title === `${debugType.name}`)!;
 				assert.equal(action.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
-				assert.equal(fsPath(action.command!.arguments![0].resource as vs.Uri), fsPath(testConfig.fileUri));
-				assert.equal(action.command!.arguments![0].launchTemplate.console, "terminal");
+				const arg = action.command!.arguments![0] as { resource: vs.Uri; launchTemplate: { console: string } };
+				assert.equal(fsPath(arg.resource), fsPath(testConfig.fileUri));
+				assert.equal(arg.launchTemplate.console, "terminal");
 			});
 		}
 	}

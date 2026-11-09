@@ -144,7 +144,8 @@ describe("SdkManager", () => {
 
 		assert.ok(showQuickPick.calledOnce);
 		const items = showQuickPick.firstCall.args[0] as vs.QuickPickItem[];
-		assert.equal(showQuickPick.firstCall.args[1]?.placeHolder, "Select an SDK to use");
+		const options = showQuickPick.firstCall.args[1] as vs.QuickPickOptions | undefined;
+		assert.equal(options?.placeHolder, "Select an SDK to use");
 		assert.equal(items.length, 4);
 		assert.deepStrictEqual(items.map((item) => item.label), [
 			"Auto-detect SDK location",

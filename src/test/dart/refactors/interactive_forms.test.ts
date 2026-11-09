@@ -17,7 +17,8 @@ describe("interactive forms", () => {
 		const capabilities = {} as ClientCapabilities;
 		feature.fillClientCapabilities(capabilities);
 
-		assert.deepEqual(capabilities.experimental?.interactiveResolve, {
+		const experimental = capabilities.experimental as { interactiveResolve?: unknown } | undefined;
+		assert.deepEqual(experimental?.interactiveResolve, {
 			inputTypes: ["bool", "file", "enum", "lazyEnum", "number", "string"],
 			validators: {
 				// eslint-disable-next-line id-blacklist
