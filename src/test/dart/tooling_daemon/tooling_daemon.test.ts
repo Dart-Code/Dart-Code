@@ -154,13 +154,13 @@ describe("dart tooling daemon", () => {
 		try {
 			const editor = await openFile(helloWorldMainFile);
 			editor.selection = new vs.Selection(new vs.Position(0, 0), new vs.Position(0, 0));
-			// Discard any first events for the above.
-			await waitForResult(() => events.length >= 1);
+			// Discard any initial events for opening the file and resetting the selection to (0, 0).
+			await waitForResult(() => events.at(-1)?.selections[0]?.active.line === 0);
 			await delay(50); // Allow for unrelated events.
 			events.length = 0;
 
 			editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
-			await delay(dtdDebounceMs + 10);
+			await waitFor(() => events.length >= 1);
 			editor.selections = [
 				new vs.Selection(new vs.Position(3, 0), new vs.Position(4, 0)),
 				new vs.Selection(new vs.Position(5, 0), new vs.Position(6, 0)),
