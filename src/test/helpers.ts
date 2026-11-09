@@ -295,11 +295,11 @@ function setupTestLogging(): boolean {
 	return true;
 }
 
-export async function activate(file?: vs.Uri | null): Promise<void> {
+export async function activate(file?: vs.Uri | null, initialAnalysisTimeoutSeconds = 120): Promise<void> {
 	await activateWithoutAnalysis(file);
 
 	logger.info(`Waiting for initial analysis`);
-	await withTimeout(privateApi.initialAnalysis, "Initial analysis did not complete", 120);
+	await withTimeout(privateApi.initialAnalysis, "Initial analysis did not complete", initialAnalysisTimeoutSeconds);
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(50);
