@@ -1,10 +1,12 @@
 import { strict as assert } from "assert";
+import * as fs from "fs";
+import * as path from "path";
 import * as sinon from "sinon";
 import { commands, workspace } from "vscode";
 import * as ls from "vscode-languageclient";
 import { ExtensionRestartReason } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
-import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, privateApi, sb, waitForResult } from "../helpers";
+import { activate, activateWithoutAnalysis, defer, delay, extApi, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest, tryDelete, waitForResult } from "../helpers";
 
 describe("extension api", () => {
 	it("provides the DTD Uri and notifies of changes", async () => {
@@ -72,6 +74,65 @@ describe("extension api", () => {
 		const doc = await workspace.openTextDocument(helloWorldMainFile);
 		const outline = (await extApi.workspace.getOutline(doc))!;
 		assert.equal(outline.element.name, "<unit>");
+	});
+
+	it("debounces configuration changes and ignores changes reverted before debounce expires", async () => {
+		await activateWithoutAnalysis();
+
+		const executeCommandStub = sb.stub(commands, "executeCommand").callThrough();
+		const reloadStub = executeCommandStub.withArgs("_dart.reloadExtension", sinon.match.any, sinon.match.any).resolves();
+
+		sb.stub(privateApi.config, "configChangeDebounceDelayMs").get(() => 150);
+
+		// Change a restart-requiring setting and revert it before the 150ms debounce expires.
+		const origClosingLabels = workspace.getConfiguration("dart").get<boolean>("closingLabels");
+		await setConfigForTest("dart", "closingLabels", !origClosingLabels);
+		await setConfigForTest("dart", "closingLabels", origClosingLabels);
+		await delay(250);
+		assert.equal(reloadStub.callCount, 0);
+
+		// Now make multiple rapid changes to restart-requiring settings within the debounce window
+		// and verify only a single reload is triggered after the debounce settles.
+		const tempFolder = getRandomTempFolder();
+		defer("delete temp folder", () => tryDelete(tempFolder));
+		await setConfigForTest("dart", "analyzerLogFile", path.join(tempFolder, "analyzer1.log"));
+		await setConfigForTest("dart", "analyzerLogFile", path.join(tempFolder, "analyzer2.log"));
+		await setConfigForTest("dart", "devToolsLogFile", path.join(tempFolder, "devtools.log"));
+
+		await waitForResult(() => reloadStub.callCount === 1);
+		assert.ok(reloadStub.calledOnceWithExactly(
+			"_dart.reloadExtension",
+			ExtensionRestartReason.ConfigurationChange,
+			"analyzerLogFile,devToolsLogFile",
+		));
+
+		// Reset back to undefined and wait for the debounced config handler to settle while stubbed.
+		await setConfigForTest("dart", "analyzerLogFile", undefined);
+		await setConfigForTest("dart", "devToolsLogFile", undefined);
+		await waitForResult(() => reloadStub.callCount === 2);
+	});
+
+	it("switches extensionLogFile and creates startup log files on configuration reload", async () => {
+		await activateWithoutAnalysis();
+
+		const tempFolder = getRandomTempFolder();
+		defer("delete temp folder", () => tryDelete(tempFolder));
+		const extLogPath = path.join(tempFolder, "extension.log");
+		const analyzerLogPath = path.join(tempFolder, "analyzer.log");
+
+		sb.stub(privateApi.config, "configChangeDebounceDelayMs").get(() => 100);
+		await setConfigForTest("dart", "extensionLogFile", extLogPath);
+		await setConfigForTest("dart", "analyzerLogFile", analyzerLogPath);
+
+		await waitForResult(() => fs.existsSync(extLogPath) && fs.existsSync(analyzerLogPath));
+		privateApi.logger.info("Test general log message after reload");
+		await waitForResult(() => fs.readFileSync(extLogPath, "utf8").includes("Test general log message after reload"));
+
+		// Restore settings and wait for the reload back to defaults to complete before finishing the test.
+		const initialAnalyzer = privateApi.analyzer;
+		await setConfigForTest("dart", "extensionLogFile", undefined);
+		await setConfigForTest("dart", "analyzerLogFile", undefined);
+		await waitForResult(() => privateApi.analyzer !== initialAnalyzer && !privateApi.analyzer.isDisposed);
 	});
 
 	it("workspace.getOutline", async () => {
