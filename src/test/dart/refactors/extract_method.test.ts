@@ -42,9 +42,16 @@ main() {
 
 	it("displays an error if an invalid new name is provided", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("\"\"\"");
+		// Return the invalid name on the first prompt, then cancel (undefined) if Interactive Forms
+		// (Dart 3.15+) re-prompts after showing the server's field validation warning.
+		showInputBox.onFirstCall().resolves("\"\"\"");
+		showInputBox.resolves(undefined);
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 		showErrorMessage.resolves(undefined);
+		// Interactive Forms (Dart 3.15+) reports server field errors via showWarningMessage,
+		// whereas legacy refactors report the failed refactor via showErrorMessage.
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
+		showWarningMessage.resolves(undefined);
 
 		await setTestContent(`
 main() {
@@ -59,8 +66,15 @@ main() {
   print("Hello, world!");
 }
 		`);
+
+		// Verify client-side input validation accepts a valid name and rejects the invalid name.
+		const inputBoxOptions = showInputBox.firstCall.args[0];
+		assert.equal(await inputBoxOptions?.validateInput?.("myNewMethod") ?? undefined, undefined);
+		assert.ok(await inputBoxOptions?.validateInput?.("\"\"\""));
+
 		const textMatch = sinon.match("Method name must not contain '\"'.")
-			.or(sinon.match("Method name must not contain '\"'.\n\nYour refactor was not applied."));
-		assert(showErrorMessage.calledWith(textMatch));
+			.or(sinon.match("Method name must not contain '\"'.\n\nYour refactor was not applied."))
+			.or(sinon.match("Question 1: Method name must not contain '\"'."));
+		assert(showErrorMessage.calledWith(textMatch) || showWarningMessage.calledWith(textMatch));
 	});
 });
