@@ -196,12 +196,12 @@ void main() => test("test inside ${newFilename}", () {});
 		fs.mkdirSync(originalFolderPath, { recursive: true });
 		fs.writeFileSync(originalFilePath, "");
 
-		await waitForResult(() => makeTestTextTree().some((s) => s.includes(`${originalFoldername}/my_test.dart`)));
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(path.join(originalFoldername, "my_test.dart"))));
 
 		fs.renameSync(originalFolderPath, newFolderPath);
 
-		await waitForResult(() => !makeTestTextTree().some((s) => s.includes(`${originalFoldername}/my_test.dart`)));
-		await waitForResult(() => makeTestTextTree().some((s) => s.includes(`${newFoldername}/my_test.dart`)));
+		await waitForResult(() => !makeTestTextTree().some((s) => s.includes(path.join(originalFoldername, "my_test.dart"))));
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(path.join(newFoldername, "my_test.dart"))));
 	});
 
 	it("discovers tests if runTests is called with undefined include", async () => {
