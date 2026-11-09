@@ -1,6 +1,5 @@
 import { strict as assert } from "assert";
-import { ChildProcess, SpawnOptions } from "child_process";
-import { EventEmitter } from "events";
+import { SpawnOptions } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
@@ -10,7 +9,7 @@ import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
 import { activate, defer, deferUntilLast, getRandomTempFolder, helloWorldFolder, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
-import { FakeProcess } from "../../mocks/child_process_spawn_stub";
+import { ChildProcessSpawnStub, FakeSpawnResult } from "../../mocks/child_process_spawn_stub";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const childProcess = require("child_process") as typeof import("child_process");
@@ -315,7 +314,7 @@ describe("SdkUtils", () => {
 	}
 
 	function createTempDir() {
-		const dir = getRandomTempFolder();
+		const dir = fsPath(vs.Uri.file(fs.realpathSync(getRandomTempFolder())));
 		defer("delete temp dir", () => tryDelete(dir));
 		return dir;
 	}
@@ -404,13 +403,18 @@ describe("SdkUtils", () => {
 			// findFlutterSdk checks for additional SDK marker files so that a standalone /usr/bin/flutter binary
 			// does not cause /usr to be treated as a Flutter SDK root.
 			const tempDir = createTempDir();
-			const usrDir = path.join(tempDir, "usr");
-			createFakeFlutterSdk(usrDir, { marker: "none" });
 
-			// Only bin/flutter exists -> should not match postFilter.
-			const resInvalid = privateApi.sdkUtils!.findFlutterSdk([path.join(usrDir, "bin")]);
-			assert.equal(resInvalid.sdkPath, undefined);
-			assert.deepStrictEqual(resInvalid.candidatePaths, [usrDir]);
+			// On non-Windows, flutterPath is "bin/flutter", whereas "bin/flutter.bat" is one of the marker files.
+			// On Windows, flutterPath is itself "bin/flutter.bat".
+			if (!isWin) {
+				const usrDir = path.join(tempDir, "usr");
+				createFakeFlutterSdk(usrDir, { marker: "none" });
+
+				// Only bin/flutter exists -> should not match postFilter.
+				const resInvalid = privateApi.sdkUtils!.findFlutterSdk([path.join(usrDir, "bin")]);
+				assert.equal(resInvalid.sdkPath, undefined);
+				assert.deepStrictEqual(resInvalid.candidatePaths, [usrDir]);
+			}
 
 			// With analysis_options.yaml -> valid.
 			const sdkWithAnalysis = path.join(tempDir, "flutter-analysis");
@@ -755,48 +759,6 @@ describe("SdkUtils", () => {
 	});
 
 	describe("tryFlutterCloneIfGitAvailable, promptForFlutterClone, and cloneFlutterWithProgress", () => {
-		// Intercepts child_process.spawn for git/flutter commands during the "Download SDK" (clone Flutter) workflow.
-		function stubSpawnForGit(handler: (bin: string, args: string[], cwd: string | undefined) => { exitCode?: number; stdout?: string; stderr?: string; error?: Error; delayMs?: number } | undefined) {
-			const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
-			return sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
-				const res = handler(bin, args ?? [], opts?.cwd?.toString());
-				if (!res)
-					return realSpawn(bin, args, opts);
-
-				const proc = new EventEmitter() as FakeProcess;
-				proc.pid = 12345;
-				proc.stdout = new EventEmitter();
-				proc.stdout.setEncoding = () => undefined;
-				proc.stderr = new EventEmitter();
-				proc.stderr.setEncoding = () => undefined;
-				proc.kill = () => {
-					setImmediate(() => {
-						proc.exitCode = 1;
-						proc.emit("exit", 1, null);
-						proc.emit("close", 1, null);
-					});
-					return true;
-				};
-
-				setImmediate(() => {
-					if (res.error) {
-						proc.emit("error", res.error);
-						return;
-					}
-					if (res.stdout)
-						proc.stdout.emit("data", Buffer.from(res.stdout));
-					if (res.stderr)
-						proc.stderr.emit("data", Buffer.from(res.stderr));
-					const code = res.exitCode ?? 0;
-					proc.exitCode = code;
-					proc.emit("exit", code, null);
-					proc.emit("close", code, null);
-				});
-
-				return proc;
-			});
-		}
-
 		it("shows error and opens setup instructions when git --version fails or errors", async () => {
 			// Clicking "Download SDK" for Flutter checks whether Git is available by running "git --version"
 			// (using the git binary path from the active vscode.git extension if available).
@@ -805,15 +767,8 @@ describe("SdkUtils", () => {
 				isActive: true,
 			} as unknown as vs.Extension<unknown>);
 
-			let gitResult: { exitCode?: number; stderr?: string; error?: Error } = { exitCode: 1, stderr: "git not found" };
-			const spawnedBins: string[] = [];
-			stubSpawnForGit((bin, args) => {
-				if (args.includes("--version")) {
-					spawnedBins.push(bin);
-					return gitResult;
-				}
-				return undefined;
-			});
+			let gitResult: FakeSpawnResult = { exitCode: 1, stderr: "git not found" };
+			const spawn = ChildProcessSpawnStub.gitCloneFlutter({ versionResult: () => gitResult });
 
 			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
@@ -829,7 +784,7 @@ describe("SdkUtils", () => {
 				() => Promise.resolve(),
 			);
 
-			assert.deepStrictEqual(spawnedBins, ["/custom/git"]);
+			assert.deepStrictEqual(spawn.calls.map((c) => c.bin), ["/custom/git"]);
 			assert.ok(showErrorMessage.calledWithExactly(
 				"Unable to clone Flutter because Git was not found. Please clone or download the Flutter SDK manually.",
 				"Setup Instructions",
@@ -872,18 +827,8 @@ describe("SdkUtils", () => {
 				return origWithProgress(options, task);
 			});
 
-			let cloneSpawned = false;
-			stubSpawnForGit((_bin, args) => {
-				if (args.includes("--version")) {
-					if (throwOnGitCancel)
-						return { error: new Error("cancelled error") };
-					return { exitCode: 0, stdout: "git version 2.40.0" };
-				}
-				if (args.includes("clone")) {
-					cloneSpawned = true;
-					return { exitCode: 0 };
-				}
-				return undefined;
+			const spawn = ChildProcessSpawnStub.gitCloneFlutter({
+				versionResult: () => throwOnGitCancel ? { error: new Error("cancelled error") } : { exitCode: 0, stdout: "git version 2.40.0" },
 			});
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
@@ -924,7 +869,7 @@ describe("SdkUtils", () => {
 
 			assert.equal(showErrorMessage.callCount, 2);
 			assert.ok(showOpenDialog.calledOnce);
-			assert.equal(cloneSpawned, false);
+			assert.equal(spawn.calls.some((c) => ChildProcessSpawnStub.includesArg(c.args, "clone")), false);
 		});
 
 		it("shows error when git clone fails or errors, and suppresses error when cancelled", async () => {
@@ -933,7 +878,7 @@ describe("SdkUtils", () => {
 			// 2. Process spawn error from "git clone".
 			// 3. User cancelling the "Cloning the Flutter SDK..." progress notification.
 			let cancelClone = false;
-			let cloneResult: { exitCode?: number; stderr?: string; error?: Error } = { exitCode: 128, stderr: "fatal: repository not found" };
+			let cloneResult: FakeSpawnResult = { exitCode: 128, stderr: "fatal: repository not found" };
 			const origWithProgress = vs.window.withProgress.bind(vs.window);
 			sb.stub(vs.window, "withProgress").callsFake(async <R>(options: vs.ProgressOptions, task: (progress: vs.Progress<{ message?: string; increment?: number }>, token: vs.CancellationToken) => Thenable<R>): Promise<R> => {
 				if (options.title === cloningFlutterMessage && cancelClone) {
@@ -944,13 +889,7 @@ describe("SdkUtils", () => {
 				return origWithProgress(options, task);
 			});
 
-			stubSpawnForGit((_bin, args) => {
-				if (args.includes("--version"))
-					return { exitCode: 0, stdout: "git version 2.40.0" };
-				if (args.includes("clone"))
-					return cloneResult;
-				return undefined;
-			});
+			ChildProcessSpawnStub.gitCloneFlutter({ cloneResult: () => cloneResult });
 
 			const cloneDir = createTempDir();
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(cloneDir)]);
@@ -1030,22 +969,7 @@ describe("SdkUtils", () => {
 			const cloneDir = createTempDir();
 			const expectedFlutterFolder = path.join(cloneDir, "flutter");
 
-			const spawnedCalls: Array<{ bin: string; args: string[]; cwd?: string }> = [];
-			stubSpawnForGit((bin, args, cwd) => {
-				if (args.includes("--version")) {
-					spawnedCalls.push({ bin, args, cwd });
-					return { exitCode: 0, stdout: "git version 2.40.0" };
-				}
-				if (args.includes("clone")) {
-					spawnedCalls.push({ bin, args, cwd });
-					return { exitCode: 0 };
-				}
-				if (args.includes("--help")) {
-					spawnedCalls.push({ bin, args, cwd });
-					return { exitCode: 0 };
-				}
-				return undefined;
-			});
+			const spawn = ChildProcessSpawnStub.gitCloneFlutter();
 
 			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK");
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(cloneDir)]);
@@ -1067,9 +991,9 @@ describe("SdkUtils", () => {
 				"flutter.createProject",
 			);
 
-			assert.ok(spawnedCalls.some((c) => c.args.includes("--version")));
-			assert.ok(spawnedCalls.some((c) => c.cwd === cloneDir && c.args.join(" ") === "clone -b stable https://github.com/flutter/flutter.git"));
-			assert.ok(spawnedCalls.some((c) => c.bin.endsWith(executableNames.flutter) && c.args.includes("--help")));
+			assert.ok(spawn.calls.some((c) => ChildProcessSpawnStub.includesArg(c.args, "--version")));
+			assert.ok(spawn.calls.some((c) => c.cwd === cloneDir && c.args?.join(" ") === "clone -b stable https://github.com/flutter/flutter.git"));
+			assert.ok(spawn.calls.some((c) => ChildProcessSpawnStub.isExecutable(c.bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(c.args, "--help")));
 			assert.equal(vs.workspace.getConfiguration("dart").inspect("flutterSdkPath")?.globalValue, expectedFlutterFolder);
 			assert.ok(showInfo.calledWith(addSdkToPathPrompt("Flutter")));
 			assert.ok(reloadExtensionStub.calledOnceWithExactly("_dart.reloadExtension", ExtensionRestartReason.AfterFlutterClone));
@@ -1145,23 +1069,7 @@ describe("SdkUtils", () => {
 
 				// scanWorkspace runs "flutter --help" to initialize the Flutter SDK for Flutter projects,
 				// but the fake binary is not runnable so complete it immediately.
-				const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
-				sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
-					if (args?.includes("--help")) {
-						const proc = new EventEmitter() as FakeProcess;
-						proc.pid = 12345;
-						proc.stdout = new EventEmitter();
-						proc.stderr = new EventEmitter();
-						proc.kill = () => true;
-						setImmediate(() => {
-							proc.exitCode = 0;
-							proc.emit("exit", 0, null);
-							proc.emit("close", 0, null);
-						});
-						return proc;
-					}
-					return realSpawn(bin, args, opts);
-				});
+				ChildProcessSpawnStub.flutterHelp();
 
 				const flutterProjectDir = path.join(tempDir, "flutter_proj");
 				touchFile(path.join(flutterProjectDir, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
@@ -1297,28 +1205,12 @@ describe("SdkUtils", () => {
 				fs.symlinkSync(snapBinary, snapFlutterLink);
 			} catch {
 				touchFile(snapFlutterLink);
+				sb.stub(fs, "realpathSync").callsFake((p: fs.PathLike) => p.toString() === snapFlutterLink ? snapBinary : fs.realpathSync.native(p));
 			}
 
 			// When scanWorkspace runs "<snapFlutterLink> --help" to initialize the SDK, create the Flutter SDK on disk
 			// (without a version file, to also test the MISSING_VERSION_FILE_VERSION fallback for main/master builds).
-			const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
-			sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
-				if (args?.includes("--help")) {
-					createFakeFlutterSdk(realFlutterSdk, { version: null, withDartSdk: true });
-					const proc = new EventEmitter() as FakeProcess;
-					proc.pid = 12345;
-					proc.stdout = new EventEmitter();
-					proc.stderr = new EventEmitter();
-					proc.kill = () => true;
-					setImmediate(() => {
-						proc.exitCode = 0;
-						proc.emit("exit", 0, null);
-						proc.emit("close", 0, null);
-					});
-					return proc;
-				}
-				return realSpawn(bin, args, opts);
-			});
+			ChildProcessSpawnStub.flutterHelp(() => createFakeFlutterSdk(realFlutterSdk, { version: null, withDartSdk: true }));
 
 			sb.stub(vs.workspace, "workspaceFolders").get(() => [
 				{ uri: vs.Uri.file(tempDir), name: "root", index: 0 },
@@ -1355,24 +1247,7 @@ describe("SdkUtils", () => {
 			createFakeFlutterSdk(flutterSdk, { withDartSdk: false });
 
 			// When scanWorkspace runs "flutter --help" to initialize Flutter, populate bin/cache/dart-sdk.
-			const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
-			sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
-				if (args?.includes("--help")) {
-					createFakeDartSdk(path.join(flutterSdk, "bin", "cache", "dart-sdk"));
-					const proc = new EventEmitter() as FakeProcess;
-					proc.pid = 12345;
-					proc.stdout = new EventEmitter();
-					proc.stderr = new EventEmitter();
-					proc.kill = () => true;
-					setImmediate(() => {
-						proc.exitCode = 0;
-						proc.emit("exit", 0, null);
-						proc.emit("close", 0, null);
-					});
-					return proc;
-				}
-				return realSpawn(bin, args, opts);
-			});
+			ChildProcessSpawnStub.flutterHelp(() => createFakeDartSdk(path.join(flutterSdk, "bin", "cache", "dart-sdk")));
 
 			// Open an empty workspace with no pubspec.yaml and no .dart files.
 			sb.stub(vs.workspace, "workspaceFolders").get(() => [
