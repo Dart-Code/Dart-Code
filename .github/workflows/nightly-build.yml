@@ -2,6 +2,7 @@ name: Nightly Build
 
 on:
   schedule:
+     # 1:50am UTC Mon-Fri (scheduled early and off-hour due to GitHub cron delays).
      - cron: '50 1 * * 1-5'
   workflow_dispatch:
 
