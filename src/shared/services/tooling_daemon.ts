@@ -18,7 +18,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	protected readonly logger: CategoryLogger;
 
 	private readonly dtdProcess: DartToolingDaemonProcess;
-	private connection: ConnectionInfo | undefined;
+	protected connection: ConnectionInfo | undefined;
 	private nextId = 1;
 	private completers: Record<string, PromiseCompleter<DtdResult>> = {};
 	private serviceHandlers: Record<string, (params?: object) => PromiseOr<DtdResult>> = {};
@@ -26,7 +26,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	private hasShownTerminatedError = false;
 	protected isShuttingDown = false;
 
-	private connectedCompleter = new PromiseCompleter<ConnectionInfo | undefined>();
+	protected connectedCompleter = new PromiseCompleter<ConnectionInfo | undefined>();
 	public get connected() { return this.connectedCompleter.promise; }
 
 	private readonly notificationsEmitters: Record<string, EventsEmitter<unknown>> = {};
@@ -92,16 +92,20 @@ export class DartToolingDaemon implements IAmDisposable {
 	}
 
 	protected async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
-		const connection = await this.connected;
-		if (connection && !this.isShuttingDown) {
-			const secret = connection.dtdSecret;
-			await this.callMethod(ServiceMethod.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
+		// `await this.connected` resolves to the initial connection object even
+		// if the socket has since closed, so check the live connection instead.
+		await this.connected;
+		if (this.connection && !this.isShuttingDown) {
+			const secret = this.connection.dtdSecret;
+			await this.tryCallMethod(ServiceMethod.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
 		}
 	}
 
 	protected async sendActiveLocation(activeLocation: ActiveLocation): Promise<void> {
-		const connection = await this.connected;
-		if (connection && !this.isShuttingDown)
+		// `await this.connected` resolves to the initial connection object even
+		// if the socket has since closed, so check the live connection instead.
+		await this.connected;
+		if (this.hasOpenSocket && !this.isShuttingDown)
 			this.sendEvent(Stream.Editor, { kind: EventKind.activeLocationChanged, ...activeLocation });
 	}
 
@@ -130,11 +134,16 @@ export class DartToolingDaemon implements IAmDisposable {
 				} catch (e: unknown) {
 					const error = this.asDtdError(e);
 					this.logger.error(`Failed handling service request ${method}: ${error.message}`);
-					this.send({
-						id,
-						jsonrpc: "2.0",
-						error,
-					});
+					try {
+						this.send({
+							id,
+							jsonrpc: "2.0",
+							error,
+						});
+					} catch {
+						// The connection dropped while the request was being
+						// handled, so the error response can't be sent either.
+					}
 				}
 			}
 
@@ -199,22 +208,50 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.streamCancel, params: { streamId: string }): Promise<DtdResult>;
 	public callMethod(service: ServiceMethod.editorGetActiveLocation): Promise<DtdResult & ActiveLocation>;
 	public callMethod(service: ServiceMethod.editorNavigateToCode, params: NavigateToCodeParams): Promise<DtdResult & SuccessResult>;
+	public callMethod(service: ServiceMethod, params?: unknown): Promise<DtdResult>;
+
+	/**
+	 * Calls a DTD service method.
+	 *
+	 * The returned promise rejects if the connection is unavailable or the
+	 * request otherwise fails. Fire-and-forget callers should use
+	 * [tryCallMethod], which logs errors instead of rejecting.
+	 */
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
-		if (!this.connection)
+		if (this.isShuttingDown || !this.hasOpenSocket)
 			return Promise.reject(new Error(`Unable to call ${method}, DTD connection is unavailable`));
 
 		const id = `${this.nextId++}`;
 		const completer = new PromiseCompleter<DtdResult>();
 		this.completers[id] = completer;
 
-		this.send({
-			id,
-			jsonrpc: "2.0",
-			method,
-			params,
-		});
+		try {
+			this.send({
+				id,
+				jsonrpc: "2.0",
+				method,
+				params,
+			});
+		} catch (e) {
+			delete this.completers[id];
+			throw e;
+		}
 
 		return completer.promise;
+	}
+
+	/**
+	 * Calls a DTD service method, logging any error (unless shutting down) and
+	 * returning `undefined` instead of rejecting.
+	 */
+	public async tryCallMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult | undefined> {
+		try {
+			return await this.callMethod(method, params);
+		} catch (e) {
+			if (!this.isShuttingDown)
+				this.logger.error(`Failed to call ${method}: ${String(e)}`);
+			return undefined;
+		}
 	}
 
 	public async streamListen(streamId: string): Promise<DtdResult> {
@@ -229,7 +266,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public sendEvent(stream: Stream.Editor, params: DebugSessionStartedEvent | DebugSessionStoppedEvent | DebugSessionChangedEvent): void;
 	public sendEvent(stream: Stream.Editor, params: ActiveLocationChangedEvent): void;
 	public sendEvent(stream: Stream, params: Event): void {
-		if (!this.connection) {
+		if (!this.hasOpenSocket) {
 			// During shutdown it's expected that events can't be sent (for example an
 			// async event handler that was in-flight when we were disposed), so just
 			// drop them. Otherwise this is an unexpected failure that should be
@@ -262,15 +299,20 @@ export class DartToolingDaemon implements IAmDisposable {
 		};
 	}
 
+	private get hasOpenSocket(): boolean {
+		return this.connection?.socket.readyState === ws.WebSocket.OPEN;
+	}
+
 	private send(json: DtdMessage): void {
 		if (this.isShuttingDown)
 			return;
-		if (!this.connection)
+		const socket = this.connection?.socket;
+		if (socket?.readyState !== ws.WebSocket.OPEN)
 			throw new Error("Unable to send message, DTD connection is unavailable");
 
 		const str = JSON.stringify(json);
 		this.logTraffic(`==> ${str}\n`);
-		this.connection.socket.send(str);
+		socket.send(str);
 	}
 
 	protected handleProcessExit(codes: ProcessExitCodes) {
@@ -284,6 +326,13 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	protected handleWebSocketClose() {
 		this.logger.info(`DTD WebSocket connection closed`);
+		// No more responses can arrive on this socket, so clear it and reject any
+		// pending requests rather than leaving their callers hanging. Settling
+		// `connected` also unblocks callers that were still waiting for it (for
+		// example if the socket never reached the open state).
+		this.connection = undefined;
+		this.connectedCompleter.resolve(undefined);
+		this.rejectPendingRequests();
 		// Delay this for a few seconds so if the process terminates, we show that one instead (since it's the most
 		// significant).
 		setTimeout(() => {
@@ -325,12 +374,22 @@ export class DartToolingDaemon implements IAmDisposable {
 		});
 	}
 
+	private rejectPendingRequests() {
+		for (const completer of Object.values(this.completers))
+			completer.reject(new Error("Unable to send message, DTD connection is unavailable"));
+		this.completers = {};
+	}
+
 	public dispose(): void {
 		this.isShuttingDown = true;
 		this.connectedCompleter.resolve(undefined);
+		this.rejectPendingRequests();
+		// Clear the connection before closing the socket, because close() can
+		// throw (for example on a socket that is still CONNECTING).
+		const socket = this.connection?.socket;
+		this.connection = undefined;
 		try {
-			this.connection?.socket?.close();
-			this.connection = undefined;
+			socket?.close();
 		} catch { }
 
 		disposeAll(this.disposables);
