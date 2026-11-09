@@ -26,7 +26,7 @@ describe("extension", () => {
 		assert.equal(ext.isActive, true);
 	});
 	it("reported no errors when analysis completed", async () => {
-		await activate();
+		await activate(undefined, 300);
 
 		function warningOrError(d: vs.Diagnostic) {
 			return d.severity <= vs.DiagnosticSeverity.Warning;
