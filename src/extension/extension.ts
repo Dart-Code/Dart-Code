@@ -113,13 +113,15 @@ let extensionThisSessionStart = extensionTotalSessionStart; // Reset during ever
 
 let previousSettingsObject: Record<string, string | number | boolean | undefined> | undefined;
 let pendingConfigReloadTimer: NodeJS.Timeout | undefined;
+let pendingSdkConfigChangeTimestamp: number | undefined;
 let reloadPromise: Promise<void> | undefined;
 let experiments: KnownExperiments;
 
 const loggers: IAmDisposableAsync[] = [];
 let ringLogger: IAmDisposable | undefined;
 const logger = new EmittingLogger();
-let extensionLog: IAmDisposable | undefined;
+let extensionLog: IAmDisposableAsync | undefined;
+let currentExtensionLogPath: string | undefined;
 const exportedApi: PublicDartExtensionApi & { [internalApiSymbol]?: InternalExtensionApi } = new PublicDartExtensionApiImpl();
 
 // Keep a running in-memory buffer of last 500 log events we can give to the
@@ -147,7 +149,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	void vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
-	extensionLog ??= setupLog(getExtensionLogPath(), LogCategory.General, false);
+	const newExtensionLogPath = getExtensionLogPath();
+	if (extensionLog && currentExtensionLogPath !== newExtensionLogPath) {
+		await tryCleanup(() => extensionLog?.dispose());
+		extensionLog = undefined;
+	}
+	currentExtensionLogPath = newExtensionLogPath;
+	extensionLog ??= setupLog(newExtensionLogPath, LogCategory.General, false);
 
 	const webClient = new WebClient(extensionVersion);
 
@@ -562,7 +570,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
 
 	// Handle config changes so we can reanalyze if necessary.
-	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange()));
+	context.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => debouncedHandleConfigurationChange(e)));
 
 	// Wire up handling of On-Save handlers.
 	context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands, flutterCapabilities));
@@ -837,7 +845,18 @@ function buildLogHeaders(headerLogger?: Logger, workspaceContext?: WorkspaceCont
 }
 
 
+function debouncedHandleConfigurationChange(e: vs.ConfigurationChangeEvent) {
+	if (e.affectsConfiguration("dart.sdkPath") || e.affectsConfiguration("dart.flutterSdkPath"))
+		pendingSdkConfigChangeTimestamp ??= Date.now();
+	clearTimeout(pendingConfigReloadTimer);
+	pendingConfigReloadTimer = setTimeout(handleConfigurationChange, config.configChangeDebounceDelayMs);
+}
+
 function handleConfigurationChange() {
+	pendingConfigReloadTimer = undefined;
+	const sdkChangeTimestamp = pendingSdkConfigChangeTimestamp ?? Date.now();
+	pendingSdkConfigChangeTimestamp = undefined;
+
 	// TODOs
 	// SDK
 	const prevObject = previousSettingsObject;
@@ -849,9 +868,6 @@ function handleConfigurationChange() {
 	previousSettingsObject = newObject;
 
 	if (prevObject && changedSettingsNames.length > 0) {
-		// Delay the restart slightly, because the config change may be transmitted to the LSP server
-		// and shutting the server down too quickly results in that trying to write to a closed
-		// stream.
 		logger.warn(`Configuration changed, reloading:`);
 		for (const changedSettingsName of changedSettingsNames)
 			logger.info(`    Setting ${changedSettingsName} changed from "${prevObject[changedSettingsName]}" to "${newObject[changedSettingsName]}"`);
@@ -861,7 +877,7 @@ function handleConfigurationChange() {
 		// could be negatively affecting performance (we'll start an analysis server, terminate it, start another). In this case, prompt users to try
 		// file issues so we can try to track down what's causing it.
 		if (changedSettingsNames.includes("sdkPath") || changedSettingsNames.includes("flutterSdkPath")) {
-			const sessionDurationMs = Date.now() - extensionThisSessionStart;
+			const sessionDurationMs = sdkChangeTimestamp - extensionThisSessionStart;
 			if (sessionDurationMs <= 1500) {
 				const ringLogContents = ringLog.toString();
 				const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
@@ -882,8 +898,7 @@ ${ringLogContents.split("\n").filter((l) => l.includes("[General]") || l.include
 		}
 
 		const restartData = getConfigurationChangeRestartData(changedSettingsNames, prevObject, newObject);
-		clearTimeout(pendingConfigReloadTimer);
-		pendingConfigReloadTimer = setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData }), 50);
+		void util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData });
 	}
 }
 
@@ -939,7 +954,12 @@ function getSettingsThatRequireRestart(): Record<string, string | number | boole
 		analyzerVmServicePort: config.analyzerVmServicePort,
 		analyzerInstrumentationLogFile: config.analyzerInstrumentationLogFile,
 		analyzerSessionLogFile: config.analyzerSessionLogFile,
+		analyzerLogFile: config.analyzerLogFile,
+		devToolsLogFile: config.devToolsLogFile,
 		extensionLogFile: config.extensionLogFile,
+		flutterDaemonLogFile: config.flutterDaemonLogFile,
+		flutterWidgetPreviewLogFile: config.flutterWidgetPreviewLogFile,
+		toolingDaemonLogFile: config.toolingDaemonLogFile,
 		analyzerAdditionalArgs: config.analyzerAdditionalArgs?.join(","),
 		analyzerVmAdditionalArgs: config.analyzerVmAdditionalArgs?.join(","),
 		flutterSdkPath: config.flutterSdkPath,
@@ -959,6 +979,7 @@ export async function deactivate(isRestart = false, reason: ExtensionRestartReas
 	// so config-change events firing during deactivation do not schedule another reload.
 	clearTimeout(pendingConfigReloadTimer);
 	pendingConfigReloadTimer = undefined;
+	pendingSdkConfigChangeTimestamp = undefined;
 	previousSettingsObject = undefined;
 
 	// Record session durations.
@@ -992,6 +1013,8 @@ export async function deactivate(isRestart = false, reason: ExtensionRestartReas
 			tryCleanup(() => ringLogger?.dispose()),
 			tryCleanup(() => extensionLog?.dispose()),
 		]);
+		extensionLog = undefined;
+		currentExtensionLogPath = undefined;
 		await new Promise((resolve) => setTimeout(resolve, 50));
 	} else {
 		logger.info(`Restarting...`);

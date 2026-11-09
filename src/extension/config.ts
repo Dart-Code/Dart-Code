@@ -251,6 +251,7 @@ class Config {
 
 	// Experiments that aren't in package.json.
 	// get experimentalMacroSupport(): boolean { return this.getConfig<boolean>("experimentalMacroSupport", false); }
+	get configChangeDebounceDelayMs(): number { return this.getConfig<number>("configChangeDebounceDelayMs", 2000); }
 
 	public readonly resolved = new ResolvedConfig();
 

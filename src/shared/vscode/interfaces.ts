@@ -131,6 +131,7 @@ export interface InternalExtensionApi {
 		promptToReloadOnVersionChanges: boolean;
 	};
 	config: {
+		configChangeDebounceDelayMs: number;
 		workspaceSdkPath: string | undefined;
 	};
 	context: Context;
