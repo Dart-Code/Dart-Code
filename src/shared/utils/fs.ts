@@ -496,8 +496,19 @@ export function mkDirRecursive(folder: string) {
 		fs.mkdirSync(folder);
 }
 
+// Matches a file path ending with a non-dot/non-separator character followed by a 3 or 4 character
+// alphanumeric extension (e.g. `.txt` or `.log`).
+// IMPORTANT: This pattern is duplicated in `package.json` for `dart.*LogFile` settings and must be kept in sync.
 export const validLogFilePattern = /[^.\\/]\.[a-zA-Z0-9]{3,4}$/;
 
+/**
+ * Validates that a configured log file path is an absolute file path (with a 3 or 4 character
+ * extension and not pointing to an existing directory on disk) before creating its parent folder.
+ *
+ * This prevents partially-typed paths or folder paths (for example when editing `settings.json`
+ * with Auto Save enabled) from creating intermediate folders or being passed to tools/streams
+ * that expect a file path.
+ */
 export function prepareLogFilePath(file?: string): string | undefined {
 	if (!file || !path.isAbsolute(file) || !validLogFilePattern.test(file) || existsAndIsDirectorySync(file))
 		return undefined;
@@ -517,10 +528,13 @@ export function createFolderForFile(file?: string): string | undefined {
 		}
 
 		const folder = path.dirname(file);
-		if (!fs.existsSync(folder))
+		if (!fs.existsSync(folder)) {
 			mkDirRecursive(folder);
-		else if (!existsAndIsDirectorySync(folder))
+		} else if (!existsAndIsDirectorySync(folder)) {
+			// The parent path exists on disk as a file rather than a directory (for example if an
+			// earlier path created a file at `folder`), so `file` cannot be created inside it.
 			return undefined;
+		}
 
 		return file;
 	} catch {

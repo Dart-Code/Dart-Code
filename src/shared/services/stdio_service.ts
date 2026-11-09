@@ -295,9 +295,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		if (!this.logStream) {
 			this.logStream = fs.createWriteStream(this.logFile);
 			this.logStream.on("error", (e) => {
+				this.logger.warn(`Failed to write to log file ${this.logFile}: ${e}`);
 				this.logStream = undefined;
 				this.openLogFile = undefined;
-				this.logger.warn(`Failed to write to log file ${this.logFile}: ${e}`);
+				this.logFile = undefined;
 			});
 			this.openLogFile = this.logFile;
 		}

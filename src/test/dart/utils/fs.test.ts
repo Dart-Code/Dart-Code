@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
-import { Uri } from "vscode";
+import { ConfigurationTarget, Uri, workspace } from "vscode";
 import { isWin } from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
 import { captureLogs, EmittingLogger, nullLogger } from "../../../shared/logging";
@@ -453,18 +453,19 @@ describe("prepareLogFilePath and createFolderForFile", () => {
 	it("validates *LogFile settings via config getters", async () => {
 		await activateWithoutAnalysis();
 
+		const configWithLog = privateApi.config as { analyzerLogFile?: string };
 		const partialDir = path.join(tempFolder, "partial_dir");
 		await setConfigForTest("dart", "analyzerLogFile", `${partialDir}${path.sep}`);
-		assert.equal(privateApi.config.analyzerLogFile, undefined);
+		assert.equal(configWithLog.analyzerLogFile, undefined);
 		assert.equal(fs.existsSync(partialDir), false);
 
-		await setConfigForTest("dart", "analyzerLogFile", path.join(partialDir, "analyzer.lo"));
-		assert.equal(privateApi.config.analyzerLogFile, undefined);
+		await workspace.getConfiguration("dart").update("analyzerLogFile", path.join(partialDir, "analyzer.lo"), ConfigurationTarget.Global);
+		assert.equal(configWithLog.analyzerLogFile, undefined);
 		assert.equal(fs.existsSync(partialDir), false);
 
 		const validLogFile = path.join(partialDir, "analyzer.log");
-		await setConfigForTest("dart", "analyzerLogFile", validLogFile);
-		assert.equal(privateApi.config.analyzerLogFile, validLogFile);
+		await workspace.getConfiguration("dart").update("analyzerLogFile", validLogFile, ConfigurationTarget.Global);
+		assert.equal(configWithLog.analyzerLogFile, validLogFile);
 		assert.equal(existsAndIsDirectorySync(partialDir), true);
 	});
 
