@@ -261,11 +261,9 @@ describe("dart test debugger", () => {
 
 		try {
 			await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
-			// Allow some time for sessions to start so the startedSessions check doesn't
-			// fire immediately after only creating the first session.
-			await delay(500);
+			// Wait for both project sessions (hello_world and hello_world/example) to have started and terminated.
 			await waitFor(
-				() => startedSessions > 0 && runningSessions === 0,
+				() => startedSessions === 2 && runningSessions === 0,
 				300, // check every 300ms
 				60000, // wait up to 60 seconds
 			);

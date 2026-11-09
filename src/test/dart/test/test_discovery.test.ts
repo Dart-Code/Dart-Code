@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { TestSource } from "../../../shared/test/test_model";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { captureTestDebugConfigurations } from "../../debug_helpers";
@@ -62,6 +63,43 @@ hello_world
     test/rename_test.dart [0/1 passed] Unknown
         test 2 Unknown
 		`);
+	});
+
+	it("does not remove TestSource.Result nodes when an outline update arrives during a test run", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6400
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() => test("test 1", () {});
+		`);
+
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("test 1"));
+
+		const suitePath = fsPath(helloWorldRenameTestFile);
+		const model = privateApi.testModel;
+		const suite = model.suites.getForPath(suitePath)!;
+		model.testDiscovered("session-1", suitePath, TestSource.Result, 99, "(tearDownAll)", undefined, suitePath, undefined, undefined, false);
+		model.testDone("session-1", suitePath, 99, "success", undefined);
+
+		assert.ok(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("(tearDownAll)"));
+
+		// Start a new whole-suite run (which marks TestSource.Result nodes as isPotentiallyDeleted)
+		// and trigger an Outline update before the run finishes.
+		model.flagSuiteStart(suite, true);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() => test("test 2", () {});
+		`);
+
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("test 2"));
+		// The TestSource.Result node should still be present while the suite run is in progress.
+		assert.ok(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("(tearDownAll)"));
+
+		// Once suiteDone runs without "(tearDownAll)" having been re-discovered, it should be removed.
+		model.suiteDone("session-2", suitePath);
+		assert.equal(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("(tearDownAll)"), false);
 	});
 
 	it("handles renaming of test files discovered from outline before suite discovery", async () => {

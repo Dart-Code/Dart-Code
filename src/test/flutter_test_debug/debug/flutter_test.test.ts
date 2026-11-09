@@ -97,11 +97,10 @@ describe("flutter test debugger", () => {
 
 		try {
 			await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
-			// Allow some time for sessions to start so the startedSessions check doesn't
-			// fire immediately after only creating the first session.
-			await delay(500);
+			// Wait for all 3 sessions (example/test, test, and integration_test, which runs sequentially
+			// after the unit test sessions complete) to have started and terminated.
 			await waitFor(
-				() => startedSessions > 0 && runningSessions === 0,
+				() => startedSessions === 3 && runningSessions === 0,
 				50, // check every 50ms
 				60000, // wait up to 60 seconds
 			);
