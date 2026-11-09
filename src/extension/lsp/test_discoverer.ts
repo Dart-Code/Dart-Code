@@ -181,7 +181,7 @@ export class TestDiscoverer implements IAmDisposable {
 			const visitor = new TestDiscoveryVisitor(this.logger, this.model, dartCodeDebugSessionID, suitePath);
 			visitor.visit(outline);
 
-			this.model.removeAllPotentiallyDeletedNodes(suite);
+			this.model.removeAllPotentiallyDeletedNodes(suite, TestSource.Outline);
 			this.model.updateSuiteTestCountLabels(suite, true);
 		}
 	}

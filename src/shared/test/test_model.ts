@@ -270,14 +270,14 @@ export class TestModel {
 		}
 	}
 
-	public removeAllPotentiallyDeletedNodes(suite: SuiteData) {
+	public removeAllPotentiallyDeletedNodes(suite: SuiteData, source: TestSource) {
 		// Delete nodes that were marked as potentially deleted and then never updated.
 		// This means they weren't run in the last run, so probably were deleted (or
 		// renamed and got new nodes, which still means the old ones should be removed).
 		const toDelete = [
 			...suite.getAllGroups(),
 			...suite.getAllTests(),
-		].filter((t) => t.isPotentiallyDeleted);
+		].filter((t) => t.testSource === source && t.isPotentiallyDeleted);
 		toDelete.forEach((node) => this.removeNode(node));
 	}
 
@@ -670,7 +670,7 @@ export class TestModel {
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		this.removeAllPotentiallyDeletedNodes(suite);
+		this.removeAllPotentiallyDeletedNodes(suite, TestSource.Result);
 
 		// Anything marked as running should be set back to Unknown
 		suite.getAllTests().filter((t) => t.status === TestStatus.Running).forEach((t) => {
