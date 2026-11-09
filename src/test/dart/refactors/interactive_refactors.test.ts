@@ -85,12 +85,14 @@ describe("interactive refactors", () => {
 
 		const rewrittenCommandName = codeAction.command!.command;
 		const rewrittenArgments = codeAction.command!.arguments!;
+		const rewrittenParams = rewrittenArgments[1] as Array<{ kind: string; defaultValue: unknown }>;
+		const rewrittenArgsObj = rewrittenArgments[2] as { arguments: unknown[] };
 
 		assert.equal(rewrittenCommandName, InteractiveRefactors.commandName);
 		assert.equal(rewrittenArgments[0], testRefactorCommandName);
-		assert.equal(rewrittenArgments[1][0].kind, kind);
-		assert.equal(rewrittenArgments[1][0].defaultValue, defaultValue);
-		assert.deepStrictEqual(rewrittenArgments[2].arguments, [defaultValue]);
+		assert.equal(rewrittenParams[0].kind, kind);
+		assert.equal(rewrittenParams[0].defaultValue, defaultValue);
+		assert.deepStrictEqual(rewrittenArgsObj.arguments, [defaultValue]);
 	});
 
 	it("runs using original values for unknown kinds", async () => {

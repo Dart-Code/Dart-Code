@@ -25,13 +25,15 @@ describe("test_code_lens", () => {
 
 		const runAction = codeLensForTarget.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-		assert.equal(runAction.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
-		assert.equal(runAction.command!.arguments![0].isGroup, false);
+		const runTest = runAction.command!.arguments![0] as { fullName: string; isGroup: boolean };
+		assert.equal(runTest.fullName, "String .split() splits the string on the delimiter");
+		assert.equal(runTest.isGroup, false);
 
 		const debugAction = codeLensForTarget.find((cl) => cl.command!.title === "Debug");
 		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromOutline");
-		assert.equal(debugAction!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
-		assert.equal(debugAction!.command!.arguments![0].isGroup, false);
+		const debugTest = debugAction!.command!.arguments![0] as { fullName: string; isGroup: boolean };
+		assert.equal(debugTest.fullName, "String .split() splits the string on the delimiter");
+		assert.equal(debugTest.isGroup, false);
 	});
 
 	it("includes run/debug actions for groups", async () => {
@@ -46,13 +48,15 @@ describe("test_code_lens", () => {
 
 		const runAction = codeLensForGroup.find((cl) => cl.command!.title === "Run");
 		assert.equal(runAction!.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-		assert.equal(runAction!.command!.arguments![0].fullName, "String");
-		assert.equal(runAction!.command!.arguments![0].isGroup, true);
+		const runGroup = runAction!.command!.arguments![0] as { fullName: string; isGroup: boolean };
+		assert.equal(runGroup.fullName, "String");
+		assert.equal(runGroup.isGroup, true);
 
 		const debugAction = codeLensForGroup.find((cl) => cl.command!.title === "Debug");
 		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromOutline");
-		assert.equal(debugAction!.command!.arguments![0].fullName, "String");
-		assert.equal(debugAction!.command!.arguments![0].isGroup, true);
+		const debugGroup = debugAction!.command!.arguments![0] as { fullName: string; isGroup: boolean };
+		assert.equal(debugGroup.fullName, "String");
+		assert.equal(debugGroup.isGroup, true);
 	});
 
 	for (const debugType of [
@@ -91,9 +95,11 @@ describe("test_code_lens", () => {
 
 			const action = codeLensForTarget.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
 			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
-			assert.equal(action!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
-			assert.equal(action!.command!.arguments![0].isGroup, false);
-			assert.deepStrictEqual(action!.command!.arguments![1].env, { MY_VAR: "FOO" });
+			const testNode = action!.command!.arguments![0] as { fullName: string; isGroup: boolean };
+			const launchTemplate = action!.command!.arguments![1] as { env: Record<string, string> };
+			assert.equal(testNode.fullName, "String .split() splits the string on the delimiter");
+			assert.equal(testNode.isGroup, false);
+			assert.deepStrictEqual(launchTemplate.env, { MY_VAR: "FOO" });
 		});
 
 		it(`includes custom ${debugType.type} actions from launch templates for groups`, async function () {
@@ -116,9 +122,11 @@ describe("test_code_lens", () => {
 
 			const action = codeLensForGroup.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
 			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
-			assert.equal(action!.command!.arguments![0].fullName, "String");
-			assert.equal(action!.command!.arguments![0].isGroup, true);
-			assert.deepStrictEqual(action!.command!.arguments![1].env, { MY_VAR: "FOO" });
+			const groupNode = action!.command!.arguments![0] as { fullName: string; isGroup: boolean };
+			const launchTemplate = action!.command!.arguments![1] as { env: Record<string, string> };
+			assert.equal(groupNode.fullName, "String");
+			assert.equal(groupNode.isGroup, true);
+			assert.deepStrictEqual(launchTemplate.env, { MY_VAR: "FOO" });
 		});
 	}
 

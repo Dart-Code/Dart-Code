@@ -166,7 +166,8 @@ describe("update_check", () => {
 			const port = (server.address() as { port: number }).port;
 
 			const redirectedBody = await client.fetch(`http://127.0.0.1:${port}/redirect`);
-			assert.equal(JSON.parse(redirectedBody).version, "3.6.0");
+			const parsed = JSON.parse(redirectedBody) as { version: string };
+			assert.equal(parsed.version, "3.6.0");
 
 			await assert.rejects(
 				() => client.fetch(`http://127.0.0.1:${port}/error`),

@@ -340,7 +340,10 @@ describe("dart tooling daemon", () => {
 
 		await delay(dtdDebounceMs + 50);
 		assert.ok(
-			!sendEvent.getCalls().some((call) => call.args[1]?.kind === EventKind.activeLocationChanged),
+			!sendEvent.getCalls().some((call) => {
+				const event = call.args[1] as { kind?: EventKind } | undefined;
+				return event?.kind === EventKind.activeLocationChanged;
+			}),
 			"debounced active-location event was sent after dispose",
 		);
 	});

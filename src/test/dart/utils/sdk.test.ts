@@ -260,7 +260,8 @@ describe("runCustomGetSDKCommand", () => {
 		assert.equal(result?.path, privateApi.workspaceContext.sdks.dart);
 		assert.ok(spawnSpy.calledOnce);
 		// Verify that child_process.spawn was called with SpawnOptions.cwd set to the .code-workspace file's directory.
-		assert.equal(spawnSpy.firstCall.args[2]?.cwd, fakeWorkspaceDir);
+		const spawnOptions = spawnSpy.firstCall.args[2] as SpawnOptions | undefined;
+		assert.equal(spawnOptions?.cwd, fakeWorkspaceDir);
 	});
 
 	it("returns undefined path when no workspace is open", async () => {
