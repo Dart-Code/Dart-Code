@@ -42,6 +42,9 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		fs.mkdirSync(logPath);
 
 	const codeVersion = (!process.env.BUILD_VERSION || process.env.BUILD_VERSION === "stable") ? "stable" : "insiders";
+	const cachePath = process.env.VSCODE_TEST_CACHE_PATH
+		? path.resolve(process.env.VSCODE_TEST_CACHE_PATH)
+		: undefined;
 
 	const reporter = {
 		report: () => { },
@@ -58,7 +61,10 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		while (currentAttempt <= maxAttempts) {
 			try {
 				// console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
-				await vstest.downloadAndUnzipVSCode({ version: codeVersion, reporter, });
+				ideOverride = await withCacheLock(
+					cachePath,
+					() => vstest.downloadAndUnzipVSCode({ version: codeVersion, cachePath, reporter }),
+				);
 				break;
 			} catch (e) {
 				if (currentAttempt >= maxAttempts)
@@ -90,6 +96,7 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 	try {
 		const res = await vstest.runTests({
 			vscodeExecutablePath: ideOverride,
+			cachePath,
 			extensionDevelopmentPath: cwd,
 			extensionTestsEnv: { ...testEnv, ...env },
 			extensionTestsPath: testFolder,
@@ -223,6 +230,66 @@ async function runAllTests(): Promise<void> {
 	} catch (e) {
 		exitCode = 1;
 		console.error(e);
+	}
+}
+
+/**
+ * Serializes VS Code downloads when a shared `cachePath` is used across
+ * parallel test runs (for example across git worktrees) so concurrent runs
+ * do not delete or overwrite each other's extraction directory.
+ */
+async function withCacheLock<T>(cachePath: string | undefined, fn: () => Promise<T>): Promise<T> {
+	if (!cachePath)
+		return fn();
+
+	fs.mkdirSync(cachePath, { recursive: true });
+	const lockFile = path.join(cachePath, ".vscode-download.lock");
+	const staleLockMs = 10 * 60 * 1000;
+
+	while (true) {
+		try {
+			fs.writeFileSync(lockFile, String(process.pid), { flag: "wx" });
+			break;
+		} catch (e) {
+			if ((e as NodeJS.ErrnoException).code !== "EEXIST")
+				throw e;
+
+			if (isLockStale(lockFile, staleLockMs)) {
+				fs.rmSync(lockFile, { force: true });
+				continue;
+			}
+
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+		}
+	}
+
+	try {
+		return await fn();
+	} finally {
+		fs.rmSync(lockFile, { force: true });
+	}
+}
+
+function isLockStale(lockFile: string, staleLockMs: number): boolean {
+	try {
+		const stat = fs.statSync(lockFile);
+		if (Date.now() - stat.mtimeMs > staleLockMs)
+			return true;
+
+		const pid = parseInt(fs.readFileSync(lockFile, "utf8").trim(), 10);
+		if (!isNaN(pid) && pid > 0) {
+			try {
+				process.kill(pid, 0);
+				return false;
+			} catch (e) {
+				if ((e as NodeJS.ErrnoException).code === "ESRCH")
+					return true;
+			}
+		}
+		return false;
+	} catch {
+		// File was already removed by the lock holder.
+		return false;
 	}
 }
 
