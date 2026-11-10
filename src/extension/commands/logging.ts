@@ -7,7 +7,9 @@ import { IAmDisposable } from "../../shared/interfaces";
 import { captureLogs, EmittingLogger } from "../../shared/logging";
 import { disposeAll, PromiseCompleter } from "../../shared/utils";
 import { createFolderForFile, forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
-import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
+import { hasFlutterExtension } from "../../shared/vscode/extension_utils";
+import { WorkspaceContext } from "../../shared/workspace";
+import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, flutterLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;
 
@@ -17,7 +19,7 @@ export class LoggingCommands implements IAmDisposable {
 	private onCaptureLogsEmitter = new vs.EventEmitter<boolean>();
 	public readonly onCaptureLogs = this.onCaptureLogsEmitter.event;
 
-	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
+	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string, private readonly workspaceContext: WorkspaceContext) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.startLogging", this.startLoggingViaPicker.bind(this)),
 			vs.commands.registerCommand("dart.startLoggingDebugging", this.startLoggingDebugging.bind(this)),
@@ -30,8 +32,11 @@ export class LoggingCommands implements IAmDisposable {
 	}
 
 	private async startLoggingViaPicker(): Promise<string | undefined> {
+		const isFlutter = this.workspaceContext.hasAnyFlutterProjects || hasFlutterExtension;
+		const logCategories = Object.keys(userSelectableLogCategories)
+			.filter((k) => isFlutter || !flutterLogCategories.includes(userSelectableLogCategories[k]));
 		const selectedLogCategories = await vs.window.showQuickPick(
-			Object.keys(userSelectableLogCategories).map((k) => ({
+			logCategories.map((k) => ({
 				label: k,
 				logCategory: userSelectableLogCategories[k],
 				picked: true,
@@ -78,11 +83,12 @@ export class LoggingCommands implements IAmDisposable {
 		const completer = new PromiseCompleter<void>();
 		this.currentLogCompleter = completer;
 
+		const isFlutter = this.workspaceContext.hasAnyFlutterProjects || hasFlutterExtension;
 		await vs.window.withProgress(
 			{
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
-				title: `Dart and Flutter logs are being captured. Reproduce your issue then click Cancel.`,
+				title: `${isFlutter ? "Dart and Flutter" : "Dart"} logs are being captured. Reproduce your issue then click Cancel.`,
 			},
 			(_, token) => {
 				token.onCancellationRequested(() => completer.resolve());

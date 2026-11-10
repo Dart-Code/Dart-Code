@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { platformEol } from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, logger, sb, waitForResult } from "../../helpers";
+import { activate, logger, privateApi, sb, waitForResult } from "../../helpers";
 
 describe("capture logs command", () => {
 	beforeEach("activate", () => activate());
@@ -16,6 +16,7 @@ describe("capture logs command", () => {
 			showQuickPick.resolves(logCategories.map((c) => ({ logCategory: c })));
 		else
 			showQuickPick.resolves(undefined);
+		const withProgress = sb.spy(vs.window, "withProgress");
 
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
 		const loggingCommand = vs.commands.executeCommand<string | undefined>("dart.startLogging");
@@ -26,11 +27,13 @@ describe("capture logs command", () => {
 
 		return {
 			loggingCommand,
+			showQuickPick,
 			stopLogging: async () => {
 				await vs.commands.executeCommand("dart.stopLogging");
 				// Wait for the logging command to finish.
 				return (await loggingCommand)!;
 			},
+			withProgress,
 		};
 	}
 
@@ -158,5 +161,32 @@ describe("capture logs command", () => {
 		assert.ok(lines.find((l) => l.includes("This is a test")), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
 		assert.ok(lines.find((l) => !l.includes("This is a flutter daemon event")), "Unexpectedly found 'This is a flutter daemon event' in the log");
 		assert.ok(lines.find((l) => l.includes("This is a flutter daemon ERROR event")), `Did not find 'This is a flutter daemon ERROR event' in ${platformEol}${lines.join(platformEol)}`);
+	});
+
+	it("excludes Flutter categories and uses Dart in progress title when Flutter is not used", async () => {
+		const log = await configureLog(LogCategory.Analyzer);
+		await waitForResult(() => log.withProgress.called);
+		await log.stopLogging();
+
+		const items = log.showQuickPick.firstCall.args[0] as vs.QuickPickItem[];
+		const labels = items.map((i) => i.label);
+		assert.ok(labels.includes("Analysis Server"));
+		assert.ok(!labels.some((l) => l.startsWith("Flutter ")), `Unexpectedly found Flutter categories in ${labels.join(", ")}`);
+		assert.equal(log.withProgress.firstCall.args[0].title, "Dart logs are being captured. Reproduce your issue then click Cancel.");
+	});
+
+	it("includes Flutter categories and uses Dart and Flutter in progress title when Flutter is used", async () => {
+		sb.stub(privateApi.workspaceContext, "hasAnyFlutterProjects").value(true);
+		const log = await configureLog(LogCategory.Analyzer);
+		await waitForResult(() => log.withProgress.called);
+		await log.stopLogging();
+
+		const items = log.showQuickPick.firstCall.args[0] as vs.QuickPickItem[];
+		const labels = items.map((i) => i.label);
+		assert.ok(labels.includes("Flutter Device Daemon"));
+		assert.ok(labels.includes("Flutter Run"));
+		assert.ok(labels.includes("Flutter Test"));
+		assert.ok(labels.includes("Flutter Widget Preview"));
+		assert.equal(log.withProgress.firstCall.args[0].title, "Dart and Flutter logs are being captured. Reproduce your issue then click Cancel.");
 	});
 });

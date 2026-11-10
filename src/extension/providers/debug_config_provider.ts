@@ -17,6 +17,7 @@ import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, i
 import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { getActiveRealFileEditor } from "../../shared/vscode/editors";
+import { hasFlutterExtension } from "../../shared/vscode/extension_utils";
 import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { getAllProjectFolders, isDartWorkspaceFolder, isInsideFolderNamed, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
@@ -826,7 +827,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 }
 
 export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: DartWorkspaceContext) { }
 
 	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, _token?: CancellationToken): Promise<DebugConfiguration[]> {
 		const results: DebugConfiguration[] = [];
@@ -874,8 +875,9 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 				}
 			}
 		} else {
+			const isFlutter = this.wsContext.hasAnyFlutterProjects || hasFlutterExtension;
 			results.push({
-				name: "Dart & Flutter",
+				name: isFlutter ? "Dart & Flutter" : "Dart",
 				request: "launch",
 				type: "dart",
 			});

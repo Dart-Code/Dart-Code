@@ -27,6 +27,9 @@ export const userSelectableLogCategories: Record<string, LogCategory> = {
 	"Web Daemon": LogCategory.WebDaemon,
 };
 
+export const flutterLogCategories = Object.values(userSelectableLogCategories)
+	.filter((c) => LogCategory[c].startsWith("Flutter"));
+
 export const analysisServerLogCategories = [
 	LogCategory.Analyzer,
 	LogCategory.CommandProcesses,

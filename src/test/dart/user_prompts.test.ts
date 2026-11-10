@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, openAction, skipThisSurveyAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
+import { doNotAskAgainAction, flutterSurveyDataUrl, installFlutterExtensionPromptKey, longRepeatPromptThreshold, noAction, noRepeatPromptThreshold, openAction, skipThisSurveyAction, takeSurveyAction, twoHoursInMs, useRecommendedSettingsPromptKey, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { Analytics } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { waitFor } from "../../shared/utils/promises";
@@ -428,6 +428,68 @@ describe("SDK deprecation notice", () => {
 
 		// Expect only two, because the first two are same major+minor
 		assert.equal(showWarningMessage.calledTwice, true);
+	});
+});
+
+describe("Startup user prompts", () => {
+	let showInformationMessage: sinon.SinonStub;
+
+	beforeEach("activate", () => activateWithoutAnalysis());
+	beforeEach("clearExtensionContext", () => clearAllContext(privateApi.context));
+	afterEach("clearExtensionContext", () => clearAllContext(privateApi.context));
+	beforeEach("set up stubs", () => {
+		showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(noAction);
+		const getHasPrompted = sb.stub(privateApi.context.profileState, "getHasPrompted").callThrough();
+		getHasPrompted.withArgs(installFlutterExtensionPromptKey).returns(true);
+		sb.stub(privateApi.webClient, "fetch").resolves(JSON.stringify({
+			endDate: "2001-01-20T09:00:00-08:00",
+			startDate: "2001-01-01T09:00:00-08:00",
+			title: "Test Survey",
+			uniqueId: flutterTestSurveyID,
+			url: "https://example.org/",
+		}));
+	});
+
+	it("prompts for recommended settings with Dart when Flutter is not used", async () => {
+		const getConfiguration = sb.stub(vs.workspace, "getConfiguration").callThrough();
+		getConfiguration.withArgs("", null).returns({ inspect: () => undefined } as unknown as vs.WorkspaceConfiguration);
+
+		await privateApi.showUserPrompts();
+
+		assert.equal(showInformationMessage.calledOnce, true);
+		assert.equal(showInformationMessage.firstCall.args[0], "Would you like to use recommended VS Code settings for Dart?");
+	});
+
+	it("prompts for recommended settings with Dart & Flutter when Flutter is used", async () => {
+		sb.stub(privateApi.workspaceContext, "hasAnyFlutterProjects").value(true);
+		const getConfiguration = sb.stub(vs.workspace, "getConfiguration").callThrough();
+		getConfiguration.withArgs("", null).returns({ inspect: () => undefined } as unknown as vs.WorkspaceConfiguration);
+
+		await privateApi.showUserPrompts();
+
+		assert.equal(showInformationMessage.calledOnce, true);
+		assert.equal(showInformationMessage.firstCall.args[0], "Would you like to use recommended VS Code settings for Dart & Flutter?");
+	});
+
+	it("prompts to install Dart MCP server in Cursor when Flutter is not used", async () => {
+		privateApi.context.profileState.setHasPrompted(useRecommendedSettingsPromptKey, true);
+		sb.stub(vs.env, "appName").value("Cursor");
+
+		await privateApi.showUserPrompts();
+
+		assert.equal(showInformationMessage.calledOnce, true);
+		assert.equal(showInformationMessage.firstCall.args[0], "Would you like to install the Dart MCP server?");
+	});
+
+	it("prompts to install Dart and Flutter MCP server in Cursor when Flutter is used", async () => {
+		privateApi.context.profileState.setHasPrompted(useRecommendedSettingsPromptKey, true);
+		sb.stub(privateApi.workspaceContext, "hasAnyFlutterProjects").value(true);
+		sb.stub(vs.env, "appName").value("Cursor");
+
+		await privateApi.showUserPrompts();
+
+		assert.equal(showInformationMessage.calledOnce, true);
+		assert.equal(showInformationMessage.firstCall.args[0], "Would you like to install the Dart and Flutter MCP server?");
 	});
 });
 

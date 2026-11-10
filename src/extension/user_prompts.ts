@@ -89,15 +89,17 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		return;
 	}
 
+	const isFlutter = workspaceContext.hasAnyFlutterProjects || hasFlutterExtension;
+
 	if (!shouldSuppress(context.profileState, useRecommendedSettingsPromptKey) && !hasAnyExistingDartSettings()) {
-		showPrompt(context.profileState, useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
+		showPrompt(context.profileState, useRecommendedSettingsPromptKey, () => promptToUseRecommendedSettings(isFlutter));
 		return;
 	}
 
 	// Show MCP install prompt for Cursor.
 	if (vs.env.appName === "Cursor" && workspaceContext.sdks.dart) {
 		if (!shouldSuppress(context.globalState, cursorInstallMcpServer)) {
-			showPrompt(context.globalState, cursorInstallMcpServer, promptToInstallMcpServerForCursor);
+			showPrompt(context.globalState, cursorInstallMcpServer, () => promptToInstallMcpServerForCursor(isFlutter));
 			return;
 		}
 	}
@@ -115,9 +117,9 @@ function hasAnyExistingDartSettings(): boolean {
 	return false;
 }
 
-async function promptToUseRecommendedSettings(): Promise<boolean> {
+async function promptToUseRecommendedSettings(isFlutter: boolean): Promise<boolean> {
 	const action = await vs.window.showInformationMessage(
-		"Would you like to use recommended VS Code settings for Dart & Flutter?",
+		`Would you like to use recommended VS Code settings for ${isFlutter ? "Dart & Flutter" : "Dart"}?`,
 		yesAction,
 		noAction,
 		showRecommendedSettingsAction,
@@ -130,9 +132,9 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 	return true;
 }
 
-async function promptToInstallMcpServerForCursor(): Promise<boolean> {
+async function promptToInstallMcpServerForCursor(isFlutter: boolean): Promise<boolean> {
 	const action = await vs.window.showInformationMessage(
-		"Would you like to install the Dart and Flutter MCP server?",
+		`Would you like to install the ${isFlutter ? "Dart and Flutter" : "Dart"} MCP server?`,
 		yesAction,
 		noAction,
 	);
