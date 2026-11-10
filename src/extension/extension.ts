@@ -479,7 +479,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Task handlers.
 	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(logger, context, sdks, dartCapabilities)));
-	context.subscriptions.push(vs.tasks.registerTaskProvider(FlutterTaskProvider.type, new FlutterTaskProvider(logger, context, sdks, flutterCapabilities)));
+	if (workspaceContext.hasAnyFlutterProjects)
+		context.subscriptions.push(vs.tasks.registerTaskProvider(FlutterTaskProvider.type, new FlutterTaskProvider(logger, context, sdks, flutterCapabilities)));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(dartCapabilities, "snippets/dart.json", () => true)));
@@ -560,13 +561,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", dynamicDebugProvider, vs.DebugConfigurationProviderTriggerKind.Dynamic));
 	}
 
-	const flutterUiGuideDecorations = config.previewFlutterUiGuides
+	const flutterUiGuideDecorations = workspaceContext.hasAnyFlutterProjects && config.previewFlutterUiGuides
 		? new FlutterUiGuideDecorations(analyzer)
 		: undefined;
 	if (flutterUiGuideDecorations)
 		context.subscriptions.push(flutterUiGuideDecorations);
 
-	if (config.flutterGutterIcons)
+	if (workspaceContext.hasAnyFlutterProjects && config.flutterGutterIcons)
 		context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
 
 	// Handle config changes so we can reanalyze if necessary.

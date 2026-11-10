@@ -3686,6 +3686,7 @@
 		"taskDefinitions": [
 			{
 				"type": "dart",
+				"when": "dart-code:anyProjectLoaded",
 				"required": [],
 				"properties": {
 					"command": {
@@ -3704,6 +3705,7 @@
 			},
 			{
 				"type": "flutter",
+				"when": "dart-code:anyFlutterProjectLoaded",
 				"required": [],
 				"properties": {
 					"command": {
