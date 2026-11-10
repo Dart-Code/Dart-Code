@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import { ChildProcess, SpawnOptions } from "child_process";
 import { EventEmitter } from "events";
 import * as path from "path";
+import { PassThrough } from "stream";
 import { dartVMPath, executableNames, flutterPath, isWin } from "../../shared/constants";
 import { quoteAndEscapeArg, simpleCommandRegex } from "../../shared/processes";
 import { privateApi, sb } from "../helpers";
@@ -24,11 +25,13 @@ export interface FakeSpawnResult {
 }
 
 export interface FakeProcess extends EventEmitter {
-	exitCode?: number;
+	exitCode: number | null;
+	signalCode: NodeJS.Signals | null;
 	kill: () => boolean;
 	pid: number;
-	stderr: EventEmitter & { setEncoding?: () => void };
-	stdout: EventEmitter & { setEncoding?: () => void };
+	stdin: PassThrough;
+	stderr: PassThrough;
+	stdout: PassThrough;
 }
 
 /**
@@ -49,6 +52,7 @@ export interface FakeProcess extends EventEmitter {
  */
 export class ChildProcessSpawnStub {
 	private readonly fakedCalls: SpawnedProcessCall[] = [];
+	private readonly fakedProcesses: FakeProcess[] = [];
 
 	private constructor(
 		shouldFake: (bin: string, args: string[], cwd: string | undefined) => boolean | FakeSpawnResult | undefined,
@@ -70,15 +74,17 @@ export class ChildProcessSpawnStub {
 
 			const proc = new EventEmitter() as FakeProcess;
 			proc.pid = 12345;
-			proc.stdout = new EventEmitter();
-			proc.stdout.setEncoding = () => undefined;
-			proc.stderr = new EventEmitter();
-			proc.stderr.setEncoding = () => undefined;
+			proc.exitCode = null;
+			proc.signalCode = null;
+			proc.stdin = new PassThrough();
+			proc.stdout = new PassThrough();
+			proc.stderr = new PassThrough();
 			let isKilled = false;
 			proc.kill = () => {
 				isKilled = true;
 				return true;
 			};
+			this.fakedProcesses.push(proc);
 
 			// Simulate the process completing right away.
 			setImmediate(() => {
@@ -127,6 +133,10 @@ export class ChildProcessSpawnStub {
 
 	static dartDoc() {
 		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) && ChildProcessSpawnStub.includesArg(args, "doc"));
+	}
+
+	static dartLanguageServer() {
+		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) && ChildProcessSpawnStub.includesArg(args, "language-server"));
 	}
 
 	static dartPub(options?: { stdout?: string, exitCode?: number }) {
@@ -186,6 +196,10 @@ export class ChildProcessSpawnStub {
 
 	public get calls(): SpawnedProcessCall[] {
 		return this.fakedCalls.slice();
+	}
+
+	public get processes(): FakeProcess[] {
+		return this.fakedProcesses.slice();
 	}
 
 	public assertCalls(expected: SpawnedProcessCall[]): void {

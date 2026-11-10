@@ -31,6 +31,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides: { envOverrides?: Record<string, string | undefined>, toolEnv?: Record<string, string | undefined> }) {
+		if (this.isDisposed) {
+			this.logTraffic(`Skipping spawning ${binPath} because service has already been disposed`);
+			return;
+		}
+
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
 		this.description = binPath;
 		if (workingDirectory)
@@ -48,13 +53,20 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 
 		if (this.process) {
-			this.logTraffic(`    PID: ${process.pid}`);
+			this.logTraffic(`    PID: ${this.process.pid}`);
 
-			this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
-			this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
-			this.process.on("exit", (code, signal) => this.handleExit(code, signal));
+			this.registerProcessListeners(this.process);
 			this.process.on("error", (error) => this.handleError(error));
 		}
+	}
+
+	protected registerProcessListeners(proc: SpawnedProcess) {
+		proc.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
+		proc.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
+		proc.stdin.on("error", (error) => this.logTraffic(`Process stdin errored! ${String(error)}`));
+		proc.stdout.on("error", (error) => this.logTraffic(`Process stdout errored! ${String(error)}`));
+		proc.stderr.on("error", (error) => this.logTraffic(`Process stderr errored! ${String(error)}`));
+		proc.on("exit", (code, signal) => this.handleExit(code, signal));
 	}
 
 	/// Flutter may send only \r as a line terminator for improved terminal output
@@ -111,7 +123,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		const id = this.nextRequestID++;
 
 		return new Promise<TResp>((resolve, reject) => {
-			if (this.processExited) {
+			if (this.isDisposed) {
+				reject(new Error(`Tried to call "${method}" after service was disposed`));
+				return;
+			}
+			if (this.processExited || (this.process && (this.process.stdin.destroyed || this.process.stdin.writableEnded))) {
 				this.notifyRequestAfterExit();
 				reject(new Error(`Tried to call "${method}" but process has already exited with code ${this.process?.exitCode}`));
 				return;
@@ -135,10 +151,14 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected sendMessage(json: string) {
 		this.logTraffic(`==> ${json}`);
-		if (this.process)
-			this.process.stdin.write(json);
-		else
+		if (this.isDisposed)
+			this.logTraffic(`  (not sent: disposed)`);
+		else if (!this.process)
 			this.logTraffic(`  (not sent: no process)`);
+		else if (this.processExited || this.process.stdin.destroyed || this.process.stdin.writableEnded)
+			this.logTraffic(`  (not sent: stdin closed)`);
+		else
+			this.process.stdin.write(json);
 	}
 
 	protected processMessageBuffer() {
@@ -311,6 +331,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	public async dispose(): Promise<void> {
 		this.isDisposed = true;
+		this.cancelAllRequests();
 
 		this.logTraffic(`Process ${this.description} is being disposed`);
 		for (const pid of this.additionalPidsToTerminate) {

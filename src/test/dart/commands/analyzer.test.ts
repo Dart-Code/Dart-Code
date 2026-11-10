@@ -15,6 +15,7 @@ import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { fsPath } from "../../../shared/utils/fs";
 import { AnalyzerUpdateDiagnosticInformationFeature, UpdateDiagnosticInformationRequest } from "../../../shared/vscode/analyzer_update_diagnostic_information";
 import { activate, defer, fakeCancellationToken, helloWorldFolder, helloWorldMainFile, privateApi, sb, setConfigForTest, waitForResult } from "../../helpers";
+import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("toggle show TODOs", () => {
 	const settingName = "showTodos";
@@ -999,6 +1000,28 @@ describe("analyzer", () => {
 			await privateApi.analyzer.onReady;
 			assert.equal(privateApi.analyzer.client.state, ls.State.Running);
 			assert.deepEqual(unhandled, []);
+		});
+
+		it("spawnServer attaches error handlers to process and stdio streams so EPIPE does not throw", async () => {
+			const spawn = ChildProcessSpawnStub.dartLanguageServer();
+			const infoSpy = sb.spy(privateApi.logger, "info");
+			const errorSpy = sb.spy(privateApi.logger, "error");
+
+			await privateApi.analyzer.spawnServer(privateApi.logger, privateApi.workspaceContext.sdks);
+			assert.equal(spawn.processes.length, 1);
+			const proc = spawn.processes[0];
+
+			assert.doesNotThrow(() => {
+				proc.stdin.emit("error", Object.assign(new Error("write EPIPE"), { code: "EPIPE" }));
+				proc.stdout.emit("error", Object.assign(new Error("read ECONNRESET"), { code: "ECONNRESET" }));
+				proc.stderr.emit("error", Object.assign(new Error("stream destroyed"), { code: "ERR_STREAM_DESTROYED" }));
+				proc.emit("error", new Error("spawn error"));
+			});
+
+			assert.ok(infoSpy.calledWithMatch("Analysis server stdin errored: Error: write EPIPE"));
+			assert.ok(infoSpy.calledWithMatch("Analysis server stdout errored: Error: read ECONNRESET"));
+			assert.ok(infoSpy.calledWithMatch("Analysis server stderr errored: Error: stream destroyed"));
+			assert.ok(errorSpy.calledWithMatch("Analysis server errored: Error: spawn error"));
 		});
 	});
 });

@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { flutterPath } from "../../shared/constants";
+import { PromiseCompleter } from "../../shared/utils";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
 import { activate, defer, fakeCancellationToken, privateApi, sb, waitForResult } from "../helpers";
 import { ChildProcessSpawnStub } from "../mocks/child_process_spawn_stub";
@@ -101,5 +102,44 @@ describe("flutter daemon", () => {
 		ChildProcessSpawnStub.flutterConfig({ stdout: JSON.stringify({}) });
 
 		assert.equal(await daemon.checkIfPlatformGloballyDisabled("linux"), false);
+	});
+
+	it("returns default values without writing to stdin if shut down before daemonInitialized resolves", async () => {
+		interface DaemonInternals {
+			isShuttingDown: boolean;
+			daemonInitializedCompleter: PromiseCompleter<void>;
+			daemonInitialized: Promise<void>;
+			daemonInitializedTimerId?: NodeJS.Timeout;
+			process?: { stdin: NodeJS.WritableStream };
+		}
+		const internals = daemon as unknown as DaemonInternals;
+		const originalIsShuttingDown = internals.isShuttingDown;
+		const originalCompleter = internals.daemonInitializedCompleter;
+		const originalInitialized = internals.daemonInitialized;
+		const originalTimerId = internals.daemonInitializedTimerId;
+		defer("restore daemon shutdown state", () => {
+			internals.isShuttingDown = originalIsShuttingDown;
+			internals.daemonInitializedCompleter = originalCompleter;
+			internals.daemonInitialized = originalInitialized;
+			internals.daemonInitializedTimerId = originalTimerId;
+		});
+
+		const pendingCompleter = new PromiseCompleter<void>();
+		internals.isShuttingDown = false;
+		internals.daemonInitializedCompleter = pendingCompleter;
+		internals.daemonInitialized = pendingCompleter.promise;
+		internals.daemonInitializedTimerId = setTimeout(() => pendingCompleter.resolve(), 60000).unref();
+
+		const writeSpy = sb.spy(internals.process!.stdin, "write");
+
+		const emulatorsPromise = daemon.getEmulators();
+		const platformsPromise = daemon.getSupportedPlatforms("/fake/project");
+
+		await daemon.shutdown();
+
+		assert.deepStrictEqual(await emulatorsPromise, []);
+		assert.deepStrictEqual(await platformsPromise, { platforms: [], platformTypes: {} });
+		assert.equal(internals.daemonInitializedTimerId, undefined);
+		assert.equal(writeSpy.notCalled, true);
 	});
 });

@@ -31,6 +31,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonResponsive = this.daemonResponsiveCompleter.promise;
 	private daemonInitializedCompleter = new PromiseCompleter<void>();
 	private daemonInitialized = this.daemonInitializedCompleter.promise;
+	private daemonInitializedTimerId?: NodeJS.Timeout;
 	private pingIntervalId?: NodeJS.Timeout;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 	private didSpawnWithAdditionalArgs = false;
@@ -45,11 +46,17 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.capabilities.version = e.version;
 			void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
 
+			if (this.isShuttingDown || this.isDisposed)
+				return;
+
 			// Delay marking as initialized for a few seconds to see whether it helps prevent
 			// the first emulator requests from hanging.
 			// https://github.com/Dart-Code/Dart-Code/issues/5793
 			const completer = this.daemonInitializedCompleter;
-			const markInitializedAfterDelay = () => setTimeout(() => completer.resolve(), 2000);
+			const markInitializedAfterDelay = () => {
+				if (!this.isShuttingDown && !this.isDisposed)
+					this.daemonInitializedTimerId = setTimeout(() => completer.resolve(), 2000).unref();
+			};
 			void this.deviceEnable().then(markInitializedAfterDelay, markInitializedAfterDelay);
 		});
 
@@ -108,13 +115,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	protected createNcProcess(port: number) {
 		this.process = child_process.spawn("nc", ["localhost", port.toString()]) satisfies SpawnedProcess;
 
-		this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
-		this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
-		this.process.on("exit", (code, signal) => this.handleExit(code, signal));
+		this.registerProcessListeners(this.process);
 		this.process.on("error", (error) => {
 			void vs.window.showErrorMessage(`Remote daemon startup had an error: ${error}. Check the instructions for using dart.daemonPort`);
 			this.handleError(error);
 		});
+	}
+
+	private clearStartupTimers() {
+		clearTimeout(this.daemonInitializedTimerId);
+		this.daemonInitializedTimerId = undefined;
+		this.daemonInitializedCompleter.resolve();
+		this.daemonResponsiveCompleter.resolve();
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
@@ -122,6 +134,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.handleUncleanExit();
 
 		super.handleExit(code, signal);
+		this.clearStartupTimers();
 	}
 
 	private handleUncleanExit() {
@@ -164,6 +177,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async dispose(): Promise<void> {
 		this.isShuttingDown = true;
+		this.clearStartupTimers();
 
 		if (this.pingIntervalId)
 			clearInterval(this.pingIntervalId);
@@ -307,6 +321,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
 		await this.daemonInitialized;
+		if (this.isShuttingDown || this.isDisposed)
+			return [];
 		return this.withRecordedTimeout("emulator.getEmulators", this.sendRequest("emulator.getEmulators"), []);
 	}
 
@@ -320,6 +336,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
 		await this.daemonInitialized;
+		if (this.isShuttingDown || this.isDisposed)
+			return { platforms: [], platformTypes: {} };
 		return this.withRecordedTimeout("daemon.getSupportedPlatforms", this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }), { platforms: [], platformTypes: {} });
 	}
 
@@ -329,7 +347,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async shutdown(): Promise<void> {
 		this.isShuttingDown = true;
-		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited)
+		this.clearStartupTimers();
+		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited || this.isDisposed)
 			return resolvedPromise;
 		// It's possible this shutdown will never complete, because if dispose() is also called, the process will be terminated.
 		// Since this is only called during shutdown, we should not hang here, because it will slow down VS Code exiting.
