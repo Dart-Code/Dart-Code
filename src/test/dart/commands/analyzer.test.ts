@@ -1,10 +1,12 @@
 import { strict as assert } from "assert";
 import * as os from "os";
 import * as path from "path";
+import { PassThrough } from "stream";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../../shared/analysis/lsp/custom_protocol";
+import { Analyzer } from "../../../shared/analyzer";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { ExtensionRestartReason, getServerStartReason } from "../../../shared/constants";
 import { SpawnedProcess } from "../../../shared/interfaces";
@@ -918,6 +920,96 @@ describe("analyzer", () => {
 			} finally {
 				clock.restore();
 			}
+		});
+
+		it("restarting the analysis server while it is unresponsive to shutdown does not show 'Connection to server got closed' error toast", async () => {
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
+			sb.stub(vs.window, "showInformationMessage").resolves(undefined);
+
+			const spawnServerStub = sb.stub(Object.getPrototypeOf(privateApi.analyzer) as Analyzer, "spawnServer").callThrough();
+			spawnServerStub.onFirstCall().callsFake(() => {
+				const serverIn = new PassThrough();
+				const serverOut = new PassThrough();
+				let buffer = "";
+				serverIn.on("data", (chunk: Buffer) => {
+					buffer += chunk.toString();
+					while (true) {
+						const match = /Content-Length: (\d+)\r\n\r\n/.exec(buffer);
+						if (!match)
+							return;
+						const headerLen = match.index + match[0].length;
+						const bodyLen = Number(match[1]);
+						if (buffer.length < headerLen + bodyLen)
+							return;
+						const msg = JSON.parse(buffer.slice(headerLen, headerLen + bodyLen)) as { id?: number; method?: string };
+						buffer = buffer.slice(headerLen + bodyLen);
+						if (msg.method === "initialize") {
+							const resp = JSON.stringify({
+								id: msg.id,
+								jsonrpc: "2.0",
+								result: {
+									capabilities: {
+										executeCommandProvider: { commands: ["dart.edit.codeAction.apply"] },
+									},
+								},
+							});
+							serverOut.write(`Content-Length: ${Buffer.byteLength(resp)}\r\n\r\n${resp}`);
+						} else if (msg.method === "shutdown") {
+							// Simulate server being busy analyzing and killed by handleDisposeCleanup
+							// while client.stop() is waiting for the shutdown response (#5285).
+							serverOut.end();
+							serverIn.end();
+						}
+					}
+				});
+				return Promise.resolve({ reader: serverOut, writer: serverIn });
+			});
+
+			await vs.commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
+			const busyAnalyzer = privateApi.analyzer;
+			await busyAnalyzer.onReady;
+			assert.equal(busyAnalyzer.client.state, ls.State.Running);
+
+			await vs.commands.executeCommand("dart.restartAnalysisServer");
+			await waitForResult(() => privateApi.analyzer !== busyAnalyzer);
+			await privateApi.analyzer.onReady;
+
+			assert.equal(busyAnalyzer.isDisposed, true);
+			assert.equal(busyAnalyzer.client.state, ls.State.Stopped);
+			assert.equal(privateApi.analyzer.client.state, ls.State.Running);
+			assert.ok(showErrorMessage.notCalled, `Expected no error message, but got: ${JSON.stringify(showErrorMessage.args)}`);
+		});
+
+		it("reloading the extension when the server connection closes during initialize does not cause unhandled rejections or duplicate command errors", async () => {
+			const unhandled: unknown[] = [];
+			const onUnhandled = (reason: unknown) => unhandled.push(reason);
+			process.on("unhandledRejection", onUnhandled);
+			defer("Remove unhandledRejection listener", () => process.off("unhandledRejection", onUnhandled));
+
+			sb.stub(vs.window, "showErrorMessage").resolves(undefined);
+
+			const spawnServerStub = sb.stub(Object.getPrototypeOf(privateApi.analyzer) as Analyzer, "spawnServer").callThrough();
+			spawnServerStub.onFirstCall().callsFake(() => {
+				const serverIn = new PassThrough();
+				const serverOut = new PassThrough();
+				serverIn.on("data", () => {
+					// Simulate server crashing or being killed before responding to initialize (#5826).
+					serverOut.end();
+					serverIn.end();
+				});
+				return Promise.resolve({ reader: serverOut, writer: serverIn });
+			});
+
+			await vs.commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
+			const failedAnalyzer = privateApi.analyzer;
+			await waitForResult(() => failedAnalyzer.client.state === ls.State.StartFailed);
+			await new Promise((resolve) => setImmediate(resolve));
+
+			// Reload again onto the real server and verify it starts cleanly without duplicate command errors.
+			await vs.commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
+			await privateApi.analyzer.onReady;
+			assert.equal(privateApi.analyzer.client.state, ls.State.Running);
+			assert.deepEqual(unhandled, []);
 		});
 	});
 });

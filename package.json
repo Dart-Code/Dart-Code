@@ -3779,7 +3779,7 @@
 		"@vscode/debugprotocol": "~1.68.0",
 		"minimatch": "^11.0.1",
 		"semver": "^7.7.1",
-		"vscode-languageclient": "^10.0.0",
+		"vscode-languageclient": "^11.0.0",
 		"vscode-uri": "^3.1.0",
 		"ws": "^8.18.0",
 		"yaml": "^2.8.3"

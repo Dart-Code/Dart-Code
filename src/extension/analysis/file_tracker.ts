@@ -25,18 +25,16 @@ export class FileTracker implements IAmDisposable {
 	public readonly onFlutterOutline = this.onFlutterOutlineEmitter.event;
 
 	constructor(private readonly logger: Logger, private readonly analyzer: LanguageClient, private readonly wsContext: WorkspaceContext) {
-		void analyzer.start().then(() => {
-			this.analyzer.onNotification(PublishOutlineNotification.type, (n) => {
-				const uri = Uri.parse(n.uri);
-				this.outlines.set(uri, n.outline);
-				this.onOutlineEmitter.fire(n);
-			});
-			this.analyzer.onNotification(PublishFlutterOutlineNotification.type, (n) => {
-				const uri = Uri.parse(n.uri);
-				this.flutterOutlines.set(uri, n.outline);
-				this.onFlutterOutlineEmitter.fire(n);
-			});
-		});
+		this.disposables.push(this.analyzer.onNotification(PublishOutlineNotification.type, (n) => {
+			const uri = Uri.parse(n.uri);
+			this.outlines.set(uri, n.outline);
+			this.onOutlineEmitter.fire(n);
+		}));
+		this.disposables.push(this.analyzer.onNotification(PublishFlutterOutlineNotification.type, (n) => {
+			const uri = Uri.parse(n.uri);
+			this.flutterOutlines.set(uri, n.outline);
+			this.onFlutterOutlineEmitter.fire(n);
+		}));
 		this.watchPubspec();
 	}
 
