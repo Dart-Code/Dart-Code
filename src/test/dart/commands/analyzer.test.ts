@@ -5,6 +5,7 @@ import { PassThrough } from "stream";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
+import { StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
 import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../../shared/analyzer";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
@@ -930,36 +931,24 @@ describe("analyzer", () => {
 			spawnServerStub.onFirstCall().callsFake(() => {
 				const serverIn = new PassThrough();
 				const serverOut = new PassThrough();
-				let buffer = "";
-				serverIn.on("data", (chunk: Buffer) => {
-					buffer += chunk.toString();
-					while (true) {
-						const match = /Content-Length: (\d+)\r\n\r\n/.exec(buffer);
-						if (!match)
-							return;
-						const headerLen = match.index + match[0].length;
-						const bodyLen = Number(match[1]);
-						if (buffer.length < headerLen + bodyLen)
-							return;
-						const msg = JSON.parse(buffer.slice(headerLen, headerLen + bodyLen)) as { id?: number; method?: string };
-						buffer = buffer.slice(headerLen + bodyLen);
-						if (msg.method === "initialize") {
-							const resp = JSON.stringify({
-								id: msg.id,
-								jsonrpc: "2.0",
-								result: {
-									capabilities: {
-										executeCommandProvider: { commands: ["dart.edit.codeAction.apply"] },
-									},
+				const reader = new StreamMessageReader(serverIn);
+				const writer = new StreamMessageWriter(serverOut);
+				reader.listen((msg: ls.Message & { id?: number; method?: string }) => {
+					if (msg.method === "initialize") {
+						void writer.write({
+							id: msg.id!,
+							jsonrpc: "2.0",
+							result: {
+								capabilities: {
+									executeCommandProvider: { commands: ["dart.edit.codeAction.apply"] },
 								},
-							});
-							serverOut.write(`Content-Length: ${Buffer.byteLength(resp)}\r\n\r\n${resp}`);
-						} else if (msg.method === "shutdown") {
-							// Simulate server being busy analyzing and killed by handleDisposeCleanup
-							// while client.stop() is waiting for the shutdown response (#5285).
-							serverOut.end();
-							serverIn.end();
-						}
+							},
+						} as ls.Message);
+					} else if (msg.method === "shutdown") {
+						// Simulate server being busy analyzing and killed by handleDisposeCleanup
+						// while client.stop() is waiting for the shutdown response (#5285).
+						serverOut.end();
+						serverIn.end();
 					}
 				});
 				return Promise.resolve({ reader: serverOut, writer: serverIn });
