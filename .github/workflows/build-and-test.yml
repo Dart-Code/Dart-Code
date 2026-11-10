@@ -362,6 +362,8 @@ jobs:
         with:
           args: >
             --root-dir ./
+            --max-retries 5
+            --retry-wait-time 3
             --exclude-all-private
             --exclude '\$\%7B[^}]+\%7D'
             --exclude "^file://"
