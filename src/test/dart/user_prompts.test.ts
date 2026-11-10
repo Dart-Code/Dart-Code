@@ -439,8 +439,7 @@ describe("Startup user prompts", () => {
 	afterEach("clearExtensionContext", () => clearAllContext(privateApi.context));
 	beforeEach("set up stubs", () => {
 		showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(noAction);
-		const getHasPrompted = sb.stub(privateApi.context.profileState, "getHasPrompted").callThrough();
-		getHasPrompted.withArgs(installFlutterExtensionPromptKey).returns(true);
+		privateApi.context.profileState.setHasPrompted(installFlutterExtensionPromptKey, true);
 		sb.stub(privateApi.webClient, "fetch").resolves(JSON.stringify({
 			endDate: "2001-01-20T09:00:00-08:00",
 			startDate: "2001-01-01T09:00:00-08:00",
