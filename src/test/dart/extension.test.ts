@@ -59,4 +59,40 @@ describe("extension", () => {
 		await activateWithoutAnalysis();
 		assert.equal(privateApi.testController?.controller.label, "Dart");
 	});
+	it("declares commandPalette entries with when conditions for all non-global commands", () => {
+		const packageJson = ext.packageJSON as {
+			contributes: {
+				commands: Array<{ command: string }>;
+				menus: {
+					commandPalette: Array<{ command: string; when?: string }>;
+				};
+			};
+		};
+		const declaredCommands = new Set(packageJson.contributes.commands.map((c) => c.command));
+		const commandPaletteEntries = packageJson.contributes.menus.commandPalette;
+		const commandPaletteMap = new Map(commandPaletteEntries.map((m) => [m.command, m]));
+
+		const missingFromCommandPalette = [...declaredCommands].filter((c) => !commandPaletteMap.has(c));
+		assert.deepStrictEqual(missingFromCommandPalette, []);
+
+		const unknownInCommandPalette = commandPaletteEntries.map((m) => m.command).filter((c) => !declaredCommands.has(c));
+		assert.deepStrictEqual(unknownInCommandPalette, []);
+
+		const allowedGlobalCommands = new Set([
+			"dart.createProject",
+			"dart.generateDiagnosticReport",
+			"flutter.createProject",
+			"flutter.doctor",
+			"flutter.upgrade",
+		]);
+		const missingWhen = commandPaletteEntries
+			.filter((m) => !m.when && !allowedGlobalCommands.has(m.command))
+			.map((m) => m.command);
+		assert.deepStrictEqual(missingWhen, []);
+
+		const visibleInternalCommands = commandPaletteEntries
+			.filter((m) => m.command.startsWith("_") && m.when !== "false")
+			.map((m) => m.command);
+		assert.deepStrictEqual(visibleInternalCommands, []);
+	});
 });
