@@ -233,6 +233,9 @@ async function runAllTests(): Promise<void> {
 	}
 }
 
+const lockHeartbeatMs = 60 * 1000;
+const staleLockMs = 5 * 60 * 1000;
+
 /**
  * Serializes VS Code downloads when a shared `cachePath` is used across
  * parallel test runs (for example across git worktrees) so concurrent runs
@@ -242,35 +245,70 @@ async function withCacheLock<T>(cachePath: string | undefined, fn: () => Promise
 	if (!cachePath)
 		return fn();
 
-	fs.mkdirSync(cachePath, { recursive: true });
-	const lockFile = path.join(cachePath, ".vscode-download.lock");
-	const staleLockMs = 10 * 60 * 1000;
+	const locksDir = path.join(cachePath, ".vscode-download-locks");
+	fs.mkdirSync(locksDir, { recursive: true });
 
-	while (true) {
+	// Give each caller its own uniquely-named ticket file so cleaning up a
+	// stale lock file can never accidentally delete another caller's new lock.
+	const ticketName = `${String(Date.now()).padStart(15, "0")}-${process.pid}-${Math.random().toString(36).slice(2, 10)}.lock`;
+	const ticketPath = path.join(locksDir, ticketName);
+	fs.writeFileSync(ticketPath, String(process.pid), { flag: "wx" });
+
+	const heartbeat = setInterval(() => {
 		try {
-			fs.writeFileSync(lockFile, String(process.pid), { flag: "wx" });
-			break;
-		} catch (e) {
-			if ((e as NodeJS.ErrnoException).code !== "EEXIST")
-				throw e;
+			const now = new Date();
+			fs.utimesSync(ticketPath, now, now);
+		} catch {
+			// Ignore transient lock contention (such as Windows AV scanners);
+			// subsequent ticks will refresh well before staleLockMs expires.
+		}
+	}, lockHeartbeatMs);
+	heartbeat.unref();
 
-			if (isLockStale(lockFile, staleLockMs)) {
-				fs.rmSync(lockFile, { force: true });
+	try {
+		// Pause briefly after creating our ticket so any concurrent caller with
+		// a timestamp <= ours has finished creating its ticket before we scan.
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
+		while (true) {
+			const entries = fs.readdirSync(locksDir)
+				.filter((name) => name.endsWith(".lock"))
+				.sort();
+
+			if (!entries.includes(ticketName)) {
+				fs.writeFileSync(ticketPath, String(process.pid));
 				continue;
 			}
 
+			let isFirstActive = true;
+			for (const entry of entries) {
+				if (entry === ticketName)
+					break;
+
+				const entryPath = path.join(locksDir, entry);
+				if (isLockStale(entryPath)) {
+					await tryDeleteLockFile(entryPath);
+					continue;
+				}
+
+				isFirstActive = false;
+				break;
+			}
+
+			if (isFirstActive)
+				break;
+
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
-	}
 
-	try {
 		return await fn();
 	} finally {
-		fs.rmSync(lockFile, { force: true });
+		clearInterval(heartbeat);
+		await tryDeleteLockFile(ticketPath);
 	}
 }
 
-function isLockStale(lockFile: string, staleLockMs: number): boolean {
+function isLockStale(lockFile: string): boolean {
 	try {
 		const stat = fs.statSync(lockFile);
 		if (Date.now() - stat.mtimeMs > staleLockMs)
@@ -287,9 +325,26 @@ function isLockStale(lockFile: string, staleLockMs: number): boolean {
 			}
 		}
 		return false;
-	} catch {
-		// File was already removed by the lock holder.
-		return false;
+	} catch (e) {
+		// Already removed by its owner or another caller.
+		return (e as NodeJS.ErrnoException).code === "ENOENT";
+	}
+}
+
+async function tryDeleteLockFile(lockFile: string): Promise<void> {
+	try {
+		await fs.promises.rm(
+			lockFile,
+			{
+				force: true,
+				recursive: true,
+				// Windows can take a little time to release file handles.
+				maxRetries: 10,
+				retryDelay: 500,
+			},
+		);
+	} catch (e) {
+		console.warn(`Failed to clean up lock file ${lockFile}: ${String(e)}`);
 	}
 }
 
