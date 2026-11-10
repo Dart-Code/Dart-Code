@@ -51,4 +51,8 @@ describe("extension", () => {
 		assert.ok(toolEnv?.FLUTTER_ROOT);
 		assert.ok(toolEnv?.FLUTTER_ROOT, privateApi.workspaceContext.sdks.flutter);
 	});
+	it("uses 'Dart & Flutter' as the TestController label", async () => {
+		await activateWithoutAnalysis();
+		assert.equal(privateApi.testController?.controller.label, "Dart & Flutter");
+	});
 });

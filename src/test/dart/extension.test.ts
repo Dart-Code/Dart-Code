@@ -55,4 +55,8 @@ describe("extension", () => {
 		const toolEnv = privateApi.getToolEnv();
 		validateExpectedEnv(toolEnv);
 	});
+	it("uses 'Dart' as the TestController label", async () => {
+		await activateWithoutAnalysis();
+		assert.equal(privateApi.testController?.controller.label, "Dart");
+	});
 });

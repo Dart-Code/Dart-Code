@@ -25,7 +25,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private testRuns: Record<string, { run: vs.TestRun, wasStartedByTestRunner: boolean } | undefined> = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, public readonly discoverer: TestDiscoverer | undefined) {
-		const controller = this.controller = vs.tests.createTestController("dart", "Dart & Flutter");
+		const controllerLabel = model.workspaceContext.hasAnyFlutterProjects ? "Dart & Flutter" : "Dart";
+		const controller = this.controller = vs.tests.createTestController("dart", controllerLabel);
 		this.coverageParser = new CoverageParser(logger);
 		this.disposables.push(controller);
 		this.disposables.push(model.onDidChangeTreeData((node) => this.onDidChangeTreeData(node)));

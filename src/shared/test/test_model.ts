@@ -221,7 +221,7 @@ export class TestModel {
 
 	public constructor(
 		private readonly logger: Logger,
-		private readonly workspaceContext: WorkspaceContext,
+		public readonly workspaceContext: WorkspaceContext,
 		private readonly config: { dynamicTestTracking: boolean; showSkippedTests: boolean },
 		private readonly getWorkspaceFolders: () => Array<{ name: string, path: string, uri: URI }>,
 		private readonly getWorkspaceFolder: (projectPath: string) => { name: string, path: string, uri: URI } | undefined,
