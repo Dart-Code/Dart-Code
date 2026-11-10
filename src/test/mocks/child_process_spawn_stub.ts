@@ -16,6 +16,13 @@ export interface SpawnedProcessCall {
 	args?: string[];
 }
 
+export interface FakeSpawnResult {
+	exitCode?: number;
+	stdout?: string;
+	stderr?: string;
+	error?: Error;
+}
+
 export interface FakeProcess extends EventEmitter {
 	exitCode?: number;
 	kill: () => boolean;
@@ -36,24 +43,30 @@ export interface FakeProcess extends EventEmitter {
  * Only invocations matching `shouldFake` are faked so other processes (like
  * the analysis server) are still spawned normally.
  *
- *   const spawn = ChildProcessSpawnStub((_bin, args) => args[0] === "pub");
+ *   const spawn = ChildProcessSpawnStub.dartPub();
  *   await vs.commands.executeCommand(...);
  *   spawn.assertCalls([{ cwd: folder, bin: executable, args: ["pub", "add", "x"] }]);
  */
 export class ChildProcessSpawnStub {
 	private readonly fakedCalls: SpawnedProcessCall[] = [];
 
-	constructor(
-		shouldFake: (bin: string, args?: string[]) => boolean,
-		{ stdout, exitCode = 0 }: { stdout?: string, exitCode?: number } = {},
+	private constructor(
+		shouldFake: (bin: string, args: string[], cwd: string | undefined) => boolean | FakeSpawnResult | undefined,
+		defaultResult: FakeSpawnResult = {},
 	) {
 		const realSpawn = childProcess.spawn as (command: string, args?: readonly string[], options?: SpawnOptions) => ChildProcess;
 
 		sb.stub(childProcess, "spawn").callsFake((bin: string, args?: string[], opts?: SpawnOptions): unknown => {
-			if (!shouldFake(bin, args))
+			// On Windows, safeSpawn wraps .bat/.cmd binary paths and arguments in double quotes.
+			const cleanBin = ChildProcessSpawnStub.unquote(bin);
+			const cleanArgs = (args ?? []).map((a) => ChildProcessSpawnStub.unquote(a));
+			const cwd = opts?.cwd?.toString();
+			const fakeResult = shouldFake(cleanBin, cleanArgs, cwd);
+			if (!fakeResult)
 				return realSpawn(bin, args, opts);
 
-			this.fakedCalls.push({ cwd: opts?.cwd?.toString(), bin, args });
+			const res = typeof fakeResult === "boolean" ? defaultResult : fakeResult;
+			this.fakedCalls.push({ cwd, bin, args });
 
 			const proc = new EventEmitter() as FakeProcess;
 			proc.pid = 12345;
@@ -61,12 +74,29 @@ export class ChildProcessSpawnStub {
 			proc.stdout.setEncoding = () => undefined;
 			proc.stderr = new EventEmitter();
 			proc.stderr.setEncoding = () => undefined;
-			proc.kill = () => true;
+			let isKilled = false;
+			proc.kill = () => {
+				isKilled = true;
+				return true;
+			};
 
 			// Simulate the process completing right away.
 			setImmediate(() => {
-				if (stdout)
-					proc.stdout.emit("data", Buffer.from(stdout));
+				if (res.error) {
+					proc.emit("error", res.error);
+					return;
+				}
+				if (isKilled) {
+					proc.exitCode = 1;
+					proc.emit("exit", null, "SIGTERM");
+					proc.emit("close", null, "SIGTERM");
+					return;
+				}
+				if (res.stdout)
+					proc.stdout.emit("data", Buffer.from(res.stdout));
+				if (res.stderr)
+					proc.stderr.emit("data", Buffer.from(res.stderr));
+				const exitCode = res.exitCode ?? 0;
 				proc.exitCode = exitCode;
 				proc.emit("exit", exitCode, null);
 				proc.emit("close", exitCode, null);
@@ -74,6 +104,10 @@ export class ChildProcessSpawnStub {
 
 			return proc;
 		});
+	}
+
+	static unquote(value: string): string {
+		return value.replace(/^"(.*)"$/, "$1");
 	}
 
 	static includesArg(args: string[] | undefined, expectedArg: string): boolean {
@@ -117,12 +151,37 @@ export class ChildProcessSpawnStub {
 		);
 	}
 
+	static flutterHelp(onRun?: () => void) {
+		return new ChildProcessSpawnStub((bin, args) => {
+			if (ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "--help")) {
+				onRun?.();
+				return true;
+			}
+			return false;
+		});
+	}
+
 	static flutterPub(options?: { stdout?: string, exitCode?: number }) {
 		return new ChildProcessSpawnStub((bin, args) => ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "pub"), options);
 	}
 
 	static dartOrFlutterPub(options?: { stdout?: string, exitCode?: number }) {
 		return new ChildProcessSpawnStub((bin, args) => (ChildProcessSpawnStub.isExecutable(bin, executableNames.dart) || ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter)) && ChildProcessSpawnStub.includesArg(args, "pub"), options);
+	}
+
+	static gitCloneFlutter(options?: {
+		versionResult?: () => FakeSpawnResult;
+		cloneResult?: () => FakeSpawnResult;
+	}) {
+		return new ChildProcessSpawnStub((bin, args) => {
+			if (ChildProcessSpawnStub.includesArg(args, "--version"))
+				return options?.versionResult ? options.versionResult() : { exitCode: 0, stdout: "git version 2.40.0" };
+			if (ChildProcessSpawnStub.includesArg(args, "clone"))
+				return options?.cloneResult ? options.cloneResult() : { exitCode: 0 };
+			if (ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter) && ChildProcessSpawnStub.includesArg(args, "--help"))
+				return { exitCode: 0 };
+			return undefined;
+		});
 	}
 
 	public get calls(): SpawnedProcessCall[] {

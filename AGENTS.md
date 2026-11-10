@@ -32,6 +32,7 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 - Code in `src/shared/` must not contain global/singleton state, and `instanceof` must not be used on classes from `src/shared/` across the extension/test boundary (for example, checking `instanceof` in `src/test/` on an object created by the extension via `privateApi`, or passing a class instance constructed in `src/test/` into `privateApi`), because `src/extension/` is bundled with Webpack (`out/dist/`) while tests run unpacked (`out/src/`), which duplicates module definitions and class constructors across the two environments. Using `instanceof` on `src/shared/` classes within the same side of the boundary (such as inside `src/shared/` or `src/extension/` on extension-owned instances) is fine.
 - All extension settings use the format `dart.*` or `dart.flutter*` and are accessed through a wrapper in `src/extension/config.ts`.
 - In tests, use the `defer()` helper (in `src/test/helpers.ts`) instead of `try`/`finally` when cleaning up or resetting state at the end of a test.
+- In tests that stub `child_process.spawn`, always use static factory methods on `ChildProcessSpawnStub` (in `src/test/mocks/child_process_spawn_stub.ts`) rather than calling `new ChildProcessSpawnStub()` or `sb.stub(childProcess, "spawn")` directly. Add a new static method to `ChildProcessSpawnStub` when stubbing a new command or workflow.
 
 ### Code Style
 
