@@ -1095,15 +1095,15 @@
 				},
 				{
 					"command": "flutter.inspectWidget",
-					"when": "inDebugMode && debugType == dart && !dart-code:flutter.isInspectingWidget"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.inspector.show && !dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.inspectWidget.autoCancel",
-					"when": "inDebugMode && debugType == dart && !dart-code:flutter.isInspectingWidget"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.inspector.show && !dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.cancelInspectWidget",
-					"when": "inDebugMode && debugType == dart && dart-code:flutter.isInspectingWidget"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.inspector.show && dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.hotRestart",
