@@ -407,6 +407,17 @@ describe("InitialLaunchJsonDebugConfigProvider (Flutter)", () => {
 			},
 		]);
 	});
+
+	it("falls back to default Dart & Flutter config when folder is undefined or has no projects", async () => {
+		const undefinedFolderConfigs = await privateApi.initialDebugProvider.provideDebugConfigurations!(undefined);
+		assert.deepStrictEqual(undefinedFolderConfigs, [
+			{
+				name: "Dart & Flutter",
+				request: "launch",
+				type: "dart",
+			},
+		]);
+	});
 });
 
 describe("DynamicDebugConfigProvider (Flutter)", () => {

@@ -219,6 +219,7 @@ export interface InternalExtensionApi {
 		uninstall(packageID: string): Promise<void>;
 	};
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>) => SpawnedProcess;
+	showUserPrompts: () => Promise<void>;
 	testController: {
 		controller: TestController;
 		runTests(debug: boolean, includeCoverage: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>;

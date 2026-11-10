@@ -90,7 +90,7 @@ import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { SdkUtils } from "./sdk/utils";
 import { VsCodeTestController } from "./test/vs_test_controller";
-import { handleNewProjects, showUserPrompts } from "./user_prompts";
+import { handleNewProjects, showUserPrompts as showUserPromptsImpl } from "./user_prompts";
 import * as util from "./utils";
 import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
@@ -442,7 +442,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 	}
 
-	const loggingCommands = new LoggingCommands(logger, context.logPath);
+	const loggingCommands = new LoggingCommands(logger, context.logPath, workspaceContext);
 	context.subscriptions.push(loggingCommands);
 
 
@@ -554,7 +554,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
 	// Also the providers for the initial configs.
-	const initialDebugProvider = new InitialLaunchJsonDebugConfigProvider(logger);
+	const initialDebugProvider = new InitialLaunchJsonDebugConfigProvider(logger, workspaceContext);
 	const dynamicDebugProvider = new DynamicDebugConfigProvider(logger, deviceManager);
 	if (vs.DebugConfigurationProviderTriggerKind) { // Temporary workaround for GitPod/Theia not having this enum.
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", initialDebugProvider, vs.DebugConfigurationProviderTriggerKind.Initial));
@@ -672,8 +672,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	// Prompt user for any special config we might want to set.
+	const showUserPrompts = () => showUserPromptsImpl(logger, extContext, webClient, analytics, workspaceContext, dartCapabilities, extensionRecommendations);
 	if (!isRestart)
-		void showUserPrompts(logger, extContext, webClient, analytics, workspaceContext, dartCapabilities, extensionRecommendations);
+		void showUserPrompts();
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);
@@ -780,6 +781,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			pubGlobal,
 			safeToolSpawn,
 			sdkUtils,
+			showUserPrompts,
 			testController: vsCodeTestController,
 			testCoordinator,
 			testDiscoverer,
