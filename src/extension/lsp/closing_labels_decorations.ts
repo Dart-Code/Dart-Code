@@ -54,20 +54,18 @@ export class LspClosingLabelsDecorations implements IAmDisposable {
 		this.closingLabelsPrefix = config.closingLabelsPrefix;
 		this.buildDecorationType();
 
-		void analyzer.start().then(() => {
-			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
-				const uri = vs.Uri.parse(n.uri);
-				this.closingLabels.set(uri, n);
-				// Fire an update if it was for a visible editor.
-				const editor = findVisibleEditor(uri);
-				if (editor) {
-					// Delay this so if we're getting lots of updates we don't flicker.
-					if (this.updateTimeouts.has(uri))
-						clearTimeout(this.updateTimeouts.get(uri));
-					this.updateTimeouts.set(uri, setTimeout(() => this.update(uri), 500));
-				}
-			});
-		});
+		this.subscriptions.push(this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
+			const uri = vs.Uri.parse(n.uri);
+			this.closingLabels.set(uri, n);
+			// Fire an update if it was for a visible editor.
+			const editor = findVisibleEditor(uri);
+			if (editor) {
+				// Delay this so if we're getting lots of updates we don't flicker.
+				if (this.updateTimeouts.has(uri))
+					clearTimeout(this.updateTimeouts.get(uri));
+				this.updateTimeouts.set(uri, setTimeout(() => this.update(uri), 500));
+			}
+		}));
 
 		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors(() => this.updateAll()));
 		this.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => {

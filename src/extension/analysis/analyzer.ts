@@ -79,11 +79,11 @@ export class LspAnalyzer extends Analyzer {
 				// which kills the server process after 3s (closing stdio and rejecting `clientStartPromise`).
 				try {
 					await this.clientStartPromise;
+					if (this.client.state === ls.State.Running)
+						await this.client.stop();
 				} catch {
-					// Ignore startup errors if the server failed to start or was killed during disposal.
+					// Ignore startup/shutdown errors if the server failed to start or was killed during disposal.
 				}
-				if (this.client.state === ls.State.Running)
-					await this.client.stop();
 			},
 		});
 		this.disposables.push(this.client.onDidChangeState((e) => {
@@ -146,6 +146,8 @@ export class LspAnalyzer extends Analyzer {
 				}
 			});
 			this.onReadyCompleter.resolve();
+		}).catch(() => {
+			// Handled by initializationFailedHandler / DartErrorHandler.
 		});
 	}
 
@@ -897,8 +899,8 @@ class DartErrorHandler implements ls.ErrorHandler {
 		// If the connection closed while the server was still starting/initializing (for example,
 		// the server process exited before responding to `initialize`), `vscode-languageclient`
 		// fails `initialize` and transitions to `StartFailed`. Even if `closed()` returned `Restart`,
-		// `vscode-languageclient`'s `start()` returns the already-rejected `_onStart` promise when
-		// called while `initialize` is still unwinding, so it cannot recover automatically.
+		// the first `start()`'s `catch` block still transitions `$state` to `StartFailed` while
+		// `initialize` unwinds, so it cannot recover automatically.
 		// Note: `checkDuringStartup` checks `client.state` (`Starting` or `StartFailed`) rather than
 		// `client.initializeResult` because `vscode-languageclient` only clears `_initializeResult`
 		// on `stop()`, not when restarting after a crash.
