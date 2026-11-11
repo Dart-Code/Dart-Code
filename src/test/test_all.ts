@@ -43,7 +43,11 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		fs.mkdirSync(logPath);
 
 	const codeVersion = (!process.env.BUILD_VERSION || process.env.BUILD_VERSION === "stable") ? "stable" : "insiders";
-	const cachePath = process.env.VSCODE_TEST_CACHE_PATH
+	// Only share VSCODE_TEST_CACHE_PATH for stable builds, which extract into
+	// versioned folders (`vscode-<platform>-<x.y.z>`). Insiders extracts into an
+	// unversioned `vscode-<platform>-insiders` folder and deletes/replaces it
+	// in-place when updated, which could collide with a running test process.
+	const cachePath = codeVersion === "stable" && process.env.VSCODE_TEST_CACHE_PATH
 		? path.resolve(process.env.VSCODE_TEST_CACHE_PATH)
 		: undefined;
 
@@ -97,7 +101,6 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 	try {
 		const res = await vstest.runTests({
 			vscodeExecutablePath: ideOverride,
-			cachePath,
 			extensionDevelopmentPath: cwd,
 			extensionTestsEnv: { ...testEnv, ...env },
 			extensionTestsPath: testFolder,
@@ -302,11 +305,18 @@ async function acquireCacheLock(locksDir: string): Promise<() => Promise<void>> 
 		// its file before scanning and retains it until exiting, at most one caller
 		// can observe itself as the sole active lock; any concurrent or delayed
 		// caller will see multiple active files and back off.
-		const active = await getActiveLocks(locksDir);
-		if (active.size === 1 && active.has(lockName))
-			return releaseCandidate;
+		let acquired = false;
+		try {
+			const active = await getActiveLocks(locksDir);
+			if (active.size === 1 && active.has(lockName)) {
+				acquired = true;
+				return releaseCandidate;
+			}
+		} finally {
+			if (!acquired)
+				await releaseCandidate();
+		}
 
-		await releaseCandidate();
 		await new Promise((resolve) => setTimeout(resolve, crypto.randomInt(50, 250)));
 	}
 }
