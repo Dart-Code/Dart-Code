@@ -1022,6 +1022,8 @@ describe("analyzer", () => {
 			assert.ok(infoSpy.calledWithMatch("Analysis server stdout errored: Error: read ECONNRESET"));
 			assert.ok(infoSpy.calledWithMatch("Analysis server stderr errored: Error: stream destroyed"));
 			assert.ok(errorSpy.calledWithMatch("Analysis server errored: Error: spawn error"));
+
+			await new Promise((resolve) => proc.once("close", resolve));
 		});
 	});
 });

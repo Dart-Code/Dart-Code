@@ -118,6 +118,7 @@ describe("flutter daemon", () => {
 		const originalInitialized = internals.daemonInitialized;
 		const originalTimerId = internals.daemonInitializedTimerId;
 		defer("restore daemon shutdown state", () => {
+			clearTimeout(internals.daemonInitializedTimerId);
 			internals.isShuttingDown = originalIsShuttingDown;
 			internals.daemonInitializedCompleter = originalCompleter;
 			internals.daemonInitialized = originalInitialized;
@@ -135,6 +136,8 @@ describe("flutter daemon", () => {
 		const emulatorsPromise = daemon.getEmulators();
 		const platformsPromise = daemon.getSupportedPlatforms("/fake/project");
 
+		// Safe on the shared daemon instance because beforeEach resets startTime = undefined
+		// (!hasStarted), so shutdown() returns early after clearing startup timers.
 		await daemon.shutdown();
 
 		assert.deepStrictEqual(await emulatorsPromise, []);

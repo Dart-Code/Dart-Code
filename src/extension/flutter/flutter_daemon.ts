@@ -42,11 +42,11 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 		this.registerForDaemonConnected((e) => {
 			this.additionalPidsToTerminate.push(e.pid);
-			this.capabilities.version = e.version;
-			void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
-
 			if (this.isShuttingDown || this.isDisposed)
 				return;
+
+			this.capabilities.version = e.version;
+			void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
 
 			// Delay marking as initialized for a few seconds to see whether it helps prevent
 			// the first emulator requests from hanging.
@@ -121,7 +121,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		});
 	}
 
-	private clearStartupTimers() {
+	private clearTimers() {
+		clearInterval(this.pingIntervalId);
+		this.pingIntervalId = undefined;
 		clearTimeout(this.daemonInitializedTimerId);
 		this.daemonInitializedTimerId = undefined;
 		this.daemonInitializedCompleter.resolve();
@@ -133,7 +135,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.handleUncleanExit();
 
 		super.handleExit(code, signal);
-		this.clearStartupTimers();
+		this.clearTimers();
 	}
 
 	private handleUncleanExit() {
@@ -176,10 +178,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async dispose(): Promise<void> {
 		this.isShuttingDown = true;
-		this.clearStartupTimers();
-
-		if (this.pingIntervalId)
-			clearInterval(this.pingIntervalId);
+		this.clearTimers();
 
 		await super.dispose();
 	}
@@ -346,8 +345,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async shutdown(): Promise<void> {
 		this.isShuttingDown = true;
-		this.clearStartupTimers();
-		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited || this.isDisposed)
+		this.clearTimers();
+		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited || this.isDisposed || !this.process?.stdin.writable)
 			return resolvedPromise;
 		// It's possible this shutdown will never complete, because if dispose() is also called, the process will be terminated.
 		// Since this is only called during shutdown, we should not hang here, because it will slow down VS Code exiting.
