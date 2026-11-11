@@ -301,6 +301,8 @@ const suppressOutputPatterns = [
 	/--trace-deprecation/i,
 	/workbench#open\(\)/i,
 	/\[chat-stt\]/i,
+	/\[node-compile-cache\]/i,
+	/\[File Watcher \(node\.js\)\] Watcher shutdown because watched path got deleted/i,
 	// DialogService refusales appear twice, once with and once without the prefix, so remove the dupe
 	/Error: DialogService/i,
 	// Verbose stack traces from VS Code errors
@@ -312,6 +314,7 @@ const suppressOutputPatterns = [
 	/Unknown channel: agentHost/i,
 	/AgentHost:renderer/i,
 	/\[AgentHost\]/i,
+	/\[AgentHostCustomizationMarketplace\]/i,
 	/\[RemoteAgentHost\]/i,
 	/\[ChatModelSelection\]/i,
 	// Multiline claude spam.
