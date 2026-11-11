@@ -68,36 +68,75 @@ describe("stdio_service", () => {
 		});
 	});
 
-	it("handles error events on stdin, stdout, and stderr without throwing", () => {
+	it("rejects active requests and closes stdin when stdin emits EPIPE while running", async () => {
 		const proc = createFakeSpawnedProcess();
 		service.attachFakeProcess(proc);
 
+		const inFlight = service.callSendRequest("test.inFlight");
+		proc.stdin.emit("error", Object.assign(new Error("write EPIPE"), { code: "EPIPE" }));
+
+		await assert.rejects(inFlight, /Process stdin errored: Error: write EPIPE/);
+		assert.equal(proc.stdin.writable, false);
+
+		// Subsequent requests see closed stdin immediately.
+		await assert.rejects(
+			() => service.callSendRequest("test.afterEpipe"),
+			/Tried to call "test\.afterEpipe" but process has already exited/,
+		);
+
 		assert.doesNotThrow(() => {
-			proc.stdin.emit("error", Object.assign(new Error("write EPIPE"), { code: "EPIPE" }));
 			proc.stdout.emit("error", Object.assign(new Error("read ECONNRESET"), { code: "ECONNRESET" }));
 			proc.stderr.emit("error", Object.assign(new Error("stream destroyed"), { code: "ERR_STREAM_DESTROYED" }));
 		});
 	});
 
-	it("guards sendRequest and sendMessage when disposed and cancels active requests", async () => {
+	it("rejects active requests when process closes unexpectedly", async () => {
+		const proc = createFakeSpawnedProcess();
+		service.attachFakeProcess(proc);
+
+		const inFlight = service.callSendRequest("test.inFlight");
+		proc.emit("exit", 1, null);
+		proc.emit("close", 1, null);
+
+		await assert.rejects(inFlight, /closed unexpectedly/);
+	});
+
+	it("rejects sendRequest if stdin.write throws synchronously", async () => {
+		const proc = createFakeSpawnedProcess();
+		sb.stub(proc.stdin, "write").throws(new Error("sync write failure"));
+		service.attachFakeProcess(proc);
+
+		await assert.rejects(
+			() => service.callSendRequest("test.syncThrow"),
+			/sync write failure/,
+		);
+	});
+
+	it("allows buffered responses to resolve during dispose and cancels remaining requests on close", async () => {
 		const proc = createFakeSpawnedProcess();
 		const writeSpy = sb.spy(proc.stdin, "write");
 		service.attachFakeProcess(proc);
 
-		let inFlightResolved = false;
-		let inFlightRejected = false;
-		void service.callSendRequest("test.inFlight").then(
-			() => { inFlightResolved = true; },
-			() => { inFlightRejected = true; },
+		const bufferedReq = service.callSendRequest<undefined, string>("test.buffered");
+		let unrespondedResolved = false;
+		let unrespondedRejected = false;
+		void service.callSendRequest("test.unresponded").then(
+			() => { unrespondedResolved = true; },
+			() => { unrespondedRejected = true; },
 		);
-		assert.equal(writeSpy.callCount, 1);
+		assert.equal(writeSpy.callCount, 2);
 
 		await service.dispose();
 
-		// Late response to a cancelled request should be ignored without resolving or rejecting.
+		// A response already buffered in stdout before "close" still resolves its caller.
 		await service.handleMessage(`${JSON.stringify({ id: "1", result: "ok" })}\n`);
-		assert.equal(inFlightResolved, false);
-		assert.equal(inFlightRejected, false);
+		assert.equal(await bufferedReq, "ok");
+
+		// Once stdio closes, any remaining requests are cancelled without rejecting.
+		proc.emit("close", 0, "SIGTERM");
+		await service.handleMessage(`${JSON.stringify({ id: "2", result: "too-late" })}\n`);
+		assert.equal(unrespondedResolved, false);
+		assert.equal(unrespondedRejected, false);
 
 		// Post-dispose sendRequest rejects without calling notifyRequestAfterExit or writing to stdin.
 		await assert.rejects(
@@ -106,8 +145,8 @@ describe("stdio_service", () => {
 		);
 		assert.equal(service.notifyRequestAfterExitCount, 0);
 
-		service.callSendMessage(`{"id":"2"}\r\n`);
-		assert.equal(writeSpy.callCount, 1);
+		service.callSendMessage(`{"id":"3"}\r\n`);
+		assert.equal(writeSpy.callCount, 2);
 
 		// createProcess after dispose does not spawn a new process.
 		service.callCreateProcess("nonexistent-binary");

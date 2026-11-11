@@ -19,6 +19,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private processExitCompleter = new PromiseCompleter<ProcessExitCodes>();
 	public processExit = this.processExitCompleter.promise;
 	private description: string | undefined;
+	protected isShuttingDown = false;
 	protected isDisposed = false;
 
 	constructor(
@@ -50,6 +51,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			this.logger.error(`Failed to spawn process! ${String(e)}`);
 			this.handleError(e);
 			this.handleExit(null, null);
+			this.handleClose(null, null);
 		}
 
 		if (this.process) {
@@ -63,10 +65,25 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	protected registerProcessListeners(proc: SpawnedProcess) {
 		proc.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
 		proc.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
-		proc.stdin.on("error", (error) => this.logTraffic(`Process stdin errored! ${String(error)}`));
+		proc.stdin.on("error", (error) => this.handleStdInError(proc, error));
 		proc.stdout.on("error", (error) => this.logTraffic(`Process stdout errored! ${String(error)}`));
 		proc.stderr.on("error", (error) => this.logTraffic(`Process stderr errored! ${String(error)}`));
 		proc.on("exit", (code, signal) => this.handleExit(code, signal));
+		proc.on("close", (code, signal) => this.handleClose(code, signal));
+	}
+
+	protected handleStdInError(proc: SpawnedProcess, error: unknown) {
+		this.logTraffic(`Process stdin errored! ${String(error)}`);
+		proc.stdin.destroy();
+		if (!this.isShuttingDown && !this.isDisposed)
+			this.rejectAllRequests(new Error(`Process stdin errored: ${String(error)}`));
+	}
+
+	protected handleClose(code: number | null, signal: NodeJS.Signals | null) {
+		if (!this.isShuttingDown && !this.isDisposed)
+			this.rejectAllRequests(new Error(`Process ${this.description} closed unexpectedly (${code}, ${signal})`));
+		else
+			this.cancelAllRequests();
 	}
 
 	/// Flutter may send only \r as a line terminator for improved terminal output
@@ -127,7 +144,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				reject(new Error(`Tried to call "${method}" after service was disposed`));
 				return;
 			}
-			if (this.processExited || (this.process && (this.process.stdin.destroyed || this.process.stdin.writableEnded))) {
+			if (this.processExited || !this.process?.stdin.writable) {
 				this.notifyRequestAfterExit();
 				reject(new Error(`Tried to call "${method}" but process has already exited with code ${this.process?.exitCode}`));
 				return;
@@ -140,12 +157,25 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			const json = this.messagesWrappedInBrackets
 				? "[" + JSON.stringify(req) + "]\r\n"
 				: JSON.stringify(req) + "\r\n";
-			this.sendMessage(json);
+			try {
+				this.sendMessage(json);
+			} catch (e) {
+				delete this.activeRequests[id.toString()];
+				reject(e instanceof Error ? e : new Error(String(e)));
+			}
 		});
 	}
 
+	protected rejectAllRequests(error: Error) {
+		for (const key of Object.keys(this.activeRequests)) {
+			const handler = this.activeRequests[key];
+			delete this.activeRequests[key];
+			if (handler && handler !== "CANCELLED")
+				void handler[1](error);
+		}
+	}
+
 	public cancelAllRequests() {
-		// TODO(dantup): Consider/test rejecting all active requests?
 		Object.keys(this.activeRequests).forEach((key) => this.activeRequests[key] = "CANCELLED");
 	}
 
@@ -155,7 +185,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			this.logTraffic(`  (not sent: disposed)`);
 		else if (!this.process)
 			this.logTraffic(`  (not sent: no process)`);
-		else if (this.processExited || this.process.stdin.destroyed || this.process.stdin.writableEnded)
+		else if (this.processExited || !this.process.stdin.writable)
 			this.logTraffic(`  (not sent: stdin closed)`);
 		else
 			this.process.stdin.write(json);
@@ -331,7 +361,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	public async dispose(): Promise<void> {
 		this.isDisposed = true;
-		this.cancelAllRequests();
+		this.isShuttingDown = true;
 
 		this.logTraffic(`Process ${this.description} is being disposed`);
 		for (const pid of this.additionalPidsToTerminate) {

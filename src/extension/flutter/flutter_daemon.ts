@@ -25,7 +25,6 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private get hasStarted() { return !!this.startTime; };
 	private hasShownTerminatedError = false;
 	private hasLoggedDaemonTimeout = false;
-	private isShuttingDown = false;
 	public startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonResponsiveCompleter = new PromiseCompleter<void>();
 	private daemonResponsive = this.daemonResponsiveCompleter.promise;
@@ -197,8 +196,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 					specificLog: config.flutterDaemonLogFile,
 					restartReason: ExtensionRestartReason.FlutterDaemonTerminatedSend,
 				});
-				throw e;
 			}
+			throw e;
 		}
 	}
 

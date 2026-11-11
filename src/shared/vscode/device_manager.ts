@@ -678,19 +678,22 @@ export class FlutterDeviceManager implements IAmDisposable {
 		// if (!name) bail() // Pressing ENTER doesn't work, but escape does, so if
 		// no name, user probably wanted to cancel
 		const name: string | undefined = undefined;
-		const create = this.daemon.createEmulator(name);
-		void vs.window.withProgress({
-			location: vs.ProgressLocation.Notification,
-			title: `${`Creating emulator ${name ?? ""}`.trim()}...`,
-		}, () => create);
-		const res = await create;
-		if (res.success) {
-			return this.launchEmulator({
-				id: res.emulatorName,
-				name: res.emulatorName,
-			}, false);
-		} else {
-			void vs.window.showErrorMessage(res.error);
+		try {
+			const res = await vs.window.withProgress({
+				location: vs.ProgressLocation.Notification,
+				title: `${`Creating emulator ${name ?? ""}`.trim()}...`,
+			}, () => this.daemon.createEmulator(name));
+			if (res.success) {
+				return this.launchEmulator({
+					id: res.emulatorName,
+					name: res.emulatorName,
+				}, false);
+			} else {
+				void vs.window.showErrorMessage(res.error);
+				return false;
+			}
+		} catch (e) {
+			void vs.window.showErrorMessage(String(e));
 			return false;
 		}
 	}
