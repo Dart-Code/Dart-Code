@@ -112,6 +112,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	// has forwarded this port to the remote machine where the Dart extension is running. Netcat is used to access the local devices,
 	// instead of starting another daemon process on the remote machine.
 	protected createNcProcess(port: number) {
+		this.description = "nc";
 		this.process = child_process.spawn("nc", ["localhost", port.toString()]) satisfies SpawnedProcess;
 
 		this.registerProcessListeners(this.process);

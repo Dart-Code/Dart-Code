@@ -694,6 +694,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 			}
 		} catch (e) {
 			this.logger.error(e);
+			void vs.window.showErrorMessage("Failed to create emulator");
 			return false;
 		}
 	}

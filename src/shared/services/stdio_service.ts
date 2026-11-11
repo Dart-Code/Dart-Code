@@ -18,7 +18,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	protected processExited = false;
 	private processExitCompleter = new PromiseCompleter<ProcessExitCodes>();
 	public processExit = this.processExitCompleter.promise;
-	private description: string | undefined;
+	protected description: string | undefined;
 	protected isShuttingDown = false;
 	protected isDisposed = false;
 
@@ -81,7 +81,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected handleClose(code: number | null, signal: NodeJS.Signals | null) {
 		if (!this.isShuttingDown && !this.isDisposed)
-			this.rejectAllRequests(new Error(`Process ${this.description} closed unexpectedly (${code}, ${signal})`));
+			this.rejectAllRequests(new Error(`Process${this.description ? ` ${this.description}` : ""} closed unexpectedly (${code}, ${signal})`));
 		else
 			this.cancelAllRequests();
 	}

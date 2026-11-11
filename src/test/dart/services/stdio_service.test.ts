@@ -98,7 +98,7 @@ describe("stdio_service", () => {
 		proc.emit("exit", 1, null);
 		proc.emit("close", 1, null);
 
-		await assert.rejects(inFlight, /closed unexpectedly/);
+		await assert.rejects(inFlight, /^Error: Process closed unexpectedly \(1, null\)$/);
 	});
 
 	it("rejects sendRequest if stdin.write throws synchronously", async () => {
