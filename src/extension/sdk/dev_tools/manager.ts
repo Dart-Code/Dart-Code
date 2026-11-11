@@ -555,7 +555,7 @@ export class DevToolsManager implements IAmDisposable {
 				if (this.debugCommands) {
 					this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(async (session) => {
 						if (session.vmServiceUri) {
-							service.vmRegister({ uri: session.vmServiceUri }).then(undefined, (e) => this.logger.error(e));
+							service.vmRegister({ uri: session.vmServiceUri }).catch((e) => this.logger.error(e));
 							// Also reconnect any orphaned DevTools views.
 							await this.reconnectDisconnectedEmbeddedViews(session as DartDebugSessionInformation & { vmServiceUri: string });
 						}
@@ -565,7 +565,7 @@ export class DevToolsManager implements IAmDisposable {
 				// And send any existing sessions we have.
 				for (const session of debugSessions) {
 					if (session.vmServiceUri)
-						service.vmRegister({ uri: session.vmServiceUri }).then(undefined, (e) => this.logger.error(e));
+						service.vmRegister({ uri: session.vmServiceUri }).catch((e) => this.logger.error(e));
 				}
 
 				// Finally, trigger a check of extensions
@@ -754,7 +754,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		return this.subscribe(this.serverStartedSubscriptions, subscriber);
 	}
 
-	public vmRegister(request: { uri: string }): Thenable<unknown> {
+	public vmRegister(request: { uri: string }): Promise<unknown> {
 		return this.sendRequest("vm.register", request);
 	}
 
