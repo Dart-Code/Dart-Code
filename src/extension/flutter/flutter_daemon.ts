@@ -145,10 +145,12 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private handleUncleanExit() {
 		clearInterval(this.pingIntervalId);
 		this.pingIntervalId = undefined;
+		if (this.hasShownTerminatedError)
+			return;
 		if (this.runIfNoDevices) {
 			this.hasShownTerminatedError = true;
 			this.runIfNoDevices();
-		} else if (!this.hasShownTerminatedError) {
+		} else {
 			this.showTerminatedError(this.hasStarted ? "has terminated" : "failed to start");
 		}
 	}
