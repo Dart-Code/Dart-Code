@@ -145,4 +145,93 @@ describe("flutter daemon", () => {
 		assert.equal(internals.daemonInitializedTimerId, undefined);
 		assert.equal(writeSpy.notCalled, true);
 	});
+
+	it("prompts once via startPing on clean remote exit and suppresses duplicate ping prompt on unclean exit", async () => {
+		const clock = sb.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+		defer("restore fake timers", () => clock.restore());
+
+		interface PingDaemonInternals {
+			isShuttingDown: boolean;
+			processExited: boolean;
+			processExitCompleter: PromiseCompleter<{ code: number | null, signal: NodeJS.Signals | null }>;
+			processExit: Promise<{ code: number | null, signal: NodeJS.Signals | null }>;
+			daemonInitializedCompleter: PromiseCompleter<void>;
+			daemonInitialized: Promise<void>;
+			daemonInitializedTimerId?: NodeJS.Timeout;
+			hasShownTerminatedError: boolean;
+			lastShownTerminatedError?: number;
+			pingIntervalId?: NodeJS.Timeout;
+			startPing: (customMessage?: string) => void;
+			handleExit: (code: number | null, signal: NodeJS.Signals | null) => void;
+		}
+		const internals = daemon as unknown as PingDaemonInternals;
+		const originalIsShuttingDown = internals.isShuttingDown;
+		const originalProcessExited = internals.processExited;
+		const originalProcessExitCompleter = internals.processExitCompleter;
+		const originalProcessExit = internals.processExit;
+		const originalInitializedCompleter = internals.daemonInitializedCompleter;
+		const originalInitialized = internals.daemonInitialized;
+		const originalTimerId = internals.daemonInitializedTimerId;
+		const originalHasShownTerminatedError = internals.hasShownTerminatedError;
+		const originalLastShownTerminatedError = internals.lastShownTerminatedError;
+		const originalPingIntervalId = internals.pingIntervalId;
+		defer("restore daemon ping state", () => {
+			clearInterval(internals.pingIntervalId);
+			internals.isShuttingDown = originalIsShuttingDown;
+			internals.processExited = originalProcessExited;
+			internals.processExitCompleter = originalProcessExitCompleter;
+			internals.processExit = originalProcessExit;
+			internals.daemonInitializedCompleter = originalInitializedCompleter;
+			internals.daemonInitialized = originalInitialized;
+			internals.daemonInitializedTimerId = originalTimerId;
+			internals.hasShownTerminatedError = originalHasShownTerminatedError;
+			internals.lastShownTerminatedError = originalLastShownTerminatedError;
+			internals.pingIntervalId = originalPingIntervalId;
+		});
+
+		const showInfo = sb.stub(vs.window, "showInformationMessage").resolves(undefined);
+		const showWarning = sb.stub(vs.window, "showWarningMessage").resolves(undefined);
+
+		// 1. Clean remote exit (code 0): pre-exit startup requests settle quietly, and next ping reports lost connection once.
+		const exitCompleter1 = new PromiseCompleter<{ code: number | null, signal: NodeJS.Signals | null }>();
+		const initCompleter1 = new PromiseCompleter<void>();
+		internals.isShuttingDown = false;
+		internals.processExited = false;
+		internals.processExitCompleter = exitCompleter1;
+		internals.processExit = exitCompleter1.promise;
+		internals.daemonInitializedCompleter = initCompleter1;
+		internals.daemonInitialized = initCompleter1.promise;
+		internals.daemonInitializedTimerId = undefined;
+		internals.hasShownTerminatedError = false;
+		internals.lastShownTerminatedError = undefined;
+
+		const startupEmulatorsPromise = daemon.getEmulators();
+		internals.startPing("Custom remote lost message");
+		internals.handleExit(0, null);
+		assert.deepStrictEqual(await startupEmulatorsPromise, []);
+		assert.equal(showWarning.callCount, 0);
+		assert.equal(showInfo.callCount, 0);
+
+		await clock.tickAsync(60 * 1000);
+		assert.equal(showWarning.callCount, 0);
+		assert.equal(showInfo.callCount, 1);
+		assert.equal(showInfo.firstCall.args[0], "Custom remote lost message");
+
+		// 2. Unclean remote exit (code 1): handleUncleanExit prompts once and stops/suppresses the ping.
+		const exitCompleter2 = new PromiseCompleter<{ code: number | null, signal: NodeJS.Signals | null }>();
+		internals.processExited = false;
+		internals.processExitCompleter = exitCompleter2;
+		internals.processExit = exitCompleter2.promise;
+		internals.hasShownTerminatedError = false;
+		internals.lastShownTerminatedError = undefined;
+
+		internals.startPing("Custom remote lost message");
+		internals.handleExit(1, null);
+		assert.equal(showWarning.callCount, 1);
+		assert.equal(showInfo.callCount, 1);
+
+		await clock.tickAsync(60 * 1000);
+		assert.equal(showWarning.callCount, 1);
+		assert.equal(showInfo.callCount, 1);
+	});
 });

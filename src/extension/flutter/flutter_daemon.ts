@@ -98,12 +98,17 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		const prompt = customMessage ?? "The daemon connection was lost. Reload the extension to restart the daemon.";
 		this.pingIntervalId = setInterval(async () => {
 			try {
+				if (this.processExited || !this.process?.stdin.writable)
+					throw new Error("The daemon connection was lost");
 				await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
 			} catch (e) {
 				clearInterval(this.pingIntervalId);
+				this.pingIntervalId = undefined;
 				this.logger.error(e);
-				this.hasShownTerminatedError = true;
-				void promptToReloadExtension(this.logger, { prompt, restartReason: ExtensionRestartReason.FlutterDaemonTerminatedPing });
+				if (!this.hasShownTerminatedError && !this.isShuttingDown) {
+					this.hasShownTerminatedError = true;
+					void promptToReloadExtension(this.logger, { prompt, restartReason: ExtensionRestartReason.FlutterDaemonTerminatedPing });
+				}
 			}
 		}, 60 * 1000).unref();
 	}
@@ -138,7 +143,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	private handleUncleanExit() {
+		clearInterval(this.pingIntervalId);
+		this.pingIntervalId = undefined;
 		if (this.runIfNoDevices) {
+			this.hasShownTerminatedError = true;
 			this.runIfNoDevices();
 		} else if (!this.hasShownTerminatedError) {
 			this.showTerminatedError(this.hasStarted ? "has terminated" : "failed to start");
@@ -319,8 +327,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
+		const wasExited = this.processExited;
 		await this.daemonInitialized;
-		if (this.isShuttingDown || this.isDisposed)
+		if (this.isShuttingDown || this.isDisposed || (!wasExited && this.processExited))
 			return [];
 		return this.withRecordedTimeout("emulator.getEmulators", this.sendRequest("emulator.getEmulators"), []);
 	}
@@ -334,8 +343,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
+		const wasExited = this.processExited;
 		await this.daemonInitialized;
-		if (this.isShuttingDown || this.isDisposed)
+		if (this.isShuttingDown || this.isDisposed || (!wasExited && this.processExited))
 			return { platforms: [], platformTypes: {} };
 		return this.withRecordedTimeout("daemon.getSupportedPlatforms", this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }), { platforms: [], platformTypes: {} });
 	}
