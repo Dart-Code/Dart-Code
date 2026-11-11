@@ -1,4 +1,5 @@
 import * as vstest from "@vscode/test-electron";
+import * as crypto from "crypto";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -245,67 +246,91 @@ async function withCacheLock<T>(cachePath: string | undefined, fn: () => Promise
 	if (!cachePath)
 		return fn();
 
-	const locksDir = path.join(cachePath, ".vscode-download-locks");
-	fs.mkdirSync(locksDir, { recursive: true });
-
-	// Give each caller its own uniquely-named ticket file so cleaning up a
-	// stale lock file can never accidentally delete another caller's new lock.
-	const ticketName = `${String(Date.now()).padStart(15, "0")}-${process.pid}-${Math.random().toString(36).slice(2, 10)}.lock`;
-	const ticketPath = path.join(locksDir, ticketName);
-	fs.writeFileSync(ticketPath, String(process.pid), { flag: "wx" });
-
-	const heartbeat = setInterval(() => {
-		try {
-			const now = new Date();
-			fs.utimesSync(ticketPath, now, now);
-		} catch {
-			// Ignore transient lock contention (such as Windows AV scanners);
-			// subsequent ticks will refresh well before staleLockMs expires.
-		}
-	}, lockHeartbeatMs);
-	heartbeat.unref();
-
+	const releaseLock = await acquireCacheLock(path.join(cachePath, ".vscode-download-locks"));
 	try {
-		// Pause briefly after creating our ticket so any concurrent caller with
-		// a timestamp <= ours has finished creating its ticket before we scan.
-		await new Promise((resolve) => setTimeout(resolve, 50));
-
-		while (true) {
-			const entries = fs.readdirSync(locksDir)
-				.filter((name) => name.endsWith(".lock"))
-				.sort();
-
-			if (!entries.includes(ticketName)) {
-				fs.writeFileSync(ticketPath, String(process.pid));
-				continue;
-			}
-
-			let isFirstActive = true;
-			for (const entry of entries) {
-				if (entry === ticketName)
-					break;
-
-				const entryPath = path.join(locksDir, entry);
-				if (isLockStale(entryPath)) {
-					await tryDeleteLockFile(entryPath);
-					continue;
-				}
-
-				isFirstActive = false;
-				break;
-			}
-
-			if (isFirstActive)
-				break;
-
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-		}
-
 		return await fn();
 	} finally {
-		clearInterval(heartbeat);
-		await tryDeleteLockFile(ticketPath);
+		await releaseLock();
 	}
+}
+
+async function acquireCacheLock(locksDir: string): Promise<() => Promise<void>> {
+	const ownerInfo = `active\n${os.hostname()}\n${process.pid}`;
+
+	while (true) {
+		fs.mkdirSync(locksDir, { recursive: true });
+
+		const existing = await getActiveLocks(locksDir);
+		if (existing.size > 0) {
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			continue;
+		}
+
+		// Give each attempt its own uniquely-named candidate file so cleaning up
+		// a stale lock file can never delete another caller's newly-created lock.
+		const lockName = `${process.pid}-${crypto.randomUUID()}.lock`;
+		const lockPath = path.join(locksDir, lockName);
+		fs.writeFileSync(lockPath, ownerInfo, { flag: "wx" });
+
+		const heartbeat = setInterval(() => {
+			try {
+				const now = new Date();
+				fs.utimesSync(lockPath, now, now);
+			} catch {
+				// Ignore transient lock contention (such as Windows AV scanners);
+				// subsequent ticks will refresh well before staleLockMs expires.
+			}
+		}, lockHeartbeatMs);
+		heartbeat.unref();
+
+		const releaseCandidate = async () => {
+			clearInterval(heartbeat);
+			try {
+				const fd = fs.openSync(lockPath, "r+");
+				try {
+					fs.writeSync(fd, "released\n", 0, "utf8");
+				} finally {
+					fs.closeSync(fd);
+				}
+			} catch {
+				// Ignore if already removed or inaccessible.
+			}
+			await tryDeleteLockFile(lockPath);
+		};
+
+		// Re-scan after publishing our candidate file. Because every caller writes
+		// its file before scanning and retains it until exiting, at most one caller
+		// can observe itself as the sole active lock; any concurrent or delayed
+		// caller will see multiple active files and back off.
+		const active = await getActiveLocks(locksDir);
+		if (active.size === 1 && active.has(lockName))
+			return releaseCandidate;
+
+		await releaseCandidate();
+		await new Promise((resolve) => setTimeout(resolve, crypto.randomInt(50, 250)));
+	}
+}
+
+async function getActiveLocks(locksDir: string): Promise<Set<string>> {
+	let entries: string[];
+	try {
+		entries = fs.readdirSync(locksDir).filter((name) => name.endsWith(".lock"));
+	} catch (e) {
+		if ((e as NodeJS.ErrnoException).code === "ENOENT")
+			return new Set();
+		throw e;
+	}
+
+	const active = new Set<string>();
+	for (const entry of entries) {
+		const entryPath = path.join(locksDir, entry);
+		if (isLockStale(entryPath)) {
+			await tryDeleteLockFile(entryPath);
+			continue;
+		}
+		active.add(entry);
+	}
+	return active;
 }
 
 function isLockStale(lockFile: string): boolean {
@@ -314,14 +339,21 @@ function isLockStale(lockFile: string): boolean {
 		if (Date.now() - stat.mtimeMs > staleLockMs)
 			return true;
 
-		const pid = parseInt(fs.readFileSync(lockFile, "utf8").trim(), 10);
-		if (!isNaN(pid) && pid > 0) {
-			try {
-				process.kill(pid, 0);
-				return false;
-			} catch (e) {
-				if ((e as NodeJS.ErrnoException).code === "ESRCH")
-					return true;
+		const content = fs.readFileSync(lockFile, "utf8");
+		if (content.startsWith("released\n"))
+			return true;
+
+		const [status, hostname, pidText] = content.trim().split("\n");
+		if (status === "active" && hostname === os.hostname()) {
+			const pid = parseInt(pidText, 10);
+			if (!isNaN(pid) && pid > 0) {
+				try {
+					process.kill(pid, 0);
+					return false;
+				} catch (e) {
+					if ((e as NodeJS.ErrnoException).code === "ESRCH")
+						return true;
+				}
 			}
 		}
 		return false;
