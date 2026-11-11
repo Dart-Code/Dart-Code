@@ -5,11 +5,13 @@ import * as path from "path";
 import * as readline from "readline";
 import { PassThrough, Writable } from "stream";
 import { getTestSuites } from "./test_runner";
+import { VsCodeTestCache } from "./vscode_test_cache";
 
 let exitCode = 0;
 const cwd = process.cwd();
 const testEnv = Object.create(process.env) as NodeJS.Dict<string>;
 const ideOverrideEnv = process.env.BOT?.includes("-") ? process.env.BOT?.split("-").pop() : undefined;
+const vsCodeTestCache = new VsCodeTestCache();
 
 // Read command line arguments for test filtering
 const testFilterArgs = process.argv.slice(2);
@@ -58,7 +60,7 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		while (currentAttempt <= maxAttempts) {
 			try {
 				// console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
-				await vstest.downloadAndUnzipVSCode({ version: codeVersion, reporter, });
+				ideOverride = await vsCodeTestCache.downloadAndUnzipVSCode({ version: codeVersion, reporter });
 				break;
 			} catch (e) {
 				if (currentAttempt >= maxAttempts)
