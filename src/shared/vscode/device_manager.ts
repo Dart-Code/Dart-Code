@@ -693,7 +693,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 				return false;
 			}
 		} catch (e) {
-			void vs.window.showErrorMessage(String(e));
+			this.logger.error(e);
 			return false;
 		}
 	}

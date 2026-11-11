@@ -889,11 +889,11 @@ describe("device_manager", () => {
 		assert.equal(failRes, false);
 		assert.equal(showErrorStub.calledOnceWithExactly("Failed to create AVD"), true);
 
-		// Rejection path (e.g. daemon pipe error).
+		// Rejection path (e.g. daemon pipe error) logs without showing raw transport error to user.
 		createStub.onThirdCall().rejects(new Error("Process stdin errored: Error: write EPIPE"));
 		const rejectRes = await dm.createEmulator();
 		assert.equal(rejectRes, false);
-		assert.equal(showErrorStub.secondCall.args[0], "Error: Process stdin errored: Error: write EPIPE");
+		assert.equal(showErrorStub.callCount, 1);
 	});
 
 	it("launchEmulator waits for emulator device to connect or shows error on timeout", async () => {

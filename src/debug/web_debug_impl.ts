@@ -154,7 +154,7 @@ export class WebDebugSession extends DartDebugSession {
 				if (this.currentRunningAppId && this.appHasStarted && !this.processExited && this.runDaemon) {
 					// Request to quit/detach, but don't await it since we sometimes
 					// don't get responses before the process quits.
-					void this.runDaemon.stop(this.currentRunningAppId);
+					this.runDaemon.stop(this.currentRunningAppId).catch((e) => this.logger.info(`${e}`));
 
 					// Now wait for the process to terminate up to 3s.
 					await Promise.race([
