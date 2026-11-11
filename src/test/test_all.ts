@@ -1,16 +1,17 @@
 import * as vstest from "@vscode/test-electron";
-import * as crypto from "crypto";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as readline from "readline";
 import { PassThrough, Writable } from "stream";
 import { getTestSuites } from "./test_runner";
+import { VsCodeTestCache } from "./vscode_test_cache";
 
 let exitCode = 0;
 const cwd = process.cwd();
 const testEnv = Object.create(process.env) as NodeJS.Dict<string>;
 const ideOverrideEnv = process.env.BOT?.includes("-") ? process.env.BOT?.split("-").pop() : undefined;
+const vsCodeTestCache = new VsCodeTestCache();
 
 // Read command line arguments for test filtering
 const testFilterArgs = process.argv.slice(2);
@@ -43,13 +44,6 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		fs.mkdirSync(logPath);
 
 	const codeVersion = (!process.env.BUILD_VERSION || process.env.BUILD_VERSION === "stable") ? "stable" : "insiders";
-	// Only share VSCODE_TEST_CACHE_PATH for stable builds, which extract into
-	// versioned folders (`vscode-<platform>-<x.y.z>`). Insiders extracts into an
-	// unversioned `vscode-<platform>-insiders` folder and deletes/replaces it
-	// in-place when updated, which could collide with a running test process.
-	const cachePath = codeVersion === "stable" && process.env.VSCODE_TEST_CACHE_PATH
-		? path.resolve(process.env.VSCODE_TEST_CACHE_PATH)
-		: undefined;
 
 	const reporter = {
 		report: () => { },
@@ -66,10 +60,7 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		while (currentAttempt <= maxAttempts) {
 			try {
 				// console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
-				ideOverride = await withCacheLock(
-					cachePath,
-					() => vstest.downloadAndUnzipVSCode({ version: codeVersion, cachePath, reporter }),
-				);
+				ideOverride = await vsCodeTestCache.downloadAndUnzipVSCode({ version: codeVersion, reporter });
 				break;
 			} catch (e) {
 				if (currentAttempt >= maxAttempts)
@@ -234,159 +225,6 @@ async function runAllTests(): Promise<void> {
 	} catch (e) {
 		exitCode = 1;
 		console.error(e);
-	}
-}
-
-const lockHeartbeatMs = 60 * 1000;
-const staleLockMs = 5 * 60 * 1000;
-
-/**
- * Serializes VS Code downloads when a shared `cachePath` is used across
- * parallel test runs (for example across git worktrees) so concurrent runs
- * do not delete or overwrite each other's extraction directory.
- */
-async function withCacheLock<T>(cachePath: string | undefined, fn: () => Promise<T>): Promise<T> {
-	if (!cachePath)
-		return fn();
-
-	const releaseLock = await acquireCacheLock(path.join(cachePath, ".vscode-download-locks"));
-	try {
-		return await fn();
-	} finally {
-		await releaseLock();
-	}
-}
-
-async function acquireCacheLock(locksDir: string): Promise<() => Promise<void>> {
-	const ownerInfo = `active\n${os.hostname()}\n${process.pid}`;
-
-	while (true) {
-		fs.mkdirSync(locksDir, { recursive: true });
-
-		const existing = await getActiveLocks(locksDir);
-		if (existing.size > 0) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-			continue;
-		}
-
-		// Give each attempt its own uniquely-named candidate file so cleaning up
-		// a stale lock file can never delete another caller's newly-created lock.
-		const lockName = `${process.pid}-${crypto.randomUUID()}.lock`;
-		const lockPath = path.join(locksDir, lockName);
-		fs.writeFileSync(lockPath, ownerInfo, { flag: "wx" });
-
-		const heartbeat = setInterval(() => {
-			try {
-				const now = new Date();
-				fs.utimesSync(lockPath, now, now);
-			} catch {
-				// Ignore transient lock contention (such as Windows AV scanners);
-				// subsequent ticks will refresh well before staleLockMs expires.
-			}
-		}, lockHeartbeatMs);
-		heartbeat.unref();
-
-		const releaseCandidate = async () => {
-			clearInterval(heartbeat);
-			try {
-				const fd = fs.openSync(lockPath, "r+");
-				try {
-					fs.writeSync(fd, "released\n", 0, "utf8");
-				} finally {
-					fs.closeSync(fd);
-				}
-			} catch {
-				// Ignore if already removed or inaccessible.
-			}
-			await tryDeleteLockFile(lockPath);
-		};
-
-		// Re-scan after publishing our candidate file. Because every caller writes
-		// its file before scanning and retains it until exiting, at most one caller
-		// can observe itself as the sole active lock; any concurrent or delayed
-		// caller will see multiple active files and back off.
-		let acquired = false;
-		try {
-			const active = await getActiveLocks(locksDir);
-			if (active.size === 1 && active.has(lockName)) {
-				acquired = true;
-				return releaseCandidate;
-			}
-		} finally {
-			if (!acquired)
-				await releaseCandidate();
-		}
-
-		await new Promise((resolve) => setTimeout(resolve, crypto.randomInt(50, 250)));
-	}
-}
-
-async function getActiveLocks(locksDir: string): Promise<Set<string>> {
-	let entries: string[];
-	try {
-		entries = fs.readdirSync(locksDir).filter((name) => name.endsWith(".lock"));
-	} catch (e) {
-		if ((e as NodeJS.ErrnoException).code === "ENOENT")
-			return new Set();
-		throw e;
-	}
-
-	const active = new Set<string>();
-	for (const entry of entries) {
-		const entryPath = path.join(locksDir, entry);
-		if (isLockStale(entryPath)) {
-			await tryDeleteLockFile(entryPath);
-			continue;
-		}
-		active.add(entry);
-	}
-	return active;
-}
-
-function isLockStale(lockFile: string): boolean {
-	try {
-		const stat = fs.statSync(lockFile);
-		if (Date.now() - stat.mtimeMs > staleLockMs)
-			return true;
-
-		const content = fs.readFileSync(lockFile, "utf8");
-		if (content.startsWith("released\n"))
-			return true;
-
-		const [status, hostname, pidText] = content.trim().split("\n");
-		if (status === "active" && hostname === os.hostname()) {
-			const pid = parseInt(pidText, 10);
-			if (!isNaN(pid) && pid > 0) {
-				try {
-					process.kill(pid, 0);
-					return false;
-				} catch (e) {
-					if ((e as NodeJS.ErrnoException).code === "ESRCH")
-						return true;
-				}
-			}
-		}
-		return false;
-	} catch (e) {
-		// Already removed by its owner or another caller.
-		return (e as NodeJS.ErrnoException).code === "ENOENT";
-	}
-}
-
-async function tryDeleteLockFile(lockFile: string): Promise<void> {
-	try {
-		await fs.promises.rm(
-			lockFile,
-			{
-				force: true,
-				recursive: true,
-				// Windows can take a little time to release file handles.
-				maxRetries: 10,
-				retryDelay: 500,
-			},
-		);
-	} catch (e) {
-		console.warn(`Failed to clean up lock file ${lockFile}: ${String(e)}`);
 	}
 }
 
