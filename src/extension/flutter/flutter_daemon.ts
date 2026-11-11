@@ -328,10 +328,23 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("device.enable");
 	}
 
-	public async getEmulators(): Promise<f.FlutterEmulator[]> {
+	/**
+	 * Waits for daemon initialization and returns whether the caller should proceed with sending its request.
+	 *
+	 * If the daemon exited while waiting (`!wasExited && this.processExited`), returns `false` so startup
+	 * callers woken by `handleExit()` resolving `daemonInitializedCompleter` settle quietly instead of
+	 * falling through to `sendRequest()` and triggering a spurious `notifyRequestAfterExit()` prompt.
+	 * Callers invoked *after* exit (`wasExited === true`) still return `true` so explicit post-exit actions
+	 * (such as opening the device picker after a crash) still reach `sendRequest()` and re-show the prompt.
+	 */
+	private async canSendAfterInitialization(): Promise<boolean> {
 		const wasExited = this.processExited;
 		await this.daemonInitialized;
-		if (this.isShuttingDown || this.isDisposed || (!wasExited && this.processExited))
+		return !this.isShuttingDown && !this.isDisposed && (wasExited || !this.processExited);
+	}
+
+	public async getEmulators(): Promise<f.FlutterEmulator[]> {
+		if (!await this.canSendAfterInitialization())
 			return [];
 		return this.withRecordedTimeout("emulator.getEmulators", this.sendRequest("emulator.getEmulators"), []);
 	}
@@ -345,9 +358,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
-		const wasExited = this.processExited;
-		await this.daemonInitialized;
-		if (this.isShuttingDown || this.isDisposed || (!wasExited && this.processExited))
+		if (!await this.canSendAfterInitialization())
 			return { platforms: [], platformTypes: {} };
 		return this.withRecordedTimeout("daemon.getSupportedPlatforms", this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }), { platforms: [], platformTypes: {} });
 	}
