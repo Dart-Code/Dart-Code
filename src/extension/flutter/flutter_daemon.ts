@@ -121,9 +121,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		});
 	}
 
-	private clearTimers() {
-		clearInterval(this.pingIntervalId);
-		this.pingIntervalId = undefined;
+	private clearStartupTimers() {
 		clearTimeout(this.daemonInitializedTimerId);
 		this.daemonInitializedTimerId = undefined;
 		this.daemonInitializedCompleter.resolve();
@@ -135,7 +133,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.handleUncleanExit();
 
 		super.handleExit(code, signal);
-		this.clearTimers();
+		this.clearStartupTimers();
 	}
 
 	private handleUncleanExit() {
@@ -178,7 +176,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async dispose(): Promise<void> {
 		this.isShuttingDown = true;
-		this.clearTimers();
+		this.clearStartupTimers();
+		clearInterval(this.pingIntervalId);
+		this.pingIntervalId = undefined;
 
 		await super.dispose();
 	}
@@ -345,7 +345,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async shutdown(): Promise<void> {
 		this.isShuttingDown = true;
-		this.clearTimers();
+		this.clearStartupTimers();
+		clearInterval(this.pingIntervalId);
+		this.pingIntervalId = undefined;
 		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited || this.isDisposed || !this.process?.stdin.writable)
 			return resolvedPromise;
 		// It's possible this shutdown will never complete, because if dispose() is also called, the process will be terminated.
