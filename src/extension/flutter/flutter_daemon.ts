@@ -25,12 +25,12 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private get hasStarted() { return !!this.startTime; };
 	private hasShownTerminatedError = false;
 	private hasLoggedDaemonTimeout = false;
-	private isShuttingDown = false;
 	public startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonResponsiveCompleter = new PromiseCompleter<void>();
 	private daemonResponsive = this.daemonResponsiveCompleter.promise;
 	private daemonInitializedCompleter = new PromiseCompleter<void>();
 	private daemonInitialized = this.daemonInitializedCompleter.promise;
+	private daemonInitializedTimerId?: NodeJS.Timeout;
 	private pingIntervalId?: NodeJS.Timeout;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 	private didSpawnWithAdditionalArgs = false;
@@ -42,6 +42,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 		this.registerForDaemonConnected((e) => {
 			this.additionalPidsToTerminate.push(e.pid);
+			if (this.isShuttingDown || this.isDisposed)
+				return;
+
 			this.capabilities.version = e.version;
 			void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
 
@@ -49,7 +52,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			// the first emulator requests from hanging.
 			// https://github.com/Dart-Code/Dart-Code/issues/5793
 			const completer = this.daemonInitializedCompleter;
-			const markInitializedAfterDelay = () => setTimeout(() => completer.resolve(), 2000);
+			const markInitializedAfterDelay = () => {
+				if (!this.isShuttingDown && !this.isDisposed)
+					this.daemonInitializedTimerId = setTimeout(() => completer.resolve(), 2000).unref();
+			};
 			void this.deviceEnable().then(markInitializedAfterDelay, markInitializedAfterDelay);
 		});
 
@@ -92,12 +98,17 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		const prompt = customMessage ?? "The daemon connection was lost. Reload the extension to restart the daemon.";
 		this.pingIntervalId = setInterval(async () => {
 			try {
+				if (this.processExited || !this.process?.stdin.writable)
+					throw new Error("The daemon connection was lost");
 				await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
 			} catch (e) {
 				clearInterval(this.pingIntervalId);
+				this.pingIntervalId = undefined;
 				this.logger.error(e);
-				this.hasShownTerminatedError = true;
-				void promptToReloadExtension(this.logger, { prompt, restartReason: ExtensionRestartReason.FlutterDaemonTerminatedPing });
+				if (!this.hasShownTerminatedError && !this.isShuttingDown) {
+					this.hasShownTerminatedError = true;
+					void promptToReloadExtension(this.logger, { prompt, restartReason: ExtensionRestartReason.FlutterDaemonTerminatedPing });
+				}
 			}
 		}, 60 * 1000).unref();
 	}
@@ -106,15 +117,21 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	// has forwarded this port to the remote machine where the Dart extension is running. Netcat is used to access the local devices,
 	// instead of starting another daemon process on the remote machine.
 	protected createNcProcess(port: number) {
+		this.description = "nc";
 		this.process = child_process.spawn("nc", ["localhost", port.toString()]) satisfies SpawnedProcess;
 
-		this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
-		this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
-		this.process.on("exit", (code, signal) => this.handleExit(code, signal));
+		this.registerProcessListeners(this.process);
 		this.process.on("error", (error) => {
 			void vs.window.showErrorMessage(`Remote daemon startup had an error: ${error}. Check the instructions for using dart.daemonPort`);
 			this.handleError(error);
 		});
+	}
+
+	private clearStartupTimers() {
+		clearTimeout(this.daemonInitializedTimerId);
+		this.daemonInitializedTimerId = undefined;
+		this.daemonInitializedCompleter.resolve();
+		this.daemonResponsiveCompleter.resolve();
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
@@ -122,12 +139,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.handleUncleanExit();
 
 		super.handleExit(code, signal);
+		this.clearStartupTimers();
 	}
 
 	private handleUncleanExit() {
+		clearInterval(this.pingIntervalId);
+		this.pingIntervalId = undefined;
+		if (this.hasShownTerminatedError)
+			return;
 		if (this.runIfNoDevices) {
+			this.hasShownTerminatedError = true;
 			this.runIfNoDevices();
-		} else if (!this.hasShownTerminatedError) {
+		} else {
 			this.showTerminatedError(this.hasStarted ? "has terminated" : "failed to start");
 		}
 	}
@@ -164,9 +187,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async dispose(): Promise<void> {
 		this.isShuttingDown = true;
-
-		if (this.pingIntervalId)
-			clearInterval(this.pingIntervalId);
+		this.clearStartupTimers();
+		clearInterval(this.pingIntervalId);
+		this.pingIntervalId = undefined;
 
 		await super.dispose();
 	}
@@ -183,8 +206,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 					specificLog: config.flutterDaemonLogFile,
 					restartReason: ExtensionRestartReason.FlutterDaemonTerminatedSend,
 				});
-				throw e;
 			}
+			throw e;
 		}
 	}
 
@@ -305,8 +328,24 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("device.enable");
 	}
 
-	public async getEmulators(): Promise<f.FlutterEmulator[]> {
+	/**
+	 * Waits for daemon initialization and returns whether the caller should proceed with sending its request.
+	 *
+	 * If the daemon exited while waiting (`!wasExited && this.processExited`), returns `false` so startup
+	 * callers woken by `handleExit()` resolving `daemonInitializedCompleter` settle quietly instead of
+	 * falling through to `sendRequest()` and triggering a spurious `notifyRequestAfterExit()` prompt.
+	 * Callers invoked *after* exit (`wasExited === true`) still return `true` so explicit post-exit actions
+	 * (such as opening the device picker after a crash) still reach `sendRequest()` and re-show the prompt.
+	 */
+	private async canSendAfterInitialization(): Promise<boolean> {
+		const wasExited = this.processExited;
 		await this.daemonInitialized;
+		return !this.isShuttingDown && !this.isDisposed && (wasExited || !this.processExited);
+	}
+
+	public async getEmulators(): Promise<f.FlutterEmulator[]> {
+		if (!await this.canSendAfterInitialization())
+			return [];
 		return this.withRecordedTimeout("emulator.getEmulators", this.sendRequest("emulator.getEmulators"), []);
 	}
 
@@ -319,7 +358,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
-		await this.daemonInitialized;
+		if (!await this.canSendAfterInitialization())
+			return { platforms: [], platformTypes: {} };
 		return this.withRecordedTimeout("daemon.getSupportedPlatforms", this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }), { platforms: [], platformTypes: {} });
 	}
 
@@ -329,7 +369,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async shutdown(): Promise<void> {
 		this.isShuttingDown = true;
-		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited)
+		this.clearStartupTimers();
+		clearInterval(this.pingIntervalId);
+		this.pingIntervalId = undefined;
+		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited || this.isDisposed || !this.process?.stdin.writable)
 			return resolvedPromise;
 		// It's possible this shutdown will never complete, because if dispose() is also called, the process will be terminated.
 		// Since this is only called during shutdown, we should not hang here, because it will slow down VS Code exiting.

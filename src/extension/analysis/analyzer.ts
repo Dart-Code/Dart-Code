@@ -745,6 +745,14 @@ export class LspAnalyzer extends Analyzer {
 				this.analytics.logAnalysisServerTerminate(code ?? 0, durationMs);
 			}
 		});
+		process.on("error", (error) => logger.error(`${processName} errored: ${error}`));
+		// StreamMessageReader / StreamMessageWriter attach error handlers to the piped
+		// LoggingTransform streams, not to process.stdout / process.stdin, and .pipe()
+		// does not forward stream error events. Handle errors (such as EPIPE during
+		// shutdown) on the underlying stdio streams so they do not become uncaught exceptions.
+		process.stdin.on("error", (error) => logger.info(`${processName} stdin errored: ${error}`));
+		process.stdout.on("error", (error) => logger.info(`${processName} stdout errored: ${error}`));
+		process.stderr.on("error", (error) => logger.info(`${processName} stderr errored: ${error}`));
 
 		return Promise.resolve({ reader, writer });
 	}

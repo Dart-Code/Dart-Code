@@ -104,7 +104,7 @@ export class WebRun extends StdIOService<UnknownNotification> {
 		return this.sendRequest("app.restart", { appId, fullRestart: hotRestart === true, pause, reason: args?.reason, debounce: args?.debounce });
 	}
 
-	public stop(appId: string): Thenable<UnknownResponse> {
+	public stop(appId: string): Promise<UnknownResponse> {
 		return this.sendRequest("app.stop", { appId });
 	}
 
