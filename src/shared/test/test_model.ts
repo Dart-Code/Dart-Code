@@ -8,7 +8,7 @@ import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isFlutterProjectFolder, isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
-import { makeRegexForTests } from "../utils/test";
+import { dartInterpolationPattern, makeRegexForTests, TestNameSegment } from "../utils/test";
 import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
 import { WorkspaceContext } from "../workspace";
@@ -21,6 +21,7 @@ export abstract class TreeNode {
 	public _isStale = false;
 	public testSource = TestSource.Outline;
 	public hasDynamicName = false;
+	public nameSegments: TestNameSegment[] | undefined;
 	public isPotentiallyDeleted = false;
 	public duration: number | undefined;
 
@@ -465,7 +466,7 @@ export class TestModel {
 		return suite;
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, _hasStarted = false, isDynamic?: boolean): GroupNode {
+	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, _hasStarted = false, nameSegments?: TestNameSegment[]): GroupNode {
 		groupPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingGroup = suite.reuseMatchingGroup(groupName);
@@ -493,7 +494,7 @@ export class TestModel {
 			groupNode.testSource = source;
 		}
 		if (source === TestSource.Outline)
-			groupNode.hasDynamicName = isDynamic ?? Boolean(groupName?.includes("$"));
+			this.setOutlineDynamicName(groupNode, groupName, nameSegments);
 
 		this.markAsNotDeleted(groupNode);
 
@@ -516,7 +517,7 @@ export class TestModel {
 		return groupNode;
 	}
 
-	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false, isDynamic?: boolean): TestNode {
+	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false, nameSegments?: TestNameSegment[]): TestNode {
 		testPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingTest = suite.reuseMatchingTest(testName);
@@ -559,7 +560,7 @@ export class TestModel {
 			testNode.testSource = source;
 		}
 		if (source === TestSource.Outline)
-			testNode.hasDynamicName = isDynamic ?? Boolean(testName?.includes("$"));
+			this.setOutlineDynamicName(testNode, testName, nameSegments);
 
 		this.markAsNotDeleted(testNode);
 		testNode.testStartTime = startTime;
@@ -590,6 +591,13 @@ export class TestModel {
 		return testNode;
 	}
 
+	private setOutlineDynamicName(node: TreeNode, name: string | undefined, nameSegments: TestNameSegment[] | undefined): void {
+		node.nameSegments = nameSegments;
+		node.hasDynamicName = nameSegments
+			? nameSegments.some((segment) => segment.isDynamic)
+			: Boolean(name && dartInterpolationPattern.test(name));
+	}
+
 	/**
 	 * Find a matching node in 'parent' that might be a node for a dynamic test/group that name is
 	 * an instance of.
@@ -609,7 +617,7 @@ export class TestModel {
 				|| !child.hasDynamicName
 				|| !child.name)
 				continue;
-			const regex = new RegExp(makeRegexForTests([{ name: child.name, isGroup: false, position: undefined }]));
+			const regex = new RegExp(makeRegexForTests([{ isDynamic: child.hasDynamicName, segments: child.nameSegments, name: child.name, isGroup: false, position: undefined }]));
 			if (regex.test(name))
 				return child;
 		}

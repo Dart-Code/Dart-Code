@@ -108,6 +108,7 @@ describe("test_outline_visitor", () => {
 		// Quote-wrapped descriptions come from analyzer toSource() fallback for interpolations.
 		assert.deepStrictEqual(parseTestNameFromOutline(`group("'group $testType'")`), { isDynamic: true, name: "group $testType" });
 		assert.deepStrictEqual(parseTestNameFromOutline(`group(""group \${1 + 1}"")`), { isDynamic: true, name: "group ${1 + 1}" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("'multiline \${\n value\n}'")`), { isDynamic: true, name: "multiline ${\n value\n}" });
 		assert.deepStrictEqual(parseTestNameFromOutline(`group("r'group ' '$testType'")`), { isDynamic: true, name: "r'group ' '$testType'" });
 		assert.deepStrictEqual(parseTestNameFromOutline(`group("('group $testType')")`), { isDynamic: true, name: "('group $testType')" });
 
@@ -129,6 +130,23 @@ describe("test_outline_visitor", () => {
 		assert.equal(
 			makeRegexForTests([{ name: "group $foo test", isDynamic: true, isGroup: false, position: undefined }]),
 			"^group .* test( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "multiline ${\n value\n} test", isDynamic: true, isGroup: false, position: undefined }]),
+			"^multiline .* test( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{
+				isDynamic: true,
+				isGroup: false,
+				name: "price $foo tax $n",
+				position: undefined,
+				segments: [
+					{ isDynamic: false, name: "price $foo" },
+					{ isDynamic: true, name: "tax $n" },
+				],
+			}]),
+			"^price \\$foo tax .*( \\(variant: .*\\))?$",
 		);
 		assert.equal(
 			makeRegexForTests([{ name: "price $5", isGroup: false, position: undefined }]),

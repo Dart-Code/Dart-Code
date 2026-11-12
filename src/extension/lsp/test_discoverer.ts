@@ -8,7 +8,7 @@ import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { OutlineVisitor } from "../../shared/utils/outline";
-import { parseTestNameFromOutline } from "../../shared/utils/test";
+import { parseTestNameFromOutline, TestNameSegment } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../shared/vscode/utils";
 import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
@@ -192,7 +192,7 @@ export class TestDiscoverer implements IAmDisposable {
 }
 
 class TestDiscoveryVisitor extends OutlineVisitor {
-	private readonly stack: Array<{ id: number, name: string }> = [];
+	private readonly stack: Array<{ id: number, segments: TestNameSegment[] }> = [];
 	private id = 1;
 
 	constructor(logger: Logger, private readonly model: TestModel, private readonly dartCodeDebugSessionID: string, private readonly suitePath: string) {
@@ -224,20 +224,21 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 		const parsedName = parseTestNameFromOutline(outline.element.name);
 		if (!parsedName?.name || !outline.element.range)
 			return;
-		const { name, isDynamic } = parsedName;
+		const { isDynamic } = parsedName;
 
 		const range = outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined);
 		const parent = this.stack.length > 0 ? this.stack[this.stack.length - 1] : undefined;
 
-		const fullName = parent?.name
-			? `${parent.name} ${name}`
-			: name;
+		const segments = parent
+			? [...parent.segments, parsedName]
+			: [parsedName];
+		const fullName = segments.map((segment) => segment.name).join(" ");
 
 		const thisID = this.id++;
 		if (isGroup)
-			this.model.groupDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, false, isDynamic);
+			this.model.groupDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, false, segments);
 		else
-			this.model.testDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined, false, isDynamic);
+			this.model.testDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined, false, segments);
 
 		// Do not recurse into dynamically-named groups; their concrete runtime
 		// group instances and child tests will be populated under this node from
@@ -246,7 +247,7 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 			return;
 
 		if (isGroup)
-			this.stack.push({ id: thisID, name: fullName });
+			this.stack.push({ id: thisID, segments });
 		try {
 			base.bind(this)(outline);
 		} finally {
