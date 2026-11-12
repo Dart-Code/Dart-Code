@@ -7,7 +7,7 @@ import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
-import { OutlineVisitor } from "../../shared/utils/outline";
+import { MainBodyOutlineVisitor } from "../../shared/utils/outline";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../shared/vscode/utils";
 import { FileTracker } from "../analysis/file_tracker";
@@ -191,7 +191,7 @@ export class TestDiscoverer implements IAmDisposable {
 	}
 }
 
-class TestDiscoveryVisitor extends OutlineVisitor {
+class TestDiscoveryVisitor extends MainBodyOutlineVisitor {
 	private readonly stack: Array<{ id: number, name: string }> = [];
 	private id = 1;
 
@@ -207,6 +207,12 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 	}
 
 	private handleItem(outline: Outline, isGroup: boolean, base: (outline: Outline) => void) {
+		// Tests and groups outside the top-level main() function cannot be
+		// statically discovered; they appear as dynamic results when the
+		// suite runs.
+		if (!this.isInsideTopLevelMain)
+			return;
+
 		const name = extractTestNameFromOutline(outline.element.name);
 		if (!name || !outline.element.range)
 			return;
