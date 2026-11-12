@@ -13,16 +13,16 @@ export class WebClient {
 	public fetch(urlString: string, headers?: http.OutgoingHttpHeaders): Promise<string> {
 		const u = url.parse(urlString);
 		if (u.protocol === "https:" && u.hostname)
-			return this.fetchHttps(u.hostname, u.port ?? "443", u.path ?? "", headers);
+			return this.fetchUrl(true, u.hostname, u.port ?? "443", u.path ?? "", headers);
 		else if (u.protocol === "http:" && u.hostname)
-			return this.fetchHttp(u.hostname, u.port ?? "80", u.path ?? "", headers);
+			return this.fetchUrl(false, u.hostname, u.port ?? "80", u.path ?? "", headers);
 		else
 			return Promise.reject(new Error(`Cannot fetch URL ${urlString}`));
 	}
 
-	private fetchHttps(hostname: string | undefined, port: string | undefined, path: string | undefined, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
+	private fetchUrl(isHttps: boolean, hostname: string | undefined, port: string | undefined, path: string | undefined, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
-			const options: https.RequestOptions = {
+			const options: http.RequestOptions = {
 				headers: {
 					...headers,
 					"User-Agent": this.userAgent,
@@ -33,7 +33,8 @@ export class WebClient {
 				port,
 			};
 
-			const req = https.request(options, (res) => this.handleResponse(headers, res, resolve, reject, path));
+			const handleResponse = (res: http.IncomingMessage) => this.handleResponse(headers, res, resolve, reject, path);
+			const req = isHttps ? https.request(options, handleResponse) : http.request(options, handleResponse);
 			req.on("error", reject);
 			req.end();
 		});
@@ -74,25 +75,6 @@ export class WebClient {
 				}
 			});
 		}
-	}
-
-	private fetchHttp(hostname: string | undefined, port: string | undefined, path: string | undefined, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
-			const options: http.RequestOptions = {
-				headers: {
-					...headers,
-					"User-Agent": this.userAgent,
-				},
-				hostname,
-				method: "GET",
-				path,
-				port,
-			};
-
-			const req = http.request(options, (res) => this.handleResponse(headers, res, resolve, reject, path));
-			req.on("error", reject);
-			req.end();
-		});
 	}
 }
 

@@ -88,7 +88,7 @@ export class SingleDocumentOffsetTracker implements IAmDisposable {
 			// updateOffset takes the *value*, since we need to map the "current" (not
 			// original) value, and then updates the value in the map.
 			const currentOffset = this.offsetMap.get(offset)!;
-			const newOffset = this.updateOffset(currentOffset, e);
+			const newOffset = updateOffset(currentOffset, e);
 			if (newOffset !== undefined)
 				this.offsetMap.set(offset, newOffset);
 			else
@@ -96,23 +96,6 @@ export class SingleDocumentOffsetTracker implements IAmDisposable {
 		}
 
 		this.onOffsetsChangedEmitter.fire([e.document, this.offsetMap]);
-	}
-
-	private updateOffset(offset: number, change: vs.TextDocumentChangeEvent): number | undefined {
-		// If any edit spans us, consider us deleted.
-		if (change.contentChanges.find((edit) => edit.rangeOffset < offset && edit.rangeOffset + edit.rangeLength > offset)) {
-			return undefined;
-		}
-
-		// Otherwise, shift us along to account for any edits before us.
-		const totalDiff = change.contentChanges
-			// Edits that end before us.
-			.filter((edit) => edit.rangeOffset + edit.rangeLength <= offset)
-			// Get the difference in lengths to know if we inserted or removed.
-			.map((edit) => edit.text.length - edit.rangeLength)
-			.reduce((total, n) => total + n, 0);
-
-		return offset + totalDiff;
 	}
 
 	public dispose() {
@@ -181,7 +164,7 @@ export class DocumentPositionTracker implements IAmDisposable {
 		// Don't call callbacks inline, as they might try to modify the trackers.
 		const callbacksToCall: Array<() => void> = [];
 		for (const entry of trackers) {
-			const newOffset = this.updateOffset(entry.offset, e);
+			const newOffset = updateOffset(entry.offset, e);
 			const newPosition = newOffset !== undefined ? e.document.positionAt(newOffset) : undefined;
 
 			callbacksToCall.push(() => entry.callback(newPosition));
@@ -221,27 +204,27 @@ export class DocumentPositionTracker implements IAmDisposable {
 		}
 	}
 
-	private updateOffset(offset: number, change: vs.TextDocumentChangeEvent): number | undefined {
-		// If any edit spans us, consider us deleted.
-		if (change.contentChanges.find((edit) => edit.rangeOffset < offset && edit.rangeOffset + edit.rangeLength > offset)) {
-			return undefined;
-		}
-
-		// Otherwise, shift us along to account for any edits before us.
-		const totalDiff = change.contentChanges
-			// Edits that end before us.
-			.filter((edit) => edit.rangeOffset + edit.rangeLength <= offset)
-			// Get the difference in lengths to know if we inserted or removed.
-			.map((edit) => edit.text.length - edit.rangeLength)
-			.reduce((total, n) => total + n, 0);
-
-		return offset + totalDiff;
-	}
-
 	public dispose() {
 		this.trackers.clear();
 		disposeAll(this.disposables);
 	}
+}
+
+function updateOffset(offset: number, change: vs.TextDocumentChangeEvent): number | undefined {
+	// If any edit spans us, consider us deleted.
+	if (change.contentChanges.find((edit) => edit.rangeOffset < offset && edit.rangeOffset + edit.rangeLength > offset)) {
+		return undefined;
+	}
+
+	// Otherwise, shift us along to account for any edits before us.
+	const totalDiff = change.contentChanges
+		// Edits that end before us.
+		.filter((edit) => edit.rangeOffset + edit.rangeLength <= offset)
+		// Get the difference in lengths to know if we inserted or removed.
+		.map((edit) => edit.text.length - edit.rangeLength)
+		.reduce((total, n) => total + n, 0);
+
+	return offset + totalDiff;
 }
 
 interface RangeTrackerEntry {

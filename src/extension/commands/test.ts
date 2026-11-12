@@ -18,6 +18,7 @@ import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { getActiveRealFileEditor, isDartDocument } from "../../shared/vscode/editors";
 import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { getAllProjectFolders, isInsideFolderNamed } from "../../shared/vscode/utils";
+import { createLinkedCancellationTokenSource } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { VsCodeTestController } from "../test/vs_test_controller";
@@ -147,17 +148,10 @@ export class TestCommands implements IAmDisposable {
 			location: vs.ProgressLocation.Notification,
 			title: "Running",
 		}, async (progress, progressToken) => {
-			const combinedTokenSource = new vs.CancellationTokenSource();
-			const tokenSubs: IAmDisposable[] = [];
-			if (token?.isCancellationRequested || progressToken?.isCancellationRequested)
-				combinedTokenSource.cancel();
-			if (token)
-				tokenSubs.push(token.onCancellationRequested(() => combinedTokenSource.cancel()));
-			if (progressToken)
-				tokenSubs.push(progressToken.onCancellationRequested(() => combinedTokenSource.cancel()));
+			const linkedTokenSource = createLinkedCancellationTokenSource(token, progressToken);
 
 			try {
-				const combinedToken = combinedTokenSource.token;
+				const combinedToken = linkedTokenSource.token;
 				const activeProjects = new Set<{ projectFolder: string, name: string, relativeTestPaths: string[] }>();
 				let completedItems = 0;
 
@@ -196,8 +190,7 @@ export class TestCommands implements IAmDisposable {
 				for (const projectWithTests of integrationTestProjects)
 					await runWithProgress(projectWithTests);
 			} finally {
-				disposeAll(tokenSubs);
-				combinedTokenSource.dispose();
+				linkedTokenSource.dispose();
 			}
 		});
 	}

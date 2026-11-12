@@ -9,6 +9,7 @@ import { ErrorNotification, PrintNotification } from "../../shared/test_protocol
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { isSetupOrTeardownTestName } from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
+import { createLinkedCancellationTokenSource } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 import { formatForTerminal } from "../utils/vscode/terminals";
@@ -198,17 +199,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					location: vs.ProgressLocation.Notification,
 					title,
 				}, async (progress, progressToken) => {
-					const combinedTokenSource = new vs.CancellationTokenSource();
-					const tokenSubs: IAmDisposable[] = [];
-					if (token?.isCancellationRequested || progressToken?.isCancellationRequested)
-						combinedTokenSource.cancel();
-					if (token)
-						tokenSubs.push(token.onCancellationRequested(() => combinedTokenSource.cancel()));
-					if (progressToken)
-						tokenSubs.push(progressToken.onCancellationRequested(() => combinedTokenSource.cancel()));
+					const linkedTokenSource = createLinkedCancellationTokenSource(token, progressToken);
 
 					try {
-						const combinedToken = combinedTokenSource.token;
+						const combinedToken = linkedTokenSource.token;
 						let currentItem = 0;
 
 						for (const [suite, nodes] of testsBySuite.entries()) {
@@ -225,8 +219,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 							progress.report({ increment: 100 / totalItems, message });
 						}
 					} finally {
-						disposeAll(tokenSubs);
-						combinedTokenSource.dispose();
+						linkedTokenSource.dispose();
 					}
 				});
 			}
