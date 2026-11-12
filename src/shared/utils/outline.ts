@@ -149,10 +149,12 @@ export class TestOutlineVisitor extends OutlineVisitor {
 
 	private readonly names: string[] = [];
 
+	private topLevelMain: Outline | undefined;
 	private isInsideTopLevelMain = false;
 
 	public visit(outline: Outline) {
 		this.tests.length = 0;
+		this.topLevelMain = undefined;
 		for (const line of Object.keys(this.testsByLine)) {
 			delete this.testsByLine[parseInt(line)];
 		}
@@ -161,13 +163,19 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	}
 
 	protected visitCompilationUnit(outline: Outline) {
-		if (outline.children) {
-			for (const child of outline.children) {
-				if (child.element.name === "main" && child.element.kind === "FUNCTION")
-					this.isInsideTopLevelMain = true;
-				this.visitNode(child);
-				this.isInsideTopLevelMain = false;
-			}
+		this.topLevelMain = outline.children?.find(
+			(child) => child.element.kind === "FUNCTION" && child.element.name === "main",
+		);
+		super.visitCompilationUnit(outline);
+	}
+
+	protected visitFunction(outline: Outline) {
+		const wasInsideTopLevelMain = this.isInsideTopLevelMain;
+		this.isInsideTopLevelMain = outline === this.topLevelMain;
+		try {
+			super.visitFunction(outline);
+		} finally {
+			this.isInsideTopLevelMain = wasInsideTopLevelMain;
 		}
 	}
 

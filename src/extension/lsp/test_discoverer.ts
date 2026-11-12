@@ -199,6 +199,20 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 		super(logger);
 	}
 
+	// Only tests and groups inside the top-level main() function are
+	// statically discoverable; tests in other functions appear as dynamic
+	// results when the suite runs.
+	protected visitCompilationUnit(outline: Outline) {
+		for (const child of outline.children ?? []) {
+			if (child.element.kind === "FUNCTION" && child.element.name === "main")
+				super.visitFunction(child);
+		}
+	}
+
+	protected visitFunction(_outline: Outline) {
+		// Do not recurse into nested local helper functions inside main().
+	}
+
 	protected visitUnitTestTest(outline: Outline) {
 		this.handleItem(outline, false, super.visitUnitTestTest.bind(this));
 	}

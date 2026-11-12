@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
-import { activate, getExpectedOutline, getPackages, helloWorldTestMainFile, logger } from "../../helpers";
+import { activate, getExpectedOutline, getPackages, helloWorldTestDiscoveryFile, helloWorldTestDynamicFile, helloWorldTestMainFile, logger, openFile } from "../../helpers";
 
 describe("test_outline_visitor", () => {
 
@@ -41,5 +41,58 @@ describe("test_outline_visitor", () => {
 		assert.equal(visitor.tests[10].fullName, "`with backticks`");
 		assert.equal(visitor.tests[11].isGroup, false);
 		assert.equal(visitor.tests[11].fullName, "ensure coverage data");
+	});
+
+	it("marks tests inside nested local functions as not from main()", async () => {
+		// dynamic_test.dart declares customTest() inside main(), and customTest's
+		// body contains a test() call. That inner test is not a main() test, but
+		// tests appearing after the local function in main() still are.
+		await openFile(helloWorldTestDynamicFile);
+		const outline = await getExpectedOutline();
+
+		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDynamicFile));
+		visitor.visit(outline);
+
+		const notFromMain = visitor.tests.filter((test) => test.isOutlineNodeNotFromMainFunction);
+		assert.ok(notFromMain.length > 0, "expected tests inside nested local functions to be flagged");
+		assert.ok(
+			notFromMain.every((test) => test.fullName.includes("extra text")),
+			`expected only the customTest body test to be flagged, got ${JSON.stringify(notFromMain.map((t) => t.fullName))}`,
+		);
+
+		const fromMain = visitor.tests.filter((test) => !test.isOutlineNodeNotFromMainFunction);
+		assert.ok(fromMain.length > 0, "expected tests directly inside main() to remain unflagged");
+	});
+
+	it("classifies tests in top-level and nested helpers against discovery_test.dart", async () => {
+		// discovery_test.dart contains a top-level helperWithTests() outside
+		// main(), a nestedHelper() local function inside main() followed by a
+		// regular test, and regular groups/tests inside main().
+		await openFile(helloWorldTestDiscoveryFile);
+		const outline = await getExpectedOutline();
+
+		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDiscoveryFile));
+		visitor.visit(outline);
+
+		assert.deepStrictEqual(
+			visitor.tests.map((test) => ({
+				fullName: test.fullName,
+				isGroup: test.isGroup,
+				isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction,
+			})),
+			[
+				{ fullName: "group 1", isGroup: true, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group 1 test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group 1 test interpolated ${1 + 1}", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group interpolated ${1 + 1}", isGroup: true, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group interpolated ${1 + 1} test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "nested helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "after nested helper", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "helper group", isGroup: true, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "helper group helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "another helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
+			],
+		);
 	});
 });
