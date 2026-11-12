@@ -145,7 +145,7 @@ export class EditCommands implements IAmDisposable {
 	private async prefixLines(editor: vs.TextEditor, lines: vs.TextLine[], prefix: string) {
 		// Find the minimum indent, so we can insert all slashes at the same level even if
 		// there is indented code.
-		const minIndent = Math.min(...lines.map((line) => line.firstNonWhitespaceCharacterIndex));
+		const minIndent = lines.reduce((min, line) => Math.min(min, line.firstNonWhitespaceCharacterIndex), Infinity);
 
 		await editor.edit((edit) => {
 			for (const line of lines) {
