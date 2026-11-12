@@ -14,7 +14,7 @@ import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { DartCreate } from "../sdk/dart/dart_create";
 import { SdkUtils } from "../sdk/utils";
-import { BaseSdkCommands, packageNameRegex } from "./sdk";
+import { BaseSdkCommands } from "./sdk";
 
 export class DartCommands extends BaseSdkCommands {
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, dartCapabilities: DartCapabilities, private readonly analytics: Analytics) {
@@ -81,16 +81,9 @@ export class DartCommands extends BaseSdkCommands {
 		if (!selectedTemplate)
 			return;
 
-		// If already in a workspace, set the default folder to something nearby.
-		const folders = await vs.window.showOpenDialog({
-			canSelectFolders: true,
-			defaultUri: this.context.profileState.lastUsedNewProjectPath ? vs.Uri.file(this.context.profileState.lastUsedNewProjectPath) : undefined,
-			openLabel: "Select a folder to create the project in",
-		});
-		if (folders?.length !== 1)
+		const folderPath = await this.pickNewProjectParentFolder();
+		if (!folderPath)
 			return;
-		const folderPath = fsPath(folders[0]);
-		this.context.profileState.lastUsedNewProjectPath = folderPath;
 
 		const projectKind = this.getProjectKind(selectedTemplate.template.name);
 		const defaultName = nextAvailableFilename(folderPath, `dart_${projectKind}_`);
@@ -124,15 +117,7 @@ export class DartCommands extends BaseSdkCommands {
 	}
 
 	public validateDartProjectName(input: string, folderDir: string) {
-		if (!packageNameRegex.test(input))
-			return "Dart project names should be all lowercase, with underscores to separate words";
-
-		const bannedNames = ["dart", "test", "this"];
-		if (bannedNames.includes(input))
-			return `You may not use ${input} as the name for a dart project`;
-
-		if (fs.existsSync(path.join(folderDir, input)))
-			return `A project with this name already exists within the selected directory`;
+		return this.validateProjectName(input, folderDir, "Dart", ["dart", "test", "this"]);
 	}
 
 	public getProjectKind(templateName: string) {
