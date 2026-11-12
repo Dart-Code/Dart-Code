@@ -8,7 +8,7 @@ import { SpawnedProcess } from "../../../shared/interfaces";
 import { nullLogger } from "../../../shared/logging";
 import { runProcess, safeSpawn } from "../../../shared/processes";
 import { mkDirRecursive } from "../../../shared/utils/fs";
-import { customScriptExt, getRandomTempFolder } from "../../helpers";
+import { customScriptExt, defer, getRandomTempFolder } from "../../helpers";
 
 const tempFolder = getRandomTempFolder();
 
@@ -75,5 +75,76 @@ describe("runProcess", () => {
 		assert.equal(result.exitCode, 0);
 		assert.equal(result.stdout, "first second");
 		assert.equal(result.stderr, "warn");
+	});
+
+	it("does not block when a background child inherits stdio pipes", async () => {
+		const script = [
+			"const cp = require('child_process');",
+			"const fs = require('fs');",
+			"const child = cp.spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'inherit' });",
+			"fs.writeSync(1, `${child.pid}\\n/opt/dart-sdk\\n`);",
+			"process.exit(0);",
+		].join(" ");
+
+		const start = Date.now();
+		const result = await runProcess(
+			nullLogger,
+			process.execPath,
+			["-e", script],
+			undefined,
+			{ ELECTRON_RUN_AS_NODE: "1" },
+			safeSpawn,
+		);
+		const elapsedMs = Date.now() - start;
+
+		const lines = result.stdout.trim().split(/\r?\n/);
+		const bgPid = Number(lines[0]);
+		if (Number.isFinite(bgPid) && bgPid > 0)
+			defer("Kill background child", () => { try { process.kill(bgPid); } catch { } });
+
+		assert.equal(result.exitCode, 0);
+		assert.equal(lines[1], "/opt/dart-sdk");
+		assert.ok(elapsedMs < 5000, `Expected runProcess not to wait for inherited stdio pipes, took ${elapsedMs}ms`);
+	});
+
+	it("cleans up listeners and cancellation subscription when settled", async () => {
+		const fakeProc = Object.assign(new EventEmitter(), {
+			kill: () => true,
+			pid: 9999,
+			stderr: new PassThrough(),
+			stdin: new PassThrough(),
+			stdout: new PassThrough(),
+		}) as unknown as SpawnedProcess;
+
+		let disposed = false;
+		const cancellationToken = {
+			isCancellationRequested: false,
+			onCancellationRequested: () => ({ dispose: () => { disposed = true; } }),
+		};
+
+		const resultPromise = runProcess(
+			nullLogger,
+			"dart",
+			["--version"],
+			undefined,
+			undefined,
+			() => {
+				setImmediate(() => {
+					fakeProc.stdout.emit("data", Buffer.from("done"));
+					fakeProc.emit("exit", 0, null);
+					fakeProc.emit("close", 0, null);
+				});
+				return fakeProc;
+			},
+			cancellationToken,
+		);
+
+		const result = await resultPromise;
+		assert.equal(result.exitCode, 0);
+		assert.equal(result.stdout, "done");
+		assert.equal(disposed, true);
+
+		fakeProc.stdout.emit("data", Buffer.from("late"));
+		assert.equal(result.stdout, "done");
 	});
 });
