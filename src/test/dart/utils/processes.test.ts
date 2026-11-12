@@ -1,7 +1,10 @@
 import { strict as assert } from "assert";
+import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
+import { PassThrough } from "stream";
 import { isWin } from "../../../shared/constants";
+import { SpawnedProcess } from "../../../shared/interfaces";
 import { nullLogger } from "../../../shared/logging";
 import { runProcess, safeSpawn } from "../../../shared/processes";
 import { mkDirRecursive } from "../../../shared/utils/fs";
@@ -44,3 +47,33 @@ function testExecution(filename: string) {
 		assert.equal(lastLine, filename, `Output did not have expected output (${procResultJson})`);
 	});
 }
+
+describe("runProcess", () => {
+	it("collects stdout and stderr emitted after exit before close", async () => {
+		const fakeProc = Object.assign(new EventEmitter(), {
+			kill: () => true,
+			pid: 9999,
+			stderr: new PassThrough(),
+			stdin: new PassThrough(),
+			stdout: new PassThrough(),
+		}) as unknown as SpawnedProcess;
+
+		const resultPromise = runProcess(nullLogger, "dart", ["--version"], undefined, undefined, () => {
+			setImmediate(() => {
+				fakeProc.stdout.emit("data", Buffer.from("first "));
+				fakeProc.emit("exit", 0, null);
+				setImmediate(() => {
+					fakeProc.stdout.emit("data", Buffer.from("second"));
+					fakeProc.stderr.emit("data", Buffer.from("warn"));
+					fakeProc.emit("close", 0, null);
+				});
+			});
+			return fakeProc;
+		});
+
+		const result = await resultPromise;
+		assert.equal(result.exitCode, 0);
+		assert.equal(result.stdout, "first second");
+		assert.equal(result.stderr, "warn");
+	});
+});

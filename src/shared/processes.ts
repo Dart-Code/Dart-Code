@@ -54,14 +54,14 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 		const err: string[] = [];
 		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
 		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
-		proc.on("exit", (code) => {
+		proc.on("close", (code) => {
 			resolve(new RunProcessResult(
 				nullToUndefined(code) ?? 1 // null means terminated by signal
 				, out.join(""),
 				err.join(""),
 			));
 		});
-		// Handle things like ENOENT which are async and come via error, but mean exit will never fire.
+		// Handle things like ENOENT which are async and come via error, but mean close will never fire.
 		proc.on("error", (e) => reject(e));
 	});
 }
