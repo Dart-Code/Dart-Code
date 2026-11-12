@@ -238,6 +238,12 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 		else
 			this.model.testDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined);
 
+		// Do not recurse into dynamically-named groups; their concrete runtime
+		// group instances and child tests will be populated under this node from
+		// test results when the suite runs.
+		if (isGroup && name.includes("$"))
+			return;
+
 		if (isGroup)
 			this.stack.push({ id: thisID, name: fullName });
 		try {

@@ -6,7 +6,7 @@ import { TestSource } from "../../../shared/test/test_model";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { captureTestDebugConfigurations } from "../../debug_helpers";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -84,6 +84,61 @@ describe("dart tests", () => {
 		assert.equal(exactGroupWithTestName.parent === suite.node, true);
 		assert.equal(staticGroup.parent === suite.node, true);
 		assert.equal(dynamicTestWithGroupName.parent === suite.node, true);
+	});
+
+	it("does not statically discover children of dynamic groups while preserving CodeLenses", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/3910
+		const editor = await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  for (final testType in ["a", "b"]) {
+    group("group $testType", () {
+      test("does X", () {});
+      group("nested", () {
+        test("does Y", () {});
+      });
+    });
+  }
+  test("regular test", () {});
+}
+		`);
+
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("regular test"));
+
+		const expectedTree = `
+hello_world
+    test/rename_test.dart [0/1 passed] Unknown
+        group $testType
+        regular test Unknown
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), expectedTree);
+
+		// Unrun dynamic groups with no static children must stay visible even when
+		// skipped tests are hidden.
+		await setConfigForTest("dart", "showSkippedTests", false);
+		privateApi.testModel.handleSkippedTestsConfigChange();
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), expectedTree);
+
+		// CodeLenses for tests and nested groups inside the dynamic group must still be provided.
+		const fileCodeLens = await getCodeLens(editor.document);
+		const expectedTargets = [
+			{ search: `group^("group $testType"`, fullName: "group $testType" },
+			{ search: `test^("does X"`, fullName: "group $testType does X" },
+			{ search: `group^("nested"`, fullName: "group $testType nested" },
+			{ search: `test^("does Y"`, fullName: "group $testType nested does Y" },
+		];
+		for (const target of expectedTargets) {
+			const targetPos = positionOf(target.search);
+			const codeLenses = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+			assert.equal(codeLenses.length, 2, `Expected Run and Debug CodeLenses for ${target.fullName}`);
+			if (codeLenses[0].command) {
+				const runAction = codeLenses.find((cl) => cl.command!.title === "Run");
+				assert.ok(runAction, `Expected Run CodeLens for ${target.fullName}`);
+				assert.equal((runAction.command!.arguments![0] as { fullName: string }).fullName, target.fullName);
+			}
+		}
 	});
 
 	it("handles renaming of discovered tests", async () => {

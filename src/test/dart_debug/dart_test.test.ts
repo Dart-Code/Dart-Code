@@ -682,6 +682,67 @@ test/empty_test.dart
 		);
 	});
 
+	it("populates runtime groups and tests under dynamic groups without phantom duplicates", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/3910
+		defer("Restore empty_test.dart", async () => {
+			writeFileSync(fsPath(helloWorldTestEmptyFile), "");
+			await vs.commands.executeCommand("workbench.action.files.revert");
+		});
+		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
+		await openFile(helloWorldTestEmptyFile);
+		await setTestContent(`
+import 'package:test/test.dart';
+
+void main() {
+  for (var testType in ['a', 'b']) {
+    group('group $testType', () {
+      test('does X', () {
+        expect(1, 1);
+      });
+
+      test('does Y', () {
+        expect(1, 1);
+      });
+    });
+  }
+}
+		`.trim());
+		await currentEditor().document.save();
+		await getExpectedOutline();
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+
+		const beforeRunTree = `
+hello_world
+    test/empty_test.dart Unknown
+        group $testType
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), beforeRunTree);
+
+		await runWithoutDebugging(helloWorldTestEmptyFile);
+
+		const afterRunTree = `
+hello_world
+    test/empty_test.dart [4/4 passed] Passed
+        group $testType [4/4 passed] Passed
+            group a [2/2 passed] Passed
+                does X Passed
+                does Y Passed
+            group b [2/2 passed] Passed
+                does X Passed
+                does Y Passed
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), afterRunTree);
+
+		// Subsequent Outline updates must preserve the runtime children without re-introducing phantom nodes.
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), afterRunTree);
+
+		// Full multi-line ranges from TestOutlineVisitor must still be resolved for tests inside dynamic groups.
+		const ranges = getTestRanges(helloWorldTestEmptyFile);
+		assert.ok(ranges.includes("does X: 5:6-7:8"), `Expected full range for does X in:\n${ranges}`);
+		assert.ok(ranges.includes("does Y: 9:6-11:8"), `Expected full range for does Y in:\n${ranges}`);
+	});
+
 	describe("collects coverage", () => {
 		let addCoverageStub: SinonStub | undefined;
 

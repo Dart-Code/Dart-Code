@@ -145,7 +145,7 @@ export class GroupNode extends RunnableTreeNode {
 	}
 
 	get isSkipped(): boolean {
-		return this.children.every((c) => {
+		return this.children.length > 0 && this.children.every((c) => {
 			if (c instanceof GroupNode || c instanceof TestNode)
 				return c.isSkipped;
 			else
