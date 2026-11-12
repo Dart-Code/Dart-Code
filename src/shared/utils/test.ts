@@ -65,12 +65,14 @@ export interface TestSelection {
 	/// level `main()` function which means we need to skip adding `^` to
 	/// the start of the regex.
 	isOutlineNodeNotFromMainFunction?: boolean,
+	isDynamic?: boolean,
 	name: string,
 	isGroup: boolean,
 	position: Position | undefined
 }
 
-const regexEscapedInterpolationExpressionPattern = /\\\$(?:(?:\w+)|(?:\\\{.*\\\}))/g;
+const dartInterpolationPattern = /\$(?:[A-Za-z_]\w*|\{.*\})/;
+const regexEscapedInterpolationExpressionPattern = /\\\$(?:[A-Za-z_]\w*|\\\{.*\\\})/g;
 export function makeRegexForTests(names: TestSelection[]) {
 	const regexSegments: string[] = [];
 	for (const name of names) {
@@ -90,7 +92,9 @@ export function makeRegexForTests(names: TestSelection[]) {
 		// name won't match. So we just replace them out with wildcards. We'll need
 		// to do this after escaping for regex, to ensure the original expression
 		// is escaped but our wildcard is not.
-		const substitutedName = escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*");
+		const substitutedName = name.isDynamic === false
+			? escapedName
+			: escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*");
 		regexSegments.push(`${prefix}${substitutedName}${suffix}`);
 	}
 
@@ -127,12 +131,12 @@ export function getTestSelectionForNodes(nodes: TreeNode[]): TestSelection[] | u
 }
 
 function getTestSelectionForNode(treeNode: GroupNode | TestNode): TestSelection {
-	return { name: treeNode.name!, isGroup: treeNode instanceof GroupNode, position: treeNode.range?.start };
+	return { isDynamic: treeNode.hasDynamicName, name: treeNode.name!, isGroup: treeNode instanceof GroupNode, position: treeNode.range?.start };
 }
 
 export function getTestSelectionForOutline(test: TestOutlineInfo): TestSelection {
 	const position = test.range.start;
-	return { isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction, name: test.fullName, isGroup: test.isGroup, position };
+	return { isDynamic: test.isDynamic, isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction, name: test.fullName, isGroup: test.isGroup, position };
 }
 
 export const createTestFileAction = (file: string) => `Create ${path.basename(file)}`;
@@ -189,16 +193,20 @@ export function parseTestNameFromOutline(elementName: string): { name: string, i
 	// constant stringValue and falls back to toSource(), leaving Dart string
 	// quotes wrapped around the description (unlike literal/escaped/raw strings
 	// such as 'price \$5' or r'price $5', where stringValue is unquoted).
-	const startsWithQuote = elementName.startsWith("'") || elementName.startsWith('"') || elementName.startsWith("r'") || elementName.startsWith('r"');
-	const endsWithQuote = elementName.endsWith("'") || elementName.endsWith('"');
-	const minQuotedLength = elementName.startsWith("r") ? 3 : 2;
-	const hasSourceQuotes = startsWithQuote && endsWithQuote && elementName.length >= minQuotedLength;
+	let unparenthesized = elementName;
+	while (unparenthesized.startsWith("(") && unparenthesized.endsWith(")") && unparenthesized.length >= 2)
+		unparenthesized = unparenthesized.substring(1, unparenthesized.length - 1).trim();
+
+	const startsWithQuote = unparenthesized.startsWith("'") || unparenthesized.startsWith('"') || unparenthesized.startsWith("r'") || unparenthesized.startsWith('r"');
+	const endsWithQuote = unparenthesized.endsWith("'") || unparenthesized.endsWith('"');
+	const minQuotedLength = unparenthesized.startsWith("r") ? 3 : 2;
+	const hasSourceQuotes = startsWithQuote && endsWithQuote && unparenthesized.length >= minQuotedLength;
 
 	if ((elementName.startsWith("'") || elementName.startsWith('"')) && (elementName.endsWith("'") || elementName.endsWith('"')) && elementName.length >= 2)
 		elementName = elementName.substring(1, elementName.length - 1);
 
 	return {
-		isDynamic: hasSourceQuotes && elementName.includes("$"),
+		isDynamic: hasSourceQuotes && dartInterpolationPattern.test(elementName),
 		name: elementName,
 	};
 }

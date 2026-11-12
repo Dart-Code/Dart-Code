@@ -193,6 +193,57 @@ hello_world
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), expectedTree);
 	});
 
+	it("hides dynamic groups and tests when showSkippedTests is false before running and all runtime children are skipped", async () => {
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const x = "a";
+  group("group $x", () {
+    test("skipped child", () {}, skip: true);
+  });
+  test("test $x", () {}, skip: true);
+  test("passing test", () {});
+}
+		`);
+
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("passing test"));
+
+		await setConfigForTest("dart", "showSkippedTests", false);
+		privateApi.testModel.handleSkippedTestsConfigChange();
+
+		// Unrun dynamic nodes start visible before their runtime children report skipped.
+		const beforeRunTree = `
+hello_world
+    test/rename_test.dart [0/2 passed] Unknown
+        group $x
+        test $x Unknown
+        passing test Unknown
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), beforeRunTree);
+
+		const model = privateApi.testModel;
+		const suitePath = fsPath(helloWorldRenameTestFile);
+		const session = "skipped_dynamic_session";
+		model.suiteStarted(session, suitePath);
+		model.groupDiscovered(session, suitePath, TestSource.Result, 10, "group a", undefined, suitePath, undefined);
+		model.testDiscovered(session, suitePath, TestSource.Result, 101, "group a skipped child", 10, suitePath, undefined, undefined, true);
+		model.testDone(session, suitePath, 101, "skipped", undefined);
+		model.testDiscovered(session, suitePath, TestSource.Result, 102, "test a", undefined, suitePath, undefined, undefined, true);
+		model.testDone(session, suitePath, 102, "skipped", undefined);
+		model.testDiscovered(session, suitePath, TestSource.Result, 103, "passing test", undefined, suitePath, undefined, undefined, true);
+		model.testDone(session, suitePath, 103, "success", undefined);
+		model.suiteDone(session, suitePath);
+
+		const afterRunTree = `
+hello_world
+    test/rename_test.dart [1/1 passed] Passed
+        passing test Passed
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), afterRunTree);
+	});
+
 	it("handles renaming of discovered tests", async () => {
 		await openFile(helloWorldRenameTestFile);
 		await setTestContent(`

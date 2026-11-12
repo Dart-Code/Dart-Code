@@ -1,7 +1,7 @@
 import { Range } from "vscode-languageclient";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { Logger } from "../interfaces";
-import { extractTestNameFromOutline } from "./test";
+import { parseTestNameFromOutline } from "./test";
 
 export abstract class OutlineVisitor {
 	constructor(private logger: Logger) { }
@@ -148,12 +148,14 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	public readonly testsByLine: Record<number, TestOutlineInfo[]> = {};
 
 	private readonly names: string[] = [];
+	private readonly dynamicFlags: boolean[] = [];
 
 	private topLevelMain: Outline | undefined;
 	private isInsideTopLevelMain = false;
 
 	public visit(outline: Outline) {
 		this.tests.length = 0;
+		this.dynamicFlags.length = 0;
 		this.topLevelMain = undefined;
 		for (const line of Object.keys(this.testsByLine)) {
 			delete this.testsByLine[parseInt(line)];
@@ -187,14 +189,17 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	}
 
 	private addTest(outline: Outline, base: (outline: Outline) => void) {
-		const name = extractTestNameFromOutline(outline.element.name);
-		if (!name || !outline.element.range)
+		const parsedName = parseTestNameFromOutline(outline.element.name);
+		if (!parsedName?.name || !outline.element.range)
 			return;
-		this.names.push(name);
+		this.names.push(parsedName.name);
+		this.dynamicFlags.push(parsedName.isDynamic);
 		const fullName = this.names.join(" ");
+		const isDynamic = this.dynamicFlags.some(Boolean);
 		const isGroup = outline.element.kind === "UNIT_TEST_GROUP";
 		const range = outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined);
 		const info = {
+			isDynamic,
 			isOutlineNodeNotFromMainFunction: !this.isInsideTopLevelMain,
 			file: this.file,
 			fullName,
@@ -211,11 +216,13 @@ export class TestOutlineVisitor extends OutlineVisitor {
 			base.bind(this)(outline);
 		} finally {
 			this.names.pop();
+			this.dynamicFlags.pop();
 		}
 	}
 }
 
 export interface TestOutlineInfo {
+	isDynamic?: boolean;
 	isOutlineNodeNotFromMainFunction: boolean;
 	fullName: string;
 	file: string;

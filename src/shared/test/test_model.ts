@@ -425,7 +425,8 @@ export class TestModel {
 		// Update the label.
 		const previousDescription = node.description;
 		node.description = node.children.length && totalTests !== 0 ? `${node.testCountPass}/${totalTests} passed` : "";
-		if (forceUpdate || node.description !== previousDescription)
+		const isHiddenSkippedNode = !this.config.showSkippedTests && (node instanceof GroupNode || node instanceof TestNode) && node.isSkipped;
+		if (forceUpdate || node.description !== previousDescription || isHiddenSkippedNode)
 			this.updateNode({ node });
 
 		if (direction === "UP") {
