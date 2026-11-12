@@ -2438,12 +2438,6 @@
 						"description": "Whether to prompt for platforms when running 'Flutter: Create New Project'.",
 						"scope": "window"
 					},
-					"dart.offline": {
-						"type": "boolean",
-						"default": false,
-						"description": "Whether to use the --offline switch for commands like 'pub get' and 'Flutter: Create New Project'.",
-						"scope": "window"
-					},
 					"dart.flutterCreateOrganization": {
 						"type": [
 							"null",
@@ -2503,25 +2497,6 @@
 						],
 						"default": "manual",
 						"markdownDescription": "Whether to automatically send a Hot Reload request to Flutter apps during a debug session when saving files. Dart apps are controlled by the hotReloadOnSave setting.",
-						"scope": "window"
-					},
-					"dart.hotReloadOnSave": {
-						"enum": [
-							"never",
-							"manual",
-							"manualIfDirty",
-							"all",
-							"allIfDirty"
-						],
-						"enumDescriptions": [
-							"Do not reload when saving",
-							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave)",
-							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave) only if the saved file had changes",
-							"Reload for all saves, manual or automatic",
-							"Reload for all saves, manual or automatic only if the saved file had changes"
-						],
-						"default": "never",
-						"markdownDescription": "Whether to automatically send a Hot Reload request to Dart apps during a debug session when saving files. Flutter apps are controlled by the flutterHotReloadOnSave setting.",
 						"scope": "window"
 					},
 					"dart.flutterGenerateLocalizationsOnSave": {
@@ -2805,6 +2780,12 @@
 						"description": "Whether to enable functionality for using Pub. Turning this setting off will prevent the extension from ever running pub and hide all commands relating to this. Use this if you are using an alternative package manager.",
 						"scope": "window"
 					},
+					"dart.offline": {
+						"type": "boolean",
+						"default": false,
+						"description": "Whether to use the --offline switch for commands like 'pub get' and 'Flutter: Create New Project'.",
+						"scope": "window"
+					},
 					"dart.promptToGetPackages": {
 						"type": "boolean",
 						"default": true,
@@ -2940,6 +2921,25 @@
 						"type": "boolean",
 						"default": true,
 						"description": "Whether to call toString() on objects when rendering them in debug views (such as the Variables, Watch and Hovers views). Only applies to views of 100 or fewer values for performance reasons.",
+						"scope": "window"
+					},
+					"dart.hotReloadOnSave": {
+						"enum": [
+							"never",
+							"manual",
+							"manualIfDirty",
+							"all",
+							"allIfDirty"
+						],
+						"enumDescriptions": [
+							"Do not reload when saving",
+							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave)",
+							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave) only if the saved file had changes",
+							"Reload for all saves, manual or automatic",
+							"Reload for all saves, manual or automatic only if the saved file had changes"
+						],
+						"default": "never",
+						"markdownDescription": "Whether to automatically send a Hot Reload request to Dart apps during a debug session when saving files. Flutter apps are controlled by the flutterHotReloadOnSave setting.",
 						"scope": "window"
 					},
 					"dart.hotReloadProgress": {
