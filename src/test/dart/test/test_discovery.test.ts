@@ -57,6 +57,13 @@ describe("dart tests", () => {
 		const nestedDynamicTest = model.testDiscovered(session, suitePath, TestSource.Outline, 30, "nested $name", 30, suitePath, undefined, undefined);
 		const nestedResult = model.testDiscovered(session, suitePath, TestSource.Result, 31, "nested alpha", 30, suitePath, undefined, undefined);
 
+		// Fixed Outline groups containing literal "$" (escaped or raw strings) must
+		// not be treated as wildcard patterns for unrelated runtime groups.
+		model.groupDiscovered(session, suitePath, TestSource.Outline, 40, "price $5", undefined, suitePath, undefined, false, false);
+		model.groupDiscovered(session, suitePath, TestSource.Outline, 41, "price $foo", undefined, suitePath, undefined, false, false);
+		const fixedDollarResult1 = model.groupDiscovered(session, suitePath, TestSource.Result, 42, "price 99", undefined, suitePath, undefined);
+		const fixedDollarResult2 = model.groupDiscovered(session, suitePath, TestSource.Result, 43, "price bar", undefined, suitePath, undefined);
+
 		const prefixMatch = model.groupDiscovered(session, suitePath, TestSource.Result, 11, "auth_service", undefined, suitePath, undefined);
 		const partialDynamicGroupMatch = model.groupDiscovered(session, suitePath, TestSource.Result, 12, "group alpha suffix extra", undefined, suitePath, undefined);
 		const matchingDynamicGroup = model.groupDiscovered(session, suitePath, TestSource.Result, 13, "group alpha suffix", undefined, suitePath, undefined);
@@ -84,6 +91,8 @@ describe("dart tests", () => {
 		assert.equal(exactGroupWithTestName.parent === suite.node, true);
 		assert.equal(staticGroup.parent === suite.node, true);
 		assert.equal(dynamicTestWithGroupName.parent === suite.node, true);
+		assert.equal(fixedDollarResult1.parent === suite.node, true, "fixed literal-dollar Outline group must not capture unrelated runtime groups");
+		assert.equal(fixedDollarResult2.parent === suite.node, true, "fixed literal-dollar Outline group must not capture unrelated runtime groups");
 	});
 
 	it("does not statically discover children of dynamic groups while preserving CodeLenses", async () => {
@@ -139,6 +148,49 @@ hello_world
 				assert.equal((runAction.command!.arguments![0] as { fullName: string }).fullName, target.fullName);
 			}
 		}
+	});
+
+	it("statically discovers children of groups with escaped or raw dollar signs", async () => {
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const x = "x";
+  group('price \\$5', () {
+    test('calculates tax', () {});
+  });
+  group("price \\$foo", () {
+    test("calculates discount", () {});
+  });
+  group(r'raw price $5', () {
+    test('calculates total', () {});
+  });
+  group(r"raw price $foo", () {
+    test("calculates subtotal", () {});
+  });
+  group('dynamic $x', () {
+    test('hidden until run', () {});
+  });
+}
+		`);
+
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("dynamic $x"));
+
+		const expectedTree = `
+hello_world
+    test/rename_test.dart [0/4 passed] Unknown
+        price $5 [0/1 passed] Unknown
+            calculates tax Unknown
+        price $foo [0/1 passed] Unknown
+            calculates discount Unknown
+        raw price $5 [0/1 passed] Unknown
+            calculates total Unknown
+        raw price $foo [0/1 passed] Unknown
+            calculates subtotal Unknown
+        dynamic $x
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), expectedTree);
 	});
 
 	it("handles renaming of discovered tests", async () => {

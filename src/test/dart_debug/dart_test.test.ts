@@ -705,6 +705,18 @@ void main() {
       });
     });
   }
+
+  group('price \\$5', () {
+    test('calculates tax', () {
+      expect(1, 1);
+    });
+  });
+
+  group(r'raw price $foo', () {
+    test('calculates total', () {
+      expect(1, 1);
+    });
+  });
 }
 		`.trim());
 		await currentEditor().document.save();
@@ -713,8 +725,12 @@ void main() {
 
 		const beforeRunTree = `
 hello_world
-    test/empty_test.dart Unknown
+    test/empty_test.dart [0/2 passed] Unknown
         group $testType
+        price $5 [0/1 passed] Unknown
+            calculates tax Unknown
+        raw price $foo [0/1 passed] Unknown
+            calculates total Unknown
 		`;
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), beforeRunTree);
 
@@ -722,7 +738,7 @@ hello_world
 
 		const afterRunTree = `
 hello_world
-    test/empty_test.dart [4/4 passed] Passed
+    test/empty_test.dart [6/6 passed] Passed
         group $testType [4/4 passed] Passed
             group a [2/2 passed] Passed
                 does X Passed
@@ -730,6 +746,10 @@ hello_world
             group b [2/2 passed] Passed
                 does X Passed
                 does Y Passed
+        price $5 [1/1 passed] Passed
+            calculates tax Passed
+        raw price $foo [1/1 passed] Passed
+            calculates total Passed
 		`;
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), afterRunTree);
 
@@ -737,10 +757,12 @@ hello_world
 		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), afterRunTree);
 
-		// Full multi-line ranges from TestOutlineVisitor must still be resolved for tests inside dynamic groups.
+		// Full multi-line ranges from TestOutlineVisitor must still be resolved for tests inside dynamic and literal-dollar groups.
 		const ranges = getTestRanges(helloWorldTestEmptyFile);
 		assert.ok(ranges.includes("does X: 5:6-7:8"), `Expected full range for does X in:\n${ranges}`);
 		assert.ok(ranges.includes("does Y: 9:6-11:8"), `Expected full range for does Y in:\n${ranges}`);
+		assert.ok(ranges.includes("calculates tax: 16:4-18:6"), `Expected full range for calculates tax in:\n${ranges}`);
+		assert.ok(ranges.includes("calculates total: 22:4-24:6"), `Expected full range for calculates total in:\n${ranges}`);
 	});
 
 	describe("collects coverage", () => {

@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
+import { parseTestNameFromOutline } from "../../../shared/utils/test";
 import { activate, getExpectedOutline, getPackages, helloWorldTestDiscoveryFile, helloWorldTestDynamicFile, helloWorldTestMainFile, logger, openFile } from "../../helpers";
 
 describe("test_outline_visitor", () => {
@@ -94,5 +95,24 @@ describe("test_outline_visitor", () => {
 				{ fullName: "another helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
 			],
 		);
+	});
+
+	it("distinguishes literal dollar signs from interpolated test names in outlines", () => {
+		// Unquoted descriptions come from analyzer stringValue (fixed strings,
+		// including escaped \$ and raw r'...' strings).
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("price $5")`), { isDynamic: false, name: "price $5" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("price $foo")`), { isDynamic: false, name: "price $foo" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("price \${1 + 1}")`), { isDynamic: false, name: "price ${1 + 1}" });
+
+		// Quote-wrapped descriptions come from analyzer toSource() fallback for interpolations.
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("'group $testType'")`), { isDynamic: true, name: "group $testType" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group(""group \${1 + 1}"")`), { isDynamic: true, name: "group ${1 + 1}" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("r'group ' '$testType'")`), { isDynamic: true, name: "r'group ' '$testType'" });
+
+		// Edge cases: partial quotes, single-quote names, empty/malformed inputs.
+		assert.deepStrictEqual(parseTestNameFromOutline(`test("with quotes ">= foo"")`), { isDynamic: false, name: `with quotes ">= foo"` });
+		assert.deepStrictEqual(parseTestNameFromOutline(`test("'")`), { isDynamic: false, name: "'" });
+		assert.equal(parseTestNameFromOutline(""), undefined);
+		assert.equal(parseTestNameFromOutline("invalid"), undefined);
 	});
 });

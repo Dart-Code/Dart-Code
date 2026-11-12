@@ -20,6 +20,7 @@ export abstract class TreeNode {
 
 	public _isStale = false;
 	public testSource = TestSource.Outline;
+	public hasDynamicName = false;
 	public isPotentiallyDeleted = false;
 	public duration: number | undefined;
 
@@ -463,7 +464,7 @@ export class TestModel {
 		return suite;
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, _hasStarted = false): GroupNode {
+	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, _hasStarted = false, isDynamic?: boolean): GroupNode {
 		groupPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingGroup = suite.reuseMatchingGroup(groupName);
@@ -490,6 +491,8 @@ export class TestModel {
 		} else {
 			groupNode.testSource = source;
 		}
+		if (source === TestSource.Outline)
+			groupNode.hasDynamicName = isDynamic ?? Boolean(groupName?.includes("$"));
 
 		this.markAsNotDeleted(groupNode);
 
@@ -512,7 +515,7 @@ export class TestModel {
 		return groupNode;
 	}
 
-	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
+	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false, isDynamic?: boolean): TestNode {
 		testPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingTest = suite.reuseMatchingTest(testName);
@@ -554,6 +557,8 @@ export class TestModel {
 		} else {
 			testNode.testSource = source;
 		}
+		if (source === TestSource.Outline)
+			testNode.hasDynamicName = isDynamic ?? Boolean(testName?.includes("$"));
 
 		this.markAsNotDeleted(testNode);
 		testNode.testStartTime = startTime;
@@ -600,7 +605,8 @@ export class TestModel {
 		for (const child of children) {
 			if (!(child instanceof nodeClass)
 				|| child.testSource !== TestSource.Outline
-				|| !child.name?.includes("$"))
+				|| !child.hasDynamicName
+				|| !child.name)
 				continue;
 			const regex = new RegExp(makeRegexForTests([{ name: child.name, isGroup: false, position: undefined }]));
 			if (regex.test(name))

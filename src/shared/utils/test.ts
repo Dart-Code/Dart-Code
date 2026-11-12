@@ -174,10 +174,10 @@ void main() {
 	};
 }
 
-export function extractTestNameFromOutline(elementName: string): string | undefined {
+export function parseTestNameFromOutline(elementName: string): { name: string, isDynamic: boolean } | undefined {
 	if (!elementName)
 		return;
-	// Strip off the function name/parent like test( or testWidget(
+	// Strip off the function name/parent like test( or testWidget(.
 	const openParen = elementName.indexOf("(");
 	const closeParen = elementName.lastIndexOf(")");
 	if (openParen === -1 || closeParen === -1 || openParen >= closeParen)
@@ -185,12 +185,26 @@ export function extractTestNameFromOutline(elementName: string): string | undefi
 
 	elementName = elementName.substring(openParen + 2, closeParen - 1);
 
-	// For tests with variables, we often end up with additional quotes wrapped
-	// around them...
-	if ((elementName.startsWith("'") || elementName.startsWith('"')) && (elementName.endsWith("'") || elementName.endsWith('"')))
+	// For tests with variables/interpolations, the analyzer cannot compute a
+	// constant stringValue and falls back to toSource(), leaving Dart string
+	// quotes wrapped around the description (unlike literal/escaped/raw strings
+	// such as 'price \$5' or r'price $5', where stringValue is unquoted).
+	const startsWithQuote = elementName.startsWith("'") || elementName.startsWith('"') || elementName.startsWith("r'") || elementName.startsWith('r"');
+	const endsWithQuote = elementName.endsWith("'") || elementName.endsWith('"');
+	const minQuotedLength = elementName.startsWith("r") ? 3 : 2;
+	const hasSourceQuotes = startsWithQuote && endsWithQuote && elementName.length >= minQuotedLength;
+
+	if ((elementName.startsWith("'") || elementName.startsWith('"')) && (elementName.endsWith("'") || elementName.endsWith('"')) && elementName.length >= 2)
 		elementName = elementName.substring(1, elementName.length - 1);
 
-	return elementName;
+	return {
+		isDynamic: hasSourceQuotes && elementName.includes("$"),
+		name: elementName,
+	};
+}
+
+export function extractTestNameFromOutline(elementName: string): string | undefined {
+	return parseTestNameFromOutline(elementName)?.name;
 }
 
 export function isSetupOrTeardownTestName(testName: string | undefined): boolean {

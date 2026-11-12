@@ -8,7 +8,7 @@ import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { OutlineVisitor } from "../../shared/utils/outline";
-import { extractTestNameFromOutline } from "../../shared/utils/test";
+import { parseTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../shared/vscode/utils";
 import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
@@ -221,9 +221,10 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 	}
 
 	private handleItem(outline: Outline, isGroup: boolean, base: (outline: Outline) => void) {
-		const name = extractTestNameFromOutline(outline.element.name);
-		if (!name || !outline.element.range)
+		const parsedName = parseTestNameFromOutline(outline.element.name);
+		if (!parsedName?.name || !outline.element.range)
 			return;
+		const { name, isDynamic } = parsedName;
 
 		const range = outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined);
 		const parent = this.stack.length > 0 ? this.stack[this.stack.length - 1] : undefined;
@@ -234,14 +235,14 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 
 		const thisID = this.id++;
 		if (isGroup)
-			this.model.groupDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range);
+			this.model.groupDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, false, isDynamic);
 		else
-			this.model.testDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined);
+			this.model.testDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined, false, isDynamic);
 
 		// Do not recurse into dynamically-named groups; their concrete runtime
 		// group instances and child tests will be populated under this node from
 		// test results when the suite runs.
-		if (isGroup && name.includes("$"))
+		if (isGroup && isDynamic)
 			return;
 
 		if (isGroup)
