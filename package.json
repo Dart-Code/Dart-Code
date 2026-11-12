@@ -2496,7 +2496,7 @@
 							"Reload for all saves, manual or automatic only if the saved file had changes"
 						],
 						"default": "manual",
-						"markdownDescription": "Whether to automatically send a Hot Reload request to Flutter apps during a debug session when saving files. Dart apps are controlled by the hotReloadOnSave setting.",
+						"markdownDescription": "Whether to automatically send a Hot Reload request to Flutter apps during a debug session when saving files. Dart apps are controlled by the `#dart.hotReloadOnSave#` setting.",
 						"scope": "window"
 					},
 					"dart.flutterGenerateLocalizationsOnSave": {
@@ -2783,7 +2783,7 @@
 					"dart.offline": {
 						"type": "boolean",
 						"default": false,
-						"description": "Whether to use the --offline switch for commands like 'pub get' and 'Flutter: Create New Project'.",
+						"description": "Whether to use the --offline switch for commands like 'Pub: Get Packages' and 'Flutter: Create New Project'.",
 						"scope": "window"
 					},
 					"dart.promptToGetPackages": {
@@ -2939,7 +2939,7 @@
 							"Reload for all saves, manual or automatic only if the saved file had changes"
 						],
 						"default": "never",
-						"markdownDescription": "Whether to automatically send a Hot Reload request to Dart apps during a debug session when saving files. Flutter apps are controlled by the flutterHotReloadOnSave setting.",
+						"markdownDescription": "Whether to automatically send a Hot Reload request to Dart apps during a debug session when saving files. Flutter apps are controlled by the `#dart.flutterHotReloadOnSave#` setting.",
 						"scope": "window"
 					},
 					"dart.hotReloadProgress": {
