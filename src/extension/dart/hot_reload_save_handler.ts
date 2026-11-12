@@ -12,8 +12,7 @@ import { shouldHotReloadFor } from "../utils";
 
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
-	private dartHotReloadDelayTimer: NodeJS.Timeout | undefined;
-	private flutterHotReloadDelayTimer: NodeJS.Timeout | undefined;
+	private readonly hotReloadDelayTimers = new Map<"dart" | "flutter", NodeJS.Timeout>();
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
 	private lastSaveReason: TextDocumentSaveReason | undefined;
@@ -88,63 +87,53 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		return true;
 	}
 
-	private reloadDart({ isAutoSave, isDirty }: { isAutoSave: boolean, isDirty: boolean }) {
-		const configSetting = config.hotReloadOnSave;
-		if (configSetting === "never" || (isAutoSave && (configSetting === "manual" || configSetting === "manualIfDirty")))
-			return;
-
-		if (!isDirty && (configSetting === "manualIfDirty" || configSetting === "allIfDirty"))
-			return;
-
-		const commandToRun = "dart.hotReload";
-		const args = {
-			onlyDart: true,
-			reason: restartReasonSave,
-		};
-
+	private reloadDart(saveState: { isAutoSave: boolean, isDirty: boolean }) {
 		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
 		// Hopefully we can improve in future: https://github.com/microsoft/vscode/issues/86087
-		if (this.dartHotReloadDelayTimer) {
-			clearTimeout(this.dartHotReloadDelayTimer);
-		}
-
-		this.dartHotReloadDelayTimer = setTimeout(() => {
-			this.dartHotReloadDelayTimer = undefined;
-			void commands.executeCommand(commandToRun, args);
-		}, 200);
+		this.scheduleReload("dart", config.hotReloadOnSave, saveState, 200, {
+			onlyDart: true,
+			reason: restartReasonSave,
+		});
 	}
 
-	private reloadFlutter({ isAutoSave, isDirty }: { isAutoSave: boolean, isDirty: boolean }) {
-		const configSetting = config.flutterHotReloadOnSave;
-		if (configSetting === "never" || (isAutoSave && (configSetting === "manual" || configSetting === "manualIfDirty")))
-			return;
-
-		if (!isDirty && (configSetting === "manualIfDirty" || configSetting === "allIfDirty"))
-			return;
-
-		const commandToRun = "dart.hotReload";
-		const args = {
-			debounce: true,
-			onlyFlutter: true,
-			reason: restartReasonSave,
-		};
-
+	private reloadFlutter(saveState: { isAutoSave: boolean, isDirty: boolean }) {
 		// We do a short debounce here to avoid many notifications when using Save All, since the debug adapter
 		// will show a notification for each reload still.
 		// https://github.com/Dart-Code/Dart-Code/issues/5552
-		if (this.flutterHotReloadDelayTimer) {
-			clearTimeout(this.flutterHotReloadDelayTimer);
-		}
+		this.scheduleReload("flutter", config.flutterHotReloadOnSave, saveState, 10, {
+			debounce: true,
+			onlyFlutter: true,
+			reason: restartReasonSave,
+		});
+	}
 
-		this.flutterHotReloadDelayTimer = setTimeout(() => {
-			this.flutterHotReloadDelayTimer = undefined;
-			void commands.executeCommand(commandToRun, args);
-		}, 10);
+	private scheduleReload(
+		key: "dart" | "flutter",
+		configSetting: typeof config.hotReloadOnSave,
+		{ isAutoSave, isDirty }: { isAutoSave: boolean, isDirty: boolean },
+		delayMs: number,
+		args: Record<string, unknown>,
+	) {
+		if (configSetting === "never" || (isAutoSave && (configSetting === "manual" || configSetting === "manualIfDirty")))
+			return;
+
+		if (!isDirty && (configSetting === "manualIfDirty" || configSetting === "allIfDirty"))
+			return;
+
+		const existingTimer = this.hotReloadDelayTimers.get(key);
+		if (existingTimer)
+			clearTimeout(existingTimer);
+
+		this.hotReloadDelayTimers.set(key, setTimeout(() => {
+			this.hotReloadDelayTimers.delete(key);
+			void commands.executeCommand("dart.hotReload", args);
+		}, delayMs));
 	}
 
 	public dispose(): void | Promise<void> {
-		if (this.dartHotReloadDelayTimer)
-			clearTimeout(this.dartHotReloadDelayTimer);
+		for (const timer of this.hotReloadDelayTimers.values())
+			clearTimeout(timer);
+		this.hotReloadDelayTimers.clear();
 
 		disposeAll(this.disposables);
 	}
