@@ -9,7 +9,7 @@ import { ErrorNotification, PrintNotification } from "../../shared/test_protocol
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { isSetupOrTeardownTestName } from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
-import { createLinkedCancellationTokenSource } from "../../shared/vscode/utils";
+import { createCombinedCancellationTokenSource } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 import { formatForTerminal } from "../utils/vscode/terminals";
@@ -199,10 +199,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					location: vs.ProgressLocation.Notification,
 					title,
 				}, async (progress, progressToken) => {
-					const linkedTokenSource = createLinkedCancellationTokenSource(token, progressToken);
+					const combinedTokenSource = createCombinedCancellationTokenSource(token, progressToken);
 
 					try {
-						const combinedToken = linkedTokenSource.token;
+						const combinedToken = combinedTokenSource.token;
 						let currentItem = 0;
 
 						for (const [suite, nodes] of testsBySuite.entries()) {
@@ -219,7 +219,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 							progress.report({ increment: 100 / totalItems, message });
 						}
 					} finally {
-						linkedTokenSource.dispose();
+						combinedTokenSource.dispose();
 					}
 				});
 			}

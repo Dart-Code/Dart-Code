@@ -10,17 +10,16 @@ export class WebClient {
 		this.userAgent = `Dart-Code/${extensionVersion} (https://dartcode.org/)`;
 	}
 
-	public fetch(urlString: string, headers?: http.OutgoingHttpHeaders): Promise<string> {
+	public fetch(urlString: string, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
 		const u = url.parse(urlString);
-		if (u.protocol === "https:" && u.hostname)
-			return this.fetchUrl(true, u.hostname, u.port ?? "443", u.path ?? "", headers);
-		else if (u.protocol === "http:" && u.hostname)
-			return this.fetchUrl(false, u.hostname, u.port ?? "80", u.path ?? "", headers);
-		else
+		if ((u.protocol !== "https:" && u.protocol !== "http:") || !u.hostname)
 			return Promise.reject(new Error(`Cannot fetch URL ${urlString}`));
-	}
 
-	private fetchUrl(isHttps: boolean, hostname: string | undefined, port: string | undefined, path: string | undefined, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
+		const isHttps = u.protocol === "https:";
+		const hostname = u.hostname;
+		const port = u.port ?? (isHttps ? "443" : "80");
+		const path = u.path ?? "";
+
 		return new Promise<string>((resolve, reject) => {
 			const options: http.RequestOptions = {
 				headers: {

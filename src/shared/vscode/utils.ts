@@ -478,7 +478,10 @@ export function buildHostKind({ appName, appHost, remoteName }: { appName?: stri
 		return undefined;
 }
 
-export function createLinkedCancellationTokenSource(...tokens: Array<vs.CancellationToken | undefined>): { token: vs.CancellationToken } & IAmDisposable {
+/**
+ * Creates a `CancellationTokenSource` that is cancelled as soon as any of the supplied tokens are cancelled.
+ */
+export function createCombinedCancellationTokenSource(...tokens: Array<vs.CancellationToken | undefined>): { token: vs.CancellationToken } & IAmDisposable {
 	const tokenSource = new vs.CancellationTokenSource();
 	const disposables: IAmDisposable[] = [tokenSource];
 	for (const token of tokens) {
