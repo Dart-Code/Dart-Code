@@ -85,131 +85,86 @@ export class EditCommands implements IAmDisposable {
 		const editor = getActiveRealFileEditor();
 		if (!editor?.selections.length)
 			return;
-		const document = editor.document;
-		const selections = editor.selections;
+		const lines = this.getNonEmptySelectedLines(editor.document, editor.selections);
+		if (!lines.length)
+			return;
 
 		// Track the prefix that matches all lines in all selections.
 		// If any line does not start with `///` then it cannot be TRIPLE.
 		// If any line does not start with '//' then it cannot be DOUBLE.
 		// We start from the highest and work down as we find lines that don't match.
 		let commonPrefix: "NONE" | "DOUBLE" | "TRIPLE" = "TRIPLE";
+		for (const line of lines) {
+			const text = line.text.trim();
+			if (commonPrefix === "TRIPLE" && !text.startsWith("///"))
+				commonPrefix = text.startsWith("//") ? "DOUBLE" : "NONE";
+			else if (commonPrefix === "DOUBLE" && !text.startsWith("//"))
+				commonPrefix = "NONE";
 
-		check: {
-			for (const selection of selections) {
-				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
-					const line = document.lineAt(lineNumber);
-					// Skip over blank lines, as they won't have comment markers and shouldn't
-					// influence which common prefix we find.
-					if (line.isEmptyOrWhitespace)
-						continue;
-
-					const text = line.text.trim();
-					if (commonPrefix === "TRIPLE" && !text.startsWith("///"))
-						commonPrefix = text.startsWith("//") ? "DOUBLE" : "NONE";
-					else if (commonPrefix === "DOUBLE" && !text.startsWith("//"))
-						commonPrefix = "NONE";
-
-					// Any time we hit NONE, we can bail out.
-					if (commonPrefix === "NONE")
-						break check;
-				}
-			}
+			// Any time we hit NONE, we can bail out.
+			if (commonPrefix === "NONE")
+				break;
 		}
 
-		if (onlyDartdoc) {
-			switch (commonPrefix) {
-				case "NONE":
-					// If no prefix, insert triples.
-					await this.prefixLines(editor, selections, "/// ");
-					break;
-				case "DOUBLE":
-					// If already double, just add the additional one slash.
-					await this.prefixLines(editor, selections, "/");
-					break;
-				case "TRIPLE":
-					// If already triple, remove slashes.
-					await this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
-					break;
-			}
-		} else {
-			switch (commonPrefix) {
-				case "NONE":
-					// If no prefix, insert doubles.
-					await this.prefixLines(editor, selections, "// ");
-					break;
-				case "DOUBLE":
-					// If already double, add an additional slash to make triple.
-					await this.prefixLines(editor, selections, "/");
-					break;
-				case "TRIPLE":
-					// If already triple, remove slashes.
-					await this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
-					break;
-			}
+		switch (commonPrefix) {
+			case "NONE":
+				// If no prefix, insert doubles (or triples when onlyDartdoc).
+				await this.prefixLines(editor, lines, onlyDartdoc ? "/// " : "// ");
+				break;
+			case "DOUBLE":
+				// If already double, add an additional slash to make triple.
+				await this.prefixLines(editor, lines, "/");
+				break;
+			case "TRIPLE":
+				// If already triple, remove slashes.
+				await this.removeLinePrefixes(editor, lines, ["/// ", "///"]);
+				break;
 		}
 	}
 
-	private async prefixLines(editor: vs.TextEditor, selections: readonly vs.Selection[], prefix: string) {
-		const document = editor.document;
+	private getNonEmptySelectedLines(document: vs.TextDocument, selections: readonly vs.Selection[]): vs.TextLine[] {
 		// In case we have overlapping selections, keep track of lines we've done.
 		const doneLines = new Set<number>();
-
-		// Find the minimum indent, so we can insert all slashes at the same level even if
-		// there is indented code.
-		let minIndent: number | undefined;
+		const lines: vs.TextLine[] = [];
 		for (const selection of selections) {
 			for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
-				const line = document.lineAt(lineNumber);
-				if (line.isEmptyOrWhitespace)
+				if (doneLines.has(lineNumber))
 					continue;
+				doneLines.add(lineNumber);
 
-				if (!minIndent || line.firstNonWhitespaceCharacterIndex < minIndent)
-					minIndent = line.firstNonWhitespaceCharacterIndex;
+				// Skip over blank lines, as they won't have comment markers and shouldn't
+				// influence which common prefix we find.
+				const line = document.lineAt(lineNumber);
+				if (!line.isEmptyOrWhitespace)
+					lines.push(line);
 			}
 		}
+		return lines;
+	}
+
+	private async prefixLines(editor: vs.TextEditor, lines: vs.TextLine[], prefix: string) {
+		// Find the minimum indent, so we can insert all slashes at the same level even if
+		// there is indented code.
+		const minIndent = lines.reduce((min, line) => Math.min(min, line.firstNonWhitespaceCharacterIndex), Infinity);
 
 		await editor.edit((edit) => {
-			for (const selection of selections) {
-				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
-					if (doneLines.has(lineNumber))
-						continue;
-					doneLines.add(lineNumber);
-
-					const line = document.lineAt(lineNumber);
-					if (line.isEmptyOrWhitespace)
-						continue;
-
-					const insertionPoint = line.range.start.translate(0, minIndent);
-					edit.insert(insertionPoint, prefix);
-				}
+			for (const line of lines) {
+				const insertionPoint = line.range.start.translate(0, minIndent);
+				edit.insert(insertionPoint, prefix);
 			}
 		});
 	}
 
-	private async removeLinePrefixes(editor: vs.TextEditor, selections: readonly vs.Selection[], prefixes: string[]) {
+	private async removeLinePrefixes(editor: vs.TextEditor, lines: vs.TextLine[], prefixes: string[]) {
 		const document = editor.document;
-		// In case we have overlapping selections, keep track of lines we've done.
-		const doneLines = new Set<number>();
-
 		await editor.edit((edit) => {
-			for (const selection of selections) {
-				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
-					if (doneLines.has(lineNumber))
-						continue;
-					doneLines.add(lineNumber);
-
-					const line = document.lineAt(lineNumber);
-					if (line.isEmptyOrWhitespace)
-						continue;
-
-					const lineContentStart = line.range.start.translate(0, line.firstNonWhitespaceCharacterIndex);
-					for (const prefix of prefixes) {
-						const possiblePrefixRange = new vs.Range(lineContentStart, lineContentStart.translate(0, prefix.length));
-						const possiblePrefix = document.getText(possiblePrefixRange);
-						if (possiblePrefix === prefix) {
-							edit.delete(possiblePrefixRange);
-							break;
-						}
+			for (const line of lines) {
+				const lineContentStart = line.range.start.translate(0, line.firstNonWhitespaceCharacterIndex);
+				for (const prefix of prefixes) {
+					const possiblePrefixRange = new vs.Range(lineContentStart, lineContentStart.translate(0, prefix.length));
+					if (document.getText(possiblePrefixRange) === prefix) {
+						edit.delete(possiblePrefixRange);
+						break;
 					}
 				}
 			}
