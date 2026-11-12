@@ -7,7 +7,7 @@ import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
-import { MainBodyOutlineVisitor } from "../../shared/utils/outline";
+import { OutlineVisitor } from "../../shared/utils/outline";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../shared/vscode/utils";
 import { FileTracker } from "../analysis/file_tracker";
@@ -191,12 +191,26 @@ export class TestDiscoverer implements IAmDisposable {
 	}
 }
 
-class TestDiscoveryVisitor extends MainBodyOutlineVisitor {
+class TestDiscoveryVisitor extends OutlineVisitor {
 	private readonly stack: Array<{ id: number, name: string }> = [];
 	private id = 1;
 
 	constructor(logger: Logger, private readonly model: TestModel, private readonly dartCodeDebugSessionID: string, private readonly suitePath: string) {
 		super(logger);
+	}
+
+	// Only tests and groups inside the top-level main() function are
+	// statically discoverable; tests in other functions appear as dynamic
+	// results when the suite runs.
+	protected visitCompilationUnit(outline: Outline) {
+		for (const child of outline.children ?? []) {
+			if (child.element.kind === "FUNCTION" && child.element.name === "main")
+				super.visitFunction(child);
+		}
+	}
+
+	protected visitFunction(_outline: Outline) {
+		// Do not recurse into nested local helper functions inside main().
 	}
 
 	protected visitUnitTestTest(outline: Outline) {
@@ -207,12 +221,6 @@ class TestDiscoveryVisitor extends MainBodyOutlineVisitor {
 	}
 
 	private handleItem(outline: Outline, isGroup: boolean, base: (outline: Outline) => void) {
-		// Tests and groups outside the top-level main() function cannot be
-		// statically discovered; they appear as dynamic results when the
-		// suite runs.
-		if (!this.isInsideTopLevelMain)
-			return;
-
 		const name = extractTestNameFromOutline(outline.element.name);
 		if (!name || !outline.element.range)
 			return;

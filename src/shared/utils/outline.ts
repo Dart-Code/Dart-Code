@@ -139,51 +139,7 @@ export abstract class OutlineVisitor {
 	protected visitUnknown(outline: Outline): void { this.visitChildren(outline); }
 }
 
-/// An [OutlineVisitor] that tracks whether the visitor is inside the body of
-/// the top-level `main()` function.
-///
-/// Tests and groups declared inside `main()` are statically discoverable,
-/// while those in other functions are not. Nested local function declarations
-/// inside `main()` suspend tracking for their own subtree so that tests they
-/// contain are not treated as `main()` tests, and tracking is restored for
-/// any subsequent siblings in `main()`.
-export abstract class MainBodyOutlineVisitor extends OutlineVisitor {
-	/// Whether the visitor is currently inside the body of the top-level
-	/// `main()` function, excluding nested local function declarations.
-	protected isInsideTopLevelMain = false;
-
-	protected visitCompilationUnit(outline: Outline) {
-		if (!outline.children)
-			return;
-
-		for (const child of outline.children) {
-			if (child.element.name === "main" && child.element.kind === "FUNCTION") {
-				this.isInsideTopLevelMain = true;
-				// Visit main()'s children directly so that this visitFunction
-				// call is not mistaken for a nested local function.
-				super.visitFunction(child);
-				this.isInsideTopLevelMain = false;
-			} else {
-				this.visitNode(child);
-			}
-		}
-	}
-
-	protected visitFunction(outline: Outline) {
-		if (this.isInsideTopLevelMain) {
-			this.isInsideTopLevelMain = false;
-			try {
-				super.visitFunction(outline);
-			} finally {
-				this.isInsideTopLevelMain = true;
-			}
-			return;
-		}
-		super.visitFunction(outline);
-	}
-}
-
-export class TestOutlineVisitor extends MainBodyOutlineVisitor {
+export class TestOutlineVisitor extends OutlineVisitor {
 	constructor(logger: Logger, private readonly file: string) {
 		super(logger);
 	}
@@ -193,13 +149,34 @@ export class TestOutlineVisitor extends MainBodyOutlineVisitor {
 
 	private readonly names: string[] = [];
 
+	private topLevelMain: Outline | undefined;
+	private isInsideTopLevelMain = false;
+
 	public visit(outline: Outline) {
 		this.tests.length = 0;
+		this.topLevelMain = undefined;
 		for (const line of Object.keys(this.testsByLine)) {
 			delete this.testsByLine[parseInt(line)];
 		}
 
 		super.visit(outline);
+	}
+
+	protected visitCompilationUnit(outline: Outline) {
+		this.topLevelMain = outline.children?.find(
+			(child) => child.element.kind === "FUNCTION" && child.element.name === "main",
+		);
+		super.visitCompilationUnit(outline);
+	}
+
+	protected visitFunction(outline: Outline) {
+		const wasInsideTopLevelMain = this.isInsideTopLevelMain;
+		this.isInsideTopLevelMain = outline === this.topLevelMain;
+		try {
+			super.visitFunction(outline);
+		} finally {
+			this.isInsideTopLevelMain = wasInsideTopLevelMain;
+		}
 	}
 
 	protected visitUnitTestTest(outline: Outline) {

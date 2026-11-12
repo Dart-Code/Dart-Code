@@ -259,8 +259,9 @@ export class TestCommands implements IAmDisposable {
 		if (preferredTestMode === "auto") {
 			// Default to line if the test is complex, but only if the file is not dirty, because
 			// if we try to save, we might trigger the formatter which will then change the line
-			// number where the test is.
-			if (!docIsDirty && testSelection?.length && testSelection.find((ts) => ts.name.includes("$")))
+			// number where the test is. Tests outside top-level main() also need line mode
+			// because their statically discovered names may not match the runtime names.
+			if (!docIsDirty && testSelection?.length && testSelection.find((ts) => ts.name.includes("$") || ts.isOutlineNodeNotFromMainFunction))
 				preferredTestMode = "line";
 			else
 				preferredTestMode = "name";

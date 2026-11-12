@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
-import { activate, getExpectedOutline, getPackages, helloWorldTestDynamicFile, helloWorldTestMainFile, logger, openFile } from "../../helpers";
+import { activate, getExpectedOutline, getPackages, helloWorldTestDiscoveryFile, helloWorldTestDynamicFile, helloWorldTestMainFile, logger, openFile } from "../../helpers";
 
 describe("test_outline_visitor", () => {
 
@@ -62,5 +62,37 @@ describe("test_outline_visitor", () => {
 
 		const fromMain = visitor.tests.filter((test) => !test.isOutlineNodeNotFromMainFunction);
 		assert.ok(fromMain.length > 0, "expected tests directly inside main() to remain unflagged");
+	});
+
+	it("classifies tests in top-level and nested helpers against discovery_test.dart", async () => {
+		// discovery_test.dart contains a top-level helperWithTests() outside
+		// main(), a nestedHelper() local function inside main() followed by a
+		// regular test, and regular groups/tests inside main().
+		await openFile(helloWorldTestDiscoveryFile);
+		const outline = await getExpectedOutline();
+
+		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDiscoveryFile));
+		visitor.visit(outline);
+
+		assert.deepStrictEqual(
+			visitor.tests.map((test) => ({
+				fullName: test.fullName,
+				isGroup: test.isGroup,
+				isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction,
+			})),
+			[
+				{ fullName: "group 1", isGroup: true, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group 1 test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group 1 test interpolated ${1 + 1}", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group interpolated ${1 + 1}", isGroup: true, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group interpolated ${1 + 1} test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "nested helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "after nested helper", isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "helper group", isGroup: true, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "helper group helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "another helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
+			],
+		);
 	});
 });

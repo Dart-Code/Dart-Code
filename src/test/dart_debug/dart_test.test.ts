@@ -13,7 +13,7 @@ import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { captureStartDebuggingConfigs, captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations, createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedOutline, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedOutline, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDiscoveryFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -570,6 +570,27 @@ hello_world
 			const editor = await openFile(helloWorldTestTreeFile);
 			await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// unsaved\n"));
 			const config = await captureTestDebugConfiguration(helloWorldTestTreeFile, (test: TestOutlineInfo) => test.fullName.includes("$"));
+
+			assert.ok(!config.program!.includes("?line="), `Expected to run by name, got program ${config.program}`);
+			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
+		});
+
+		it("uses line numbers for a saved file when the test is outside top-level main()", async () => {
+			// "nested helper test" is declared inside a local helper function in
+			// discovery_test.dart, so its static name may not match the runtime
+			// name and it must run by line even though it contains no "$".
+			const config = await captureTestDebugConfiguration(helloWorldTestDiscoveryFile, (test: TestOutlineInfo) => test.fullName === "nested helper test");
+
+			assert.ok(config.program!.includes("?line="), `Expected to run by line, got program ${config.program}`);
+			assert.ok(!config.toolArgs?.includes("--name"), `Expected no --name arg, got ${JSON.stringify(config.toolArgs)}`);
+		});
+
+		it("uses the test name when a helper-defined test is in an unsaved file", async () => {
+			// Unsaved files may format-on-save and shift lines, so even tests
+			// outside top-level main() fall back to name-based execution.
+			const editor = await openFile(helloWorldTestDiscoveryFile);
+			await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "// unsaved\n"));
+			const config = await captureTestDebugConfiguration(helloWorldTestDiscoveryFile, (test: TestOutlineInfo) => test.fullName === "nested helper test");
 
 			assert.ok(!config.program!.includes("?line="), `Expected to run by name, got program ${config.program}`);
 			assert.ok(config.toolArgs?.includes("--name"), `Expected a --name arg, got ${JSON.stringify(config.toolArgs)}`);
