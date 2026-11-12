@@ -34,7 +34,21 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 
 	abstract get type(): string;
 
-	public abstract provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]>;
+	public async provideTasks(): Promise<vs.Task[]> {
+		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+
+		const promises: Array<Promise<vs.Task>> = [];
+		for (const folder of projectFolders) {
+			const folderUri = vs.Uri.file(folder);
+			const workspaceFolder = vs.workspace.getWorkspaceFolder(folderUri)!;
+			const isFlutter = isFlutterProjectFolder(folder);
+			promises.push(...this.createTasksForProject(workspaceFolder, folderUri, isFlutter));
+		}
+
+		return Promise.all(promises);
+	}
+
+	protected abstract createTasksForProject(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, isFlutter: boolean): Array<Promise<vs.Task>>;
 
 	/// Tasks that will either be run by Dart or Flutter depending on the project type.
 	protected createSharedTasks(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri): Array<Promise<vs.Task>> {
@@ -196,25 +210,10 @@ export class DartTaskProvider extends BaseTaskProvider {
 
 	get type() { return DartTaskProvider.type; }
 
-	public async provideTasks(): Promise<vs.Task[]> {
-		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
-
-		const promises: Array<Promise<vs.Task>> = [];
-		projectFolders.forEach((folder) => {
-			const folderUri = vs.Uri.file(folder);
-			const workspaceFolder = vs.workspace.getWorkspaceFolder(folderUri)!;
-			const isFlutter = isFlutterProjectFolder(folder);
-			if (!isFlutter)
-				promises.push(...this.createSharedTasks(workspaceFolder, folderUri));
-			promises.push(this.createTask(workspaceFolder, folderUri, this.dartDocCommand, this.dartDocArguments));
-
-			// For testing...
-			// tasks.push(this.createTask(folder, "--version"));
-		});
-
-		const tasks = (await Promise.all(promises));
-
-		return tasks;
+	protected createTasksForProject(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, isFlutter: boolean): Array<Promise<vs.Task>> {
+		const promises = isFlutter ? [] : this.createSharedTasks(workspaceFolder, projectFolder);
+		promises.push(this.createTask(workspaceFolder, projectFolder, this.dartDocCommand, this.dartDocArguments));
+		return promises;
 	}
 
 	protected createPubTask(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, args: string[]) {
