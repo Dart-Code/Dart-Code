@@ -8,6 +8,7 @@ import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, Sp
 import { logProcess } from "../../shared/logging";
 import { getPubExecutionInfo, RunProcessResult } from "../../shared/processes";
 import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { getPackageOrFolderDisplayName } from "../../shared/vscode/display_names";
 import { OperationProgress } from "../../shared/vscode/interfaces";
 import { DartSdkManager, FlutterSdkManager } from "../../shared/vscode/sdk_manager";
@@ -18,7 +19,7 @@ import { getGlobalFlutterArgs, safeToolSpawn } from "../utils/processes";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import * as channels from "./channels";
 
-export const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
+const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 
 // TODO: Find a better way/place for this.
 export const commandState = {
@@ -154,6 +155,31 @@ export class BaseSdkCommands implements IAmDisposable {
 			location: vs.ProgressLocation.Notification,
 			title: `${commandName} ${args.join(" ")}`,
 		}, (progress, token) => runWithProgress(progress, token));
+	}
+
+	protected async pickNewProjectParentFolder(): Promise<string | undefined> {
+		// If already in a workspace, set the default folder to something nearby.
+		const folders = await vs.window.showOpenDialog({
+			canSelectFolders: true,
+			defaultUri: this.context.profileState.lastUsedNewProjectPath ? vs.Uri.file(this.context.profileState.lastUsedNewProjectPath) : undefined,
+			openLabel: "Select a folder to create the project in",
+		});
+		if (folders?.length !== 1)
+			return undefined;
+		const folderPath = fsPath(folders[0]);
+		this.context.profileState.lastUsedNewProjectPath = folderPath;
+		return folderPath;
+	}
+
+	protected validateProjectName(input: string, folderDir: string, kind: "Dart" | "Flutter", bannedNames: string[]) {
+		if (!packageNameRegex.test(input))
+			return `${kind} project names should be all lowercase, with underscores to separate words`;
+
+		if (bannedNames.includes(input))
+			return `You may not use ${input} as the name for a ${kind.toLowerCase()} project`;
+
+		if (fs.existsSync(path.join(folderDir, input)))
+			return `A project with this name already exists within the selected directory`;
 	}
 
 	public dispose(): void {

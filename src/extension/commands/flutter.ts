@@ -27,7 +27,7 @@ import * as util from "../utils";
 import { editSetting, showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
-import { BaseSdkCommands, commandState, packageNameRegex } from "./sdk";
+import { BaseSdkCommands, commandState } from "./sdk";
 
 export class FlutterCommands extends BaseSdkCommands {
 	private flutterScreenshotPath?: string;
@@ -332,16 +332,9 @@ export class FlutterCommands extends BaseSdkCommands {
 			return;
 		}
 
-		// If already in a workspace, set the default folder to something nearby.
-		const folders = await vs.window.showOpenDialog({
-			canSelectFolders: true,
-			defaultUri: this.context.profileState.lastUsedNewProjectPath ? vs.Uri.file(this.context.profileState.lastUsedNewProjectPath) : undefined,
-			openLabel: "Select a folder to create the project in",
-		});
-		if (folders?.length !== 1)
+		const folderPath = await this.pickNewProjectParentFolder();
+		if (!folderPath)
 			return;
-		const folderPath = fsPath(folders[0]);
-		this.context.profileState.lastUsedNewProjectPath = folderPath;
 
 		const projectKind = this.getProjectKind(template.id);
 		const defaultName = nextAvailableFilename(folderPath, `flutter_${projectKind}_`);
@@ -448,15 +441,7 @@ export class FlutterCommands extends BaseSdkCommands {
 	}
 
 	private validateFlutterProjectName(input: string, folderDir: string) {
-		if (!packageNameRegex.test(input))
-			return "Flutter project names should be all lowercase, with underscores to separate words";
-
-		const bannedNames = ["flutter", "flutter_test", "test", "integration_test", "this"];
-		if (bannedNames.includes(input))
-			return `You may not use ${input} as the name for a flutter project`;
-
-		if (fs.existsSync(path.join(folderDir, input)))
-			return `A project with this name already exists within the selected directory`;
+		return this.validateProjectName(input, folderDir, "Flutter", ["flutter", "flutter_test", "test", "integration_test", "this"]);
 	}
 
 	private getProjectKind(templateName: string) {
