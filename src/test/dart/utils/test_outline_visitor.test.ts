@@ -115,9 +115,10 @@ describe("test_outline_visitor", () => {
 		// Quote-wrapped constant string containing non-interpolation "$5" (e.g. r'"price $5"').
 		assert.deepStrictEqual(parseTestNameFromOutline(`group(""price $5"")`), { isDynamic: false, name: "price $5" });
 
-		// Edge cases: partial quotes, single-quote names, empty/malformed inputs.
+		// Edge cases: partial quotes, single-quote names, unclosed "${", empty/malformed inputs.
 		assert.deepStrictEqual(parseTestNameFromOutline(`test("with quotes ">= foo"")`), { isDynamic: false, name: `with quotes ">= foo"` });
 		assert.deepStrictEqual(parseTestNameFromOutline(`test("'")`), { isDynamic: false, name: "'" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("'price \${unclosed'")`), { isDynamic: false, name: "price ${unclosed" });
 		assert.equal(parseTestNameFromOutline(""), undefined);
 		assert.equal(parseTestNameFromOutline("invalid"), undefined);
 	});
@@ -151,6 +152,38 @@ describe("test_outline_visitor", () => {
 		assert.equal(
 			makeRegexForTests([{ name: "price $5", isGroup: false, position: undefined }]),
 			"^price \\$5( \\(variant: .*\\))?$",
+		);
+	});
+
+	it("tokenizes multiple and multiline interpolations without swallowing literal text between them", () => {
+		assert.equal(
+			makeRegexForTests([{ name: "phase ${\n n\n} end ${other}", isDynamic: true, isGroup: true, position: undefined }]),
+			"^phase .* end .*",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "phase ${n} end ${other}", isDynamic: true, isGroup: false, position: undefined }]),
+			"^phase .* end .*( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{
+				isDynamic: true,
+				isGroup: true,
+				name: `phase \${items.where((x) {\n // ignore }\n /* ignore } */\n return x != r"}" && x != '\\'}' && x != "\${'}'}";\n}).length} end $other`,
+				position: undefined,
+			}]),
+			"^phase .* end .*",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "pair ${a}$b done", isDynamic: true, isGroup: false, position: undefined }]),
+			"^pair .* done( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "price $5 tax $n", isDynamic: true, isGroup: true, position: undefined }]),
+			"^price \\$5 tax .*",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "price ${\"unterminated", isDynamic: true, isGroup: true, position: undefined }]),
+			"^price \\$\\{\"unterminated",
 		);
 	});
 });

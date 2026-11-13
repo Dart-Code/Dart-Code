@@ -64,6 +64,12 @@ describe("dart tests", () => {
 		const fixedDollarResult1 = model.groupDiscovered(session, suitePath, TestSource.Result, 42, "price 99", undefined, suitePath, undefined);
 		const fixedDollarResult2 = model.groupDiscovered(session, suitePath, TestSource.Result, 43, "price bar", undefined, suitePath, undefined);
 
+		// Multiline interpolations followed by another interpolation must preserve literal
+		// text between them so unrelated runtime groups are not captured.
+		const multilineMultiInterpGroup = model.groupDiscovered(session, suitePath, TestSource.Outline, 50, "phase ${\n n\n} end ${other}", undefined, suitePath, undefined, false, [{ isDynamic: true, name: "phase ${\n n\n} end ${other}" }]);
+		const matchingMultilineMultiInterpResult = model.groupDiscovered(session, suitePath, TestSource.Result, 51, "phase 1 end alpha", undefined, suitePath, undefined);
+		const unrelatedMultilineResult = model.groupDiscovered(session, suitePath, TestSource.Result, 52, "phase unrelated", undefined, suitePath, undefined);
+
 		const prefixMatch = model.groupDiscovered(session, suitePath, TestSource.Result, 11, "auth_service", undefined, suitePath, undefined);
 		const partialDynamicGroupMatch = model.groupDiscovered(session, suitePath, TestSource.Result, 12, "group alpha suffix extra", undefined, suitePath, undefined);
 		const matchingDynamicGroup = model.groupDiscovered(session, suitePath, TestSource.Result, 13, "group alpha suffix", undefined, suitePath, undefined);
@@ -93,6 +99,8 @@ describe("dart tests", () => {
 		assert.equal(dynamicTestWithGroupName.parent === suite.node, true);
 		assert.equal(fixedDollarResult1.parent === suite.node, true, "fixed literal-dollar Outline group must not capture unrelated runtime groups");
 		assert.equal(fixedDollarResult2.parent === suite.node, true, "fixed literal-dollar Outline group must not capture unrelated runtime groups");
+		assert.equal(matchingMultilineMultiInterpResult.parent === multilineMultiInterpGroup, true);
+		assert.equal(unrelatedMultilineResult.parent === suite.node, true, "multiline interpolation followed by another interpolation must not swallow literal text between them");
 	});
 
 	it("does not statically discover children of dynamic groups while preserving CodeLenses", async () => {
@@ -259,6 +267,72 @@ void main() {
 		const selectionRegex = new RegExp(expectedPattern);
 		assert.equal(selectionRegex.test("price $foo tax 1"), true);
 		assert.equal(selectionRegex.test("price bar tax 1"), false);
+	});
+
+	it("preserves literal text between multiline and subsequent interpolations in CodeLens selections", async () => {
+		await setConfigForTest("dart", "testInvocationMode", "name");
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const n = 1;
+  const other = "alpha";
+  group("phase \${'''
+$n'''.trim()} end \${other}", () {
+    test("runs", () {});
+  });
+  group("phase unrelated", () {
+    test("other", () {});
+  });
+}
+		`);
+
+		const codeLensConfig = await captureTestDebugConfiguration(
+			helloWorldRenameTestFile,
+			(test) => test.isGroup && test.fullName.startsWith("phase ") && test.fullName !== "phase unrelated",
+		);
+
+		const expectedPattern = "^phase .* end .*";
+		assert.deepStrictEqual(codeLensConfig.toolArgs, ["--name", expectedPattern, "--run-skipped"]);
+
+		const selectionRegex = new RegExp(expectedPattern);
+		assert.equal(selectionRegex.test("phase 1 end alpha"), true);
+		assert.equal(selectionRegex.test("phase unrelated"), false);
+	});
+
+	it("preserves literal text between multiline and subsequent interpolations in tree-node selections", async () => {
+		await setConfigForTest("dart", "testInvocationMode", "name");
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const n = 1;
+  const other = "alpha";
+  group("phase \${'''
+$n'''.trim()} end \${other}", () {
+    test("runs", () {});
+  });
+  group("phase unrelated", () {
+    test("other", () {});
+  });
+}
+		`);
+
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("phase unrelated"));
+
+		const treeNodeConfig = await captureTestDebugConfigurationForItems(
+			helloWorldRenameTestFile,
+			(suiteNode) => {
+				const dynamicGroup = Array.from(suiteNode.children, ([, item]) => item).find((item) => item.label.startsWith("phase ") && item.label !== "phase unrelated");
+				assert.ok(dynamicGroup, "Expected multiline dynamic group in test tree");
+				return [dynamicGroup];
+			},
+		);
+
+		const expectedPattern = "^phase .* end .*";
+		assert.deepStrictEqual(treeNodeConfig.toolArgs, ["--name", expectedPattern]);
 	});
 
 	it("hides dynamic groups and tests when showSkippedTests is false before running and all runtime children are skipped", async () => {
