@@ -162,14 +162,15 @@ describe("AddSdkToPath", () => {
 			return this.skip();
 		setEnvVar("SHELL", "/bin/fish");
 		useTempHome();
-		const writeText = sb.stub(vs.env.clipboard, "writeText").resolves(undefined);
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		showInformationMessage.onFirstCall().resolves(copySdkPathToClipboardAction);
 		showInformationMessage.onSecondCall().resolves(noThanksAction);
 
 		await privateApi.addSdkToPath.addToPath("Dart", "/fake/dart-sdk");
 
-		assert.ok(writeText.calledOnceWithExactly(path.join("/fake/dart-sdk", "bin")));
+		// vs.env.clipboard cannot be stubbed, so verify the real clipboard like
+		// the debug command tests do.
+		assert.equal(await vs.env.clipboard.readText(), path.join("/fake/dart-sdk", "bin"));
 	});
 
 	it("reports already-on-PATH when the update fails but PATH contains the SDK", async function () {
@@ -197,7 +198,9 @@ describe("AddSdkToPath", () => {
 
 		await privateApi.addSdkToPath.promptToAddToPath("Dart", "/fake/dart-sdk");
 
-		assert.ok(showInformationMessage.calledOnceWithExactly(addSdkToPathPrompt("Dart"), addSdkToPathAction, noThanksAction));
+		// addToPath shows a second prompt with the result, so check each call.
+		assert.deepEqual(showInformationMessage.firstCall.args, [addSdkToPathPrompt("Dart"), addSdkToPathAction, noThanksAction]);
+		assert.deepEqual(showInformationMessage.secondCall.args, [addedToPathPrompt("Dart")]);
 		assert.equal(
 			fs.readFileSync(unixProfilePath(home, "bash"), "utf8"),
 			`export PATH="${path.join("/fake/dart-sdk", "bin")}:$PATH"\n`,
