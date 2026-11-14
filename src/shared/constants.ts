@@ -154,7 +154,7 @@ export const addedToPathPrompt = (sdkType: SdkTypeString) => `The ${sdkType} SDK
 export const addSdkToPathPrompt = (sdkType: SdkTypeString) => `Do you want to add the ${sdkType} SDK to PATH so it's accessible in external terminals?`;
 export const unableToAddToPathPrompt = (sdkType: SdkTypeString) => `Unable to add the ${sdkType} SDK to PATH automatically. Show instructions to add manually?`;
 export const openInstructionsAction = "Open Instructions";
-export const copySdkPathToClipboardAction = "Copy SDK path to Clipboard";
+export const copySdkPathToClipboardAction = "Copy SDK bin path to Clipboard";
 export const addSdkToPathAction = "Add SDK to PATH";
 export const addToPathInstructionsUrl = isWin
 	? "https://flutter.dev/to/update-windows-path"

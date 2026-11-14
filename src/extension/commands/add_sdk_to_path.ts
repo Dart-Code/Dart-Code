@@ -19,16 +19,16 @@ export class AddSdkToPath {
 			return;
 		}
 
-		sdkPath = path.join(sdkPath, "bin");
+		const binPath = path.join(sdkPath, "bin");
 
 		let result = AddSdkToPathResult.failed;
 		try {
 			result = this.canAddPathAutomatically()
 				? isWin
-					? await this.addToPathWindows(sdkPath)
-					: await this.addToPathUnix(sdkPath)
+					? await this.addToPathWindows(binPath)
+					: await this.addToPathUnix(binPath)
 				: AddSdkToPathResult.unavailableOnPlatform;
-			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(sdkPath))) {
+			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(binPath))) {
 				void vs.window.showInformationMessage(sdkAlreadyOnPathPrompt(sdkType));
 			} else if (result === AddSdkToPathResult.succeeded) {
 				void vs.window.showInformationMessage(addedToPathPrompt(sdkType));
@@ -73,7 +73,7 @@ export class AddSdkToPath {
 			if (action === openInstructionsAction) {
 				await envUtils.openInBrowser(addToPathInstructionsUrl);
 			} else if (action === copySdkPathToClipboardAction) {
-				await vs.env.clipboard.writeText(sdkPath);
+				await vs.env.clipboard.writeText(path.join(sdkPath, "bin"));
 			} else {
 				break;
 			}
