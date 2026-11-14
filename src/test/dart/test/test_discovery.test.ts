@@ -6,7 +6,7 @@ import { TestSource } from "../../../shared/test/test_model";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations } from "../../debug_helpers";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedOutline, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -122,7 +122,8 @@ void main() {
 }
 		`);
 
-		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("regular test"));
+		await getExpectedOutline();
+		privateApi.testDiscoverer.forceUpdate(helloWorldRenameTestFile);
 
 		const expectedTree = `
 hello_world
@@ -183,7 +184,8 @@ void main() {
 }
 		`);
 
-		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("dynamic $x"));
+		await getExpectedOutline();
+		privateApi.testDiscoverer.forceUpdate(helloWorldRenameTestFile);
 
 		const expectedTree = `
 hello_world
@@ -247,8 +249,6 @@ void main() {
   });
 }
 		`);
-
-		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("tax $n"));
 
 		const treeNodeConfig = await captureTestDebugConfigurationForItems(
 			helloWorldRenameTestFile,
@@ -320,8 +320,6 @@ $n'''.trim()} end \${other}", () {
 }
 		`);
 
-		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("phase unrelated"));
-
 		const treeNodeConfig = await captureTestDebugConfigurationForItems(
 			helloWorldRenameTestFile,
 			(suiteNode) => {
@@ -350,7 +348,8 @@ void main() {
 }
 		`);
 
-		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("passing test"));
+		await getExpectedOutline();
+		privateApi.testDiscoverer.forceUpdate(helloWorldRenameTestFile);
 
 		await setConfigForTest("dart", "showSkippedTests", false);
 		privateApi.testModel.handleSkippedTestsConfigChange();

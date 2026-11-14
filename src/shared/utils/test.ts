@@ -233,10 +233,6 @@ export function parseTestNameFromOutline(elementName: string): TestNameSegment |
 	};
 }
 
-export function extractTestNameFromOutline(elementName: string): string | undefined {
-	return parseTestNameFromOutline(elementName)?.name;
-}
-
 export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
 	return !!(testName && (testName.startsWith("(setUp") || testName.startsWith("(tearDown")) && testName.endsWith(")"));
 }
