@@ -136,12 +136,10 @@ export function getTestSelectionForOutline(test: TestOutlineInfo): TestSelection
 }
 
 export const createTestFileAction = (file: string) => `Create ${path.basename(file)}`;
-export const defaultTestFileContents = (isFlutterProject: boolean, dartEscapedTestName: string) => isFlutterProject ? defaultFlutterTestFileContents(dartEscapedTestName) : defaultDartTestFileContents(dartEscapedTestName);
-
 const defaultTestFileSelectionPlaceholder = "// TODO: Implement test";
 
-function defaultFlutterTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
-	const contents = `
+export function defaultTestFileContents(isFlutterProject: boolean, dartEscapedTestName: string): OpenedFileInformation {
+	const contents = (isFlutterProject ? `
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -149,16 +147,7 @@ void main() {
     ${defaultTestFileSelectionPlaceholder}
   });
 }
-`.trim();
-	return {
-		contents,
-		selectionLength: defaultTestFileSelectionPlaceholder.length,
-		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
-	};
-}
-
-export function defaultDartTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
-	const contents = `
+` : `
 import 'package:test/test.dart';
 
 void main() {
@@ -166,7 +155,7 @@ void main() {
     ${defaultTestFileSelectionPlaceholder}
   });
 }
-`.trim();
+`).trim();
 	return {
 		contents,
 		selectionLength: defaultTestFileSelectionPlaceholder.length,

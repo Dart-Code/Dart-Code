@@ -1,11 +1,14 @@
 import { strict as assert } from "assert";
+import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
+import { PassThrough } from "stream";
 import { isWin } from "../../../shared/constants";
+import { SpawnedProcess } from "../../../shared/interfaces";
 import { nullLogger } from "../../../shared/logging";
 import { runProcess, safeSpawn } from "../../../shared/processes";
 import { mkDirRecursive } from "../../../shared/utils/fs";
-import { customScriptExt, getRandomTempFolder } from "../../helpers";
+import { customScriptExt, defer, getRandomTempFolder } from "../../helpers";
 
 const tempFolder = getRandomTempFolder();
 
@@ -44,3 +47,80 @@ function testExecution(filename: string) {
 		assert.equal(lastLine, filename, `Output did not have expected output (${procResultJson})`);
 	});
 }
+
+describe("runProcess", () => {
+	it("collects stdout and stderr emitted after exit before close", async () => {
+		const fakeProc = Object.assign(new EventEmitter(), {
+			kill: () => true,
+			pid: 9999,
+			stderr: new PassThrough(),
+			stdin: new PassThrough(),
+			stdout: new PassThrough(),
+		}) as unknown as SpawnedProcess;
+
+		const resultPromise = runProcess(nullLogger, "dart", ["--version"], undefined, undefined, () => {
+			setImmediate(() => {
+				fakeProc.stdout.emit("data", Buffer.from("first "));
+				fakeProc.emit("exit", 0, null);
+				setImmediate(() => {
+					fakeProc.stdout.emit("data", Buffer.from("second"));
+					fakeProc.stderr.emit("data", Buffer.from("warn"));
+					fakeProc.emit("close", 0, null);
+				});
+			});
+			return fakeProc;
+		});
+
+		const result = await resultPromise;
+		assert.equal(result.exitCode, 0);
+		assert.equal(result.stdout, "first second");
+		assert.equal(result.stderr, "warn");
+	});
+
+	it("does not block when a background child inherits stdio pipes", async () => {
+		const script = [
+			"const cp = require('child_process');",
+			"const fs = require('fs');",
+			"const child = cp.spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'inherit' });",
+			"fs.writeSync(1, `${child.pid}\\n/opt/dart-sdk\\n`);",
+			"process.exit(0);",
+		].join(" ");
+
+		const start = Date.now();
+		const result = await runProcess(
+			nullLogger,
+			process.execPath,
+			["-e", script],
+			undefined,
+			{ ELECTRON_RUN_AS_NODE: "1" },
+			safeSpawn,
+		);
+		const elapsedMs = Date.now() - start;
+
+		const lines = result.stdout.trim().split(/\r?\n/);
+		const bgPid = Number(lines[0]);
+		if (Number.isFinite(bgPid) && bgPid > 0)
+			defer("Kill background child", () => { try { process.kill(bgPid); } catch { } });
+
+		assert.equal(result.exitCode, 0);
+		assert.equal(lines[1], "/opt/dart-sdk");
+		assert.ok(elapsedMs < 5000, `Expected runProcess not to wait for inherited stdio pipes, took ${elapsedMs}ms`);
+	});
+
+	it("rejects when process emits an error", async () => {
+		const fakeProc = Object.assign(new EventEmitter(), {
+			kill: () => true,
+			pid: 9999,
+			stderr: new PassThrough(),
+			stdin: new PassThrough(),
+			stdout: new PassThrough(),
+		}) as unknown as SpawnedProcess;
+
+		const resultPromise = runProcess(nullLogger, "missing", [], undefined, undefined, () => {
+			setImmediate(() => fakeProc.emit("error", new Error("spawn missing ENOENT")));
+			return fakeProc;
+		});
+
+		await assert.rejects(resultPromise, /ENOENT/);
+	});
+});

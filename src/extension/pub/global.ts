@@ -3,13 +3,12 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { moreInfoAction, noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
-import { logProcess } from "../../shared/logging";
 import { getPubExecutionInfo } from "../../shared/processes";
 import { PubApi } from "../../shared/pub/api";
 import { pubVersionIsAtLeast } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { safeToolSpawn } from "../utils/processes";
+import { runToolProcess } from "../utils/processes";
 
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private readonly dartCapabilities: DartCapabilities, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
@@ -143,25 +142,11 @@ export class PubGlobal {
 		}, () => this.runCommand(packageName, args));
 	}
 
-	private runCommand(packageName: string, args: string[]): Thenable<string> {
+	private async runCommand(packageName: string, args: string[]): Promise<string> {
 		const pubExecution = getPubExecutionInfo(this.sdks.dart, args);
-
-		return new Promise((resolve, reject) => {
-			this.logger.info(`Spawning ${pubExecution.executable} with args ${JSON.stringify(pubExecution.args)}`);
-			const proc = safeToolSpawn(undefined, pubExecution.executable, pubExecution.args);
-			logProcess(this.logger, LogCategory.CommandProcesses, proc);
-
-			const stdout: string[] = [];
-			const stderr: string[] = [];
-			proc.stdout.on("data", (data: Buffer | string) => stdout.push(data.toString()));
-			proc.stderr.on("data", (data: Buffer | string) => stderr.push(data.toString()));
-			proc.on("close", (code) => {
-				if (!code) {
-					resolve(stdout.join(""));
-				} else {
-					reject(new Error(`${packageName} exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`));
-				}
-			});
-		});
+		const result = await runToolProcess(this.logger, undefined, pubExecution.executable, pubExecution.args);
+		if (result.exitCode === 0)
+			return result.stdout;
+		throw new Error(`${packageName} exited with code ${result.exitCode}.\n\n${result.stdout}\n\n${result.stderr}`);
 	}
 }

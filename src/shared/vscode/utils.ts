@@ -8,10 +8,10 @@ import * as lsp from "vscode-languageclient";
 import * as YAML from "yaml";
 import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchProgressNotificationDelayInMs, projectSearchProgressText } from "../constants";
 import { EventEmitter } from "../events";
-import { Logger } from "../interfaces";
+import { IAmDisposable, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { cachedTestCapabilities } from "../test/version";
-import { PromiseCompleter, flatMap, notUndefined } from "../utils";
+import { PromiseCompleter, disposeAll, flatMap, notUndefined } from "../utils";
 import { SimpleTimeBasedCache } from "../utils/cache";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPathOrEqual, safeRealpathSync } from "../utils/fs";
 import { withProgressIfSlow } from "./progress";
@@ -476,4 +476,24 @@ export function buildHostKind({ appName, appHost, remoteName }: { appName?: stri
 		return remoteName;
 	else
 		return undefined;
+}
+
+/**
+ * Creates a `CancellationTokenSource` that is cancelled as soon as any of the supplied tokens are cancelled.
+ */
+export function createCombinedCancellationTokenSource(...tokens: Array<vs.CancellationToken | undefined>): { token: vs.CancellationToken } & IAmDisposable {
+	const tokenSource = new vs.CancellationTokenSource();
+	const disposables: IAmDisposable[] = [tokenSource];
+	for (const token of tokens) {
+		if (!token)
+			continue;
+		if (token.isCancellationRequested)
+			tokenSource.cancel();
+		else
+			disposables.push(token.onCancellationRequested(() => tokenSource.cancel()));
+	}
+	return {
+		dispose: () => disposeAll(disposables),
+		token: tokenSource.token,
+	};
 }

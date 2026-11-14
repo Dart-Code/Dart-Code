@@ -4,7 +4,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { createFolderForFile, fsPath } from "../../../shared/utils/fs";
-import { createTestFileAction, defaultDartTestFileContents } from "../../../shared/utils/test";
+import { createTestFileAction, defaultTestFileContents } from "../../../shared/utils/test";
 import { activate, createTempTestFile, currentDoc, currentEditor, defer, emptyFile, helloWorldFolder, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, privateApi, sb, tryDelete, waitForResult } from "../../helpers";
 
 for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOrImplementationFile"] as const) {
@@ -195,7 +195,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 
 				// Check the file has the correct contents.
 				const actual = fs.readFileSync(testFilePath, "utf8");
-				const expected = defaultDartTestFileContents("empty");
+				const expected = defaultTestFileContents(false, "empty");
 				assert.equal(actual, expected.contents);
 
 				// Check the file is open and has the correct selection.
