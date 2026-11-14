@@ -4,7 +4,7 @@ import { dartVMPath, isWin } from "./constants";
 import { LogCategory } from "./enums";
 import { CancellationToken, Logger, SpawnedProcess } from "./interfaces";
 import { logProcess } from "./logging";
-import { nullToUndefined } from "./utils";
+import { nullToUndefined, PromiseCompleter } from "./utils";
 
 export const simpleCommandRegex = new RegExp("^[\\w\\-.]+$");
 
@@ -43,68 +43,32 @@ export class RunProcessResult {
 	constructor(public readonly exitCode: number, public readonly stdout: string, public readonly stderr: string) { }
 }
 
-const postExitDrainTimeoutMs = 250;
+export async function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: Record<string, string | undefined> | undefined, spawn: SpawnFunction, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
+	logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(env)}`);
+	const proc = spawn(workingDirectory, binPath, args, env);
+	cancellationToken?.onCancellationRequested(() => proc.kill());
+	logProcess(logger, LogCategory.CommandProcesses, proc);
 
-export function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: Record<string, string | undefined> | undefined, spawn: SpawnFunction, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
-	return new Promise((resolve, reject) => {
-		logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(env)}`);
-		const proc = spawn(workingDirectory, binPath, args, env);
-		const cancellationDisposable = cancellationToken?.onCancellationRequested(() => proc.kill());
-		logProcess(logger, LogCategory.CommandProcesses, proc);
+	const out: string[] = [];
+	const err: string[] = [];
+	proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
+	proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
 
-		const out: string[] = [];
-		const err: string[] = [];
-		let settled = false;
-		let exitCode: number | undefined;
-		let exitDrainTimer: NodeJS.Timeout | undefined;
+	const exitCompleter = new PromiseCompleter<number | null>();
+	let exitTimer: NodeJS.Timeout | undefined;
+	proc.on("close", (code) => exitCompleter.resolve(code));
+	// Also fall back to "exit" after a short delay in case a spawned background child
+	// inherits stdio and keeps the streams open indefinitely.
+	proc.on("exit", (code) => { exitTimer = setTimeout(() => exitCompleter.resolve(code), 250); });
+	// Handle things like ENOENT which are async and come via error, but mean close will never fire.
+	proc.on("error", (e) => exitCompleter.reject(e));
 
-		const onStdoutData = (data: Buffer) => out.push(data.toString());
-		const onStderrData = (data: Buffer) => err.push(data.toString());
-		const cleanup = () => {
-			if (exitDrainTimer)
-				clearTimeout(exitDrainTimer);
-			cancellationDisposable?.dispose();
-			proc.stdout.removeListener("data", onStdoutData);
-			proc.stderr.removeListener("data", onStderrData);
-			proc.removeListener("exit", onExit);
-			proc.removeListener("close", onClose);
-			proc.removeListener("error", onError);
-		};
-		const finish = (code: number | null | undefined) => {
-			if (settled)
-				return;
-			settled = true;
-			cleanup();
-			resolve(new RunProcessResult(
-				nullToUndefined(code) ?? exitCode ?? 1, // null means terminated by signal
-				out.join(""),
-				err.join(""),
-			));
-		};
-		const onExit = (code: number | null) => {
-			exitCode = nullToUndefined(code) ?? 1;
-			// Usually "close" fires shortly after "exit" once stdio streams finish draining,
-			// which preserves full output. However, if the process spawned a background child
-			// that inherited stdio pipes, "close" may not fire until that background process
-			// exits, so bound how long we wait after "exit".
-			exitDrainTimer ??= setTimeout(() => finish(exitCode), postExitDrainTimeoutMs);
-		};
-		const onClose = (code: number | null) => finish(code);
-		const onError = (e: Error) => {
-			if (settled)
-				return;
-			settled = true;
-			cleanup();
-			reject(e);
-		};
-
-		proc.stdout.on("data", onStdoutData);
-		proc.stderr.on("data", onStderrData);
-		proc.on("exit", onExit);
-		proc.on("close", onClose);
-		// Handle things like ENOENT which are async and come via error, but mean close will never fire.
-		proc.on("error", onError);
-	});
+	const code = await exitCompleter.promise.finally(() => clearTimeout(exitTimer));
+	return new RunProcessResult(
+		nullToUndefined(code) ?? 1, // null means terminated by signal.
+		out.join(""),
+		err.join(""),
+	);
 }
 
 type SpawnFunction = (workingDirectory: string | undefined, binPath: string, args: string[], env: Record<string, string | undefined> | undefined) => SpawnedProcess;

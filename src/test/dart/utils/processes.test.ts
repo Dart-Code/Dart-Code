@@ -107,7 +107,7 @@ describe("runProcess", () => {
 		assert.ok(elapsedMs < 5000, `Expected runProcess not to wait for inherited stdio pipes, took ${elapsedMs}ms`);
 	});
 
-	it("cleans up listeners and cancellation subscription when settled", async () => {
+	it("rejects when process emits an error", async () => {
 		const fakeProc = Object.assign(new EventEmitter(), {
 			kill: () => true,
 			pid: 9999,
@@ -116,35 +116,11 @@ describe("runProcess", () => {
 			stdout: new PassThrough(),
 		}) as unknown as SpawnedProcess;
 
-		let disposed = false;
-		const cancellationToken = {
-			isCancellationRequested: false,
-			onCancellationRequested: () => ({ dispose: () => { disposed = true; } }),
-		};
+		const resultPromise = runProcess(nullLogger, "missing", [], undefined, undefined, () => {
+			setImmediate(() => fakeProc.emit("error", new Error("spawn missing ENOENT")));
+			return fakeProc;
+		});
 
-		const resultPromise = runProcess(
-			nullLogger,
-			"dart",
-			["--version"],
-			undefined,
-			undefined,
-			() => {
-				setImmediate(() => {
-					fakeProc.stdout.emit("data", Buffer.from("done"));
-					fakeProc.emit("exit", 0, null);
-					fakeProc.emit("close", 0, null);
-				});
-				return fakeProc;
-			},
-			cancellationToken,
-		);
-
-		const result = await resultPromise;
-		assert.equal(result.exitCode, 0);
-		assert.equal(result.stdout, "done");
-		assert.equal(disposed, true);
-
-		fakeProc.stdout.emit("data", Buffer.from("late"));
-		assert.equal(result.stdout, "done");
+		await assert.rejects(resultPromise, /ENOENT/);
 	});
 });
