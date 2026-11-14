@@ -1,11 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { dartVMPath } from "../../../shared/constants";
-import { LogCategory } from "../../../shared/enums";
 import { DartProjectTemplate, DartSdks, Logger } from "../../../shared/interfaces";
-import { logProcess } from "../../../shared/logging";
 import { cleanPubOutput } from "../../../shared/pub/utils";
-import { safeToolSpawn } from "../../utils/processes";
+import { runToolProcess } from "../../utils/processes";
 
 export class DartCreate {
 	constructor(private logger: Logger, private sdks: DartSdks) { }
@@ -26,25 +24,11 @@ export class DartCreate {
 		}, () => this.runCommand(args));
 	}
 
-	private runCommand(args: string[]): Thenable<string> {
-		const dartSdkPath = this.sdks.dart;
-		const dartBinPath = path.join(dartSdkPath, dartVMPath);
-
-		return new Promise((resolve, reject) => {
-			const proc = safeToolSpawn(undefined, dartBinPath, args);
-			logProcess(this.logger, LogCategory.CommandProcesses, proc);
-
-			const stdout: string[] = [];
-			const stderr: string[] = [];
-			proc.stdout.on("data", (data: Buffer | string) => stdout.push(data.toString()));
-			proc.stderr.on("data", (data: Buffer | string) => stderr.push(data.toString()));
-			proc.on("close", (code) => {
-				if (!code) {
-					resolve(stdout.join(""));
-				} else {
-					reject(new Error(`'dart create' exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`));
-				}
-			});
-		});
+	private async runCommand(args: string[]): Promise<string> {
+		const dartBinPath = path.join(this.sdks.dart, dartVMPath);
+		const result = await runToolProcess(this.logger, undefined, dartBinPath, args);
+		if (result.exitCode === 0)
+			return result.stdout;
+		throw new Error(`'dart create' exited with code ${result.exitCode}.\n\n${result.stdout}\n\n${result.stderr}`);
 	}
 }

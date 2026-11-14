@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkPathToClipboardAction, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
+import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkBinPathToClipboardAction, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -19,16 +19,16 @@ export class AddSdkToPath {
 			return;
 		}
 
-		sdkPath = path.join(sdkPath, "bin");
+		const binPath = path.join(sdkPath, "bin");
 
 		let result = AddSdkToPathResult.failed;
 		try {
 			result = this.canAddPathAutomatically()
 				? isWin
-					? await this.addToPathWindows(sdkPath)
-					: await this.addToPathUnix(sdkPath)
+					? await this.addToPathWindows(binPath)
+					: await this.addToPathUnix(binPath)
 				: AddSdkToPathResult.unavailableOnPlatform;
-			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(sdkPath))) {
+			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(binPath))) {
 				void vs.window.showInformationMessage(sdkAlreadyOnPathPrompt(sdkType));
 			} else if (result === AddSdkToPathResult.succeeded) {
 				void vs.window.showInformationMessage(addedToPathPrompt(sdkType));
@@ -68,19 +68,19 @@ export class AddSdkToPath {
 
 		while (true) {
 			const action = didFailToAutomaticallyAdd
-				? await vs.window.showWarningMessage(unableToAddToPathPrompt(sdkType), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction)
-				: await vs.window.showInformationMessage(addSdkToPathPrompt(sdkType), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction);
+				? await vs.window.showWarningMessage(unableToAddToPathPrompt(sdkType), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction)
+				: await vs.window.showInformationMessage(addSdkToPathPrompt(sdkType), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction);
 			if (action === openInstructionsAction) {
 				await envUtils.openInBrowser(addToPathInstructionsUrl);
-			} else if (action === copySdkPathToClipboardAction) {
-				await vs.env.clipboard.writeText(sdkPath);
+			} else if (action === copySdkBinPathToClipboardAction) {
+				await vs.env.clipboard.writeText(path.join(sdkPath, "bin"));
 			} else {
 				break;
 			}
 		}
 	}
 
-	private async addToPathWindows(sdkPath: string): Promise<AddSdkToPathResult> {
+	private async addToPathWindows(binPath: string): Promise<AddSdkToPathResult> {
 		try {
 			const scriptPath = this.context.asAbsolutePath("media/add_to_path.ps1");
 			const result = await runToolProcess(
@@ -93,7 +93,7 @@ export class AddSdkToPath {
 					"-WindowStyle", "Hidden",
 					"-ExecutionPolicy", "Bypass",
 					"-File", scriptPath,
-					sdkPath,
+					binPath,
 				],
 				undefined,
 			);
@@ -108,8 +108,8 @@ export class AddSdkToPath {
 		}
 	}
 
-	private async addToPathUnix(sdkPath: string): Promise<AddSdkToPathResult> {
-		const exportLine = `export PATH="${sdkPath}:$PATH"`;
+	private async addToPathUnix(binPath: string): Promise<AddSdkToPathResult> {
+		const exportLine = `export PATH="${binPath}:$PATH"`;
 		try {
 			const profileFilename = this.getUnixShellProfileFilename();
 			if (!profileFilename)

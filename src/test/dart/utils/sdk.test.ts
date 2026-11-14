@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { addSdkToPathPrompt, analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openSettingsAction, showLogAction } from "../../../shared/constants";
+import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, cloningFlutterMessage, copySdkBinPathToClipboardAction, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openInstructionsAction, openSettingsAction, showLogAction } from "../../../shared/constants";
 import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
@@ -998,6 +998,77 @@ describe("SdkUtils", () => {
 			assert.ok(showInfo.calledWith(addSdkToPathPrompt("Flutter")));
 			assert.ok(reloadExtensionStub.calledOnceWithExactly("_dart.reloadExtension", ExtensionRestartReason.AfterFlutterClone));
 			assert.ok(rerunStub.calledOnceWithExactly("flutter.createProject"));
+		});
+
+		it("copies the SDK bin path to the clipboard from manual instructions after cloning Flutter", async function () {
+			if (isWin || !addToPathInstructionsUrl)
+				return this.skip();
+
+			const originalShell = process.env.SHELL;
+			process.env.SHELL = "/bin/fish";
+			defer("restore SHELL", () => {
+				if (originalShell === undefined)
+					delete process.env.SHELL;
+				else
+					process.env.SHELL = originalShell;
+			});
+
+			await setConfigForTest("dart", "flutterSdkPath", undefined);
+
+			const cloneDir = createTempDir();
+			const expectedFlutterFolder = path.join(cloneDir, "flutter");
+
+			ChildProcessSpawnStub.gitCloneFlutter();
+
+			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK");
+			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(cloneDir)]);
+			const showInfo = sb.stub(vs.window, "showInformationMessage");
+			showInfo.withArgs(addSdkToPathPrompt("Flutter"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction)
+				.onFirstCall().resolves(copySdkBinPathToClipboardAction)
+				.onSecondCall().resolves(noThanksAction);
+
+			await privateApi.sdkUtils!.showSdkActivationFailure(
+				"Flutter",
+				() => ({ candidatePaths: [], sdkInitScript: undefined }),
+				FLUTTER_DOWNLOAD_URL,
+				() => Promise.resolve(),
+			);
+
+			assert.equal(copySdkBinPathToClipboardAction, "Copy SDK bin path to Clipboard");
+			assert.equal(await vs.env.clipboard.readText(), path.join(expectedFlutterFolder, "bin"));
+		});
+	});
+
+	describe("addSdkToPath", () => {
+		it("copies the SDK bin path to the clipboard from manual instructions when running dart.addSdkToPath", async function () {
+			if (isWin || !addToPathInstructionsUrl)
+				return this.skip();
+
+			const originalShell = process.env.SHELL;
+			process.env.SHELL = "/bin/fish";
+			defer("restore SHELL", () => {
+				if (originalShell === undefined)
+					delete process.env.SHELL;
+				else
+					process.env.SHELL = originalShell;
+			});
+
+			const { sdks } = privateApi.workspaceContext;
+			const expectedSdkType = sdks.dartSdkIsFromFlutter ? "Flutter" : "Dart";
+			const expectedSdkPath = sdks.dartSdkIsFromFlutter ? sdks.flutter : sdks.dart;
+			assert.ok(expectedSdkPath);
+
+			await vs.env.clipboard.writeText("");
+
+			const showInfo = sb.stub(vs.window, "showInformationMessage");
+			showInfo.withArgs(addSdkToPathPrompt(expectedSdkType), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction)
+				.onFirstCall().resolves(copySdkBinPathToClipboardAction)
+				.onSecondCall().resolves(noThanksAction);
+
+			await vs.commands.executeCommand("dart.addSdkToPath");
+
+			assert.equal(showInfo.callCount, 2);
+			assert.equal(await vs.env.clipboard.readText(), path.join(expectedSdkPath, "bin"));
 		});
 	});
 

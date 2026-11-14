@@ -5,12 +5,11 @@ import "package:test/test.dart";
 // the results from the tests below.
 // == EXPECTED RESULTS ==
 // hello_world
-//     test/discovery_test.dart [0/5 passed] Unknown
+//     test/discovery_test.dart [0/4 passed] Unknown
 //         group 1 [0/2 passed] Unknown
 //             test 1 Unknown
 //             test interpolated ${1 + 1} Unknown
-//         group interpolated ${1 + 1} [0/1 passed] Unknown
-//             test 1 Unknown
+//         group interpolated ${1 + 1}
 //         test 1 Unknown
 //         after nested helper Unknown
 // == /EXPECTED RESULTS ==

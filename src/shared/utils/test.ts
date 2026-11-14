@@ -60,37 +60,57 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 	);
 }
 
+export interface TestNameSegment {
+	name: string;
+	isDynamic: boolean;
+}
+
 export interface TestSelection {
 	/// Whether this node is a test that wasn't discovered inside the top
 	/// level `main()` function which means we need to skip adding `^` to
 	/// the start of the regex.
 	isOutlineNodeNotFromMainFunction?: boolean,
+	isDynamic?: boolean,
+	segments?: TestNameSegment[],
 	name: string,
 	isGroup: boolean,
 	position: Position | undefined
 }
 
-const regexEscapedInterpolationExpressionPattern = /\\\$(?:(?:\w+)|(?:\\\{.*\\\}))/g;
+// Match $identifier or ${...} non-greedily across lines. We intentionally avoid
+// parsing Dart expressions here, so nested "}" characters inside "${...}" are
+// not supported when matching test names by regex.
+export const dartInterpolationPattern = /\$(?:[A-Za-z_]\w*|\{[\s\S]*?\})/;
+const regexEscapedInterpolationExpressionPattern = /(?:\\\$(?:[A-Za-z_]\w*|\\\{[\s\S]*?\\\}))+/g;
+
+function escapeTestNameSegment(segmentName: string, isDynamic: boolean): string {
+	let escapedName = escapeRegExp(segmentName);
+
+	// Replace any literal newlines with \n because literals can cause
+	// issues in the shell.
+	// https://github.com/Dart-Code/Dart-Code/issues/4007
+	escapedName = escapedName
+		.replace(/\n/g, "\\n")
+		.replace(/\r/g, "\\r");
+
+	// If a test name contains interpolated expressions, passing the exact
+	// name won't match. So we just replace them out with wildcards. We'll need
+	// to do this after escaping for regex, to ensure the original expression
+	// is escaped but our wildcard is not.
+	return isDynamic
+		? escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*")
+		: escapedName;
+}
+
 export function makeRegexForTests(names: TestSelection[]) {
 	const regexSegments: string[] = [];
 	for (const name of names) {
 		const prefix = name.isOutlineNodeNotFromMainFunction ? "" : "^";
 		// We can't anchor to the end for groups, as we want them to run all children.
 		const suffix = name.isGroup ? "" : "( \\(variant: .*\\))?$";
-		let escapedName = escapeRegExp(name.name);
-
-		// Replace any literal newlines with \n because literals can cause
-		// issues in the shell.
-		// https://github.com/Dart-Code/Dart-Code/issues/4007
-		escapedName = escapedName
-			.replace(/\n/g, "\\n")
-			.replace(/\r/g, "\\r");
-
-		// If a test name contains interpolated expressions, passing the exact
-		// name won't match. So we just replace them out with wildcards. We'll need
-		// to do this after escaping for regex, to ensure the original expression
-		// is escaped but our wildcard is not.
-		const substitutedName = escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*");
+		const substitutedName = name.segments?.length
+			? name.segments.map((segment) => escapeTestNameSegment(segment.name, segment.isDynamic)).join(" ")
+			: escapeTestNameSegment(name.name, name.isDynamic !== false);
 		regexSegments.push(`${prefix}${substitutedName}${suffix}`);
 	}
 
@@ -127,21 +147,19 @@ export function getTestSelectionForNodes(nodes: TreeNode[]): TestSelection[] | u
 }
 
 function getTestSelectionForNode(treeNode: GroupNode | TestNode): TestSelection {
-	return { name: treeNode.name!, isGroup: treeNode instanceof GroupNode, position: treeNode.range?.start };
+	return { isDynamic: treeNode.hasDynamicName, segments: treeNode.nameSegments, name: treeNode.name!, isGroup: treeNode instanceof GroupNode, position: treeNode.range?.start };
 }
 
 export function getTestSelectionForOutline(test: TestOutlineInfo): TestSelection {
 	const position = test.range.start;
-	return { isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction, name: test.fullName, isGroup: test.isGroup, position };
+	return { isDynamic: test.isDynamic, segments: test.segments, isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction, name: test.fullName, isGroup: test.isGroup, position };
 }
 
 export const createTestFileAction = (file: string) => `Create ${path.basename(file)}`;
-export const defaultTestFileContents = (isFlutterProject: boolean, dartEscapedTestName: string) => isFlutterProject ? defaultFlutterTestFileContents(dartEscapedTestName) : defaultDartTestFileContents(dartEscapedTestName);
-
 const defaultTestFileSelectionPlaceholder = "// TODO: Implement test";
 
-function defaultFlutterTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
-	const contents = `
+export function defaultTestFileContents(isFlutterProject: boolean, dartEscapedTestName: string): OpenedFileInformation {
+	const contents = (isFlutterProject ? `
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -149,16 +167,7 @@ void main() {
     ${defaultTestFileSelectionPlaceholder}
   });
 }
-`.trim();
-	return {
-		contents,
-		selectionLength: defaultTestFileSelectionPlaceholder.length,
-		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
-	};
-}
-
-export function defaultDartTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
-	const contents = `
+` : `
 import 'package:test/test.dart';
 
 void main() {
@@ -166,7 +175,7 @@ void main() {
     ${defaultTestFileSelectionPlaceholder}
   });
 }
-`.trim();
+`).trim();
 	return {
 		contents,
 		selectionLength: defaultTestFileSelectionPlaceholder.length,
@@ -174,10 +183,10 @@ void main() {
 	};
 }
 
-export function extractTestNameFromOutline(elementName: string): string | undefined {
+export function parseTestNameFromOutline(elementName: string): TestNameSegment | undefined {
 	if (!elementName)
 		return;
-	// Strip off the function name/parent like test( or testWidget(
+	// Strip off the function name/parent like test( or testWidget(.
 	const openParen = elementName.indexOf("(");
 	const closeParen = elementName.lastIndexOf(")");
 	if (openParen === -1 || closeParen === -1 || openParen >= closeParen)
@@ -185,12 +194,32 @@ export function extractTestNameFromOutline(elementName: string): string | undefi
 
 	elementName = elementName.substring(openParen + 2, closeParen - 1);
 
-	// For tests with variables, we often end up with additional quotes wrapped
-	// around them...
-	if ((elementName.startsWith("'") || elementName.startsWith('"')) && (elementName.endsWith("'") || elementName.endsWith('"')))
+	// For tests with variables/interpolations, the analyzer cannot compute a
+	// constant stringValue and falls back to toSource(), leaving Dart string
+	// quotes wrapped around the description (unlike literal/escaped/raw strings
+	// such as 'price \$5' or r'price $5', where stringValue is unquoted).
+	// Note: a constant string whose value itself starts and ends with quotes and
+	// contains "$foo" (such as r'"price $foo"') produces the exact same Outline
+	// element name as an interpolated string ("price $foo"). Because Outline
+	// does not distinguish constant values from toSource(), we intentionally
+	// treat quote-wrapped names matching interpolation syntax as dynamic, since
+	// interpolated test/group names are far more common.
+	let unparenthesized = elementName;
+	while (unparenthesized.startsWith("(") && unparenthesized.endsWith(")") && unparenthesized.length >= 2)
+		unparenthesized = unparenthesized.substring(1, unparenthesized.length - 1).trim();
+
+	const startsWithQuote = unparenthesized.startsWith("'") || unparenthesized.startsWith("\"") || unparenthesized.startsWith("r'") || unparenthesized.startsWith("r\"");
+	const endsWithQuote = unparenthesized.endsWith("'") || unparenthesized.endsWith("\"");
+	const minQuotedLength = unparenthesized.startsWith("r") ? 3 : 2;
+	const hasSourceQuotes = startsWithQuote && endsWithQuote && unparenthesized.length >= minQuotedLength;
+
+	if ((elementName.startsWith("'") || elementName.startsWith("\"")) && (elementName.endsWith("'") || elementName.endsWith("\"")) && elementName.length >= 2)
 		elementName = elementName.substring(1, elementName.length - 1);
 
-	return elementName;
+	return {
+		isDynamic: hasSourceQuotes && dartInterpolationPattern.test(elementName),
+		name: elementName,
+	};
 }
 
 export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
