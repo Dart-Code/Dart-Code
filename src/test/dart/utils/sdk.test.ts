@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, cloningFlutterMessage, copySdkPathToClipboardAction, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openInstructionsAction, openSettingsAction, showLogAction } from "../../../shared/constants";
+import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, cloningFlutterMessage, copySdkBinPathToClipboardAction, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openInstructionsAction, openSettingsAction, showLogAction } from "../../../shared/constants";
 import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
@@ -1023,8 +1023,8 @@ describe("SdkUtils", () => {
 			sb.stub(vs.window, "showErrorMessage").resolves("Download SDK");
 			sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(cloneDir)]);
 			const showInfo = sb.stub(vs.window, "showInformationMessage");
-			showInfo.withArgs(addSdkToPathPrompt("Flutter"), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction)
-				.onFirstCall().resolves(copySdkPathToClipboardAction)
+			showInfo.withArgs(addSdkToPathPrompt("Flutter"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction)
+				.onFirstCall().resolves(copySdkBinPathToClipboardAction)
 				.onSecondCall().resolves(noThanksAction);
 
 			await privateApi.sdkUtils!.showSdkActivationFailure(
@@ -1034,7 +1034,7 @@ describe("SdkUtils", () => {
 				() => Promise.resolve(),
 			);
 
-			assert.equal(copySdkPathToClipboardAction, "Copy SDK bin path to Clipboard");
+			assert.equal(copySdkBinPathToClipboardAction, "Copy SDK bin path to Clipboard");
 			assert.equal(await vs.env.clipboard.readText(), path.join(expectedFlutterFolder, "bin"));
 		});
 	});

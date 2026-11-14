@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkPathToClipboardAction, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
+import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkBinPathToClipboardAction, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -68,11 +68,11 @@ export class AddSdkToPath {
 
 		while (true) {
 			const action = didFailToAutomaticallyAdd
-				? await vs.window.showWarningMessage(unableToAddToPathPrompt(sdkType), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction)
-				: await vs.window.showInformationMessage(addSdkToPathPrompt(sdkType), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction);
+				? await vs.window.showWarningMessage(unableToAddToPathPrompt(sdkType), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction)
+				: await vs.window.showInformationMessage(addSdkToPathPrompt(sdkType), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction);
 			if (action === openInstructionsAction) {
 				await envUtils.openInBrowser(addToPathInstructionsUrl);
-			} else if (action === copySdkPathToClipboardAction) {
+			} else if (action === copySdkBinPathToClipboardAction) {
 				await vs.env.clipboard.writeText(path.join(sdkPath, "bin"));
 			} else {
 				break;
