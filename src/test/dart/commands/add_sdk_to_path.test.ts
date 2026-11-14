@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { addSdkToPathAction, addSdkToPathPrompt, addedToPathPrompt, addToPathInstructionsUrl, copySdkPathToClipboardAction, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../../shared/constants";
+import { addSdkToPathAction, addSdkToPathPrompt, addedToPathPrompt, addToPathInstructionsUrl, copySdkBinPathToClipboardAction, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../../shared/constants";
 import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 import { activate, defer, privateApi, sb } from "../../helpers";
 
@@ -141,7 +141,7 @@ describe("AddSdkToPath", () => {
 		await privateApi.addSdkToPath.addToPath("Dart", "/fake/dart-sdk");
 
 		assert.ok(showInformationMessage.calledOnce);
-		assert.deepEqual(showInformationMessage.firstCall.args, [addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction]);
+		assert.deepEqual(showInformationMessage.firstCall.args, [addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction]);
 		assert.equal(fs.existsSync(path.join(home, ".bashrc")), false);
 		assert.equal(fs.existsSync(path.join(home, ".zshenv")), false);
 	});
@@ -158,7 +158,7 @@ describe("AddSdkToPath", () => {
 		await privateApi.addSdkToPath.addToPath("Dart", "/fake/dart-sdk");
 
 		assert.ok(showWarningMessage.calledOnce);
-		assert.deepEqual(showWarningMessage.firstCall.args, [unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction]);
+		assert.deepEqual(showWarningMessage.firstCall.args, [unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction]);
 	});
 
 	it("opens the instructions URL from the manual instructions prompt", async function () {
@@ -182,7 +182,7 @@ describe("AddSdkToPath", () => {
 		setEnvVar("SHELL", "/bin/fish");
 		useTempHome();
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-		showInformationMessage.onFirstCall().resolves(copySdkPathToClipboardAction);
+		showInformationMessage.onFirstCall().resolves(copySdkBinPathToClipboardAction);
 		showInformationMessage.onSecondCall().resolves(noThanksAction);
 
 		await privateApi.addSdkToPath.addToPath("Dart", "/fake/dart-sdk");
@@ -249,7 +249,7 @@ describe("AddSdkToPath", () => {
 		await privateApi.addSdkToPath.promptToAddToPath("Dart", "/fake/dart-sdk");
 
 		assert.ok(showInformationMessage.calledOnce);
-		assert.deepEqual(showInformationMessage.firstCall.args, [addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction]);
+		assert.deepEqual(showInformationMessage.firstCall.args, [addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction]);
 	});
 
 	it("dart.addSdkToPath adds the workspace Dart SDK to the profile", async function () {
@@ -364,7 +364,7 @@ describe("AddSdkToPath", () => {
 
 		await privateApi.addSdkToPath.addToPath("Dart", "C:\\fake\\dart-sdk");
 
-		assert.deepEqual(showWarningMessage.firstCall.args, [unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction]);
+		assert.deepEqual(showWarningMessage.firstCall.args, [unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction]);
 	});
 
 	it("addToPathWindows shows manual instructions when PowerShell cannot be spawned", async function () {
@@ -375,6 +375,6 @@ describe("AddSdkToPath", () => {
 
 		await privateApi.addSdkToPath.addToPath("Dart", "C:\\fake\\dart-sdk");
 
-		assert.deepEqual(showWarningMessage.firstCall.args, [unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkPathToClipboardAction, noThanksAction]);
+		assert.deepEqual(showWarningMessage.firstCall.args, [unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction]);
 	});
 });
