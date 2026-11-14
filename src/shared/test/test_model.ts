@@ -8,7 +8,7 @@ import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isFlutterProjectFolder, isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
-import { makeRegexForTests } from "../utils/test";
+import { dartInterpolationPattern, makeRegexForTests, TestNameSegment } from "../utils/test";
 import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
 import { WorkspaceContext } from "../workspace";
@@ -20,6 +20,8 @@ export abstract class TreeNode {
 
 	public _isStale = false;
 	public testSource = TestSource.Outline;
+	public hasDynamicName = false;
+	public nameSegments: TestNameSegment[] | undefined;
 	public isPotentiallyDeleted = false;
 	public duration: number | undefined;
 
@@ -145,7 +147,7 @@ export class GroupNode extends RunnableTreeNode {
 	}
 
 	get isSkipped(): boolean {
-		return this.children.every((c) => {
+		return this.children.length > 0 && this.children.every((c) => {
 			if (c instanceof GroupNode || c instanceof TestNode)
 				return c.isSkipped;
 			else
@@ -424,7 +426,8 @@ export class TestModel {
 		// Update the label.
 		const previousDescription = node.description;
 		node.description = node.children.length && totalTests !== 0 ? `${node.testCountPass}/${totalTests} passed` : "";
-		if (forceUpdate || node.description !== previousDescription)
+		const isHiddenSkippedNode = !this.config.showSkippedTests && (node instanceof GroupNode || node instanceof TestNode) && node.isSkipped;
+		if (forceUpdate || node.description !== previousDescription || isHiddenSkippedNode)
 			this.updateNode({ node });
 
 		if (direction === "UP") {
@@ -463,7 +466,7 @@ export class TestModel {
 		return suite;
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, _hasStarted = false): GroupNode {
+	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, _hasStarted = false, nameSegments?: TestNameSegment[]): GroupNode {
 		groupPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingGroup = suite.reuseMatchingGroup(groupName);
@@ -490,6 +493,8 @@ export class TestModel {
 		} else {
 			groupNode.testSource = source;
 		}
+		if (source === TestSource.Outline)
+			this.setOutlineDynamicName(groupNode, groupName, nameSegments);
 
 		this.markAsNotDeleted(groupNode);
 
@@ -512,7 +517,7 @@ export class TestModel {
 		return groupNode;
 	}
 
-	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
+	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false, nameSegments?: TestNameSegment[]): TestNode {
 		testPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingTest = suite.reuseMatchingTest(testName);
@@ -554,6 +559,8 @@ export class TestModel {
 		} else {
 			testNode.testSource = source;
 		}
+		if (source === TestSource.Outline)
+			this.setOutlineDynamicName(testNode, testName, nameSegments);
 
 		this.markAsNotDeleted(testNode);
 		testNode.testStartTime = startTime;
@@ -584,6 +591,13 @@ export class TestModel {
 		return testNode;
 	}
 
+	private setOutlineDynamicName(node: TreeNode, name: string | undefined, nameSegments: TestNameSegment[] | undefined): void {
+		node.nameSegments = nameSegments;
+		node.hasDynamicName = nameSegments
+			? nameSegments.some((segment) => segment.isDynamic)
+			: Boolean(name && dartInterpolationPattern.test(name));
+	}
+
 	/**
 	 * Find a matching node in 'parent' that might be a node for a dynamic test/group that name is
 	 * an instance of.
@@ -600,9 +614,10 @@ export class TestModel {
 		for (const child of children) {
 			if (!(child instanceof nodeClass)
 				|| child.testSource !== TestSource.Outline
-				|| !child.name?.includes("$"))
+				|| !child.hasDynamicName
+				|| !child.name)
 				continue;
-			const regex = new RegExp(makeRegexForTests([{ name: child.name, isGroup: false, position: undefined }]));
+			const regex = new RegExp(makeRegexForTests([{ isDynamic: child.hasDynamicName, segments: child.nameSegments, name: child.name, isGroup: false, position: undefined }]));
 			if (regex.test(name))
 				return child;
 		}

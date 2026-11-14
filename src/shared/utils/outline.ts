@@ -1,7 +1,7 @@
 import { Range } from "vscode-languageclient";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { Logger } from "../interfaces";
-import { extractTestNameFromOutline } from "./test";
+import { parseTestNameFromOutline, TestNameSegment } from "./test";
 
 export abstract class OutlineVisitor {
 	constructor(private logger: Logger) { }
@@ -147,13 +147,14 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	public readonly tests: TestOutlineInfo[] = [];
 	public readonly testsByLine: Record<number, TestOutlineInfo[]> = {};
 
-	private readonly names: string[] = [];
+	private readonly segments: TestNameSegment[] = [];
 
 	private topLevelMain: Outline | undefined;
 	private isInsideTopLevelMain = false;
 
 	public visit(outline: Outline) {
 		this.tests.length = 0;
+		this.segments.length = 0;
 		this.topLevelMain = undefined;
 		for (const line of Object.keys(this.testsByLine)) {
 			delete this.testsByLine[parseInt(line)];
@@ -187,14 +188,18 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	}
 
 	private addTest(outline: Outline, base: (outline: Outline) => void) {
-		const name = extractTestNameFromOutline(outline.element.name);
-		if (!name || !outline.element.range)
+		const parsedName = parseTestNameFromOutline(outline.element.name);
+		if (!parsedName?.name || !outline.element.range)
 			return;
-		this.names.push(name);
-		const fullName = this.names.join(" ");
+		this.segments.push(parsedName);
+		const segments = this.segments.slice();
+		const fullName = segments.map((segment) => segment.name).join(" ");
+		const isDynamic = segments.some((segment) => segment.isDynamic);
 		const isGroup = outline.element.kind === "UNIT_TEST_GROUP";
 		const range = outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined);
 		const info = {
+			isDynamic,
+			segments,
 			isOutlineNodeNotFromMainFunction: !this.isInsideTopLevelMain,
 			file: this.file,
 			fullName,
@@ -210,12 +215,14 @@ export class TestOutlineVisitor extends OutlineVisitor {
 		try {
 			base.bind(this)(outline);
 		} finally {
-			this.names.pop();
+			this.segments.pop();
 		}
 	}
 }
 
 export interface TestOutlineInfo {
+	isDynamic?: boolean;
+	segments?: TestNameSegment[];
 	isOutlineNodeNotFromMainFunction: boolean;
 	fullName: string;
 	file: string;

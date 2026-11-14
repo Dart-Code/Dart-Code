@@ -5,8 +5,8 @@ import * as vs from "vscode";
 import { TestSource } from "../../../shared/test/test_model";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
-import { captureTestDebugConfigurations } from "../../debug_helpers";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations } from "../../debug_helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedOutline, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -57,6 +57,19 @@ describe("dart tests", () => {
 		const nestedDynamicTest = model.testDiscovered(session, suitePath, TestSource.Outline, 30, "nested $name", 30, suitePath, undefined, undefined);
 		const nestedResult = model.testDiscovered(session, suitePath, TestSource.Result, 31, "nested alpha", 30, suitePath, undefined, undefined);
 
+		// Fixed Outline groups containing literal "$" (escaped or raw strings) must
+		// not be treated as wildcard patterns for unrelated runtime groups.
+		model.groupDiscovered(session, suitePath, TestSource.Outline, 40, "price $5", undefined, suitePath, undefined, false, [{ isDynamic: false, name: "price $5" }]);
+		model.groupDiscovered(session, suitePath, TestSource.Outline, 41, "price $foo", undefined, suitePath, undefined, false, [{ isDynamic: false, name: "price $foo" }]);
+		const fixedDollarResult1 = model.groupDiscovered(session, suitePath, TestSource.Result, 42, "price 99", undefined, suitePath, undefined);
+		const fixedDollarResult2 = model.groupDiscovered(session, suitePath, TestSource.Result, 43, "price bar", undefined, suitePath, undefined);
+
+		// Multiline interpolations followed by another interpolation must preserve literal
+		// text between them so unrelated runtime groups are not captured.
+		const multilineMultiInterpGroup = model.groupDiscovered(session, suitePath, TestSource.Outline, 50, "phase ${\n n\n} end ${other}", undefined, suitePath, undefined, false, [{ isDynamic: true, name: "phase ${\n n\n} end ${other}" }]);
+		const matchingMultilineMultiInterpResult = model.groupDiscovered(session, suitePath, TestSource.Result, 51, "phase 1 end alpha", undefined, suitePath, undefined);
+		const unrelatedMultilineResult = model.groupDiscovered(session, suitePath, TestSource.Result, 52, "phase unrelated", undefined, suitePath, undefined);
+
 		const prefixMatch = model.groupDiscovered(session, suitePath, TestSource.Result, 11, "auth_service", undefined, suitePath, undefined);
 		const partialDynamicGroupMatch = model.groupDiscovered(session, suitePath, TestSource.Result, 12, "group alpha suffix extra", undefined, suitePath, undefined);
 		const matchingDynamicGroup = model.groupDiscovered(session, suitePath, TestSource.Result, 13, "group alpha suffix", undefined, suitePath, undefined);
@@ -84,6 +97,292 @@ describe("dart tests", () => {
 		assert.equal(exactGroupWithTestName.parent === suite.node, true);
 		assert.equal(staticGroup.parent === suite.node, true);
 		assert.equal(dynamicTestWithGroupName.parent === suite.node, true);
+		assert.equal(fixedDollarResult1.parent === suite.node, true, "fixed literal-dollar Outline group must not capture unrelated runtime groups");
+		assert.equal(fixedDollarResult2.parent === suite.node, true, "fixed literal-dollar Outline group must not capture unrelated runtime groups");
+		assert.equal(matchingMultilineMultiInterpResult.parent === multilineMultiInterpGroup, true);
+		assert.equal(unrelatedMultilineResult.parent === suite.node, true, "multiline interpolation followed by another interpolation must not swallow literal text between them");
+	});
+
+	it("does not statically discover children of dynamic groups while preserving CodeLenses", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/3910
+		const editor = await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  for (final testType in ["a", "b"]) {
+    group("group $testType", () {
+      test("does X", () {});
+      group("nested", () {
+        test("does Y", () {});
+      });
+    });
+  }
+  test("regular test", () {});
+}
+		`);
+
+		await getExpectedOutline();
+		privateApi.testDiscoverer.forceUpdate(helloWorldRenameTestFile);
+
+		const expectedTree = `
+hello_world
+    test/rename_test.dart [0/1 passed] Unknown
+        group $testType
+        regular test Unknown
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), expectedTree);
+
+		// Unrun dynamic groups with no static children must stay visible even when
+		// skipped tests are hidden.
+		await setConfigForTest("dart", "showSkippedTests", false);
+		privateApi.testModel.handleSkippedTestsConfigChange();
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), expectedTree);
+
+		// CodeLenses for tests and nested groups inside the dynamic group must still be provided.
+		const fileCodeLens = await getCodeLens(editor.document);
+		const expectedTargets = [
+			{ search: `group^("group $testType"`, fullName: "group $testType" },
+			{ search: `test^("does X"`, fullName: "group $testType does X" },
+			{ search: `group^("nested"`, fullName: "group $testType nested" },
+			{ search: `test^("does Y"`, fullName: "group $testType nested does Y" },
+		];
+		for (const target of expectedTargets) {
+			const targetPos = positionOf(target.search);
+			const codeLenses = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+			assert.equal(codeLenses.length, 2, `Expected Run and Debug CodeLenses for ${target.fullName}`);
+			if (codeLenses[0].command) {
+				const runAction = codeLenses.find((cl) => cl.command!.title === "Run");
+				assert.ok(runAction, `Expected Run CodeLens for ${target.fullName}`);
+				assert.equal((runAction.command!.arguments![0] as { fullName: string }).fullName, target.fullName);
+			}
+		}
+	});
+
+	it("statically discovers children of groups with escaped or raw dollar signs", async () => {
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const x = "x";
+  group('price \\$5', () {
+    test('calculates tax', () {});
+  });
+  group("price \\$foo", () {
+    test("calculates discount", () {});
+  });
+  group(r'raw price $5', () {
+    test('calculates total', () {});
+  });
+  group(r"raw price $foo", () {
+    test("calculates subtotal", () {});
+  });
+  group('dynamic $x', () {
+    test('hidden until run', () {});
+  });
+}
+		`);
+
+		await getExpectedOutline();
+		privateApi.testDiscoverer.forceUpdate(helloWorldRenameTestFile);
+
+		const expectedTree = `
+hello_world
+    test/rename_test.dart [0/4 passed] Unknown
+        price $5 [0/1 passed] Unknown
+            calculates tax Unknown
+        price $foo [0/1 passed] Unknown
+            calculates discount Unknown
+        raw price $5 [0/1 passed] Unknown
+            calculates total Unknown
+        raw price $foo [0/1 passed] Unknown
+            calculates subtotal Unknown
+        dynamic $x
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), expectedTree);
+	});
+
+	it("preserves literal dollar parent segments in CodeLens selections for dynamic child tests", async () => {
+		await setConfigForTest("dart", "testInvocationMode", "name");
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const n = 1;
+  group(r"price $foo", () {
+    test("tax $n", () {});
+  });
+  group("price bar", () {
+    test("tax 1", () {});
+  });
+}
+		`);
+
+		const codeLensConfig = await captureTestDebugConfiguration(
+			helloWorldRenameTestFile,
+			(test) => !test.isGroup && test.fullName === "price $foo tax $n",
+		);
+
+		const expectedPattern = "^price \\$foo tax .*( \\(variant: .*\\))?$";
+		assert.deepStrictEqual(codeLensConfig.toolArgs, ["--name", expectedPattern, "--run-skipped"]);
+
+		const selectionRegex = new RegExp(expectedPattern);
+		assert.equal(selectionRegex.test("price $foo tax 1"), true);
+		assert.equal(selectionRegex.test("price bar tax 1"), false);
+	});
+
+	it("preserves literal dollar parent segments in tree-node selections for dynamic child tests", async () => {
+		await setConfigForTest("dart", "testInvocationMode", "name");
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const n = 1;
+  group(r"price $foo", () {
+    test("tax $n", () {});
+  });
+  group("price bar", () {
+    test("tax 1", () {});
+  });
+}
+		`);
+
+		const treeNodeConfig = await captureTestDebugConfigurationForItems(
+			helloWorldRenameTestFile,
+			(suiteNode) => {
+				const literalDollarGroup = Array.from(suiteNode.children, ([, item]) => item).find((item) => item.label === "price $foo");
+				assert.ok(literalDollarGroup, "Expected literal-dollar parent group in test tree");
+				const dynamicChild = Array.from(literalDollarGroup.children, ([, item]) => item).find((item) => item.label === "tax $n");
+				assert.ok(dynamicChild, "Expected dynamic child test in test tree");
+				return [dynamicChild];
+			},
+		);
+
+		const expectedPattern = "^price \\$foo tax .*( \\(variant: .*\\))?$";
+		assert.deepStrictEqual(treeNodeConfig.toolArgs, ["--name", expectedPattern, "--run-skipped"]);
+
+		const selectionRegex = new RegExp(expectedPattern);
+		assert.equal(selectionRegex.test("price $foo tax 1"), true);
+		assert.equal(selectionRegex.test("price bar tax 1"), false);
+	});
+
+	it("preserves literal text between multiline and subsequent interpolations in CodeLens selections", async () => {
+		await setConfigForTest("dart", "testInvocationMode", "name");
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const n = 1;
+  const other = "alpha";
+  group("phase \${'''
+$n'''.trim()} end \${other}", () {
+    test("runs", () {});
+  });
+  group("phase unrelated", () {
+    test("other", () {});
+  });
+}
+		`);
+
+		const codeLensConfig = await captureTestDebugConfiguration(
+			helloWorldRenameTestFile,
+			(test) => test.isGroup && test.fullName.startsWith("phase ") && test.fullName !== "phase unrelated",
+		);
+
+		const expectedPattern = "^phase .* end .*";
+		assert.deepStrictEqual(codeLensConfig.toolArgs, ["--name", expectedPattern, "--run-skipped"]);
+
+		const selectionRegex = new RegExp(expectedPattern);
+		assert.equal(selectionRegex.test("phase 1 end alpha"), true);
+		assert.equal(selectionRegex.test("phase unrelated"), false);
+	});
+
+	it("preserves literal text between multiline and subsequent interpolations in tree-node selections", async () => {
+		await setConfigForTest("dart", "testInvocationMode", "name");
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const n = 1;
+  const other = "alpha";
+  group("phase \${'''
+$n'''.trim()} end \${other}", () {
+    test("runs", () {});
+  });
+  group("phase unrelated", () {
+    test("other", () {});
+  });
+}
+		`);
+
+		const treeNodeConfig = await captureTestDebugConfigurationForItems(
+			helloWorldRenameTestFile,
+			(suiteNode) => {
+				const dynamicGroup = Array.from(suiteNode.children, ([, item]) => item).find((item) => item.label.startsWith("phase ") && item.label !== "phase unrelated");
+				assert.ok(dynamicGroup, "Expected multiline dynamic group in test tree");
+				return [dynamicGroup];
+			},
+		);
+
+		const expectedPattern = "^phase .* end .*";
+		assert.deepStrictEqual(treeNodeConfig.toolArgs, ["--name", expectedPattern]);
+	});
+
+	it("hides dynamic groups and tests when showSkippedTests is false before running and all runtime children are skipped", async () => {
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  const x = "a";
+  group("group $x", () {
+    test("skipped child", () {}, skip: true);
+  });
+  test("test $x", () {}, skip: true);
+  test("passing test", () {});
+}
+		`);
+
+		await getExpectedOutline();
+		privateApi.testDiscoverer.forceUpdate(helloWorldRenameTestFile);
+
+		await setConfigForTest("dart", "showSkippedTests", false);
+		privateApi.testModel.handleSkippedTestsConfigChange();
+
+		// Unrun dynamic nodes start visible before their runtime children report skipped.
+		const beforeRunTree = `
+hello_world
+    test/rename_test.dart [0/2 passed] Unknown
+        group $x
+        test $x Unknown
+        passing test Unknown
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), beforeRunTree);
+
+		const model = privateApi.testModel;
+		const suitePath = fsPath(helloWorldRenameTestFile);
+		const session = "skipped_dynamic_session";
+		model.suiteStarted(session, suitePath);
+		model.groupDiscovered(session, suitePath, TestSource.Result, 10, "group a", undefined, suitePath, undefined);
+		model.testDiscovered(session, suitePath, TestSource.Result, 101, "group a skipped child", 10, suitePath, undefined, undefined, true);
+		model.testDone(session, suitePath, 101, "skipped", undefined);
+		model.testDiscovered(session, suitePath, TestSource.Result, 102, "test a", undefined, suitePath, undefined, undefined, true);
+		model.testDone(session, suitePath, 102, "skipped", undefined);
+		model.testDiscovered(session, suitePath, TestSource.Result, 103, "passing test", undefined, suitePath, undefined, undefined, true);
+		model.testDone(session, suitePath, 103, "success", undefined);
+		model.suiteDone(session, suitePath);
+
+		const afterRunTree = `
+hello_world
+    test/rename_test.dart [1/1 passed] Passed
+        passing test Passed
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), afterRunTree);
 	});
 
 	it("handles renaming of discovered tests", async () => {

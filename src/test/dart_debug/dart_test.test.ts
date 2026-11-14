@@ -682,6 +682,113 @@ test/empty_test.dart
 		);
 	});
 
+	it("populates runtime groups and tests under dynamic groups without phantom duplicates", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/3910
+		defer("Restore empty_test.dart", async () => {
+			writeFileSync(fsPath(helloWorldTestEmptyFile), "");
+			await vs.commands.executeCommand("workbench.action.files.revert");
+		});
+		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
+		await openFile(helloWorldTestEmptyFile);
+		await setTestContent(`
+import 'package:test/test.dart';
+
+void main() {
+  for (var testType in ['a', 'b']) {
+    group('group $testType', () {
+      test('does X', () {
+        expect(1, 1);
+      });
+
+      test('does Y', () {
+        expect(1, 1);
+      });
+    });
+
+    group('multiline \${\n      testType\n    } end \${testType}', () {
+      test('works', () {
+        expect(1, 1);
+      });
+    });
+  }
+
+  group('multiline unrelated', () {
+    test('stays separate', () {
+      expect(1, 1);
+    });
+  });
+
+  group('price \\$5', () {
+    test('calculates tax', () {
+      expect(1, 1);
+    });
+  });
+
+  group(r'raw price $foo', () {
+    test('calculates total', () {
+      expect(1, 1);
+    });
+  });
+}
+		`.trim());
+		await currentEditor().document.save();
+		await getExpectedOutline();
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+
+		const beforeRunTree = `
+hello_world
+    test/empty_test.dart [0/3 passed] Unknown
+        group $testType
+        multiline \${testType} end \${testType}
+        multiline unrelated [0/1 passed] Unknown
+            stays separate Unknown
+        price $5 [0/1 passed] Unknown
+            calculates tax Unknown
+        raw price $foo [0/1 passed] Unknown
+            calculates total Unknown
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), beforeRunTree);
+
+		await runWithoutDebugging(helloWorldTestEmptyFile);
+
+		const afterRunTree = `
+hello_world
+    test/empty_test.dart [9/9 passed] Passed
+        group $testType [4/4 passed] Passed
+            group a [2/2 passed] Passed
+                does X Passed
+                does Y Passed
+            group b [2/2 passed] Passed
+                does X Passed
+                does Y Passed
+        multiline \${testType} end \${testType} [2/2 passed] Passed
+            multiline a end a [1/1 passed] Passed
+                works Passed
+            multiline b end b [1/1 passed] Passed
+                works Passed
+        multiline unrelated [1/1 passed] Passed
+            stays separate Passed
+        price $5 [1/1 passed] Passed
+            calculates tax Passed
+        raw price $foo [1/1 passed] Passed
+            calculates total Passed
+		`;
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), afterRunTree);
+
+		// Subsequent Outline updates must preserve the runtime children without re-introducing phantom nodes.
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), afterRunTree);
+
+		// Full multi-line ranges from TestOutlineVisitor must still be resolved for tests inside dynamic and literal-dollar groups.
+		const ranges = getTestRanges(helloWorldTestEmptyFile);
+		assert.ok(ranges.includes("does X: 5:6-7:8"), `Expected full range for does X in:\n${ranges}`);
+		assert.ok(ranges.includes("does Y: 9:6-11:8"), `Expected full range for does Y in:\n${ranges}`);
+		assert.ok(ranges.includes("works: 17:6-19:8"), `Expected full range for works in:\n${ranges}`);
+		assert.ok(ranges.includes("stays separate: 24:4-26:6"), `Expected full range for stays separate in:\n${ranges}`);
+		assert.ok(ranges.includes("calculates tax: 30:4-32:6"), `Expected full range for calculates tax in:\n${ranges}`);
+		assert.ok(ranges.includes("calculates total: 36:4-38:6"), `Expected full range for calculates total in:\n${ranges}`);
+	});
+
 	describe("collects coverage", () => {
 		let addCoverageStub: SinonStub | undefined;
 

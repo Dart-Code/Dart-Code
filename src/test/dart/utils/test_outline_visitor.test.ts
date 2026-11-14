@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
+import { parseTestNameFromOutline, makeRegexForTests } from "../../../shared/utils/test";
 import { activate, getExpectedOutline, getPackages, helloWorldTestDiscoveryFile, helloWorldTestDynamicFile, helloWorldTestMainFile, logger, openFile } from "../../helpers";
 
 describe("test_outline_visitor", () => {
@@ -77,22 +78,106 @@ describe("test_outline_visitor", () => {
 		assert.deepStrictEqual(
 			visitor.tests.map((test) => ({
 				fullName: test.fullName,
+				isDynamic: test.isDynamic,
 				isGroup: test.isGroup,
 				isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction,
 			})),
 			[
-				{ fullName: "group 1", isGroup: true, isOutlineNodeNotFromMainFunction: false },
-				{ fullName: "group 1 test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
-				{ fullName: "group 1 test interpolated ${1 + 1}", isGroup: false, isOutlineNodeNotFromMainFunction: false },
-				{ fullName: "group interpolated ${1 + 1}", isGroup: true, isOutlineNodeNotFromMainFunction: false },
-				{ fullName: "group interpolated ${1 + 1} test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
-				{ fullName: "test 1", isGroup: false, isOutlineNodeNotFromMainFunction: false },
-				{ fullName: "nested helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
-				{ fullName: "after nested helper", isGroup: false, isOutlineNodeNotFromMainFunction: false },
-				{ fullName: "helper group", isGroup: true, isOutlineNodeNotFromMainFunction: true },
-				{ fullName: "helper group helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
-				{ fullName: "another helper test", isGroup: false, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "group 1", isDynamic: false, isGroup: true, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group 1 test 1", isDynamic: false, isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group 1 test interpolated ${1 + 1}", isDynamic: true, isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group interpolated ${1 + 1}", isDynamic: true, isGroup: true, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "group interpolated ${1 + 1} test 1", isDynamic: true, isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "test 1", isDynamic: false, isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "nested helper test", isDynamic: false, isGroup: false, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "after nested helper", isDynamic: false, isGroup: false, isOutlineNodeNotFromMainFunction: false },
+				{ fullName: "helper group", isDynamic: false, isGroup: true, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "helper group helper test", isDynamic: false, isGroup: false, isOutlineNodeNotFromMainFunction: true },
+				{ fullName: "another helper test", isDynamic: false, isGroup: false, isOutlineNodeNotFromMainFunction: true },
 			],
+		);
+	});
+
+	it("distinguishes literal dollar signs from interpolated test names in outlines", () => {
+		// Unquoted descriptions come from analyzer stringValue (fixed strings,
+		// including escaped \$ and raw r'...' strings).
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("price $5")`), { isDynamic: false, name: "price $5" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("price $foo")`), { isDynamic: false, name: "price $foo" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("price \${1 + 1}")`), { isDynamic: false, name: "price ${1 + 1}" });
+
+		// Quote-wrapped descriptions come from analyzer toSource() fallback for interpolations.
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("'group $testType'")`), { isDynamic: true, name: "group $testType" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group(""group \${1 + 1}"")`), { isDynamic: true, name: "group ${1 + 1}" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("'multiline \${\n value\n}'")`), { isDynamic: true, name: "multiline ${\n value\n}" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("r'group ' '$testType'")`), { isDynamic: true, name: "r'group ' '$testType'" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("('group $testType')")`), { isDynamic: true, name: "('group $testType')" });
+
+		// Quote-wrapped constant string containing non-interpolation "$5" (e.g. r'"price $5"').
+		assert.deepStrictEqual(parseTestNameFromOutline(`group(""price $5"")`), { isDynamic: false, name: "price $5" });
+		// A constant string whose value itself is quote-wrapped with "$ident" (e.g. r'"price $foo"')
+		// is indistinguishable from toSource() for an interpolated string; we intentionally treat it as dynamic.
+		assert.deepStrictEqual(parseTestNameFromOutline(`group(""price $foo"")`), { isDynamic: true, name: "price $foo" });
+
+		// Edge cases: partial quotes, single-quote names, unclosed "${", empty/malformed inputs.
+		assert.deepStrictEqual(parseTestNameFromOutline(`test("with quotes ">= foo"")`), { isDynamic: false, name: `with quotes ">= foo"` });
+		assert.deepStrictEqual(parseTestNameFromOutline(`test("'")`), { isDynamic: false, name: "'" });
+		assert.deepStrictEqual(parseTestNameFromOutline(`group("'price \${unclosed'")`), { isDynamic: false, name: "price ${unclosed" });
+		assert.equal(parseTestNameFromOutline(""), undefined);
+		assert.equal(parseTestNameFromOutline("invalid"), undefined);
+	});
+
+	it("preserves literal dollar signs in makeRegexForTests when isDynamic is false", () => {
+		assert.equal(
+			makeRegexForTests([{ name: "raw price $foo calculates total", isDynamic: false, isGroup: false, position: undefined }]),
+			"^raw price \\$foo calculates total( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "group $foo test", isDynamic: true, isGroup: false, position: undefined }]),
+			"^group .* test( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "multiline ${\n value\n} test", isDynamic: true, isGroup: false, position: undefined }]),
+			"^multiline .* test( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{
+				isDynamic: true,
+				isGroup: false,
+				name: "price $foo tax $n",
+				position: undefined,
+				segments: [
+					{ isDynamic: false, name: "price $foo" },
+					{ isDynamic: true, name: "tax $n" },
+				],
+			}]),
+			"^price \\$foo tax .*( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "price $5", isGroup: false, position: undefined }]),
+			"^price \\$5( \\(variant: .*\\))?$",
+		);
+	});
+
+	it("replaces multiple and multiline interpolations without swallowing literal text between them", () => {
+		assert.equal(
+			makeRegexForTests([{ name: "phase ${\n n\n} end ${other}", isDynamic: true, isGroup: true, position: undefined }]),
+			"^phase .* end .*",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "phase ${n} end ${other}", isDynamic: true, isGroup: false, position: undefined }]),
+			"^phase .* end .*( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "pair ${a}$b done", isDynamic: true, isGroup: false, position: undefined }]),
+			"^pair .* done( \\(variant: .*\\))?$",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "price $5 tax $n", isDynamic: true, isGroup: true, position: undefined }]),
+			"^price \\$5 tax .*",
+		);
+		assert.equal(
+			makeRegexForTests([{ name: "price ${\"unterminated", isDynamic: true, isGroup: true, position: undefined }]),
+			"^price \\$\\{\"unterminated",
 		);
 	});
 });
