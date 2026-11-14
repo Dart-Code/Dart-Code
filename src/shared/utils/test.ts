@@ -77,163 +77,29 @@ export interface TestSelection {
 	position: Position | undefined
 }
 
-function escapeLiteralTestNameText(text: string): string {
+// Match $identifier or ${...} non-greedily across lines. We intentionally avoid
+// parsing Dart expressions here, so nested "}" characters inside "${...}" are
+// not supported when matching test names by regex.
+export const dartInterpolationPattern = /\$(?:[A-Za-z_]\w*|\{[\s\S]*?\})/;
+const regexEscapedInterpolationExpressionPattern = /(?:\\\$(?:[A-Za-z_]\w*|\\\{[\s\S]*?\\\}))+/g;
+
+function escapeTestNameSegment(segmentName: string, isDynamic: boolean): string {
+	let escapedName = escapeRegExp(segmentName);
+
 	// Replace any literal newlines with \n because literals can cause
 	// issues in the shell.
 	// https://github.com/Dart-Code/Dart-Code/issues/4007
-	return escapeRegExp(text)
+	escapedName = escapedName
 		.replace(/\n/g, "\\n")
 		.replace(/\r/g, "\\r");
-}
-
-function skipDartStringLiteral(text: string, quoteIndex: number, isRaw: boolean): number | undefined {
-	const quote = text[quoteIndex];
-	const isTriple = text.startsWith(quote.repeat(3), quoteIndex);
-	const delimiterLength = isTriple ? 3 : 1;
-	let i = quoteIndex + delimiterLength;
-
-	while (i < text.length) {
-		if (isTriple) {
-			if (text.startsWith(quote.repeat(3), i))
-				return i + 3;
-		} else {
-			if (text[i] === quote)
-				return i + 1;
-			if (text[i] === "\n" || text[i] === "\r")
-				return undefined;
-		}
-
-		if (!isRaw && text[i] === "\\") {
-			if (i + 1 >= text.length)
-				return undefined;
-			i += 2;
-			continue;
-		}
-
-		if (!isRaw && text[i] === "$" && text[i + 1] === "{") {
-			const braceEnd = findMatchingBraceEnd(text, i + 1);
-			if (braceEnd === undefined)
-				return undefined;
-			i = braceEnd;
-			continue;
-		}
-
-		i++;
-	}
-
-	return undefined;
-}
-
-function findMatchingBraceEnd(text: string, openBraceIndex: number): number | undefined {
-	let i = openBraceIndex + 1;
-	let depth = 1;
-
-	while (i < text.length) {
-		const ch = text[i];
-
-		if (ch === "/" && text[i + 1] === "/") {
-			const nextNewline = text.indexOf("\n", i + 2);
-			if (nextNewline === -1)
-				return undefined;
-			i = nextNewline + 1;
-			continue;
-		}
-
-		if (ch === "/" && text[i + 1] === "*") {
-			const commentEnd = text.indexOf("*/", i + 2);
-			if (commentEnd === -1)
-				return undefined;
-			i = commentEnd + 2;
-			continue;
-		}
-
-		if (ch === "r" && (text[i + 1] === "'" || text[i + 1] === "\"") && (i === 0 || !/\w/.test(text[i - 1]))) {
-			const stringEnd = skipDartStringLiteral(text, i + 1, true);
-			if (stringEnd === undefined)
-				return undefined;
-			i = stringEnd;
-			continue;
-		}
-
-		if (ch === "'" || ch === "\"") {
-			const stringEnd = skipDartStringLiteral(text, i, false);
-			if (stringEnd === undefined)
-				return undefined;
-			i = stringEnd;
-			continue;
-		}
-
-		if (ch === "{") {
-			depth++;
-		} else if (ch === "}") {
-			depth--;
-			if (depth === 0)
-				return i + 1;
-		}
-
-		i++;
-	}
-
-	return undefined;
-}
-
-function findDartInterpolationEnd(text: string, dollarIndex: number): number | undefined {
-	const next = text[dollarIndex + 1];
-	if (!next)
-		return undefined;
-
-	if (/[A-Za-z_]/.test(next)) {
-		let end = dollarIndex + 2;
-		while (end < text.length && /\w/.test(text[end]))
-			end++;
-		return end;
-	}
-
-	if (next === "{")
-		return findMatchingBraceEnd(text, dollarIndex + 1);
-
-	return undefined;
-}
-
-export function hasDartInterpolation(text: string): boolean {
-	for (let i = text.indexOf("$"); i !== -1; i = text.indexOf("$", i + 1)) {
-		if (findDartInterpolationEnd(text, i) !== undefined)
-			return true;
-	}
-	return false;
-}
-
-function escapeTestNameSegment(segmentName: string, isDynamic: boolean): string {
-	if (!isDynamic)
-		return escapeLiteralTestNameText(segmentName);
 
 	// If a test name contains interpolated expressions, passing the exact
-	// name won't match. Tokenize each interpolation separately so literal text
-	// between interpolations stays escaped rather than being swallowed into one
-	// greedy wildcard.
-	const parts: string[] = [];
-	let literalStart = 0;
-	let dollarIndex = segmentName.indexOf("$");
-	while (dollarIndex !== -1) {
-		const interpolationEnd = findDartInterpolationEnd(segmentName, dollarIndex);
-		if (interpolationEnd === undefined) {
-			dollarIndex = segmentName.indexOf("$", dollarIndex + 1);
-			continue;
-		}
-
-		if (dollarIndex > literalStart)
-			parts.push(escapeLiteralTestNameText(segmentName.slice(literalStart, dollarIndex)));
-		if (parts[parts.length - 1] !== ".*")
-			parts.push(".*");
-
-		literalStart = interpolationEnd;
-		dollarIndex = segmentName.indexOf("$", interpolationEnd);
-	}
-
-	if (literalStart < segmentName.length)
-		parts.push(escapeLiteralTestNameText(segmentName.slice(literalStart)));
-
-	return parts.join("");
+	// name won't match. So we just replace them out with wildcards. We'll need
+	// to do this after escaping for regex, to ensure the original expression
+	// is escaped but our wildcard is not.
+	return isDynamic
+		? escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*")
+		: escapedName;
 }
 
 export function makeRegexForTests(names: TestSelection[]) {
@@ -343,6 +209,12 @@ export function parseTestNameFromOutline(elementName: string): TestNameSegment |
 	// constant stringValue and falls back to toSource(), leaving Dart string
 	// quotes wrapped around the description (unlike literal/escaped/raw strings
 	// such as 'price \$5' or r'price $5', where stringValue is unquoted).
+	// Note: a constant string whose value itself starts and ends with quotes and
+	// contains "$foo" (such as r'"price $foo"') produces the exact same Outline
+	// element name as an interpolated string ("price $foo"). Because Outline
+	// does not distinguish constant values from toSource(), we intentionally
+	// treat quote-wrapped names matching interpolation syntax as dynamic, since
+	// interpolated test/group names are far more common.
 	let unparenthesized = elementName;
 	while (unparenthesized.startsWith("(") && unparenthesized.endsWith(")") && unparenthesized.length >= 2)
 		unparenthesized = unparenthesized.substring(1, unparenthesized.length - 1).trim();
@@ -356,7 +228,7 @@ export function parseTestNameFromOutline(elementName: string): TestNameSegment |
 		elementName = elementName.substring(1, elementName.length - 1);
 
 	return {
-		isDynamic: hasSourceQuotes && hasDartInterpolation(elementName),
+		isDynamic: hasSourceQuotes && dartInterpolationPattern.test(elementName),
 		name: elementName,
 	};
 }

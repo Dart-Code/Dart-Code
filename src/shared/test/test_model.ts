@@ -8,7 +8,7 @@ import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isFlutterProjectFolder, isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
-import { hasDartInterpolation, makeRegexForTests, TestNameSegment } from "../utils/test";
+import { dartInterpolationPattern, makeRegexForTests, TestNameSegment } from "../utils/test";
 import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
 import { WorkspaceContext } from "../workspace";
@@ -595,7 +595,7 @@ export class TestModel {
 		node.nameSegments = nameSegments;
 		node.hasDynamicName = nameSegments
 			? nameSegments.some((segment) => segment.isDynamic)
-			: Boolean(name && hasDartInterpolation(name));
+			: Boolean(name && dartInterpolationPattern.test(name));
 	}
 
 	/**

@@ -33,6 +33,7 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 - All extension settings use the format `dart.*` or `dart.flutter*` and are accessed through a wrapper in `src/extension/config.ts`.
 - In tests, use the `defer()` helper (in `src/test/helpers.ts`) instead of `try`/`finally` when cleaning up or resetting state at the end of a test.
 - In tests that stub `child_process.spawn`, always use static factory methods on `ChildProcessSpawnStub` (in `src/test/mocks/child_process_spawn_stub.ts`) rather than calling `new ChildProcessSpawnStub()` or `sb.stub(childProcess, "spawn")` directly. Add a new static method to `ChildProcessSpawnStub` when stubbing a new command or workflow.
+- Do not write Dart parsers, lexers, or tokenizers in the TypeScript extension code (for example, scanning Dart expressions to track nested braces, string literals, or comments). Dart language semantics belong in the Dart analysis server / LSP; if protocol data is ambiguous, prefer a simple heuristic with a comment explaining the trade-off (or ask the user) rather than parsing Dart source in TypeScript.
 
 ### Code Style
 
