@@ -22,7 +22,7 @@ export class SingleDocumentPositionTracker implements IAmDisposable {
 			for (const position of this.positionMap.keys()) {
 				const currentOffset = this.positionMap.get(position)!;
 				const newOffset = offsets.get(currentOffset);
-				if (newOffset)
+				if (newOffset !== undefined)
 					newPositions.set(position, doc.positionAt(newOffset));
 				else
 					newPositions.delete(position);
@@ -89,7 +89,7 @@ export class SingleDocumentOffsetTracker implements IAmDisposable {
 			// original) value, and then updates the value in the map.
 			const currentOffset = this.offsetMap.get(offset)!;
 			const newOffset = this.updateOffset(currentOffset, e);
-			if (newOffset)
+			if (newOffset !== undefined)
 				this.offsetMap.set(offset, newOffset);
 			else
 				this.offsetMap.delete(offset);
