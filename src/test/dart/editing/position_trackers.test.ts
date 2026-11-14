@@ -125,6 +125,42 @@ describe("offset tracker", () => {
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalOffset), 10);
 	});
+
+	it("retains tracked offset 0 when edits occur after it", async () => {
+		const editor = currentEditor();
+		const doc = currentDoc();
+		await setTestContent("0123456789");
+
+		const originalOffset = 0;
+		tracker.trackDoc(doc, [originalOffset]);
+
+		let updatedValues: Map<number, number> | undefined;
+		const sub = tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
+		defer("Dispose listener", () => sub.dispose());
+
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 7), "NEW TEXT"));
+
+		assert.ok(updatedValues);
+		assert.strictEqual(updatedValues.get(originalOffset), 0);
+	});
+
+	it("retains tracked offset when deletion shifts it to 0", async () => {
+		const editor = currentEditor();
+		const doc = currentDoc();
+		await setTestContent("0123456789");
+
+		const originalOffset = 5;
+		tracker.trackDoc(doc, [originalOffset]);
+
+		let updatedValues: Map<number, number> | undefined;
+		const sub = tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
+		defer("Dispose listener", () => sub.dispose());
+
+		await editor.edit((eb) => eb.delete(new vs.Range(new vs.Position(0, 0), new vs.Position(0, 5))));
+
+		assert.ok(updatedValues);
+		assert.strictEqual(updatedValues.get(originalOffset), 0);
+	});
 });
 
 describe("position tracker", () => {
@@ -243,6 +279,44 @@ describe("position tracker", () => {
 
 		assert.ok(updatedValues);
 		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, positionOf("4^5")));
+	});
+
+	it("retains tracked position at start of document when edits occur after it", async () => {
+		const editor = currentEditor();
+		const doc = currentDoc();
+		await setTestContent("0123456789");
+
+		const originalPosition = positionOf("^0123");
+		tracker.trackDoc(doc, [originalPosition]);
+
+		let updatedValues: Map<Position, Position> | undefined;
+		const sub = tracker.onPositionsChanged(([_, positionMap]) => updatedValues = positionMap);
+		defer("Dispose listener", () => sub.dispose());
+
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 7), "NEW TEXT"));
+
+		assert.ok(updatedValues);
+		assert.ok(updatedValues.get(originalPosition));
+		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, new vs.Position(0, 0)));
+	});
+
+	it("retains tracked position when deletion shifts it to start of document", async () => {
+		const editor = currentEditor();
+		const doc = currentDoc();
+		await setTestContent("0123456789");
+
+		const originalPosition = positionOf("4^5");
+		tracker.trackDoc(doc, [originalPosition]);
+
+		let updatedValues: Map<Position, Position> | undefined;
+		const sub = tracker.onPositionsChanged(([_, positionMap]) => updatedValues = positionMap);
+		defer("Dispose listener", () => sub.dispose());
+
+		await editor.edit((eb) => eb.delete(new vs.Range(new vs.Position(0, 0), new vs.Position(0, 5))));
+
+		assert.ok(updatedValues);
+		assert.ok(updatedValues.get(originalPosition));
+		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, positionOf("^5")));
 	});
 });
 
