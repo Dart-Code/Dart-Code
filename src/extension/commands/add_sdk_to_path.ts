@@ -80,7 +80,7 @@ export class AddSdkToPath {
 		}
 	}
 
-	private async addToPathWindows(sdkPath: string): Promise<AddSdkToPathResult> {
+	private async addToPathWindows(binPath: string): Promise<AddSdkToPathResult> {
 		try {
 			const scriptPath = this.context.asAbsolutePath("media/add_to_path.ps1");
 			const result = await runToolProcess(
@@ -93,7 +93,7 @@ export class AddSdkToPath {
 					"-WindowStyle", "Hidden",
 					"-ExecutionPolicy", "Bypass",
 					"-File", scriptPath,
-					sdkPath,
+					binPath,
 				],
 				undefined,
 			);
@@ -108,8 +108,8 @@ export class AddSdkToPath {
 		}
 	}
 
-	private async addToPathUnix(sdkPath: string): Promise<AddSdkToPathResult> {
-		const exportLine = `export PATH="${sdkPath}:$PATH"`;
+	private async addToPathUnix(binPath: string): Promise<AddSdkToPathResult> {
+		const exportLine = `export PATH="${binPath}:$PATH"`;
 		try {
 			const profileFilename = this.getUnixShellProfileFilename();
 			if (!profileFilename)

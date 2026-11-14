@@ -1039,6 +1039,39 @@ describe("SdkUtils", () => {
 		});
 	});
 
+	describe("addSdkToPath", () => {
+		it("copies the SDK bin path to the clipboard from manual instructions when running dart.addSdkToPath", async function () {
+			if (isWin || !addToPathInstructionsUrl)
+				return this.skip();
+
+			const originalShell = process.env.SHELL;
+			process.env.SHELL = "/bin/fish";
+			defer("restore SHELL", () => {
+				if (originalShell === undefined)
+					delete process.env.SHELL;
+				else
+					process.env.SHELL = originalShell;
+			});
+
+			const { sdks } = privateApi.workspaceContext;
+			const expectedSdkType = sdks.dartSdkIsFromFlutter ? "Flutter" : "Dart";
+			const expectedSdkPath = sdks.dartSdkIsFromFlutter ? sdks.flutter : sdks.dart;
+			assert.ok(expectedSdkPath);
+
+			await vs.env.clipboard.writeText("");
+
+			const showInfo = sb.stub(vs.window, "showInformationMessage");
+			showInfo.withArgs(addSdkToPathPrompt(expectedSdkType), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction)
+				.onFirstCall().resolves(copySdkBinPathToClipboardAction)
+				.onSecondCall().resolves(noThanksAction);
+
+			await vs.commands.executeCommand("dart.addSdkToPath");
+
+			assert.equal(showInfo.callCount, 2);
+			assert.equal(await vs.env.clipboard.readText(), path.join(expectedSdkPath, "bin"));
+		});
+	});
+
 	describe("scanWorkspace", () => {
 		describe("Dart SDK search precedence", () => {
 			// Clears the environment variables that can affect SDK searching so tests are
