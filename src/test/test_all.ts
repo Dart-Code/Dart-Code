@@ -239,7 +239,17 @@ function filterOutputStreamLines(targetStream: Writable): { stream: Writable, en
 		crlfDelay: Infinity
 	});
 
+	let isSuppressingMultiline = false;
 	rl.on("line", (line) => {
+		if (isSuppressingMultiline) {
+			if (multilineContinuationPattern.test(line))
+				return;
+			isSuppressingMultiline = false;
+		}
+		if (suppressMultilineOutputPatterns.some((pattern) => pattern.test(line))) {
+			isSuppressingMultiline = true;
+			return;
+		}
 		if (shouldIncludeOutputLine(line))
 			targetStream.write(`${line}\n`);
 	});
@@ -254,12 +264,24 @@ function filterOutputStreamLines(targetStream: Writable): { stream: Writable, en
 	};
 }
 
+const multilineContinuationPattern = /^(\s+(at |\w+:)|\s*\},?$)/;
+
+const suppressMultilineOutputPatterns = [
+	/\[LS Main\] Heartbeat error:/i,
+	/\[AGY Extension\] Inline completion error:/i,
+	/\[Jetski\] PostMessageTransport error:/i,
+	/\[Jetski\] Failed to list and register commands/i,
+	/\[RemoteAgentHostProtocol\]/i,
+];
+
 const suppressOutputPatterns = [
 	/Found --crash-reporter-directory argument/i,
 	/ERROR:dbus/i,
 	/Exiting GPU process/i,
 	/update#setState disabled/i,
-	/update#ctor - updates are disabled by the environment/i,
+	/update#ctor - updates are disabled/i,
+	/initializing default profile extensions in extensions installation folder/i,
+	/\[perf\] profiling (STARTED|DONE)/i,
 	/Started local extension host with pid/i,
 	/MCP Registry configured/i,
 	/is not in the list of known options/i,
@@ -305,9 +327,10 @@ const suppressOutputPatterns = [
 	/\[File Watcher \(node\.js\)\] Watcher shutdown because watched path got deleted/i,
 	// DialogService refusales appear twice, once with and once without the prefix, so remove the dupe
 	/Error: DialogService/i,
-	// Verbose stack traces from VS Code errors
-	/resources\/app\/out/i,
-	/extensions\/github\.copilot-chat/i,
+	// Verbose stack traces from VS Code / IDE errors.
+	/resources[\\/]app[\\/]out/i,
+	/resources[\\/]app[\\/]extensions[\\/]agy/i,
+	/extensions[\\/]github\.copilot-chat/i,
 	// New AgentHost spam
 	/AgentHostProcessManager/i,
 	/No token resolved for resource/i,
@@ -315,8 +338,22 @@ const suppressOutputPatterns = [
 	/AgentHost:renderer/i,
 	/\[AgentHost\]/i,
 	/\[AgentHostCustomizationMarketplace\]/i,
+	/\[AgentPluginRepositoryService\]/i,
+	/ChatSessionStore: Migrating/i,
 	/\[RemoteAgentHost\]/i,
 	/\[ChatModelSelection\]/i,
+	// Antigravity spam.
+	/\[BrowserOnboardingClient(MainService|Server)\]/i,
+	/\[(OAuthToken|OverrideStore|SidebarWorkspaces|ArtifactReview|BrowserPreferences)Lifecycle\]/i,
+	/\[google\.google-antigravity\]:/i,
+	/Unable to create workbench contribution 'antigravity\./i,
+	/CodeWindow: failed to load/i,
+	/\[LAUNCH\] Spawning .*agy/i,
+	/\[LAUNCH POLL \d+\] Error connecting to http:\/\/127\.0\.0\.1:/i,
+	/\[LAUNCH\] Server at http:\/\/127\.0\.0\.1:.* is READY/i,
+	/Antigravity AGY Extension:/i,
+	/\[HUB STDOUT\]/i,
+	/\[Jetski\]/i,
 	// Multiline claude spam.
 	/\[RemoteAgentHostProtocol\]/i,
 	/code: -32603,/i,

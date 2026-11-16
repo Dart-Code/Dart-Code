@@ -621,6 +621,36 @@ before("throw if isDartCodeTestRun is false", () => {
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
 
+interface GlobalTestSetting {
+	section: string;
+	key: string;
+	value: unknown;
+}
+
+const defaultGlobalTestSettings: GlobalTestSetting[] = [
+	// Some IDEs (such as Antigravity) enable formatOnSave by default, whereas
+	// tests expect VS Code's defaults unless explicitly configured via setConfigForTest.
+	{ section: "editor", key: "formatOnPaste", value: false },
+	{ section: "editor", key: "formatOnSave", value: false },
+	{ section: "editor", key: "formatOnType", value: false },
+];
+const originalGlobalTestSettings: GlobalTestSetting[] = [];
+
+before("configure default test settings", async () => {
+	originalGlobalTestSettings.length = 0;
+	for (const { section, key, value } of defaultGlobalTestSettings) {
+		const conf = vs.workspace.getConfiguration(section);
+		originalGlobalTestSettings.push({ section, key, value: conf.inspect(key)?.globalValue });
+		await conf.update(key, value, vs.ConfigurationTarget.Global);
+	}
+});
+
+after("restore default test settings", async () => {
+	for (const { section, key, value } of originalGlobalTestSettings)
+		await vs.workspace.getConfiguration(section).update(key, value, vs.ConfigurationTarget.Global);
+	originalGlobalTestSettings.length = 0;
+});
+
 afterEach("wait for any debug sessions to end", async () => {
 	// Wait up to 2s for any active debug sessions to end, as some tests may end earlier and
 	// there may still be ingoing events firing.
