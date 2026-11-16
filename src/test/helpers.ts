@@ -621,34 +621,12 @@ before("throw if isDartCodeTestRun is false", () => {
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
 
-interface GlobalTestSetting {
-	section: string;
-	key: string;
-	value: unknown;
-}
-
-const defaultGlobalTestSettings: GlobalTestSetting[] = [
+before("configure default test settings", async () => {
 	// Some IDEs (such as Antigravity) enable formatOnSave by default, whereas
 	// tests expect VS Code's defaults unless explicitly configured via setConfigForTest.
-	{ section: "editor", key: "formatOnPaste", value: false },
-	{ section: "editor", key: "formatOnSave", value: false },
-	{ section: "editor", key: "formatOnType", value: false },
-];
-const originalGlobalTestSettings: GlobalTestSetting[] = [];
-
-before("configure default test settings", async () => {
-	originalGlobalTestSettings.length = 0;
-	for (const { section, key, value } of defaultGlobalTestSettings) {
-		const conf = vs.workspace.getConfiguration(section);
-		originalGlobalTestSettings.push({ section, key, value: conf.inspect(key)?.globalValue });
-		await conf.update(key, value, vs.ConfigurationTarget.Global);
-	}
-});
-
-after("restore default test settings", async () => {
-	for (const { section, key, value } of originalGlobalTestSettings)
-		await vs.workspace.getConfiguration(section).update(key, value, vs.ConfigurationTarget.Global);
-	originalGlobalTestSettings.length = 0;
+	await setConfigForTestRun("editor", "formatOnPaste", false);
+	await setConfigForTestRun("editor", "formatOnSave", false);
+	await setConfigForTestRun("editor", "formatOnType", false);
 });
 
 afterEach("wait for any debug sessions to end", async () => {
@@ -664,33 +642,46 @@ interface DeferredFunction {
 
 const deferredItems: DeferredFunction[] = [];
 const deferredToLastItems: DeferredFunction[] = [];
-afterEach("run deferred functions", async function () {
+const deferredToTestRunEndItems: DeferredFunction[] = [];
+async function runDeferredFunctions(hookName: string, items: DeferredFunction[], state?: "failed" | "passed" | "pending"): Promise<void> {
 	logger.info(`Running deferred functions!`);
 	let firstError: Error | undefined;
-	for (const deferredFunction of [...deferredItems.reverse(), ...deferredToLastItems.reverse()]) {
+	for (const deferredFunction of items) {
 		const description = deferredFunction.description;
 		const callback = deferredFunction.callback;
 		logger.info(`Running deferred function ${description}`);
 		try {
-			await watchPromise(`afterEach->deferred->${description}`, callback(this.currentTest ? this.currentTest.state : undefined));
+			await watchPromise(`${hookName}->deferred->${description}`, callback(state));
 		} catch (e) {
 			logger.error(`Error running deferred function ${description}: ${String(e)}`);
 			firstError ??= e instanceof Error ? e : new Error(String(e));
 		}
 		logger.info(`    done!`);
 	}
-	deferredItems.length = 0;
-	deferredToLastItems.length = 0;
-	// We delay throwing until the end so that other cleanup can run
+	// We delay throwing until the end so that other cleanup can run.
 	if (firstError)
 		throw firstError;
 	logger.info(`Done running deferred functions!`);
+}
+afterEach("run deferred functions", async function () {
+	const items = [...deferredItems.reverse(), ...deferredToLastItems.reverse()];
+	deferredItems.length = 0;
+	deferredToLastItems.length = 0;
+	await runDeferredFunctions("afterEach", items, this.currentTest ? this.currentTest.state : undefined);
+});
+after("run test-run deferred functions", async () => {
+	const items = [...deferredToTestRunEndItems.reverse()];
+	deferredToTestRunEndItems.length = 0;
+	await runDeferredFunctions("after", items);
 });
 export function defer(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<unknown>): void {
 	deferredItems.push({ description: `${description} (${currentTestName})`, callback });
 }
 export function deferUntilLast(description: string, callback: (result?: "failed" | "passed" | "pending") => PromiseOr<unknown>): void {
 	deferredToLastItems.push({ description: `${description} (${currentTestName})`, callback });
+}
+function deferForTestRun(description: string, callback: () => PromiseOr<unknown>): void {
+	deferredToTestRunEndItems.push({ description, callback });
 }
 
 afterEach("destroy sinon sandbox", () => {
@@ -1437,12 +1428,20 @@ export function watchPromise<T>(name: string, maybePromise: Promise<T> | T): Pro
 	return promise;
 }
 
-export async function setConfigForTest(section: string, key: string, value: unknown): Promise<void> {
+async function setGlobalConfig(section: string, key: string, value: unknown, deferFn: (description: string, callback: () => PromiseOr<unknown>) => void): Promise<void> {
 	const conf = vs.workspace.getConfiguration(section);
 	const values = conf.inspect(key);
 	const oldValue = values?.globalValue;
 	await conf.update(key, value, vs.ConfigurationTarget.Global);
-	defer("Restore test config", () => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
+	deferFn("Restore test config", () => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
+}
+
+export async function setConfigForTest(section: string, key: string, value: unknown): Promise<void> {
+	await setGlobalConfig(section, key, value, defer);
+}
+
+async function setConfigForTestRun(section: string, key: string, value: unknown): Promise<void> {
+	await setGlobalConfig(section, key, value, deferForTestRun);
 }
 
 export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: unknown[]) {
