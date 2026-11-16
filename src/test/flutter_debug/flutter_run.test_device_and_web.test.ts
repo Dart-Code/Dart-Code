@@ -2,7 +2,6 @@ import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { isLinux } from "../../shared/constants";
 import { DebuggerType, VmService, VmServiceExtension } from "../../shared/enums";
 import { fsPath } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
@@ -646,10 +645,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureVariable(classInstance, "danny.baseField", "baseField", `"baseField"`);
 		// Getters
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
-		// TODO: Remove this Linux-skip when this bug is fixed:
-		// https://github.com/dart-lang/sdk/issues/39330
-		if (!isLinux)
-			ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
+		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "<Oops!" });
 
 		await waitAllThrowIfTerminates(dc,
