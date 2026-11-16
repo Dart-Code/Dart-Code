@@ -37,6 +37,15 @@ describe("dart_formatting_edit_provider", () => {
 		assert.equal(currentDoc().getText(), formattedContent);
 	});
 
+	it("does not format the document on save with default test environment settings", async () => {
+		// Verify the test runner's default settings (configured in helpers.ts) disable
+		// formatOnSave so tests saving files are not unexpectedly formatted in IDEs
+		// (such as Antigravity) that enable formatOnSave by default for end users.
+		await setTestContent(unformattedContent);
+		await currentDoc().save();
+		assert.equal(currentDoc().getText(), unformattedContent);
+	});
+
 	it("formats the document on save", async () => {
 		await setConfigForTest("editor", "formatOnSave", true);
 		await setTestContent(unformattedContent);
