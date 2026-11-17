@@ -162,15 +162,16 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForTestID[evt.test.id] = suite;
 
 		// Rename suite load tests from "loading /path/to/test.dart" to "(loading)".
-		if (evt.test.name?.startsWith("loading ") && !evt.test.groupIDs?.length)
-			evt.test.name = suiteLoadTestName;
+		const testName = evt.test.name?.startsWith("loading ") && !evt.test.groupIDs?.length
+			? suiteLoadTestName
+			: evt.test.name;
 
-		const { path: testPath, line, character } = this.getLocation(evt.test);
+		const { path: testPath, line, character } = this.getLocation(evt.test, testName);
 
 		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
 		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
 
-		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), testPath, range, evt.time, true);
+		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, testName, this.getRealGroupId(dartCodeDebugSessionID, groupID), testPath, range, evt.time, true);
 	}
 
 	/**
@@ -179,8 +180,8 @@ export class TestSessionCoordinator implements IAmDisposable {
 	 * to them correctly.
 	 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
 	 */
-	private getLocation(item: TestItem): { path?: string, line?: number, character?: number } {
-		const useRootLocation = !isSyntheticTestName(item.name) && !!item.root_url && !!item.root_line && !!item.root_column;
+	private getLocation(item: TestItem, name = item.name): { path?: string, line?: number, character?: number } {
+		const useRootLocation = !isSyntheticTestName(name) && !!item.root_url && !!item.root_line && !!item.root_column;
 
 		const url = useRootLocation
 			? item.root_url ?? undefined
@@ -301,6 +302,11 @@ The test description was: .*
 
 		test.outputEvents.push(evt);
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
+		// If a suite load test emits an out-of-band error after its initial hidden testDone
+		// completed (for example an unawaited Future in main()), package:test does not emit a
+		// second testDone, so synthesize completion now to unhide and report the failure.
+		if (test.name === suiteLoadTestName && test.hidden)
+			this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure ? "failure" : "error", evt.time, false);
 	}
 
 	private getRangeForNode(suite: SuiteData, line: number | undefined, character: number | undefined): Range | undefined {

@@ -2,6 +2,7 @@ import { minimatch } from "minimatch";
 import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
+import { TestStatus } from "../../shared/enums";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { CoverageParser } from "../../shared/test/coverage";
 import { GroupNode, NodeDidChangeEvent, ProjectNode, RunnableTreeNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode, WorkspaceFolderNode } from "../../shared/test/test_model";
@@ -335,21 +336,20 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		let existingItem = collection.get(nodeId);
 		const didCreate = !existingItem;
 
-		if (!shouldShowNode && existingItem)
-			collection.delete(nodeId);
+		if (!shouldShowNode) {
+			if (existingItem)
+				collection.delete(nodeId);
+			return;
+		}
 
 		// Create new item if required.
 		if (!existingItem) {
-			if (!shouldShowNode)
-				return;
 			const newItem = this.createTestItem(node);
 			collection.add(newItem);
 			existingItem = newItem;
 		} else {
 			// Otherwise, update this item to match the latest state.
 			this.updateFields(existingItem, node);
-			if (!shouldShowNode)
-				return;
 		}
 
 		// For new suites without children, set canResolveChildren because we can
@@ -545,7 +545,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
-		if (node.name === suiteLoadTestName)
+		if (node.name === suiteLoadTestName && (node.hidden || node.status === TestStatus.Running))
 			return;
 
 		const run = this.getOrCreateTestRun(sessionID);
@@ -555,7 +555,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
-		if (node.name === suiteLoadTestName)
+		if (node.name === suiteLoadTestName && (node.hidden || node.status === TestStatus.Running))
 			return;
 
 		const run = this.getOrCreateTestRun(sessionID);
