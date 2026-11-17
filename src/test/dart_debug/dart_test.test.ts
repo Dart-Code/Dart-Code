@@ -789,6 +789,125 @@ hello_world
 		assert.ok(ranges.includes("calculates total: 36:4-38:6"), `Expected full range for calculates total in:\n${ranges}`);
 	});
 
+	it("reports errors thrown in main() before setUp() in TestController and clears them when fixed", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6437
+		const emptyTestPath = fsPath(helloWorldTestEmptyFile);
+		defer("Restore empty_test.dart", async () => {
+			writeFileSync(emptyTestPath, "");
+			await vs.commands.executeCommand("workbench.action.files.revert");
+		});
+		writeFileSync(emptyTestPath, "");
+		const editor = await openFile(helloWorldTestEmptyFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  print("before throw");
+  final Foo f = Foo();
+
+  test("calculate", () {
+    expect(f.value, 42);
+  });
+}
+
+class Foo {
+  final int value = 42;
+  Foo() {
+    throw Exception("Foo constructor error");
+  }
+}
+		`.trim());
+		await editor.document.save();
+		await getExpectedOutline(editor.document);
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+
+		const controller = privateApi.testController!;
+		const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
+		const capturedRuns: Array<{
+			enqueued: ReturnType<typeof sb.spy>;
+			started: ReturnType<typeof sb.spy>;
+			appendOutput: ReturnType<typeof sb.spy>;
+			errored: ReturnType<typeof sb.spy>;
+			passed: ReturnType<typeof sb.spy>;
+		}> = [];
+		sb.stub(controller.controller, "createTestRun").callsFake((...args: Parameters<typeof controller.controller.createTestRun>) => {
+			const run = createTestRunOriginal(...args);
+			capturedRuns.push({
+				appendOutput: sb.spy(run, "appendOutput"),
+				enqueued: sb.spy(run, "enqueued"),
+				errored: sb.spy(run, "errored"),
+				passed: sb.spy(run, "passed"),
+				started: sb.spy(run, "started"),
+			});
+			return run;
+		});
+
+		const run1SuiteItem = findSuiteNode(emptyTestPath);
+		const calculateItem = run1SuiteItem.children.get(`TEST:${emptyTestPath}:calculate`)!;
+		await controller.runTests(false, false, new vs.TestRunRequest([calculateItem]), fakeCancellationToken);
+
+		const loadingItem = run1SuiteItem.children.get(`TEST:${emptyTestPath}:${testUtils.suiteLoadTestName}`);
+		assert.ok(loadingItem, "Expected (loading) item under suite");
+		assert.equal(loadingItem.tags.some((tag) => tag.id === "DartRunnableTest"), false);
+
+		const run1Output = capturedRuns[0].appendOutput.getCalls().map((c) => String(c.args[0])).join("");
+		assert.equal(run1Output.split("before throw").length - 1, 1, run1Output);
+		assert.ok(run1Output.includes("Foo constructor error"), run1Output);
+		assert.equal(capturedRuns[0].errored.callCount, 1);
+		assert.equal(capturedRuns[0].errored.firstCall.args[0], loadingItem);
+		const run1Message = capturedRuns[0].errored.firstCall.args[1] as vs.TestMessage;
+		const run1MessageText = typeof run1Message.message === "string" ? run1Message.message : run1Message.message.value;
+		assert.ok(run1MessageText.includes("before throw"), run1MessageText);
+		assert.ok(run1MessageText.includes("Foo constructor error"), run1MessageText);
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), `
+hello_world
+    test/empty_test.dart [0/2 passed] Failed
+        calculate Unknown
+        (loading) Failed
+		`);
+
+		await controller.runTests(false, false, new vs.TestRunRequest([run1SuiteItem]), fakeCancellationToken);
+		assert.equal(capturedRuns[1].enqueued.calledWith(calculateItem), true);
+		assert.equal(capturedRuns[1].enqueued.getCalls().some((c) => (c.args[0] as vs.TestItem).label === testUtils.suiteLoadTestName), false);
+		assert.equal(capturedRuns[1].errored.callCount, 1);
+		assert.equal(capturedRuns[1].errored.firstCall.args[0], run1SuiteItem.children.get(`TEST:${emptyTestPath}:${testUtils.suiteLoadTestName}`));
+
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  print("in main");
+  final Foo f = Foo();
+
+  test("calculate", () {
+    expect(f.value, 42);
+  });
+}
+
+class Foo {
+  final int value = 42;
+}
+		`.trim());
+		await editor.document.save();
+		await getExpectedOutline(editor.document);
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+
+		const updatedCalculateItem = findSuiteNode(emptyTestPath).children.get(`TEST:${emptyTestPath}:calculate`)!;
+		await controller.runTests(false, false, new vs.TestRunRequest([updatedCalculateItem]), fakeCancellationToken);
+
+		assert.equal(capturedRuns[2].started.callCount, 1);
+		assert.equal(capturedRuns[2].started.firstCall.args[0], updatedCalculateItem);
+		assert.equal(capturedRuns[2].appendOutput.getCalls().some((c) => (c.args[2] as vs.TestItem | undefined)?.label === testUtils.suiteLoadTestName), false);
+		assert.equal(capturedRuns[2].passed.callCount, 1);
+		assert.equal(capturedRuns[2].passed.firstCall.args[0], updatedCalculateItem);
+		assert.equal(findSuiteNode(emptyTestPath).children.get(`TEST:${emptyTestPath}:${testUtils.suiteLoadTestName}`), undefined);
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), `
+hello_world
+    test/empty_test.dart [1/1 passed] Passed
+        calculate Passed
+		`);
+	});
+
 	describe("collects coverage", () => {
 		let addCoverageStub: SinonStub | undefined;
 

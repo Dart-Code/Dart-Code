@@ -8,7 +8,7 @@ import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isFlutterProjectFolder, isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
-import { dartInterpolationPattern, makeRegexForTests, TestNameSegment } from "../utils/test";
+import { dartInterpolationPattern, isSyntheticTestName, makeRegexForTests, suiteLoadTestName, TestNameSegment } from "../utils/test";
 import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
 import { WorkspaceContext } from "../workspace";
@@ -23,6 +23,7 @@ export abstract class TreeNode {
 	public hasDynamicName = false;
 	public nameSegments: TestNameSegment[] | undefined;
 	public isPotentiallyDeleted = false;
+	public hidden = false;
 	public duration: number | undefined;
 
 	public testCount = 0;
@@ -37,7 +38,7 @@ export abstract class TreeNode {
 	getHighestChildStatus(includeSkipped: boolean): TestStatus {
 		const statuses = new Set<TestStatus>();
 		const addStatus = (node: TreeNode) => {
-			if (node !== this && node instanceof TestNode)
+			if (node !== this && node instanceof TestNode && !node.hidden)
 				statuses.add(node.status);
 			for (const child of node.children)
 				addStatus(child);
@@ -413,9 +414,9 @@ export class TestModel {
 
 		// Update the cached counts on this node.
 		if (node instanceof TestNode && !node.children.length) {
-			node.testCount = 1;
-			node.testCountPass = node.status === TestStatus.Passed ? 1 : 0;
-			node.testCountSkip = node.status === TestStatus.Skipped ? 1 : 0;
+			node.testCount = node.hidden ? 0 : 1;
+			node.testCountPass = !node.hidden && node.status === TestStatus.Passed ? 1 : 0;
+			node.testCountSkip = !node.hidden && node.status === TestStatus.Skipped ? 1 : 0;
 		} else {
 			node.testCount = node.children.map((c) => c.testCount).reduce((total, value) => total + value, 0);
 			node.testCountPass = node.children.map((c) => c.testCountPass).reduce((total, value) => total + value, 0);
@@ -522,22 +523,21 @@ export class TestModel {
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
-		let parent: TreeNode = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
+		const parent: TreeNode = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
+		const testNode = existingTest ?? new TestNode(suite, parent, testName, testPath, range);
+		testNode.parent = parent;
+		testNode.name = testName;
 
 		/**
 		 * If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
-		 * the analyzer.
+		 * the analyzer. Exclude synthetic tests such as `(loading)`, `(setUpAll)`, and `(tearDownAll)`.
 		 */
-		if (testName && source === TestSource.Result)
-			parent = this.findMatchingDynamicNode(parent, testName, false) ?? parent;
-
-		const testNode = existingTest ?? new TestNode(suite, parent, testName, testPath, range);
+		if (testName && source === TestSource.Result && !isSyntheticTestName(testNode.label))
+			testNode.parent = this.findMatchingDynamicNode(parent, testName, false) ?? parent;
 
 		suite.storeTest(dartCodeDebugSessionID, testID, testNode);
 
 		if (existingTest) {
-			testNode.parent = parent;
-			testNode.name = testName;
 			testNode.path = testPath;
 			if (range) {
 				const originalRange = testNode.range;
@@ -580,6 +580,7 @@ export class TestModel {
 			// Clear any test output from previous runs.
 			testNode.outputEvents.length = 0;
 			testNode.status = TestStatus.Running;
+			testNode.hidden = false;
 		}
 
 		this.updateNode({ node: testNode });
@@ -654,9 +655,11 @@ export class TestModel {
 		);
 	}
 
-	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {
+	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined, hidden = false): void {
 		const suite = this.suites.getForPath(suitePath)!;
 		const testNode = suite.getCurrentTest(dartCodeDebugSessionID, testID)!;
+
+		testNode.hidden = hidden;
 
 		if (result === "skipped") {
 			testNode.status = TestStatus.Skipped;
@@ -679,7 +682,7 @@ export class TestModel {
 
 		this.updateTestCountLabels(testNode, true, "UP");
 
-		if (dartCodeDebugSessionID)
+		if (dartCodeDebugSessionID && !hidden)
 			this.testEventListeners.forEach((l) => l.testDone(dartCodeDebugSessionID, testNode, result));
 	}
 
@@ -696,6 +699,8 @@ export class TestModel {
 		// Anything marked as running should be set back to Unknown
 		suite.getAllTests().filter((t) => t.status === TestStatus.Running).forEach((t) => {
 			t.status = TestStatus.Unknown;
+			if (t.name === suiteLoadTestName)
+				t.hidden = true;
 			this.updateNode({ node: t });
 		});
 

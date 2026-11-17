@@ -5,10 +5,12 @@ import * as vs from "vscode";
 import { TestSource } from "../../../shared/test/test_model";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
+import { suiteLoadTestName } from "../../../shared/utils/test";
 import { captureTestDebugConfiguration, captureTestDebugConfigurationForItems, captureTestDebugConfigurations } from "../../debug_helpers";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedOutline, getExpectedResults, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedOutline, getExpectedResults, getPackages, helloWorldExampleSubFolder, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, helloWorldTestMainFile, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
+	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 	beforeEach("clear test tree", () => clearTestTree());
 
@@ -81,6 +83,12 @@ describe("dart tests", () => {
 		const matchingGroupDespiteExactTest = model.groupDiscovered(session, suitePath, TestSource.Result, 17, "paired group alpha", undefined, suitePath, undefined);
 		const matchingTestDespiteExactGroup = model.testDiscovered(session, suitePath, TestSource.Result, 13, "paired test alpha", undefined, suitePath, undefined, undefined);
 
+		// Purely interpolated Outline tests must not capture synthetic nodes such as (loading) or (setUpAll).
+		model.testDiscovered(session, suitePath, TestSource.Outline, 60, "$name", undefined, suitePath, undefined, undefined);
+		model.testDiscovered(session, suitePath, TestSource.Outline, 61, "nested parent $name", 30, suitePath, undefined, undefined);
+		const loadFailureNode = model.testDiscovered(session, suitePath, TestSource.Result, 62, suiteLoadTestName, undefined, suitePath, undefined, undefined);
+		const nestedSetUpAllNode = model.testDiscovered(session, suitePath, TestSource.Result, 63, "nested parent (setUpAll)", 30, suitePath, undefined, undefined);
+
 		assert.equal(prefixMatch.parent === suite.node, true, "static group prefixes should not capture runtime groups");
 		assert.equal(partialDynamicGroupMatch.parent === suite.node, true, "dynamic group patterns should match the full name");
 		assert.equal(matchingDynamicGroup.parent === dynamicGroup, true);
@@ -101,6 +109,8 @@ describe("dart tests", () => {
 		assert.equal(fixedDollarResult2.parent === suite.node, true, "fixed literal-dollar Outline group must not capture unrelated runtime groups");
 		assert.equal(matchingMultilineMultiInterpResult.parent === multilineMultiInterpGroup, true);
 		assert.equal(unrelatedMultilineResult.parent === suite.node, true, "multiline interpolation followed by another interpolation must not swallow literal text between them");
+		assert.equal(loadFailureNode.parent === suite.node, true, "synthetic (loading) node must not be captured by dynamic test pattern");
+		assert.equal(nestedSetUpAllNode.parent === nestedParent, true, "synthetic group (setUpAll) node must not be captured by dynamic test pattern");
 	});
 
 	it("does not statically discover children of dynamic groups while preserving CodeLenses", async () => {

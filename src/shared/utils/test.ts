@@ -222,6 +222,12 @@ export function parseTestNameFromOutline(elementName: string): TestNameSegment |
 	};
 }
 
-export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
+export const suiteLoadTestName = "(loading)";
+
+function isSetupOrTeardownTestName(testName: string | undefined): boolean {
 	return !!(testName && (testName.startsWith("(setUp") || testName.startsWith("(tearDown")) && testName.endsWith(")"));
+}
+
+export function isSyntheticTestName(testName: string | undefined): boolean {
+	return testName === suiteLoadTestName || isSetupOrTeardownTestName(testName);
 }

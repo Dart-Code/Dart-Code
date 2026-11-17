@@ -7,7 +7,7 @@ import { CoverageParser } from "../../shared/test/coverage";
 import { GroupNode, NodeDidChangeEvent, ProjectNode, RunnableTreeNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode, WorkspaceFolderNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
-import { isSetupOrTeardownTestName } from "../../shared/utils/test";
+import { isSyntheticTestName, suiteLoadTestName } from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { createCombinedCancellationTokenSource } from "../../shared/vscode/utils";
 import { config } from "../config";
@@ -237,9 +237,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				// Enqueue only test items (VS Code will handle showing the status for containers).
 				const node = this.nodeForItem.get(item);
 				const isTest = node instanceof TestNode;
-				if (isTest) {
+				// Don't add (loading) to the TestRun up-front because TestRun items cannot be removed if loading succeeds.
+				if (isTest && node.name !== suiteLoadTestName)
 					run.enqueued(item);
-				}
 			} else {
 				// Otherwise recurse.
 				item.children.forEach(markTestEnqueued);
@@ -340,9 +340,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 		// Create new item if required.
 		if (!existingItem) {
-			const newItem = this.createTestItem(node);
 			if (!shouldShowNode)
 				return;
+			const newItem = this.createTestItem(node);
 			collection.add(newItem);
 			existingItem = newItem;
 		} else {
@@ -354,7 +354,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 		// For new suites without children, set canResolveChildren because we can
 		// open the file and discover tests from the Outline if the user expands them.
-		if (node instanceof SuiteNode && node.children.length === 0)
+		if (node instanceof SuiteNode && !node.children.some((c) => !c.hidden))
 			existingItem.canResolveChildren = true;
 
 		if (didCreate || updateChildren) {
@@ -382,6 +382,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private shouldShowNode(node: TreeNode): boolean {
+		if (node.hidden)
+			return false;
+
 		if (config.showSkippedTests)
 			return true;
 
@@ -448,7 +451,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 
 		item.children.replace(
-			node.children.map((c) => this.createTestItem(c)),
+			node.children.filter((c) => this.shouldShowNode(c)).map((c) => this.createTestItem(c)),
 		);
 
 		return item;
@@ -479,7 +482,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const label = node.label;
 		if (!label)
 			return false;
-		if (isSetupOrTeardownTestName(label))
+		if (isSyntheticTestName(label))
 			return false;
 		if (this.discoverer?.fileTracker.supportsPackageTest(URI.file(node.suiteData.path)) === false)
 			return false;
@@ -526,6 +529,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public testStarted(sessionID: string, node: TestNode): void {
 		this.testDiscovered(sessionID, node);
+		// Defer reporting (loading) to TestRun until testDone fails so passing loads do not stay in Test Results.
+		if (node.name === suiteLoadTestName)
+			return;
 
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
@@ -534,6 +540,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
+		if (node.name === suiteLoadTestName)
+			return;
+
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
@@ -541,6 +550,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
+		if (node.name === suiteLoadTestName)
+			return;
+
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item) {
@@ -583,6 +595,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 						const actual = valueMatch[2];
 						testMessage.expectedOutput = typeof expected === "string" ? expected : undefined;
 						testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
+					}
+
+					if (node.name === suiteLoadTestName) {
+						run.started(item);
+						this.appendTestOutputLines(run, item, output);
 					}
 
 					if (result === "failure")

@@ -1582,7 +1582,7 @@ export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, on
 			if (includeStatus) {
 				if (status)
 					nodeString += ` ${TestStatus[status]}`;
-				else if (lastResult.children.length)
+				else if (lastResult.children.some((c) => !c.hidden))
 					nodeString += ` ${TestStatus[lastResult.getHighestChildStatus(true)]}`;
 			}
 

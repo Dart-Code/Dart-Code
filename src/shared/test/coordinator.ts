@@ -7,7 +7,7 @@ import { ErrorNotification, GroupNotification, Notification, PrintNotification, 
 import { disposeAll, maybeUriToFilePath } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
 import { TestOutlineVisitor } from "../utils/outline";
-import { isSetupOrTeardownTestName } from "../utils/test";
+import { isSyntheticTestName, suiteLoadTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
 
 /** Handles results from a test debug session and provides them to the test model. */
@@ -154,16 +154,16 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private handleTestStartNotification(dartCodeDebugSessionID: string, evt: TestStartNotification) {
-		// Skip loading tests.
-		if (evt.test.name?.startsWith("loading ") && !evt.test.groupIDs?.length)
-			return;
-
 		const suite = this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForID[evt.test.suiteID];
 		if (!suite) {
 			this.logger.warn(`Could not find suite ${evt.test.suiteID} for session ${dartCodeDebugSessionID}`);
 			return;
 		}
 		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForTestID[evt.test.id] = suite;
+
+		// Rename suite load tests from "loading /path/to/test.dart" to "(loading)".
+		if (evt.test.name?.startsWith("loading ") && !evt.test.groupIDs?.length)
+			evt.test.name = suiteLoadTestName;
 
 		const { path: testPath, line, character } = this.getLocation(evt.test);
 
@@ -180,7 +180,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
 	 */
 	private getLocation(item: TestItem): { path?: string, line?: number, character?: number } {
-		const useRootLocation = !isSetupOrTeardownTestName(item.name) && !!item.root_url && !!item.root_line && !!item.root_column;
+		const useRootLocation = !isSyntheticTestName(item.name) && !!item.root_url && !!item.root_line && !!item.root_column;
 
 		const url = useRootLocation
 			? item.root_url ?? undefined
@@ -209,17 +209,18 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
-		// If we don't have a test, it was likely a "loading foo.dart" test that we skipped over, so skip the result too.
 		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
-		if (!suite) {
+		if (!suite)
 			return;
-		}
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
 		if (!test)
 			return;
 
 		const result = evt.skipped ? "skipped" : evt.result;
-		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time);
+		// Only hide "(loading)" tests when evt.hidden is true; package:test also marks passing
+		// (setUpAll)/(tearDownAll) tests hidden, which we intentionally show in the tree.
+		const hide = evt.hidden && test.name === suiteLoadTestName;
+		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time, hide);
 	}
 
 	private handleGroupNotification(dartCodeDebugSessionID: string, evt: GroupNotification) {
@@ -271,10 +272,6 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
-
-		// It's possible we'll get notifications for tests we don't track (like loading tests) - for example package:test
-		// may send "Consider enabling the flag chain-stack-traces to receive more detailed exceptions" against the first
-		// loading test.
 		if (!test)
 			return;
 
@@ -290,10 +287,6 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
-
-		// It's possible we'll get notifications for tests we don't track (like loading tests) - for example package:test
-		// may send "Consider enabling the flag chain-stack-traces to receive more detailed exceptions" against the first
-		// loading test.
 		if (!test)
 			return;
 
