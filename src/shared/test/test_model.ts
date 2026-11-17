@@ -8,7 +8,7 @@ import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isFlutterProjectFolder, isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
-import { dartInterpolationPattern, isSyntheticTestName, makeRegexForTests, suiteLoadTestName, TestNameSegment } from "../utils/test";
+import { dartInterpolationPattern, isSetupOrTeardownTestName, makeRegexForTests, suiteLoadTestName, TestNameSegment } from "../utils/test";
 import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
 import { WorkspaceContext } from "../workspace";
@@ -202,6 +202,16 @@ export class TestNode extends RunnableTreeNode {
 
 	set isStale(value: boolean) {
 		super.isStale = value;
+	}
+
+	get label(): string | undefined {
+		if (this.name === suiteLoadTestName)
+			return this.status === TestStatus.Failed ? "Failed to load" : "Loading...";
+		return super.label;
+	}
+
+	get isSynthetic(): boolean {
+		return this.name === suiteLoadTestName || isSetupOrTeardownTestName(super.label);
 	}
 }
 
@@ -532,7 +542,7 @@ export class TestModel {
 		 * If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
 		 * the analyzer. Exclude synthetic tests such as `(loading)`, `(setUpAll)`, and `(tearDownAll)`.
 		 */
-		if (testName && source === TestSource.Result && !isSyntheticTestName(testNode.label))
+		if (testName && source === TestSource.Result && !testNode.isSynthetic)
 			testNode.parent = this.findMatchingDynamicNode(parent, testName, false) ?? parent;
 
 		suite.storeTest(dartCodeDebugSessionID, testID, testNode);

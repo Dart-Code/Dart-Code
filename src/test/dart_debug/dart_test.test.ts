@@ -822,6 +822,12 @@ class Foo {
 		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
 
 		const controller = privateApi.testController!;
+		const seenLoadLabels: string[] = [];
+		const treeChangeSub = privateApi.testModel.onDidChangeTreeData((e) => {
+			if (e?.node.path === emptyTestPath && "name" in e.node && e.node.name === testUtils.suiteLoadTestName && e.node.label)
+				seenLoadLabels.push(e.node.label);
+		});
+		defer("Dispose tree change listener", () => treeChangeSub.dispose());
 		const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
 		const capturedRuns: Array<{
 			enqueued: ReturnType<typeof sb.spy>;
@@ -848,6 +854,9 @@ class Foo {
 
 		const loadingItem = run1SuiteItem.children.get(`TEST:${emptyTestPath}:${testUtils.suiteLoadTestName}`);
 		assert.ok(loadingItem, "Expected (loading) item under suite");
+		assert.equal(seenLoadLabels.includes("Loading..."), true, `Expected "Loading..." in ${seenLoadLabels.join(", ")}`);
+		assert.equal(seenLoadLabels.includes("Failed to load"), true, `Expected "Failed to load" in ${seenLoadLabels.join(", ")}`);
+		assert.equal(loadingItem.label, "Failed to load");
 		assert.equal(loadingItem.tags.some((tag) => tag.id === "DartRunnableTest"), false);
 
 		const run1Output = capturedRuns[0].appendOutput.getCalls().map((c) => String(c.args[0])).join("");
@@ -863,12 +872,12 @@ class Foo {
 hello_world
     test/empty_test.dart [0/2 passed] Failed
         calculate Unknown
-        (loading) Failed
+        Failed to load Failed
 		`);
 
 		await controller.runTests(false, false, new vs.TestRunRequest([run1SuiteItem]), fakeCancellationToken);
 		assert.equal(capturedRuns[1].enqueued.calledWith(calculateItem), true);
-		assert.equal(capturedRuns[1].enqueued.getCalls().some((c) => (c.args[0] as vs.TestItem).label === testUtils.suiteLoadTestName), false);
+		assert.equal(capturedRuns[1].enqueued.calledWith(loadingItem), false);
 		assert.equal(capturedRuns[1].errored.callCount, 1);
 		assert.equal(capturedRuns[1].errored.firstCall.args[0], run1SuiteItem.children.get(`TEST:${emptyTestPath}:${testUtils.suiteLoadTestName}`));
 
@@ -897,7 +906,7 @@ class Foo {
 
 		assert.equal(capturedRuns[2].started.callCount, 1);
 		assert.equal(capturedRuns[2].started.firstCall.args[0], updatedCalculateItem);
-		assert.equal(capturedRuns[2].appendOutput.getCalls().some((c) => (c.args[2] as vs.TestItem | undefined)?.label === testUtils.suiteLoadTestName), false);
+		assert.equal(capturedRuns[2].appendOutput.getCalls().some((c) => (c.args[2] as vs.TestItem | undefined)?.id.endsWith(`:${testUtils.suiteLoadTestName}`)), false);
 		assert.equal(capturedRuns[2].passed.callCount, 1);
 		assert.equal(capturedRuns[2].passed.firstCall.args[0], updatedCalculateItem);
 		assert.equal(findSuiteNode(emptyTestPath).children.get(`TEST:${emptyTestPath}:${testUtils.suiteLoadTestName}`), undefined);

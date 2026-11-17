@@ -224,7 +224,7 @@ export function parseTestNameFromOutline(elementName: string): TestNameSegment |
 
 export const suiteLoadTestName = "(loading)";
 
-function isSetupOrTeardownTestName(testName: string | undefined): boolean {
+export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
 	return !!(testName && (testName.startsWith("(setUp") || testName.startsWith("(tearDown")) && testName.endsWith(")"));
 }
 

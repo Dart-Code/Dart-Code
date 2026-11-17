@@ -7,7 +7,7 @@ import { CoverageParser } from "../../shared/test/coverage";
 import { GroupNode, NodeDidChangeEvent, ProjectNode, RunnableTreeNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode, WorkspaceFolderNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
-import { isSyntheticTestName, suiteLoadTestName } from "../../shared/utils/test";
+import { suiteLoadTestName } from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { createCombinedCancellationTokenSource } from "../../shared/vscode/utils";
 import { config } from "../config";
@@ -425,11 +425,15 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return path.basename(node.path);
 	}
 
-	private createTestItem(node: TreeNode): vs.TestItem {
-		const id = this.idForNode(node);
-		const label = node instanceof SuiteNode
+	private labelForNode(node: TreeNode): string {
+		return node instanceof SuiteNode
 			? this.labelForSuite(node)
 			: this.cleanLabel(node.label ?? "<unnamed>");
+	}
+
+	private createTestItem(node: TreeNode): vs.TestItem {
+		const id = this.idForNode(node);
+		const label = this.labelForNode(node);
 		// We use path here (and not suiteData.path) because we want to
 		// navigate to the source for setup/teardown which may be in a
 		// different file to the test.
@@ -458,6 +462,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private updateFields(item: vs.TestItem, node: TreeNode) {
+		item.label = this.labelForNode(node);
 		item.description = node.description;
 		if ((node instanceof GroupNode || node instanceof TestNode) && node.range) {
 			// Only update locations of tests that already have locations if they are from the Outline, because
@@ -482,7 +487,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const label = node.label;
 		if (!label)
 			return false;
-		if (isSyntheticTestName(label))
+		if (node instanceof TestNode && node.isSynthetic)
 			return false;
 		if (this.discoverer?.fileTracker.supportsPackageTest(URI.file(node.suiteData.path)) === false)
 			return false;
