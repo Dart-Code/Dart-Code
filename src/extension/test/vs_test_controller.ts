@@ -2,7 +2,6 @@ import { minimatch } from "minimatch";
 import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
-import { TestStatus } from "../../shared/enums";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { CoverageParser } from "../../shared/test/coverage";
 import { GroupNode, NodeDidChangeEvent, ProjectNode, RunnableTreeNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode, WorkspaceFolderNode } from "../../shared/test/test_model";
@@ -23,7 +22,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public readonly coverageParser: CoverageParser;
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
-	private appendedLoadOutputCounts = new WeakMap<TestNode, number>();
 	private testRuns: Record<string, { run: vs.TestRun, wasStartedByTestRunner: boolean } | undefined> = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, public readonly discoverer: TestDiscoverer | undefined) {
@@ -537,61 +535,30 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public testStarted(sessionID: string, node: TestNode): void {
 		this.testDiscovered(sessionID, node);
 		const run = this.getOrCreateTestRun(sessionID);
-		// Defer reporting (loading) to TestRun until testDone so passing loads do not add a TestItem to Test Results.
-		if (node.isSyntheticLoadingTest) {
-			this.appendedLoadOutputCounts.delete(node);
+		// Defer reporting (loading) to TestRun until testDone fails so passing loads do not add a TestItem to Test Results.
+		if (node.isSyntheticLoadingTest)
 			return;
-		}
 
 		const item = this.itemForNode.get(node);
 		if (run && item)
 			run.started(item);
 	}
 
-	/**
-	 * Returns whether output for `node` should be buffered instead of appended to `vs.TestRun` immediately.
-	 *
-	 * Passing any `vs.TestItem` to `run.appendOutput` permanently adds that item to the `TestRun` in Test Results,
-	 * even if suite loading succeeds and the tree item is later hidden. While a synthetic suite load test is still
-	 * running, `TestSessionCoordinator` buffers `print` and `error` events on `node.outputEvents` until `testDone`
-	 * determines whether to associate the output with the `"Failed to load"` item (on failure) or append it as
-	 * unassociated run output (on success).
-	 */
-	private shouldDeferLoadTestOutput(node: TestNode): boolean {
-		return node.isSyntheticLoadingTest && node.status === TestStatus.Running;
-	}
-
-	private getUnappendedLoadOutput(node: TestNode): string {
-		const startIndex = this.appendedLoadOutputCounts.get(node) ?? 0;
-		this.appendedLoadOutputCounts.set(node, node.outputEvents.length);
-		return node.outputEvents.slice(startIndex).map((outputEvent) => this.formatNotification(outputEvent)).join("\n");
-	}
-
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
-		if (this.shouldDeferLoadTestOutput(node))
-			return;
-
 		const run = this.getOrCreateTestRun(sessionID);
-		if (node.hidden) {
-			this.appendedLoadOutputCounts.set(node, node.outputEvents.length);
-			this.appendTestOutputLines(run, undefined, message);
-			return;
-		}
-
-		const item = this.itemForNode.get(node);
-		if (run && item)
+		// Write suite load output at the run level (without a TestItem) because passing any
+		// TestItem to run.appendOutput permanently adds it to Test Results even if loading succeeds.
+		const item = node.isSyntheticLoadingTest ? undefined : this.itemForNode.get(node);
+		if (run && (item || node.isSyntheticLoadingTest))
 			this.appendTestOutputLines(run, item, message);
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
-		if (this.shouldDeferLoadTestOutput(node))
-			return;
-
 		const run = this.getOrCreateTestRun(sessionID);
-		const item = node.hidden ? undefined : this.itemForNode.get(node);
-		if (run && (item || node.hidden)) {
-			if (node.hidden)
-				this.appendedLoadOutputCounts.set(node, node.outputEvents.length);
+		// Write suite load errors at the run level (without a TestItem); if loading fails,
+		// testDone also attaches the full node.outputEvents as a TestMessage on "Failed to load".
+		const item = node.isSyntheticLoadingTest ? undefined : this.itemForNode.get(node);
+		if (run && (item || node.isSyntheticLoadingTest)) {
 			// TODO(dantup): If the change described here:
 			//  https://github.com/microsoft/vscode/issues/185778#issuecomment-1603742803
 			//  goes ahead, then if isFailure=true, capture the output of this as the
@@ -609,15 +576,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void {
 		const run = this.getOrCreateTestRun(sessionID);
-		if (node.hidden) {
-			// Hidden nodes (such as a passing suite load test) must not pass a TestItem to TestRun,
-			// as that would permanently add the hidden node to Test Results. Still write any buffered
-			// output (such as top-level print() calls in main() or package:test hints) to the run
-			// output stream without a TestItem so it is not lost from Test Results.
-			if (node.isSyntheticLoadingTest)
-				this.appendTestOutputLines(run, undefined, this.getUnappendedLoadOutput(node));
+		if (node.hidden)
 			return;
-		}
+
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			switch (result) {
@@ -642,10 +603,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 						testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
 					}
 
-					if (node.isSyntheticLoadingTest) {
+					if (node.isSyntheticLoadingTest)
 						run.started(item);
-						this.appendTestOutputLines(run, item, this.getUnappendedLoadOutput(node));
-					}
 
 					if (result === "failure")
 						run.failed(item, testMessage, node.duration);

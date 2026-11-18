@@ -310,15 +310,12 @@ The test description was: .*
 			return;
 
 		test.outputEvents.push(evt);
-		if (test.isSyntheticLoadingTest && test.hidden) {
-			// If a suite load test emits an out-of-band error after its initial hidden testDone
-			// completed (for example an unawaited Future in main()), package:test does not emit a
-			// second testDone. Synthesize testDone now to unhide the node and report the failure
-			// (which replays all buffered outputEvents, including evt).
-			this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure ? "failure" : "error", evt.time, false);
-			return;
-		}
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
+		// If a suite load test emits an out-of-band error after its initial hidden testDone
+		// completed (for example an unawaited Future in main()), package:test does not emit a
+		// second testDone, so synthesize testDone now to unhide and report the failure.
+		if (test.isSyntheticLoadingTest && test.hidden)
+			this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure ? "failure" : "error", evt.time, false);
 	}
 
 	private getRangeForNode(suite: SuiteData, line: number | undefined, character: number | undefined): Range | undefined {

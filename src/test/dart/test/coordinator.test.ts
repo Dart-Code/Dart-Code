@@ -103,9 +103,9 @@ void main() => test("test 1", () {});
 			time: 2,
 			type: "testDone",
 		});
-		// Output emitted while still hidden must go to TestRun without a TestItem so the hidden node is not added to Test Results.
+		// Output emitted for a loading test goes to TestRun without a TestItem so the hidden node is not added to Test Results.
 		coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
-			message: "buffered print message",
+			message: "late print message",
 			messageType: "print",
 			testID: 1,
 			time: 3,
@@ -138,10 +138,11 @@ void main() => test("test 1", () {});
 		assert.equal((erroredSpy?.firstCall.args[0] as vs.TestItem).label, "Failed to load");
 		const message = erroredSpy?.firstCall.args[1] as vs.TestMessage;
 		const messageText = typeof message.message === "string" ? message.message : message.message.value;
-		assert.ok(messageText.includes("buffered print message"));
+		assert.ok(messageText.includes("late print message"));
 		assert.ok(messageText.includes("async main error"));
+		assert.equal(appendOutputSpy?.getCalls().every((c) => c.args[2] === undefined), true);
 		const runOutput = appendOutputSpy?.getCalls().map((c) => String(c.args[0])).join("") ?? "";
-		assert.equal(runOutput.split("buffered print message").length - 1, 1, runOutput);
+		assert.equal(runOutput.split("late print message").length - 1, 1, runOutput);
 		assert.ok(runOutput.includes("async main error"), runOutput);
 		assert.ok(runOutput.includes("second async error"), runOutput);
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), `
