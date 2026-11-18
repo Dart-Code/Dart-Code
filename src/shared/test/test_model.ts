@@ -24,9 +24,7 @@ export abstract class TreeNode {
 	public nameSegments: TestNameSegment[] | undefined;
 	public isPotentiallyDeleted = false;
 	/**
-	 * Whether this node is hidden from the test tree, excluded from suite test counts/statuses,
-	 * and has its output/completion events (`testOutput`, `testErrorOutput`, `testDone`) suppressed
-	 * from `TestEventListener`s.
+	 * Whether this node is hidden from the test tree and excluded from suite test counts/statuses.
 	 *
 	 * Used for synthetic suite load nodes (`(loading)`), which are shown as `"Loading..."` while
 	 * running and hidden if suite loading succeeds or is cancelled before completing.
@@ -673,13 +671,6 @@ export class TestModel {
 		);
 	}
 
-	/**
-	 * Records the completion of a test in the model and notifies `TestEventListener`s.
-	 *
-	 * When `hidden` is `true` (for example, a passing synthetic suite load test), the node is marked
-	 * hidden in the tree/counts and `testDone` events to `TestEventListener`s are suppressed so the
-	 * node is not added to `vs.TestRun`.
-	 */
 	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined, hidden = false): void {
 		const suite = this.suites.getForPath(suitePath)!;
 		const testNode = suite.getCurrentTest(dartCodeDebugSessionID, testID)!;
@@ -707,9 +698,7 @@ export class TestModel {
 
 		this.updateTestCountLabels(testNode, true, "UP");
 
-		// Suppress notifying listeners (such as VsCodeTestController) when hidden so passing
-		// synthetic suite load nodes are never added to vs.TestRun.
-		if (dartCodeDebugSessionID && !hidden)
+		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testDone(dartCodeDebugSessionID, testNode, result));
 	}
 
@@ -741,8 +730,7 @@ export class TestModel {
 		const suite = this.suites.getForPath(suitePath)!;
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
 
-		// Suppress output events for hidden nodes (see TreeNode.hidden).
-		if (test && !test.hidden)
+		if (test)
 			this.testEventListeners.forEach((l) => l.testOutput(dartCodeDebugSessionID, test, message));
 	}
 
@@ -750,8 +738,7 @@ export class TestModel {
 		const suite = this.suites.getForPath(suitePath)!;
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
 
-		// Suppress output events for hidden nodes (see TreeNode.hidden).
-		if (test && !test.hidden)
+		if (test)
 			this.testEventListeners.forEach((l) => l.testErrorOutput(dartCodeDebugSessionID, test, message, isFailure, stack));
 	}
 

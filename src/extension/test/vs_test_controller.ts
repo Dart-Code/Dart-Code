@@ -23,6 +23,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public readonly coverageParser: CoverageParser;
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
+	private appendedLoadOutputCounts = new WeakMap<TestNode, number>();
 	private testRuns: Record<string, { run: vs.TestRun, wasStartedByTestRunner: boolean } | undefined> = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, public readonly discoverer: TestDiscoverer | undefined) {
@@ -304,14 +305,16 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	/**
-	 * Creates a test item for `node` in its parent collection, or updates the existing item if one already exists.
+	 * Creates a test item for `node` (adding it to its parent collection) or updates the existing item
+	 * if one already exists, and returns it so callers rebuilding a whole level can also pass the results
+	 * to `.replace()`.
 	 *
 	 * Recursively creates/updates children if the item was newly created or `updateChildren` is `true`.
 	 *
 	 * If `shouldShowNode(node)` is `false` (for example, a hidden `(loading)` node or a skipped test when
 	 * `dart.showSkippedTests` is `false`), any existing item is removed from its parent collection and `undefined`
-	 * is returned so callers rebuilding child collections exclude it. Also returns `undefined` if the parent
-	 * collection cannot be found or if `node` is a `WorkspaceFolderNode` in a single-root workspace.
+	 * is returned. Also returns `undefined` if the parent collection cannot be found or if `node` is a
+	 * `WorkspaceFolderNode` in a single-root workspace.
 	 */
 	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
 		// If we're not showing workspace folder nodes and this is a workspace folder, skip over it to
@@ -534,9 +537,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public testStarted(sessionID: string, node: TestNode): void {
 		this.testDiscovered(sessionID, node);
 		const run = this.getOrCreateTestRun(sessionID);
-		// Defer reporting (loading) to TestRun until testDone fails so passing loads do not stay in Test Results.
-		if (node.isSyntheticLoadingTest)
+		// Defer reporting (loading) to TestRun until testDone so passing loads do not add a TestItem to Test Results.
+		if (node.isSyntheticLoadingTest) {
+			this.appendedLoadOutputCounts.delete(node);
 			return;
+		}
 
 		const item = this.itemForNode.get(node);
 		if (run && item)
@@ -548,12 +553,18 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	 *
 	 * Passing any `vs.TestItem` to `run.appendOutput` permanently adds that item to the `TestRun` in Test Results,
 	 * even if suite loading succeeds and the tree item is later hidden. While a synthetic suite load test is still
-	 * running, `TestSessionCoordinator` buffers `print` and `error` events on `node.outputEvents`, and `testDone`
-	 * replays them to the `TestRun` only if loading fails. Once a load failure has been reported (`status !== Running`),
-	 * any subsequent late async output is forwarded directly.
+	 * running, `TestSessionCoordinator` buffers `print` and `error` events on `node.outputEvents` until `testDone`
+	 * determines whether to associate the output with the `"Failed to load"` item (on failure) or append it as
+	 * unassociated run output (on success).
 	 */
 	private shouldDeferLoadTestOutput(node: TestNode): boolean {
 		return node.isSyntheticLoadingTest && node.status === TestStatus.Running;
+	}
+
+	private getUnappendedLoadOutput(node: TestNode): string {
+		const startIndex = this.appendedLoadOutputCounts.get(node) ?? 0;
+		this.appendedLoadOutputCounts.set(node, node.outputEvents.length);
+		return node.outputEvents.slice(startIndex).map((outputEvent) => this.formatNotification(outputEvent)).join("\n");
 	}
 
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
@@ -561,6 +572,12 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return;
 
 		const run = this.getOrCreateTestRun(sessionID);
+		if (node.hidden) {
+			this.appendedLoadOutputCounts.set(node, node.outputEvents.length);
+			this.appendTestOutputLines(run, undefined, message);
+			return;
+		}
+
 		const item = this.itemForNode.get(node);
 		if (run && item)
 			this.appendTestOutputLines(run, item, message);
@@ -571,8 +588,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return;
 
 		const run = this.getOrCreateTestRun(sessionID);
-		const item = this.itemForNode.get(node);
-		if (run && item) {
+		const item = node.hidden ? undefined : this.itemForNode.get(node);
+		if (run && (item || node.hidden)) {
+			if (node.hidden)
+				this.appendedLoadOutputCounts.set(node, node.outputEvents.length);
 			// TODO(dantup): If the change described here:
 			//  https://github.com/microsoft/vscode/issues/185778#issuecomment-1603742803
 			//  goes ahead, then if isFailure=true, capture the output of this as the
@@ -582,7 +601,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
-	public appendTestOutputLines(run: vs.TestRun, item: vs.TestItem, message: string) {
+	public appendTestOutputLines(run: vs.TestRun, item: vs.TestItem | undefined, message: string) {
 		if (message.trim() === "")
 			return;
 		run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
@@ -590,6 +609,15 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void {
 		const run = this.getOrCreateTestRun(sessionID);
+		if (node.hidden) {
+			// Hidden nodes (such as a passing suite load test) must not pass a TestItem to TestRun,
+			// as that would permanently add the hidden node to Test Results. Still write any buffered
+			// output (such as top-level print() calls in main() or package:test hints) to the run
+			// output stream without a TestItem so it is not lost from Test Results.
+			if (node.isSyntheticLoadingTest)
+				this.appendTestOutputLines(run, undefined, this.getUnappendedLoadOutput(node));
+			return;
+		}
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			switch (result) {
@@ -616,7 +644,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 					if (node.isSyntheticLoadingTest) {
 						run.started(item);
-						this.appendTestOutputLines(run, item, output);
+						this.appendTestOutputLines(run, item, this.getUnappendedLoadOutput(node));
 					}
 
 					if (result === "failure")

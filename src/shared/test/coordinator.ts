@@ -7,7 +7,7 @@ import { ErrorNotification, GroupNotification, Notification, PrintNotification, 
 import { disposeAll, maybeUriToFilePath } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
 import { TestOutlineVisitor } from "../utils/outline";
-import { isSyntheticTestName, suiteLoadTestName } from "../utils/test";
+import { isSetupOrTeardownTestName, suiteLoadTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
 
 /** Handles results from a test debug session and provides them to the test model. */
@@ -166,7 +166,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 			? suiteLoadTestName
 			: evt.test.name;
 
-		const { path: testPath, line, character } = this.getLocation(evt.test, testName);
+		const { path: testPath, line, character } = this.getLocation(evt.test);
 
 		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
 		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
@@ -180,8 +180,8 @@ export class TestSessionCoordinator implements IAmDisposable {
 	 * to them correctly.
 	 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
 	 */
-	private getLocation(item: TestItem, name = item.name): { path?: string, line?: number, character?: number } {
-		const useRootLocation = !isSyntheticTestName(name) && !!item.root_url && !!item.root_line && !!item.root_column;
+	private getLocation(item: TestItem): { path?: string, line?: number, character?: number } {
+		const useRootLocation = !isSetupOrTeardownTestName(item.name) && !!item.root_url && !!item.root_line && !!item.root_column;
 
 		const url = useRootLocation
 			? item.root_url ?? undefined

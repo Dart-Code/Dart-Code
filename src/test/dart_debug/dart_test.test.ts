@@ -907,6 +907,8 @@ class Foo {
 		assert.equal(capturedRuns[2].started.callCount, 1);
 		assert.equal(capturedRuns[2].started.firstCall.args[0], updatedCalculateItem);
 		assert.equal(capturedRuns[2].appendOutput.getCalls().some((c) => (c.args[2] as vs.TestItem | undefined)?.id.endsWith(`:${testUtils.suiteLoadTestName}`)), false);
+		const run3Output = capturedRuns[2].appendOutput.getCalls().map((c) => String(c.args[0])).join("");
+		assert.ok(run3Output.includes("in main"), run3Output);
 		assert.equal(capturedRuns[2].passed.callCount, 1);
 		assert.equal(capturedRuns[2].passed.firstCall.args[0], updatedCalculateItem);
 		assert.equal(findSuiteNode(emptyTestPath).children.get(`TEST:${emptyTestPath}:${testUtils.suiteLoadTestName}`), undefined);

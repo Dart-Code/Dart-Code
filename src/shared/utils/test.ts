@@ -233,11 +233,3 @@ export const suiteLoadTestName = "(loading)";
 export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
 	return !!(testName && (testName.startsWith("(setUp") || testName.startsWith("(tearDown")) && testName.endsWith(")"));
 }
-
-/**
- * Returns whether `testName` is a synthetic `package:test` node (`(loading)`, `(setUp...)`, or `(tearDown...)`)
- * rather than a user-authored `test(...)`.
- */
-export function isSyntheticTestName(testName: string | undefined): boolean {
-	return testName === suiteLoadTestName || isSetupOrTeardownTestName(testName);
-}

@@ -103,7 +103,7 @@ void main() => test("test 1", () {});
 			time: 2,
 			type: "testDone",
 		});
-		// Output emitted while still hidden must not touch TestRun until an error unhides the node.
+		// Output emitted while still hidden must go to TestRun without a TestItem so the hidden node is not added to Test Results.
 		coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
 			message: "buffered print message",
 			messageType: "print",
@@ -111,7 +111,8 @@ void main() => test("test 1", () {});
 			time: 3,
 			type: "print",
 		});
-		assert.equal(appendOutputSpy?.callCount, 0);
+		assert.equal(appendOutputSpy?.callCount, 1);
+		assert.equal(appendOutputSpy?.firstCall.args[2], undefined);
 
 		coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
 			error: "Exception: async main error",
@@ -140,7 +141,7 @@ void main() => test("test 1", () {});
 		assert.ok(messageText.includes("buffered print message"));
 		assert.ok(messageText.includes("async main error"));
 		const runOutput = appendOutputSpy?.getCalls().map((c) => String(c.args[0])).join("") ?? "";
-		assert.ok(runOutput.includes("buffered print message"), runOutput);
+		assert.equal(runOutput.split("buffered print message").length - 1, 1, runOutput);
 		assert.ok(runOutput.includes("async main error"), runOutput);
 		assert.ok(runOutput.includes("second async error"), runOutput);
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), `
