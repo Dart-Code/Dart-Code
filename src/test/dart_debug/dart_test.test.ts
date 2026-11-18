@@ -416,7 +416,7 @@ describe("dart test debugger", () => {
 		// the counts on the containing nodes will also be reduced.
 		expectedResults = `
 hello_world
-    test/tree_test.dart [6/8 passed] Failed
+    test/tree_test.dart [4/6 passed] Failed
         (setUpAll) Passed (utils.dart)
         (tearDownAll) Passed (utils.dart)
         failing group 1 [2/3 passed] Failed
@@ -870,7 +870,7 @@ class Foo {
 		assert.ok(run1MessageText.includes("Foo constructor error"), run1MessageText);
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), `
 hello_world
-    test/empty_test.dart [0/2 passed] Failed
+    test/empty_test.dart [0/1 passed] Failed
         calculate Unknown
         Failed to load Failed
 		`);
@@ -916,6 +916,148 @@ class Foo {
 hello_world
     test/empty_test.dart [1/1 passed] Passed
         calculate Passed
+		`);
+	});
+
+	it("keeps (setUpAll) and (tearDownAll) nodes in the tree while excluding them from test counts", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/6443
+		const emptyTestPath = fsPath(helloWorldTestEmptyFile);
+		const utilsPath = path.join(path.dirname(emptyTestPath), "utils.dart");
+		defer("Restore empty_test.dart", async () => {
+			writeFileSync(emptyTestPath, "");
+			await vs.commands.executeCommand("workbench.action.files.revert");
+		});
+		writeFileSync(emptyTestPath, "");
+		const editor = await openFile(helloWorldTestEmptyFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+import "utils.dart";
+
+void main() {
+  group("group A", () {
+    setUpAll(() {
+      print("in A setUpAll");
+      throw Exception("A setUpAll error");
+    });
+
+    test("test A", () {
+      expect(1, 1);
+    });
+  });
+
+  group("group B", () {
+    setupTests();
+
+    test("test B", () {
+      expect(1, 1);
+    });
+  });
+}
+		`.trim());
+		await editor.document.save();
+		await getExpectedOutline(editor.document);
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+
+		const controller = privateApi.testController!;
+		const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
+		const capturedRuns: Array<{
+			errored: ReturnType<typeof sb.spy>;
+			passed: ReturnType<typeof sb.spy>;
+		}> = [];
+		sb.stub(controller.controller, "createTestRun").callsFake((...args: Parameters<typeof controller.controller.createTestRun>) => {
+			const run = createTestRunOriginal(...args);
+			capturedRuns.push({
+				errored: sb.spy(run, "errored"),
+				passed: sb.spy(run, "passed"),
+			});
+			return run;
+		});
+
+		const run1SuiteItem = findSuiteNode(emptyTestPath);
+		await controller.runTests(false, false, new vs.TestRunRequest([run1SuiteItem]), fakeCancellationToken);
+
+		const groupAItem = run1SuiteItem.children.get(`GROUP:${emptyTestPath}:group A`)!;
+		const groupBItem = run1SuiteItem.children.get(`GROUP:${emptyTestPath}:group B`)!;
+		const groupASetUpAllItem = groupAItem.children.get(`TEST:${emptyTestPath}:group A (setUpAll)`);
+		const groupBSetUpAllItem = groupBItem.children.get(`TEST:${emptyTestPath}:group B (setUpAll)`);
+		const groupBTearDownAllItem = groupBItem.children.get(`TEST:${emptyTestPath}:group B (tearDownAll)`);
+		assert.ok(groupASetUpAllItem, "Expected group A (setUpAll) item under group A");
+		assert.equal(groupASetUpAllItem.label, "(setUpAll)");
+		assert.equal(groupASetUpAllItem.tags.some((tag) => tag.id === "DartRunnableTest"), false);
+		assert.equal(fsPath(groupASetUpAllItem.uri!), emptyTestPath);
+		assert.equal(groupASetUpAllItem.range?.start.line, positionOf("^setUpAll(() {", editor.document).line);
+
+		assert.ok(groupBSetUpAllItem, "Expected group B (setUpAll) item under group B");
+		assert.equal(groupBSetUpAllItem.tags.some((tag) => tag.id === "DartRunnableTest"), false);
+		assert.equal(fsPath(groupBSetUpAllItem.uri!), utilsPath);
+		assert.ok(groupBTearDownAllItem, "Expected group B (tearDownAll) item under group B");
+		assert.equal(groupBTearDownAllItem.tags.some((tag) => tag.id === "DartRunnableTest"), false);
+		assert.equal(fsPath(groupBTearDownAllItem.uri!), utilsPath);
+
+		assert.equal(capturedRuns[0].errored.callCount, 1);
+		assert.equal(capturedRuns[0].errored.firstCall.args[0], groupASetUpAllItem);
+		const run1Message = capturedRuns[0].errored.firstCall.args[1] as vs.TestMessage;
+		const run1MessageText = typeof run1Message.message === "string" ? run1Message.message : run1Message.message.value;
+		assert.ok(run1MessageText.includes("in A setUpAll"), run1MessageText);
+		assert.ok(run1MessageText.includes("A setUpAll error"), run1MessageText);
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), `
+hello_world
+    test/empty_test.dart [1/2 passed] Failed
+        group A [0/1 passed] Failed
+            (setUpAll) Failed
+            test A Unknown
+            (tearDownAll) Passed
+        group B [1/1 passed] Passed
+            (setUpAll) Passed (utils.dart)
+            (tearDownAll) Passed (utils.dart)
+            test B Passed
+		`);
+
+		await setTestContent(`
+import "package:test/test.dart";
+
+import "utils.dart";
+
+void main() {
+  group("group A", () {
+    setUpAll(() {
+      print("A fixed");
+    });
+
+    test("test A", () {
+      expect(1, 1);
+    });
+  });
+
+  group("group B", () {
+    setupTests();
+
+    test("test B", () {
+      expect(1, 1);
+    });
+  });
+}
+		`.trim());
+		await editor.document.save();
+		await getExpectedOutline(editor.document);
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+
+		const run2SuiteItem = findSuiteNode(emptyTestPath);
+		await controller.runTests(false, false, new vs.TestRunRequest([run2SuiteItem]), fakeCancellationToken);
+
+		assert.equal(capturedRuns[1].errored.callCount, 0);
+		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), `
+hello_world
+    test/empty_test.dart [2/2 passed] Passed
+        group A [1/1 passed] Passed
+            (setUpAll) Passed
+            test A Passed
+            (tearDownAll) Passed
+        group B [1/1 passed] Passed
+            (setUpAll) Passed (utils.dart)
+            (tearDownAll) Passed (utils.dart)
+            test B Passed
 		`);
 	});
 

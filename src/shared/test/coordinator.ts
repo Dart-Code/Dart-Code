@@ -2,6 +2,7 @@ import * as path from "path";
 import { URI } from "vscode-uri";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { isWin } from "../constants";
+import { TestStatus } from "../enums";
 import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestItem, TestStartNotification } from "../test_protocol";
 import { disposeAll, maybeUriToFilePath } from "../utils";
@@ -166,12 +167,18 @@ export class TestSessionCoordinator implements IAmDisposable {
 			? suiteLoadTestName
 			: evt.test.name;
 
-		const { path: testPath, line, character } = this.getLocation(evt.test);
+		const rawGroupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
+		const groupID = this.getRealGroupId(dartCodeDebugSessionID, rawGroupID);
+		const groupName = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)?.name : undefined;
+		const localTestName = groupName && testName?.startsWith(`${groupName} `)
+			? testName.slice(groupName.length + 1)
+			: testName;
 
-		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
-		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
+		const { path: testPath, line, character } = this.getLocation(evt.test, isSetupOrTeardownTestName(localTestName));
 
-		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, testName, this.getRealGroupId(dartCodeDebugSessionID, groupID), testPath, range, evt.time, true);
+		const range = this.getRangeForNode(suite, testPath, line ?? undefined, character ?? undefined);
+
+		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, testName, groupID, testPath, range, evt.time, true);
 	}
 
 	/**
@@ -180,8 +187,8 @@ export class TestSessionCoordinator implements IAmDisposable {
 	 * to them correctly.
 	 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
 	 */
-	private getLocation(item: TestItem): { path?: string, line?: number, character?: number } {
-		const useRootLocation = !isSetupOrTeardownTestName(item.name) && !!item.root_url && !!item.root_line && !!item.root_column;
+	private getLocation(item: TestItem, isSetupOrTeardown = false): { path?: string, line?: number, character?: number } {
+		const useRootLocation = !isSetupOrTeardown && !!item.root_url && !!item.root_line && !!item.root_column;
 
 		const url = useRootLocation
 			? item.root_url ?? undefined
@@ -222,9 +229,8 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 
 		const result = evt.skipped ? "skipped" : evt.result;
-		// Only hide synthetic "(loading)" tests when evt.hidden is true; package:test also sets
-		// hidden: true on passing (setUpAll)/(tearDownAll) tests, which currently remain in the
-		// tree (with source locations/gutter icons; see #4681 and #5984).
+		// Only hide synthetic "(loading)" tests when evt.hidden is true; passing (setUpAll) and
+		// (tearDownAll) nodes remain in the tree for navigation (and are excluded from counts in TestModel).
 		const hide = evt.hidden && test.isSyntheticLoadingTest;
 		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time, hide);
 	}
@@ -247,7 +253,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 		const { path: groupPath, line, character } = this.getLocation(evt.group);
 
-		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
+		const range = this.getRangeForNode(suite, groupPath, line ?? undefined, character ?? undefined);
 		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), groupPath, range, true);
 	}
 
@@ -311,14 +317,14 @@ The test description was: .*
 
 		test.outputEvents.push(evt);
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
-		// If a suite load test emits an out-of-band error after its initial hidden testDone
-		// completed (for example an unawaited Future in main()), package:test does not emit a
-		// second testDone, so synthesize testDone now to unhide and report the failure.
-		if (test.isSyntheticLoadingTest && test.hidden)
+		// If a synthetic test ((loading), (setUpAll), or (tearDownAll)) emits an out-of-band error
+		// after its initial passing testDone completed (for example an unawaited Future), package:test
+		// does not emit a second testDone, so synthesize testDone now to report the failure.
+		if (test.isSynthetic && test.status === TestStatus.Passed)
 			this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure ? "failure" : "error", evt.time, false);
 	}
 
-	private getRangeForNode(suite: SuiteData, line: number | undefined, character: number | undefined): Range | undefined {
+	private getRangeForNode(suite: SuiteData, nodePath: string | undefined, line: number | undefined, character: number | undefined): Range | undefined {
 		if (!line || !character)
 			return;
 
@@ -330,7 +336,9 @@ The test description was: .*
 		// The outline data was captured when the suite started, so we can assume it's reasonable accurate, so try to look up the node
 		// there and use its range. Otherwise, just make a range that goes from the start position to the next line (assuming the rest
 		// of the line is the test name, and we can at least support running it there).
-		const testsOnLine = this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine];
+		const testsOnLine = (!nodePath || nodePath === suite.path)
+			? this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine]
+			: undefined;
 		const test = testsOnLine ? testsOnLine.find((t) => t.range.start.character === zeroBasedCharacter) : undefined;
 
 		return test?.range ?? {

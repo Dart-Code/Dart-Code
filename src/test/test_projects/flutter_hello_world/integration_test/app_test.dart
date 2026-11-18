@@ -8,7 +8,7 @@ import 'package:integration_test/integration_test.dart';
 // the results from the tests below.
 // == EXPECTED RESULTS ==
 // flutter_hello_world
-//     integration_test/app_test.dart [3/3 passed] Passed
+//     integration_test/app_test.dart [2/2 passed] Passed
 //         Counter App [2/2 passed] Passed
 //             starts at 0 Passed
 //             increments the counter Passed
