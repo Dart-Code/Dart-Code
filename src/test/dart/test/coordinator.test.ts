@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { TestSource } from "../../../shared/test/test_model";
-import { forceWindowsDriveLetterToUppercaseInUriString, fsPath } from "../../../shared/utils/fs";
+import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { activate, checkTreeNodeResults, clearTestTree, closeAllOpenFiles, defer, delay, findSuiteNode, getPackages, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent } from "../../helpers";
 
@@ -167,8 +167,8 @@ void main() => test("test 1", () {});
 
 		const suitePath = fsPath(helloWorldRenameTestFile);
 		const utilsPath = path.join(fsPath(helloWorldTestFolder), "utils.dart");
-		const suiteUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(suitePath).toString(true));
-		const utilsUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(utilsPath).toString(true));
+		const suiteUri = vs.Uri.file(suitePath).toString();
+		const utilsUri = vs.Uri.file(utilsPath).toString();
 		const coordinator = privateApi.testCoordinator;
 		const controller = privateApi.testController!;
 		const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
@@ -291,8 +291,8 @@ void main() {
 
 		const suitePath = fsPath(helloWorldRenameTestFile);
 		const utilsPath = path.join(fsPath(helloWorldTestFolder), "utils.dart");
-		const suiteUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(suitePath).toString(true));
-		const utilsUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(utilsPath).toString(true));
+		const suiteUri = vs.Uri.file(suitePath).toString();
+		const utilsUri = vs.Uri.file(utilsPath).toString();
 		const coordinator = privateApi.testCoordinator;
 		const sessionID = "session-group-setupall-location";
 		const debugSessionID = "dbg-group-setupall-location";
@@ -303,7 +303,7 @@ void main() {
 
 		coordinator.handleDebugSessionStart(debugSessionID, sessionID, fsPath(helloWorldFolder));
 		coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
-			suite: { id: 0, path: suitePath, platform: "vm" },
+			suite: { id: 0, path: path.relative(fsPath(helloWorldFolder), suitePath), platform: "vm" },
 			time: 0,
 			type: "suite",
 		});

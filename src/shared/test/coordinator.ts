@@ -5,8 +5,8 @@ import { isWin } from "../constants";
 import { TestStatus } from "../enums";
 import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestItem, TestStartNotification } from "../test_protocol";
-import { disposeAll, maybeUriToFilePath } from "../utils";
-import { forceWindowsDriveLetterToUppercase, normalizeSlashes, uriComparisonString } from "../utils/fs";
+import { disposeAll } from "../utils";
+import { forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, normalizeSlashes, uriComparisonString } from "../utils/fs";
 import { TestOutlineVisitor } from "../utils/outline";
 import { isSetupOrTeardownTestName, suiteLoadTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
@@ -45,6 +45,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	public handleDebugSessionStart(debugSessionID: string, dartCodeDebugSessionID: string | undefined, cwd: string | undefined) {
 		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
+		cwd = cwd ? this.normalizePath(cwd) : undefined;
 
 		const lookup = this.debugSessionLookups[dartCodeDebugSessionID] ??= { cwd, suiteForID: {}, suiteForTestID: {} };
 
@@ -79,6 +80,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	public handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, evt: Notification): void {
+		evt = this.normalizeNotification(dartCodeDebugSessionID, evt);
 		switch (evt.type) {
 			// We won't get notifications that aren't directly tied to Suites because
 			// of how the DA works.
@@ -92,19 +94,6 @@ export class TestSessionCoordinator implements IAmDisposable {
 			// 	break;
 			case "suite": {
 				const event = evt as SuiteNotification;
-				// HACK: Handle paths with wrong slashes.
-				// https://github.com/Dart-Code/Dart-Code/issues/4441
-				if (isWin)
-					event.suite.path = normalizeSlashes(event.suite.path);
-
-				// pkg:test's suite paths can be either relative or absolute, but we expect them to always be absolute
-				// so fix them up before we do anything else.
-				const cwd = this.debugSessionLookups[dartCodeDebugSessionID]?.cwd;
-				if (!path.isAbsolute(event.suite.path) && cwd) {
-					event.suite.path = path.join(cwd, event.suite.path);
-				}
-				event.suite.path = forceWindowsDriveLetterToUppercase(event.suite.path);
-
 				this.owningDebugSessions[event.suite.path] = debugSessionID;
 				this.handleSuiteNotification(dartCodeDebugSessionID, event);
 				break;
@@ -130,6 +119,44 @@ export class TestSessionCoordinator implements IAmDisposable {
 				this.handleErrorNotification(dartCodeDebugSessionID, evt as ErrorNotification);
 				break;
 		}
+	}
+
+	private normalizePath(p: string): string {
+		return forceWindowsDriveLetterToUppercase(isWin ? normalizeSlashes(p) : p);
+	}
+
+	private normalizeNotification(dartCodeDebugSessionID: string, evt: Notification) {
+		switch (evt.type) {
+			case "suite": {
+				const event = evt as SuiteNotification;
+				// pkg:test's suite paths can be either relative or absolute, but we expect them to always be absolute
+				// so fix them up before we do anything else.
+				const cwd = this.debugSessionLookups[dartCodeDebugSessionID]?.cwd;
+				const absolutePath = !path.isAbsolute(event.suite.path) && cwd ? path.join(cwd, event.suite.path) : event.suite.path;
+				// HACK: Handle paths with wrong slashes and lowercase drive letters.
+				// https://github.com/Dart-Code/Dart-Code/issues/4441
+				const suitePath = this.normalizePath(absolutePath);
+				return suitePath === event.suite.path ? event : { ...event, suite: { ...event.suite, path: suitePath } };
+			}
+			case "testStart": {
+				const event = evt as TestStartNotification;
+				const test = this.normalizeTestItem(event.test);
+				return test === event.test ? event : { ...event, test };
+			}
+			case "group": {
+				const event = evt as GroupNotification;
+				const group = this.normalizeTestItem(event.group);
+				return group === event.group ? event : { ...event, group };
+			}
+			default:
+				return evt;
+		}
+	}
+
+	private normalizeTestItem<T extends TestItem>(item: T): T {
+		const url = item.url ? forceWindowsDriveLetterToUppercaseInUriString(item.url) : item.url;
+		const rootUrl = item.root_url ? forceWindowsDriveLetterToUppercaseInUriString(item.root_url) : item.root_url;
+		return url === item.url && rootUrl === item.root_url ? item : { ...item, root_url: rootUrl, url }; // eslint-disable-line camelcase
 	}
 
 	private handleSuiteNotification(dartCodeDebugSessionID: string, evt: SuiteNotification) {
@@ -199,7 +226,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		let line: number | undefined;
 		let character: number | undefined;
 		if (url?.startsWith("file:")) {
-			filePath = forceWindowsDriveLetterToUppercase(maybeUriToFilePath(url));
+			filePath = fsPath(URI.parse(url));
 			if (useRootLocation) {
 				line = item.root_line ?? undefined;
 				character = item.root_column ?? undefined;
