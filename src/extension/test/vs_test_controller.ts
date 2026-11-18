@@ -8,7 +8,6 @@ import { CoverageParser } from "../../shared/test/coverage";
 import { GroupNode, NodeDidChangeEvent, ProjectNode, RunnableTreeNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode, WorkspaceFolderNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
-import { suiteLoadTestName } from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { createCombinedCancellationTokenSource } from "../../shared/vscode/utils";
 import { config } from "../config";
@@ -239,7 +238,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				const node = this.nodeForItem.get(item);
 				const isTest = node instanceof TestNode;
 				// Don't add (loading) to the TestRun up-front because TestRun items cannot be removed if loading succeeds.
-				if (isTest && node.name !== suiteLoadTestName)
+				if (isTest && !node.isSyntheticLoadingTest)
 					run.enqueued(item);
 			} else {
 				// Otherwise recurse.
@@ -304,16 +303,16 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return collection;
 	}
 
-	/// Creates a node or if it already exists, updates it.
-	///
-	/// Recursively creates/updates children unless `updateChildren` is `false` and this node
-	/// already existed.
-	///
-	/// Does not add the item to its parent, so that the calling code can .replace()
-	/// all children if required.
-	///
-	/// Returns undefined if in the case of an error or a node that should
-	/// not be shown in the tree.
+	/**
+	 * Creates a test item for `node` in its parent collection, or updates the existing item if one already exists.
+	 *
+	 * Recursively creates/updates children if the item was newly created or `updateChildren` is `true`.
+	 *
+	 * If `shouldShowNode(node)` is `false` (for example, a hidden `(loading)` node or a skipped test when
+	 * `dart.showSkippedTests` is `false`), any existing item is removed from its parent collection and `undefined`
+	 * is returned so callers rebuilding child collections exclude it. Also returns `undefined` if the parent
+	 * collection cannot be found or if `node` is a `WorkspaceFolderNode` in a single-root workspace.
+	 */
 	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
 		// If we're not showing workspace folder nodes and this is a workspace folder, skip over it to
 		// its children.
@@ -534,18 +533,31 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public testStarted(sessionID: string, node: TestNode): void {
 		this.testDiscovered(sessionID, node);
+		const run = this.getOrCreateTestRun(sessionID);
 		// Defer reporting (loading) to TestRun until testDone fails so passing loads do not stay in Test Results.
-		if (node.name === suiteLoadTestName)
+		if (node.isSyntheticLoadingTest)
 			return;
 
-		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
 			run.started(item);
 	}
 
+	/**
+	 * Returns whether output for `node` should be buffered instead of appended to `vs.TestRun` immediately.
+	 *
+	 * Passing any `vs.TestItem` to `run.appendOutput` permanently adds that item to the `TestRun` in Test Results,
+	 * even if suite loading succeeds and the tree item is later hidden. While a synthetic suite load test is still
+	 * running, `TestSessionCoordinator` buffers `print` and `error` events on `node.outputEvents`, and `testDone`
+	 * replays them to the `TestRun` only if loading fails. Once a load failure has been reported (`status !== Running`),
+	 * any subsequent late async output is forwarded directly.
+	 */
+	private shouldDeferLoadTestOutput(node: TestNode): boolean {
+		return node.isSyntheticLoadingTest && node.status === TestStatus.Running;
+	}
+
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
-		if (node.name === suiteLoadTestName && (node.hidden || node.status === TestStatus.Running))
+		if (this.shouldDeferLoadTestOutput(node))
 			return;
 
 		const run = this.getOrCreateTestRun(sessionID);
@@ -555,7 +567,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
-		if (node.name === suiteLoadTestName && (node.hidden || node.status === TestStatus.Running))
+		if (this.shouldDeferLoadTestOutput(node))
 			return;
 
 		const run = this.getOrCreateTestRun(sessionID);
@@ -602,7 +614,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 						testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
 					}
 
-					if (node.name === suiteLoadTestName) {
+					if (node.isSyntheticLoadingTest) {
 						run.started(item);
 						this.appendTestOutputLines(run, item, output);
 					}

@@ -222,12 +222,22 @@ export function parseTestNameFromOutline(elementName: string): TestNameSegment |
 	};
 }
 
+/**
+ * Internal test name used in `TestModel` for `package:test`'s synthetic `loading <path>` suite load test.
+ */
 export const suiteLoadTestName = "(loading)";
 
+/**
+ * Returns whether `testName` is a synthetic `(setUp...)` or `(tearDown...)` test emitted by `package:test`.
+ */
 export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
 	return !!(testName && (testName.startsWith("(setUp") || testName.startsWith("(tearDown")) && testName.endsWith(")"));
 }
 
+/**
+ * Returns whether `testName` is a synthetic `package:test` node (`(loading)`, `(setUp...)`, or `(tearDown...)`)
+ * rather than a user-authored `test(...)`.
+ */
 export function isSyntheticTestName(testName: string | undefined): boolean {
 	return testName === suiteLoadTestName || isSetupOrTeardownTestName(testName);
 }

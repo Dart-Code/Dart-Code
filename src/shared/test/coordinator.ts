@@ -211,16 +211,21 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
 		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
-		if (!suite)
+		if (!suite) {
+			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
 			return;
+		}
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
-		if (!test)
+		if (!test) {
+			this.logger.warn(`Could not find test ${evt.testID} for session ${dartCodeDebugSessionID}`);
 			return;
+		}
 
 		const result = evt.skipped ? "skipped" : evt.result;
-		// Only hide "(loading)" tests when evt.hidden is true; package:test also marks passing
-		// (setUpAll)/(tearDownAll) tests hidden, which we intentionally show in the tree.
-		const hide = evt.hidden && test.name === suiteLoadTestName;
+		// Only hide synthetic "(loading)" tests when evt.hidden is true; package:test also sets
+		// hidden: true on passing (setUpAll)/(tearDownAll) tests, which currently remain in the
+		// tree (with source locations/gutter icons; see #4681 and #5984).
+		const hide = evt.hidden && test.isSyntheticLoadingTest;
 		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time, hide);
 	}
 
@@ -273,8 +278,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
-		if (!test)
+		if (!test) {
+			this.logger.warn(`Could not find test ${evt.testID} for session ${dartCodeDebugSessionID}`);
 			return;
+		}
 
 		test.outputEvents.push(evt);
 		this.data.testOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.message);
@@ -288,8 +295,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
-		if (!test)
+		if (!test) {
+			this.logger.warn(`Could not find test ${evt.testID} for session ${dartCodeDebugSessionID}`);
 			return;
+		}
 
 		// Flutter emits an error when tests fail which when reported to the VS Code API will result in not-so-useful text
 		// in the Test Error Peek window, so we suppress messages that match this pattern.
@@ -301,12 +310,15 @@ The test description was: .*
 			return;
 
 		test.outputEvents.push(evt);
-		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
-		// If a suite load test emits an out-of-band error after its initial hidden testDone
-		// completed (for example an unawaited Future in main()), package:test does not emit a
-		// second testDone, so synthesize completion now to unhide and report the failure.
-		if (test.name === suiteLoadTestName && test.hidden)
+		if (test.isSyntheticLoadingTest && test.hidden) {
+			// If a suite load test emits an out-of-band error after its initial hidden testDone
+			// completed (for example an unawaited Future in main()), package:test does not emit a
+			// second testDone. Synthesize testDone now to unhide the node and report the failure
+			// (which replays all buffered outputEvents, including evt).
 			this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure ? "failure" : "error", evt.time, false);
+			return;
+		}
+		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
 	}
 
 	private getRangeForNode(suite: SuiteData, line: number | undefined, character: number | undefined): Range | undefined {
