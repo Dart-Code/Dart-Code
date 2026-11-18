@@ -1,9 +1,10 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { fsPath } from "../../../shared/utils/fs";
+import { TestSource } from "../../../shared/test/test_model";
+import { forceWindowsDriveLetterToUppercaseInUriString, fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
-import { activate, checkTreeNodeResults, clearTestTree, defer, findSuiteNode, getPackages, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, closeAllOpenFiles, defer, delay, findSuiteNode, getPackages, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent } from "../../helpers";
 
 describe("test coordinator", () => {
 	before("get packages", () => getPackages());
@@ -166,16 +167,18 @@ void main() => test("test 1", () {});
 
 		const suitePath = fsPath(helloWorldRenameTestFile);
 		const utilsPath = path.join(fsPath(helloWorldTestFolder), "utils.dart");
-		const suiteUri = vs.Uri.file(suitePath).toString();
-		const utilsUri = vs.Uri.file(utilsPath).toString();
+		const suiteUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(suitePath).toString(true));
+		const utilsUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(utilsPath).toString(true));
 		const coordinator = privateApi.testCoordinator;
 		const controller = privateApi.testController!;
 		const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
 		let erroredSpy: ReturnType<typeof sb.spy> | undefined;
+		let failedSpy: ReturnType<typeof sb.spy> | undefined;
 		let appendOutputSpy: ReturnType<typeof sb.spy> | undefined;
 		sb.stub(controller.controller, "createTestRun").callsFake((...args: Parameters<typeof controller.controller.createTestRun>) => {
 			const run = createTestRunOriginal(...args);
 			erroredSpy = sb.spy(run, "errored");
+			failedSpy = sb.spy(run, "failed");
 			appendOutputSpy = sb.spy(run, "appendOutput");
 			return run;
 		});
@@ -236,7 +239,7 @@ hello_world
 
 		coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
 			error: "Exception: async setUpAll error",
-			isFailure: false,
+			isFailure: true,
 			stackTrace: "stack",
 			testID: 1,
 			time: 4,
@@ -253,9 +256,10 @@ hello_world
 		coordinator.handleDebugSessionEnd(debugSessionID, sessionID);
 		privateApi.testController?.handleDebugSessionEnd({ configuration: { dartCodeDebugSessionID: sessionID } } as unknown as vs.DebugSession);
 
-		assert.equal(erroredSpy?.callCount, 1);
-		assert.equal((erroredSpy?.firstCall.args[0] as vs.TestItem).label, "(setUpAll)");
-		const message = erroredSpy?.firstCall.args[1] as vs.TestMessage;
+		assert.equal(erroredSpy?.callCount, 0);
+		assert.equal(failedSpy?.callCount, 1);
+		assert.equal((failedSpy?.firstCall.args[0] as vs.TestItem).label, "(setUpAll)");
+		const message = failedSpy?.firstCall.args[1] as vs.TestMessage;
 		const messageText = typeof message.message === "string" ? message.message : message.message.value;
 		assert.ok(messageText.includes("late setUpAll print"));
 		assert.ok(messageText.includes("async setUpAll error"));
@@ -287,8 +291,8 @@ void main() {
 
 		const suitePath = fsPath(helloWorldRenameTestFile);
 		const utilsPath = path.join(fsPath(helloWorldTestFolder), "utils.dart");
-		const suiteUri = vs.Uri.file(suitePath).toString();
-		const utilsUri = vs.Uri.file(utilsPath).toString();
+		const suiteUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(suitePath).toString(true));
+		const utilsUri = forceWindowsDriveLetterToUppercaseInUriString(vs.Uri.file(utilsPath).toString(true));
 		const coordinator = privateApi.testCoordinator;
 		const sessionID = "session-group-setupall-location";
 		const debugSessionID = "dbg-group-setupall-location";
@@ -379,7 +383,7 @@ void main() {
 
 		assert.ok(setUpAllItem, "Expected failed group (setUpAll) item under group");
 		assert.equal(setUpAllItem.label, "(setUpAll)");
-		assert.equal(fsPath(setUpAllItem.uri!), fsPath(vs.Uri.file(utilsPath)));
+		assert.equal(fsPath(setUpAllItem.uri!), utilsPath);
 		assert.equal(setUpAllItem.range?.start.line, 3);
 		assert.equal(setUpAllItem.range?.start.character, 2);
 		assert.equal(setUpAllItem.tags.some((tag) => tag.id === "DartRunnableTest"), false);
@@ -397,5 +401,30 @@ hello_world
             (setUpAll) Failed (utils.dart)
             calls (setUpAll) Passed
 		`);
+	});
+
+	it("disposes in-flight helper file range trackers if superseded or removed before openTextDocument resolves", async () => {
+		await closeAllOpenFiles();
+
+		const suitePath = fsPath(helloWorldRenameTestFile);
+		const utilsPath = path.join(fsPath(helloWorldTestFolder), "utils.dart");
+		const utilsUri = vs.Uri.file(utilsPath);
+		const model = privateApi.testModel;
+		model.suiteDiscovered("s1", suitePath);
+
+		const initialRange = { end: { character: 2, line: 4 }, start: { character: 2, line: 3 } };
+		model.testDiscovered("s1", suitePath, TestSource.Result, 1, "(setUpAll)", undefined, utilsPath, initialRange, undefined, false);
+		const node = model.testDiscovered("s1", suitePath, TestSource.Result, 1, "(setUpAll)", undefined, utilsPath, initialRange, undefined, false);
+		model.clearSuiteOrDirectory(suitePath);
+
+		const utilsEditor = await openFile(utilsUri);
+		defer("Revert utils.dart", async () => {
+			await vs.window.showTextDocument(utilsEditor.document);
+			await vs.commands.executeCommand("workbench.action.files.revert");
+		});
+		await utilsEditor.edit((e) => e.insert(new vs.Position(0, 0), "// line\n"));
+		await delay(50);
+
+		assert.equal(node.range?.start.line, 3);
 	});
 });

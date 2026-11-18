@@ -95,6 +95,7 @@ export abstract class TreeNode {
 
 	public dispose(): void {
 		this.rangeTracker?.dispose();
+		this.rangeTracker = undefined;
 	}
 }
 
@@ -314,6 +315,8 @@ export class TestModel {
 	}
 
 	public clearAll(): void {
+		for (const suite of this.suites.values())
+			this.disposeSubtree(suite.node);
 		this.suites.clear();
 		this.projectNodes.clear();
 		this.workspaceFolderNodes.clear();
@@ -415,9 +418,15 @@ export class TestModel {
 
 	public updateNode(event?: NodeDidChangeEvent) {
 		if (event?.nodeWasRemoved)
-			event.node.dispose();
+			this.disposeSubtree(event.node);
 
 		this.onDidChangeDataEmitter.fire(event);
+	}
+
+	private disposeSubtree(node: TreeNode): void {
+		node.dispose();
+		for (const child of node.children)
+			this.disposeSubtree(child);
 	}
 
 	public updateSuiteTestCountLabels(suite: SuiteData, forceUpdate: boolean) {
@@ -655,10 +664,21 @@ export class TestModel {
 		if (source !== TestSource.Result || node.testSource !== TestSource.Result)
 			return;
 
+		let isDisposed = false;
+		let resolvedTracker: IAmDisposable | undefined;
+		node.rangeTracker = {
+			dispose: () => {
+				isDisposed = true;
+				resolvedTracker?.dispose();
+			},
+		};
+
 		void this.rangeTracker.trackRangeForUri(
 			URI.file(nodePath),
 			range,
 			(newRange) => {
+				if (isDisposed)
+					return;
 				if (newRange) {
 					node.range = newRange;
 					this.updateNode({ node });
@@ -667,7 +687,12 @@ export class TestModel {
 				}
 			},
 		).then(
-			(tracker) => node.rangeTracker = tracker,
+			(tracker) => {
+				if (isDisposed)
+					tracker.dispose();
+				else
+					resolvedTracker = tracker;
+			},
 			(e) => this.logger.error(e),
 		);
 	}

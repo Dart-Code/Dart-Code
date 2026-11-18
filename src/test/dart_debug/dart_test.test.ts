@@ -996,6 +996,7 @@ void main() {
 		assert.equal(fsPath(groupBTearDownAllItem.uri!), utilsPath);
 
 		assert.equal(capturedRuns[0].errored.callCount, 1);
+		assert.equal(capturedRuns[0].passed.callCount, 4);
 		assert.equal(capturedRuns[0].errored.firstCall.args[0], groupASetUpAllItem);
 		const run1Message = capturedRuns[0].errored.firstCall.args[1] as vs.TestMessage;
 		const run1MessageText = typeof run1Message.message === "string" ? run1Message.message : run1Message.message.value;
@@ -1047,6 +1048,7 @@ void main() {
 		await controller.runTests(false, false, new vs.TestRunRequest([run2SuiteItem]), fakeCancellationToken);
 
 		assert.equal(capturedRuns[1].errored.callCount, 0);
+		assert.equal(capturedRuns[1].passed.callCount, 6);
 		checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldTestEmptyFile }).join("\n"), `
 hello_world
     test/empty_test.dart [2/2 passed] Passed

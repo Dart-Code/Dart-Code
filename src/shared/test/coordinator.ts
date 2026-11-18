@@ -6,7 +6,7 @@ import { TestStatus } from "../enums";
 import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestItem, TestStartNotification } from "../test_protocol";
 import { disposeAll, maybeUriToFilePath } from "../utils";
-import { normalizeSlashes } from "../utils/fs";
+import { forceWindowsDriveLetterToUppercase, normalizeSlashes, uriComparisonString } from "../utils/fs";
 import { TestOutlineVisitor } from "../utils/outline";
 import { isSetupOrTeardownTestName, suiteLoadTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
@@ -103,6 +103,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 				if (!path.isAbsolute(event.suite.path) && cwd) {
 					event.suite.path = path.join(cwd, event.suite.path);
 				}
+				event.suite.path = forceWindowsDriveLetterToUppercase(event.suite.path);
 
 				this.owningDebugSessions[event.suite.path] = debugSessionID;
 				this.handleSuiteNotification(dartCodeDebugSessionID, event);
@@ -143,7 +144,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 		// Also capture the test nodes from the outline so that we can look up the full range for a test (instead of online its line/col)
 		// to provide to VS Code to better support "run test at cursor".
-		this.captureTestOutlne(evt.suite.path);
+		this.captureTestOutlne(suiteData.path);
 	}
 
 	private captureTestOutlne(suitePath: string) {
@@ -198,7 +199,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		let line: number | undefined;
 		let character: number | undefined;
 		if (url?.startsWith("file:")) {
-			filePath = maybeUriToFilePath(url);
+			filePath = forceWindowsDriveLetterToUppercase(maybeUriToFilePath(url));
 			if (useRootLocation) {
 				line = item.root_line ?? undefined;
 				character = item.root_column ?? undefined;
@@ -230,7 +231,8 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 		const result = evt.skipped ? "skipped" : evt.result;
 		// Only hide synthetic "(loading)" tests when evt.hidden is true; passing (setUpAll) and
-		// (tearDownAll) nodes remain in the tree for navigation (and are excluded from counts in TestModel).
+		// (tearDownAll) nodes remain in the tree (and vs.TestRun) for navigation and gutter/status icons,
+		// while TestModel excludes them from suite/group [X/Y passed] counts.
 		const hide = evt.hidden && test.isSyntheticLoadingTest;
 		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time, hide);
 	}
@@ -336,7 +338,7 @@ The test description was: .*
 		// The outline data was captured when the suite started, so we can assume it's reasonable accurate, so try to look up the node
 		// there and use its range. Otherwise, just make a range that goes from the start position to the next line (assuming the rest
 		// of the line is the test name, and we can at least support running it there).
-		const testsOnLine = (!nodePath || nodePath === suite.path)
+		const testsOnLine = (!nodePath || uriComparisonString(URI.file(nodePath)) === uriComparisonString(URI.file(suite.path)))
 			? this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine]
 			: undefined;
 		const test = testsOnLine ? testsOnLine.find((t) => t.range.start.character === zeroBasedCharacter) : undefined;
