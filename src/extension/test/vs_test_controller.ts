@@ -7,7 +7,6 @@ import { CoverageParser } from "../../shared/test/coverage";
 import { GroupNode, NodeDidChangeEvent, ProjectNode, RunnableTreeNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode, WorkspaceFolderNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
-import { isSetupOrTeardownTestName } from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { createCombinedCancellationTokenSource } from "../../shared/vscode/utils";
 import { config } from "../config";
@@ -237,9 +236,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				// Enqueue only test items (VS Code will handle showing the status for containers).
 				const node = this.nodeForItem.get(item);
 				const isTest = node instanceof TestNode;
-				if (isTest) {
+				// Don't add (loading) to the TestRun up-front because TestRun items cannot be removed if loading succeeds.
+				if (isTest && !node.isSyntheticLoadingTest)
 					run.enqueued(item);
-				}
 			} else {
 				// Otherwise recurse.
 				item.children.forEach(markTestEnqueued);
@@ -303,16 +302,18 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return collection;
 	}
 
-	/// Creates a node or if it already exists, updates it.
-	///
-	/// Recursively creates/updates children unless `updateChildren` is `false` and this node
-	/// already existed.
-	///
-	/// Does not add the item to its parent, so that the calling code can .replace()
-	/// all children if required.
-	///
-	/// Returns undefined if in the case of an error or a node that should
-	/// not be shown in the tree.
+	/**
+	 * Creates a test item for `node` (adding it to its parent collection) or updates the existing item
+	 * if one already exists, and returns it so callers rebuilding a whole level can also pass the results
+	 * to `.replace()`.
+	 *
+	 * Recursively creates/updates children if the item was newly created or `updateChildren` is `true`.
+	 *
+	 * If `shouldShowNode(node)` is `false` (for example, a hidden `(loading)` node or a skipped test when
+	 * `dart.showSkippedTests` is `false`), any existing item is removed from its parent collection and `undefined`
+	 * is returned. Also returns `undefined` if the parent collection cannot be found or if `node` is a
+	 * `WorkspaceFolderNode` in a single-root workspace.
+	 */
 	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
 		// If we're not showing workspace folder nodes and this is a workspace folder, skip over it to
 		// its children.
@@ -335,26 +336,25 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		let existingItem = collection.get(nodeId);
 		const didCreate = !existingItem;
 
-		if (!shouldShowNode && existingItem)
-			collection.delete(nodeId);
+		if (!shouldShowNode) {
+			if (existingItem)
+				collection.delete(nodeId);
+			return;
+		}
 
 		// Create new item if required.
 		if (!existingItem) {
 			const newItem = this.createTestItem(node);
-			if (!shouldShowNode)
-				return;
 			collection.add(newItem);
 			existingItem = newItem;
 		} else {
 			// Otherwise, update this item to match the latest state.
 			this.updateFields(existingItem, node);
-			if (!shouldShowNode)
-				return;
 		}
 
 		// For new suites without children, set canResolveChildren because we can
 		// open the file and discover tests from the Outline if the user expands them.
-		if (node instanceof SuiteNode && node.children.length === 0)
+		if (node instanceof SuiteNode && !node.children.some((c) => !c.hidden))
 			existingItem.canResolveChildren = true;
 
 		if (didCreate || updateChildren) {
@@ -382,6 +382,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private shouldShowNode(node: TreeNode): boolean {
+		if (node.hidden)
+			return false;
+
 		if (config.showSkippedTests)
 			return true;
 
@@ -422,11 +425,15 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return path.basename(node.path);
 	}
 
-	private createTestItem(node: TreeNode): vs.TestItem {
-		const id = this.idForNode(node);
-		const label = node instanceof SuiteNode
+	private labelForNode(node: TreeNode): string {
+		return node instanceof SuiteNode
 			? this.labelForSuite(node)
 			: this.cleanLabel(node.label ?? "<unnamed>");
+	}
+
+	private createTestItem(node: TreeNode): vs.TestItem {
+		const id = this.idForNode(node);
+		const label = this.labelForNode(node);
 		// We use path here (and not suiteData.path) because we want to
 		// navigate to the source for setup/teardown which may be in a
 		// different file to the test.
@@ -448,13 +455,14 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 
 		item.children.replace(
-			node.children.map((c) => this.createTestItem(c)),
+			node.children.filter((c) => this.shouldShowNode(c)).map((c) => this.createTestItem(c)),
 		);
 
 		return item;
 	}
 
 	private updateFields(item: vs.TestItem, node: TreeNode) {
+		item.label = this.labelForNode(node);
 		item.description = node.description;
 		if ((node instanceof GroupNode || node instanceof TestNode) && node.range) {
 			// Only update locations of tests that already have locations if they are from the Outline, because
@@ -479,7 +487,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const label = node.label;
 		if (!label)
 			return false;
-		if (isSetupOrTeardownTestName(label))
+		if (node instanceof TestNode && node.isSynthetic)
 			return false;
 		if (this.discoverer?.fileTracker.supportsPackageTest(URI.file(node.suiteData.path)) === false)
 			return false;
@@ -526,8 +534,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public testStarted(sessionID: string, node: TestNode): void {
 		this.testDiscovered(sessionID, node);
-
 		const run = this.getOrCreateTestRun(sessionID);
+		// Defer reporting (loading) to TestRun until testDone fails so passing loads do not add a TestItem to Test Results.
+		if (node.isSyntheticLoadingTest)
+			return;
+
 		const item = this.itemForNode.get(node);
 		if (run && item)
 			run.started(item);
@@ -535,15 +546,19 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
 		const run = this.getOrCreateTestRun(sessionID);
-		const item = this.itemForNode.get(node);
-		if (run && item)
+		// Write suite load output at the run level (without a TestItem) because passing any
+		// TestItem to run.appendOutput permanently adds it to Test Results even if loading succeeds.
+		const item = node.isSyntheticLoadingTest ? undefined : this.itemForNode.get(node);
+		if (run && (item || node.isSyntheticLoadingTest))
 			this.appendTestOutputLines(run, item, message);
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
 		const run = this.getOrCreateTestRun(sessionID);
-		const item = this.itemForNode.get(node);
-		if (run && item) {
+		// Write suite load errors at the run level (without a TestItem); if loading fails,
+		// testDone also attaches the full node.outputEvents as a TestMessage on "Failed to load".
+		const item = node.isSyntheticLoadingTest ? undefined : this.itemForNode.get(node);
+		if (run && (item || node.isSyntheticLoadingTest)) {
 			// TODO(dantup): If the change described here:
 			//  https://github.com/microsoft/vscode/issues/185778#issuecomment-1603742803
 			//  goes ahead, then if isFailure=true, capture the output of this as the
@@ -553,7 +568,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
-	public appendTestOutputLines(run: vs.TestRun, item: vs.TestItem, message: string) {
+	public appendTestOutputLines(run: vs.TestRun, item: vs.TestItem | undefined, message: string) {
 		if (message.trim() === "")
 			return;
 		run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
@@ -561,6 +576,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void {
 		const run = this.getOrCreateTestRun(sessionID);
+		if (node.hidden)
+			return;
+
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			switch (result) {
@@ -584,6 +602,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 						testMessage.expectedOutput = typeof expected === "string" ? expected : undefined;
 						testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
 					}
+
+					if (node.isSyntheticLoadingTest)
+						run.started(item);
 
 					if (result === "failure")
 						run.failed(item, testMessage, node.duration);

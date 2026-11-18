@@ -8,7 +8,7 @@ import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isFlutterProjectFolder, isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
-import { dartInterpolationPattern, makeRegexForTests, TestNameSegment } from "../utils/test";
+import { dartInterpolationPattern, isSetupOrTeardownTestName, makeRegexForTests, suiteLoadTestName, TestNameSegment } from "../utils/test";
 import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
 import { WorkspaceContext } from "../workspace";
@@ -23,6 +23,13 @@ export abstract class TreeNode {
 	public hasDynamicName = false;
 	public nameSegments: TestNameSegment[] | undefined;
 	public isPotentiallyDeleted = false;
+	/**
+	 * Whether this node is hidden from the test tree and excluded from suite test counts/statuses.
+	 *
+	 * Used for synthetic suite load nodes (`(loading)`), which are shown as `"Loading..."` while
+	 * running and hidden if suite loading succeeds or is cancelled before completing.
+	 */
+	public hidden = false;
 	public duration: number | undefined;
 
 	public testCount = 0;
@@ -37,7 +44,7 @@ export abstract class TreeNode {
 	getHighestChildStatus(includeSkipped: boolean): TestStatus {
 		const statuses = new Set<TestStatus>();
 		const addStatus = (node: TreeNode) => {
-			if (node !== this && node instanceof TestNode)
+			if (node !== this && node instanceof TestNode && !node.hidden)
 				statuses.add(node.status);
 			for (const child of node.children)
 				addStatus(child);
@@ -201,6 +208,20 @@ export class TestNode extends RunnableTreeNode {
 
 	set isStale(value: boolean) {
 		super.isStale = value;
+	}
+
+	get label(): string | undefined {
+		if (this.isSyntheticLoadingTest)
+			return this.status === TestStatus.Failed ? "Failed to load" : "Loading...";
+		return super.label;
+	}
+
+	get isSyntheticLoadingTest(): boolean {
+		return this.name === suiteLoadTestName;
+	}
+
+	get isSynthetic(): boolean {
+		return this.isSyntheticLoadingTest || isSetupOrTeardownTestName(super.label);
 	}
 }
 
@@ -413,9 +434,9 @@ export class TestModel {
 
 		// Update the cached counts on this node.
 		if (node instanceof TestNode && !node.children.length) {
-			node.testCount = 1;
-			node.testCountPass = node.status === TestStatus.Passed ? 1 : 0;
-			node.testCountSkip = node.status === TestStatus.Skipped ? 1 : 0;
+			node.testCount = node.hidden ? 0 : 1;
+			node.testCountPass = !node.hidden && node.status === TestStatus.Passed ? 1 : 0;
+			node.testCountSkip = !node.hidden && node.status === TestStatus.Skipped ? 1 : 0;
 		} else {
 			node.testCount = node.children.map((c) => c.testCount).reduce((total, value) => total + value, 0);
 			node.testCountPass = node.children.map((c) => c.testCountPass).reduce((total, value) => total + value, 0);
@@ -473,10 +494,8 @@ export class TestModel {
 		const oldParent = existingGroup?.parent;
 		let parent = parentID ? suite.getMyGroup(dartCodeDebugSessionID, parentID)! : suite.node;
 
-		/**
-		 * If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
-		 * the analyzer.
-		 */
+		// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
+		// the analyzer.
 		if (groupName && source === TestSource.Result)
 			parent = this.findMatchingDynamicNode(parent, groupName, true) ?? parent;
 
@@ -522,22 +541,19 @@ export class TestModel {
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
-		let parent: TreeNode = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
-
-		/**
-		 * If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
-		 * the analyzer.
-		 */
-		if (testName && source === TestSource.Result)
-			parent = this.findMatchingDynamicNode(parent, testName, false) ?? parent;
-
+		const parent: TreeNode = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
 		const testNode = existingTest ?? new TestNode(suite, parent, testName, testPath, range);
+		testNode.parent = parent;
+		testNode.name = testName;
+
+		// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
+		// the analyzer. Exclude synthetic tests such as (loading), (setUpAll), and (tearDownAll).
+		if (testName && source === TestSource.Result && !testNode.isSynthetic)
+			testNode.parent = this.findMatchingDynamicNode(parent, testName, false) ?? parent;
 
 		suite.storeTest(dartCodeDebugSessionID, testID, testNode);
 
 		if (existingTest) {
-			testNode.parent = parent;
-			testNode.name = testName;
 			testNode.path = testPath;
 			if (range) {
 				const originalRange = testNode.range;
@@ -580,6 +596,7 @@ export class TestModel {
 			// Clear any test output from previous runs.
 			testNode.outputEvents.length = 0;
 			testNode.status = TestStatus.Running;
+			testNode.hidden = false;
 		}
 
 		this.updateNode({ node: testNode });
@@ -654,9 +671,11 @@ export class TestModel {
 		);
 	}
 
-	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {
+	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined, hidden = false): void {
 		const suite = this.suites.getForPath(suitePath)!;
 		const testNode = suite.getCurrentTest(dartCodeDebugSessionID, testID)!;
+
+		testNode.hidden = hidden;
 
 		if (result === "skipped") {
 			testNode.status = TestStatus.Skipped;
@@ -696,6 +715,8 @@ export class TestModel {
 		// Anything marked as running should be set back to Unknown
 		suite.getAllTests().filter((t) => t.status === TestStatus.Running).forEach((t) => {
 			t.status = TestStatus.Unknown;
+			if (t.isSyntheticLoadingTest)
+				t.hidden = true;
 			this.updateNode({ node: t });
 		});
 
