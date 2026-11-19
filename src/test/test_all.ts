@@ -239,15 +239,22 @@ function filterOutputStreamLines(targetStream: Writable): { stream: Writable, en
 		crlfDelay: Infinity
 	});
 
-	let isSuppressingMultiline = false;
+	let activeMultilineRule: { continuation?: RegExp, end?: RegExp } | undefined;
 	rl.on("line", (line) => {
-		if (isSuppressingMultiline) {
-			if (multilineContinuationPattern.test(line))
+		if (activeMultilineRule) {
+			if (activeMultilineRule.end?.test(line)) {
+				activeMultilineRule = undefined;
 				return;
-			isSuppressingMultiline = false;
+			}
+			if ((activeMultilineRule.continuation ?? multilineContinuationPattern).test(line))
+				return;
+			activeMultilineRule = undefined;
 		}
-		if (suppressMultilineOutputPatterns.some((pattern) => pattern.test(line))) {
-			isSuppressingMultiline = true;
+		const matchingRule = suppressMultilineOutputPatterns.find((rule) =>
+			rule instanceof RegExp ? rule.test(line) : rule.start.test(line),
+		);
+		if (matchingRule) {
+			activeMultilineRule = matchingRule instanceof RegExp ? {} : matchingRule;
 			return;
 		}
 		if (shouldIncludeOutputLine(line))
@@ -266,7 +273,14 @@ function filterOutputStreamLines(targetStream: Writable): { stream: Writable, en
 
 const multilineContinuationPattern = /^(\s+(at |\w+:)|\s*\},?$)/;
 
-const suppressMultilineOutputPatterns = [
+const suppressMultilineOutputPatterns: Array<RegExp | { start: RegExp, continuation?: RegExp, end?: RegExp }> = [
+	{
+		// VS Code dumps every proposed API name when a bundled extension (e.g. github.copilot-chat)
+		// declares different proposals in package.json vs product.json.
+		start: /Extension '.*' appears in product\.json but enables (LESS|MORE) API proposals than the extension wants\./i,
+		continuation: /^(package\.json \((LOSES|WINS)\):|product\.json \((LOSES|WINS)\):|DELTA:|[a-zA-Z][a-zA-Z0-9_@-]*$)/,
+		end: /Proceeding with EXTRA proposals/i,
+	},
 	/\[LS Main\] Heartbeat error:/i,
 	/\[AGY Extension\] Inline completion error:/i,
 	/\[Jetski\] PostMessageTransport error:/i,
@@ -297,7 +311,7 @@ const suppressOutputPatterns = [
 	/GPU stall due to/i,
 	/Closing VS Code gracefully/i,
 	/FATAL:electron/i,
-	/ERROR:(ui|gpu|third_party)/i,
+	/ERROR:(ui|gpu|third_party|net[\\/]|base[\\/])/i,
 	/Failed to check for extension recommendations/i,
 	/Extension host with pid \d+ exited with code: 0/i,
 	/\[DEP0040\] DeprecationWarning:/i,
@@ -333,6 +347,7 @@ const suppressOutputPatterns = [
 	/extensions[\\/]github\.copilot-chat/i,
 	// New AgentHost spam
 	/AgentHostProcessManager/i,
+	/AgentHostStarter:/i,
 	/No token resolved for resource/i,
 	/Unknown channel: agentHost/i,
 	/AgentHost:renderer/i,
@@ -359,6 +374,13 @@ const suppressOutputPatterns = [
 	/code: -32603,/i,
 	/message: 'ProviderCatalogUnavailableError: Provider/i,
 	/^}$/i,
+	// Extension host responsiveness and profiler warnings.
+	/Extension host \(LocalProcess pid: \d+\) is (un)?responsive\./i,
+	/UNRESPONSIVE extension host:/i,
+	// Slow workbench contribution creation logs.
+	/Creation of workbench contribution '.*' took \d+ms\./i,
+	// VS Code Local History copy errors when test files are deleted.
+	/ENOENT: no such file or directory, copyfile .*[\\/]User[\\/]History[\\/]/i,
 ];
 const shouldIncludeOutputLine = (line: string) => !suppressOutputPatterns.some((pattern) => pattern.test(line));
 
