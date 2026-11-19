@@ -1,7 +1,11 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { TestSource } from "../../../shared/test/test_model";
+import { isWin } from "../../../shared/constants";
+import { nullLogger } from "../../../shared/logging";
+import { TestSessionCoordinator } from "../../../shared/test/coordinator";
+import { TestModel, TestSource } from "../../../shared/test/test_model";
+import { GroupNotification, SuiteNotification, TestStartNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { activate, checkTreeNodeResults, clearTestTree, closeAllOpenFiles, defer, delay, findSuiteNode, getPackages, helloWorldFolder, helloWorldRenameTestFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent } from "../../helpers";
@@ -426,5 +430,253 @@ hello_world
 		await delay(50);
 
 		assert.equal(node.range?.start.line, 3);
+	});
+
+	it("normalizes Windows drive letters, slashes, and file URIs across notifications regardless of input casing", () => {
+		const model = new TestModel(nullLogger, privateApi.workspaceContext, { dynamicTestTracking: false, showSkippedTests: true }, () => [], () => undefined);
+		const winCoordinator = new TestSessionCoordinator(nullLogger, model, { getOutlineFor: () => undefined }, true);
+
+		winCoordinator.handleDebugSessionStart("d1", "s1", "d:/workspace/proj");
+		const lowerCwdEvt: SuiteNotification = {
+			suite: { id: 0, path: "test/my_test.dart", platform: "vm" },
+			time: 0,
+			type: "suite",
+		};
+		const fromLowerCwd = winCoordinator.normalizeNotification("s1", lowerCwdEvt) as SuiteNotification;
+		assert.equal(fromLowerCwd.suite.path, "D:\\workspace\\proj\\test\\my_test.dart");
+
+		winCoordinator.handleDebugSessionStart("d2", "s2", "D:\\workspace\\proj");
+		for (const rawSuitePath of [
+			"test\\my_test.dart",
+			"d:/workspace/proj/test/my_test.dart",
+			"D:\\workspace\\proj\\test\\my_test.dart",
+		]) {
+			const suiteEvt: SuiteNotification = {
+				suite: { id: 0, path: rawSuitePath, platform: "vm" },
+				time: 0,
+				type: "suite",
+			};
+			const normalized = winCoordinator.normalizeNotification("s2", suiteEvt) as SuiteNotification;
+			assert.equal(normalized.suite.path, "D:\\workspace\\proj\\test\\my_test.dart");
+		}
+
+		for (const [rawUtilsUri, expectedUtilsUri, rawRootUri, expectedRootUri] of [
+			[
+				"file:///d:/workspace/proj/test/utils.dart",
+				"file:///D:/workspace/proj/test/utils.dart",
+				"file:///d%3A/workspace/proj/test/my_test.dart",
+				"file:///D%3A/workspace/proj/test/my_test.dart",
+			],
+			[
+				"file:///D:/workspace/proj/test/utils.dart",
+				"file:///D:/workspace/proj/test/utils.dart",
+				"file:///D%3A/workspace/proj/test/my_test.dart",
+				"file:///D%3A/workspace/proj/test/my_test.dart",
+			],
+		]) {
+			const groupEvt = winCoordinator.normalizeNotification("s1", {
+				group: {
+					column: 3,
+					id: 1,
+					line: 4,
+					name: "my group",
+					root_column: undefined, // eslint-disable-line camelcase
+					root_line: undefined, // eslint-disable-line camelcase
+					root_url: rawRootUri, // eslint-disable-line camelcase
+					suiteID: 0,
+					testCount: 1,
+					url: rawUtilsUri,
+				},
+				time: 1,
+				type: "group",
+			} as GroupNotification) as GroupNotification;
+			assert.equal(groupEvt.group.url, expectedUtilsUri);
+			assert.equal(groupEvt.group.root_url, expectedRootUri);
+
+			const testEvt = winCoordinator.normalizeNotification("s1", {
+				test: {
+					column: 3,
+					groupIDs: [1],
+					id: 2,
+					line: 5,
+					name: "my group (setUpAll)",
+					root_column: 5, // eslint-disable-line camelcase
+					root_line: 6, // eslint-disable-line camelcase
+					root_url: rawRootUri, // eslint-disable-line camelcase
+					suiteID: 0,
+					url: rawUtilsUri,
+				},
+				time: 2,
+				type: "testStart",
+			} as TestStartNotification) as TestStartNotification;
+			assert.equal(testEvt.test.url, expectedUtilsUri);
+			assert.equal(testEvt.test.root_url, expectedRootUri);
+		}
+	});
+
+	it("resolves mixed uppercase and lowercase Windows drive letters end-to-end", async function () {
+		if (!isWin)
+			this.skip();
+
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() {
+  group("my group", () {
+    test("my test", () {
+      expect(1, 1);
+    });
+  });
+}
+		`.trim());
+
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("my test"));
+
+		const cwd = fsPath(helloWorldFolder);
+		const suitePath = fsPath(helloWorldRenameTestFile);
+		const utilsPath = path.join(fsPath(helloWorldTestFolder), "utils.dart");
+		const initialSuiteCount = privateApi.testModel.suites.size;
+
+		const withLowerDrive = (p: string) => `${p.charAt(0).toLowerCase()}${p.slice(1)}`;
+		const withUpperDrive = (p: string) => `${p.charAt(0).toUpperCase()}${p.slice(1)}`;
+		const toUnencodedFileUri = (p: string, upperDrive: boolean) => {
+			const raw = vs.Uri.file(p).toString(true);
+			return raw.replace(/^file:\/\/\/([a-zA-Z]):\//, (_, d: string) => `file:///${upperDrive ? d.toUpperCase() : d.toLowerCase()}:/`);
+		};
+		const toEncodedFileUri = (p: string, upperDrive: boolean) => {
+			const raw = vs.Uri.file(p).toString();
+			return raw.replace(/^file:\/\/\/([a-zA-Z])%3A\//, (_, d: string) => `file:///${upperDrive ? d.toUpperCase() : d.toLowerCase()}%3A/`);
+		};
+
+		const coordinator = privateApi.testCoordinator;
+
+		const runMixedCasingSession = (
+			sessionSuffix: string,
+			sessionCwd: string,
+			sessionSuitePath: string,
+			groupUrl: string,
+			setUpAllUrl: string,
+			setUpAllRootUrl: string,
+			userTestUrl: string,
+			userTestRootUrl: string,
+		) => {
+			const sessionID = `session-win-casing-${sessionSuffix}`;
+			const debugSessionID = `dbg-win-casing-${sessionSuffix}`;
+			defer(`End ${sessionID}`, () => {
+				coordinator.handleDebugSessionEnd(debugSessionID, sessionID);
+				privateApi.testController?.handleDebugSessionEnd({ configuration: { dartCodeDebugSessionID: sessionID } } as unknown as vs.DebugSession);
+			});
+
+			coordinator.handleDebugSessionStart(debugSessionID, sessionID, sessionCwd);
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+				suite: { id: 0, path: sessionSuitePath, platform: "vm" },
+				time: 0,
+				type: "suite",
+			});
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+				group: { id: 2, name: "", parentID: undefined, suiteID: 0, testCount: 2 },
+				time: 1,
+				type: "group",
+			});
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+				group: { column: 3, id: 4, line: 4, name: "my group", parentID: 2, suiteID: 0, testCount: 2, url: groupUrl },
+				time: 2,
+				type: "group",
+			});
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+				test: {
+					column: 3,
+					groupIDs: [2, 4],
+					id: 5,
+					line: 4,
+					name: "my group (setUpAll)",
+					root_column: 3, // eslint-disable-line camelcase
+					root_line: 4, // eslint-disable-line camelcase
+					root_url: setUpAllRootUrl, // eslint-disable-line camelcase
+					suiteID: 0,
+					url: setUpAllUrl,
+				},
+				time: 3,
+				type: "testStart",
+			});
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+				hidden: true,
+				result: "success",
+				skipped: false,
+				testID: 5,
+				time: 4,
+				type: "testDone",
+			});
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+				test: {
+					column: 3,
+					groupIDs: [2, 4],
+					id: 6,
+					line: 10,
+					name: "my group my test",
+					root_column: 5, // eslint-disable-line camelcase
+					root_line: 5, // eslint-disable-line camelcase
+					root_url: userTestRootUrl, // eslint-disable-line camelcase
+					suiteID: 0,
+					url: userTestUrl,
+				},
+				time: 5,
+				type: "testStart",
+			});
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+				hidden: false,
+				result: "success",
+				skipped: false,
+				testID: 6,
+				time: 6,
+				type: "testDone",
+			});
+			coordinator.handleDebugSessionEnd(debugSessionID, sessionID);
+			privateApi.testController?.handleDebugSessionEnd({ configuration: { dartCodeDebugSessionID: sessionID } } as unknown as vs.DebugSession);
+
+			assert.equal(privateApi.testModel.suites.size, initialSuiteCount);
+
+			const suiteItem = findSuiteNode(suitePath);
+			const groupItem = suiteItem.children.get(`GROUP:${suitePath}:my group`)!;
+			const setUpAllItem = groupItem.children.get(`TEST:${suitePath}:my group (setUpAll)`)!;
+			const userTestItem = groupItem.children.get(`TEST:${suitePath}:my group my test`)!;
+
+			assert.equal(fsPath(setUpAllItem.uri!), utilsPath);
+			assert.equal(fsPath(userTestItem.uri!), suitePath);
+			assert.ok(userTestItem.range && userTestItem.range.end.line > userTestItem.range.start.line + 1, "Expected user test to match multi-line Outline range");
+
+			checkTreeNodeResults(makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n"), `
+hello_world
+    test/rename_test.dart [1/1 passed] Passed
+        my group [1/1 passed] Passed
+            (setUpAll) Passed (utils.dart)
+            my test Passed
+			`);
+		};
+
+		// Session 1: lowercase forward-slash cwd + relative suite.path + lowercase/uppercase encoded & unencoded URIs.
+		runMixedCasingSession(
+			"1",
+			withLowerDrive(cwd).replace(/\\/g, "/"),
+			"test/rename_test.dart",
+			toUnencodedFileUri(suitePath, true),
+			toUnencodedFileUri(utilsPath, false),
+			toUnencodedFileUri(suitePath, true),
+			toEncodedFileUri(utilsPath, false),
+			toEncodedFileUri(suitePath, false),
+		);
+
+		// Session 2: uppercase cwd + absolute lowercase forward-slash suite.path + opposite URI casing.
+		runMixedCasingSession(
+			"2",
+			withUpperDrive(cwd),
+			withLowerDrive(suitePath).replace(/\\/g, "/"),
+			toEncodedFileUri(suitePath, false),
+			toEncodedFileUri(utilsPath, true),
+			toEncodedFileUri(suitePath, false),
+			toUnencodedFileUri(utilsPath, true),
+			toUnencodedFileUri(suitePath, true),
+		);
 	});
 });

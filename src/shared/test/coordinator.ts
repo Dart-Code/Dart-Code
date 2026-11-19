@@ -41,7 +41,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	 */
 	private phantomGroupParents: Record<string, Record<number, number | null | undefined>> = {};
 
-	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined }) { }
+	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined }, private readonly platformIsWin = isWin) { }
 
 	public handleDebugSessionStart(debugSessionID: string, dartCodeDebugSessionID: string | undefined, cwd: string | undefined) {
 		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
@@ -122,17 +122,18 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private normalizePath(p: string): string {
-		return forceWindowsDriveLetterToUppercase(isWin ? normalizeSlashes(p) : p);
+		return forceWindowsDriveLetterToUppercase(this.platformIsWin ? normalizeSlashes(p, true) : p, this.platformIsWin);
 	}
 
-	private normalizeNotification(dartCodeDebugSessionID: string, evt: Notification) {
+	public normalizeNotification(dartCodeDebugSessionID: string, evt: Notification) {
 		switch (evt.type) {
 			case "suite": {
 				const event = evt as SuiteNotification;
 				// pkg:test's suite paths can be either relative or absolute, but we expect them to always be absolute
 				// so fix them up before we do anything else.
 				const cwd = this.debugSessionLookups[dartCodeDebugSessionID]?.cwd;
-				const absolutePath = !path.isAbsolute(event.suite.path) && cwd ? path.join(cwd, event.suite.path) : event.suite.path;
+				const pathModule = this.platformIsWin ? path.win32 : path;
+				const absolutePath = !pathModule.isAbsolute(event.suite.path) && cwd ? pathModule.join(cwd, event.suite.path) : event.suite.path;
 				// HACK: Handle paths with wrong slashes and lowercase drive letters.
 				// https://github.com/Dart-Code/Dart-Code/issues/4441
 				const suitePath = this.normalizePath(absolutePath);

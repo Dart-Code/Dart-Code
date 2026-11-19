@@ -5,7 +5,7 @@ import { ConfigurationTarget, Uri, workspace } from "vscode";
 import { isWin } from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
 import { captureLogs, EmittingLogger, nullLogger } from "../../../shared/logging";
-import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, fsPath, getDartToolDir, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, prepareLogFilePath, uriComparisonString } from "../../../shared/utils/fs";
+import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, getDartToolDir, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, normalizeSlashes, prepareLogFilePath, uriComparisonString } from "../../../shared/utils/fs";
 import { activateWithoutAnalysis, createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, privateApi, setConfigForTest, testProjectsFolder, tryDelete, waitForResult } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
@@ -483,5 +483,23 @@ describe("prepareLogFilePath and createFolderForFile", () => {
 		await waitForResult(() => warnings.length > 0);
 		emittingLogger.info("Test message after stream error", LogCategory.Analyzer);
 		await fileLogger.dispose();
+	});
+});
+
+describe("Windows path and URI normalization", () => {
+	it("uppercases Windows drive letters across separator styles and preserves relative paths", () => {
+		assert.equal(forceWindowsDriveLetterToUppercase("c:\\foo\\bar.dart", true), "C:\\foo\\bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercase("C:\\foo\\bar.dart", true), "C:\\foo\\bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercase("c:/foo/bar.dart", true), "C:/foo/bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercase("relative/bar.dart", true), "relative/bar.dart");
+		assert.equal(normalizeSlashes("c:/foo\\bar/baz.dart", true), "c:\\foo\\bar\\baz.dart");
+	});
+
+	it("uppercases Windows drive letters in encoded and unencoded file URI strings", () => {
+		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("file:///c:/foo/bar.dart"), "file:///C:/foo/bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("file:///C:/foo/bar.dart"), "file:///C:/foo/bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("file:///c%3A/foo/bar.dart"), "file:///C%3A/foo/bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("file:///C%3A/foo/bar.dart"), "file:///C%3A/foo/bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("package:foo/bar.dart"), "package:foo/bar.dart");
 	});
 });
