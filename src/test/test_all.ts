@@ -1,4 +1,5 @@
 import * as vstest from "@vscode/test-electron";
+import * as child_process from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -20,6 +21,17 @@ if (testFilterArgs.length > 0) {
 	console.log(`Running tests with filter(s): ${testFilterArgs.join(", ")}`);
 }
 
+const collectCoverage = testFilterArgs.length === 0 || !!process.env.DART_CODE_COVERAGE;
+const nycOutputPath = path.join(cwd, ".nyc_output");
+
+function runNyc(args: string[], workingDirectory = cwd): void {
+	const nycBinPath = path.join(cwd, "node_modules", "nyc", "bin", "nyc.js");
+	child_process.execFileSync(process.execPath, [nycBinPath, ...args], {
+		cwd: workingDirectory,
+		stdio: "inherit",
+	});
+}
+
 async function runTests(testFolderName: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
 	const testFolder = path.join(cwd, "out", "src", "test", testFolderName);
 	const files = await getTestSuites(testFolder, testFilterArgs);
@@ -37,7 +49,10 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 
 	testEnv.TEST_RUN_NAME = testRunName;
 	testEnv.DC_TEST_LOGS = logPath;
-	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}.json`);
+	if (collectCoverage)
+		testEnv.COVERAGE_OUTPUT = path.join(nycOutputPath, `${testRunName}.json`);
+	else
+		delete testEnv.COVERAGE_OUTPUT;
 	testEnv.TEST_XML_OUTPUT = path.join(path.join(cwd, ".test_results"), `${testRunName}.xml`);
 
 	if (!fs.existsSync(logPath))
@@ -159,11 +174,16 @@ async function runAllTests(): Promise<void> {
 	testEnv.DART_CODE_IS_TEST_RUN = "true";
 	testEnv.MOCHA_FORBID_ONLY = "true";
 
-	// Ensure any necessary folders exist.
-	if (!fs.existsSync(".nyc_output"))
-		fs.mkdirSync(".nyc_output");
+	// Clean any stale coverage output from previous builds/runs so nyc never merges mismatched line numbers.
+	fs.rmSync(nycOutputPath, { recursive: true, force: true });
 	if (!fs.existsSync(".dart_code_test_logs"))
 		fs.mkdirSync(".dart_code_test_logs");
+
+	if (collectCoverage) {
+		fs.mkdirSync(nycOutputPath, { recursive: true });
+		runNyc(["instrument", "--compact", "false", "--in-place", ".", "."], path.join(cwd, "out", "dist"));
+		runNyc(["instrument", "--compact", "false", "--in-place", ".", "."], path.join(cwd, "out", "src"));
+	}
 
 	function shouldRunBot(name: string, { onlyIfExplicit } = { onlyIfExplicit: false }) {
 		// If there's no BOT defined and onlyIfExplicit=false, run this bot.
@@ -225,6 +245,16 @@ async function runAllTests(): Promise<void> {
 	} catch (e) {
 		exitCode = 1;
 		console.error(e);
+	}
+
+	if (collectCoverage && exitCode === 0) {
+		const reportDir = process.env.BOT ? path.join("coverage", process.env.BOT) : "coverage";
+		try {
+			runNyc(["report", "-r", "lcovonly", "-r", "text", "--report-dir", reportDir]);
+		} catch (e) {
+			exitCode = 1;
+			console.error(e);
+		}
 	}
 }
 
