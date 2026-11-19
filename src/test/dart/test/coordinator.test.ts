@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { isWin } from "../../../shared/constants";
+import * as constants from "../../../shared/constants";
 import { nullLogger } from "../../../shared/logging";
 import { TestSessionCoordinator } from "../../../shared/test/coordinator";
 import { TestModel, TestSource } from "../../../shared/test/test_model";
@@ -433,8 +433,9 @@ hello_world
 	});
 
 	it("normalizes Windows drive letters, slashes, and file URIs across notifications regardless of input casing", () => {
+		sb.stub(constants, "isWin").value(true);
 		const model = new TestModel(nullLogger, privateApi.workspaceContext, { dynamicTestTracking: false, showSkippedTests: true }, () => [], () => undefined);
-		const winCoordinator = new TestSessionCoordinator(nullLogger, model, { getOutlineFor: () => undefined }, true);
+		const winCoordinator = new TestSessionCoordinator(nullLogger, model, { getOutlineFor: () => undefined });
 
 		winCoordinator.handleDebugSessionStart("d1", "s1", "d:/workspace/proj");
 		const lowerCwdEvt: SuiteNotification = {
@@ -515,7 +516,7 @@ hello_world
 	});
 
 	it("resolves mixed uppercase and lowercase Windows drive letters end-to-end", async function () {
-		if (!isWin)
+		if (!constants.isWin)
 			this.skip();
 
 		await openFile(helloWorldRenameTestFile);

@@ -41,7 +41,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	 */
 	private phantomGroupParents: Record<string, Record<number, number | null | undefined>> = {};
 
-	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined }, private readonly platformIsWin = isWin) { }
+	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined }) { }
 
 	public handleDebugSessionStart(debugSessionID: string, dartCodeDebugSessionID: string | undefined, cwd: string | undefined) {
 		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
@@ -122,7 +122,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private normalizePath(p: string): string {
-		return forceWindowsDriveLetterToUppercase(this.platformIsWin ? normalizeSlashes(p, true) : p, this.platformIsWin);
+		return forceWindowsDriveLetterToUppercase(isWin ? normalizeSlashes(p) : p);
 	}
 
 	public normalizeNotification(dartCodeDebugSessionID: string, evt: Notification) {
@@ -132,7 +132,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 				// pkg:test's suite paths can be either relative or absolute, but we expect them to always be absolute
 				// so fix them up before we do anything else.
 				const cwd = this.debugSessionLookups[dartCodeDebugSessionID]?.cwd;
-				const pathModule = this.platformIsWin ? path.win32 : path;
+				const pathModule = isWin ? path.win32 : path;
 				const absolutePath = !pathModule.isAbsolute(event.suite.path) && cwd ? pathModule.join(cwd, event.suite.path) : event.suite.path;
 				// HACK: Handle paths with wrong slashes and lowercase drive letters.
 				// https://github.com/Dart-Code/Dart-Code/issues/4441

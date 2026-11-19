@@ -2,11 +2,11 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationTarget, Uri, workspace } from "vscode";
-import { isWin } from "../../../shared/constants";
+import * as constants from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
 import { captureLogs, EmittingLogger, nullLogger } from "../../../shared/logging";
 import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, getDartToolDir, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, normalizeSlashes, prepareLogFilePath, uriComparisonString } from "../../../shared/utils/fs";
-import { activateWithoutAnalysis, createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, privateApi, setConfigForTest, testProjectsFolder, tryDelete, waitForResult } from "../../helpers";
+import { activateWithoutAnalysis, createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, privateApi, sb, setConfigForTest, testProjectsFolder, tryDelete, waitForResult } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
 	it("handles empty array", () => {
@@ -48,7 +48,7 @@ describe("findCommonAncestorFolder", () => {
 
 describe("uriComparisonString", () => {
 	it("handles differences in drive letter casing for file scheme", function () {
-		if (!isWin)
+		if (!constants.isWin)
 			this.skip();
 
 		// Upper
@@ -64,7 +64,7 @@ describe("uriComparisonString", () => {
 	});
 
 	it("handles URIs", function () {
-		if (!isWin)
+		if (!constants.isWin)
 			this.skip();
 
 		assert.equal(
@@ -155,7 +155,7 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 	});
 
 	it("handles missing URIs", function () {
-		if (!isWin)
+		if (!constants.isWin)
 			this.skip();
 
 		createPackageConfig({});
@@ -165,7 +165,7 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 	});
 
 	it("handles non-Windows file URI in package path on Windows", function () {
-		if (!isWin)
+		if (!constants.isWin)
 			this.skip();
 
 		createPackageConfig({
@@ -177,7 +177,7 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 	});
 
 	it("handles Windows file URI in package path on non-Windows", function () {
-		if (isWin)
+		if (constants.isWin)
 			this.skip();
 
 		createPackageConfig({
@@ -189,7 +189,7 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 	});
 
 	it("handles non-Windows file URI in flutterRoot on Windows", function () {
-		if (!isWin)
+		if (!constants.isWin)
 			this.skip();
 
 		createPackageConfig({
@@ -201,7 +201,7 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 	});
 
 	it("handles Windows file URI in flutterRoot on non-Windows", function () {
-		if (isWin)
+		if (constants.isWin)
 			this.skip();
 
 		createPackageConfig({
@@ -488,11 +488,12 @@ describe("prepareLogFilePath and createFolderForFile", () => {
 
 describe("Windows path and URI normalization", () => {
 	it("uppercases Windows drive letters across separator styles and preserves relative paths", () => {
-		assert.equal(forceWindowsDriveLetterToUppercase("c:\\foo\\bar.dart", true), "C:\\foo\\bar.dart");
-		assert.equal(forceWindowsDriveLetterToUppercase("C:\\foo\\bar.dart", true), "C:\\foo\\bar.dart");
-		assert.equal(forceWindowsDriveLetterToUppercase("c:/foo/bar.dart", true), "C:/foo/bar.dart");
-		assert.equal(forceWindowsDriveLetterToUppercase("relative/bar.dart", true), "relative/bar.dart");
-		assert.equal(normalizeSlashes("c:/foo\\bar/baz.dart", true), "c:\\foo\\bar\\baz.dart");
+		sb.stub(constants, "isWin").value(true);
+		assert.equal(forceWindowsDriveLetterToUppercase("c:\\foo\\bar.dart"), "C:\\foo\\bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercase("C:\\foo\\bar.dart"), "C:\\foo\\bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercase("c:/foo/bar.dart"), "C:/foo/bar.dart");
+		assert.equal(forceWindowsDriveLetterToUppercase("relative/bar.dart"), "relative/bar.dart");
+		assert.equal(normalizeSlashes("c:/foo\\bar/baz.dart"), "c:\\foo\\bar\\baz.dart");
 	});
 
 	it("uppercases Windows drive letters in encoded and unencoded file URI strings", () => {

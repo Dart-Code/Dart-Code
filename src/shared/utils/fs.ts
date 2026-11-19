@@ -42,12 +42,12 @@ export function safeRealpathSync(filePath: string, { useNative = false }: { useN
 	}
 }
 
-export function forceWindowsDriveLetterToUppercase<T extends string | undefined>(p: T, platformIsWin = isWin): string | (undefined extends T ? undefined : never) {
+export function forceWindowsDriveLetterToUppercase<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
 	if (typeof p !== "string")
 		return undefined as (undefined extends T ? undefined : never);
 
-	const pathModule = platformIsWin ? path.win32 : path;
-	if (p && platformIsWin && pathModule.isAbsolute(p) && p.startsWith(p.charAt(0).toLowerCase()))
+	const pathModule = isWin ? path.win32 : path;
+	if (p && isWin && pathModule.isAbsolute(p) && p.startsWith(p.charAt(0).toLowerCase()))
 		return p.substr(0, 1).toUpperCase() + p.substr(1);
 
 	return p;
@@ -552,8 +552,8 @@ export function areSameFolder(folder1: string, folder2: string) {
 	return folder1 === folder2;
 }
 
-export function normalizeSlashes(p: string, platformIsWin = isWin) {
-	return p.replace(/[\\/]/g, platformIsWin ? path.win32.sep : path.sep);
+export function normalizeSlashes(p: string) {
+	return p.replace(/[\\/]/g, isWin ? path.win32.sep : path.sep);
 }
 
 /**
