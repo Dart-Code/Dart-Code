@@ -3781,7 +3781,7 @@
 		"clean-coverage": "node -e \"require('fs').rmSync('.nyc_output', { recursive: true, force: true })\"",
 		"instrument-dist": "cd out/dist && nyc instrument --compact false --in-place . . && cd ../..",
 		"instrument": "cd out/src && nyc instrument --compact false --in-place . . && cd ../..",
-		"report-coverage": "nyc report -r lcovonly -r text --report-dir coverage/$BOT",
+		"report-coverage": "node -e \"require('child_process').execFileSync(process.execPath, [require.resolve('nyc/bin/nyc.js'), 'report', '-r', 'lcovonly', '-r', 'text', '--report-dir', require('path').join('coverage', process.env.BOT ?? '')], { stdio: 'inherit' })\"",
 		"update-grammar-snapshots": "vscode-tmgrammar-snap --updateSnapshot \"src/test/test_projects/grammar_testing/**/*.dart\""
 	},
 	"dependencies": {
