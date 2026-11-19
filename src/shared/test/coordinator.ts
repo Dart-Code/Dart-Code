@@ -2,10 +2,11 @@ import * as path from "path";
 import { URI } from "vscode-uri";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { isWin } from "../constants";
+import { TestStatus } from "../enums";
 import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestItem, TestStartNotification } from "../test_protocol";
-import { disposeAll, maybeUriToFilePath } from "../utils";
-import { normalizeSlashes } from "../utils/fs";
+import { disposeAll } from "../utils";
+import { forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, normalizeSlashes, uriComparisonString } from "../utils/fs";
 import { TestOutlineVisitor } from "../utils/outline";
 import { isSetupOrTeardownTestName, suiteLoadTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
@@ -44,6 +45,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	public handleDebugSessionStart(debugSessionID: string, dartCodeDebugSessionID: string | undefined, cwd: string | undefined) {
 		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
+		cwd = cwd ? this.normalizePath(cwd) : undefined;
 
 		const lookup = this.debugSessionLookups[dartCodeDebugSessionID] ??= { cwd, suiteForID: {}, suiteForTestID: {} };
 
@@ -78,6 +80,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	public handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, evt: Notification): void {
+		evt = this.normalizeNotification(dartCodeDebugSessionID, evt);
 		switch (evt.type) {
 			// We won't get notifications that aren't directly tied to Suites because
 			// of how the DA works.
@@ -91,18 +94,6 @@ export class TestSessionCoordinator implements IAmDisposable {
 			// 	break;
 			case "suite": {
 				const event = evt as SuiteNotification;
-				// HACK: Handle paths with wrong slashes.
-				// https://github.com/Dart-Code/Dart-Code/issues/4441
-				if (isWin)
-					event.suite.path = normalizeSlashes(event.suite.path);
-
-				// pkg:test's suite paths can be either relative or absolute, but we expect them to always be absolute
-				// so fix them up before we do anything else.
-				const cwd = this.debugSessionLookups[dartCodeDebugSessionID]?.cwd;
-				if (!path.isAbsolute(event.suite.path) && cwd) {
-					event.suite.path = path.join(cwd, event.suite.path);
-				}
-
 				this.owningDebugSessions[event.suite.path] = debugSessionID;
 				this.handleSuiteNotification(dartCodeDebugSessionID, event);
 				break;
@@ -130,6 +121,45 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 	}
 
+	private normalizePath(p: string): string {
+		return forceWindowsDriveLetterToUppercase(isWin ? normalizeSlashes(p) : p);
+	}
+
+	public normalizeNotification(dartCodeDebugSessionID: string, evt: Notification) {
+		switch (evt.type) {
+			case "suite": {
+				const event = evt as SuiteNotification;
+				// pkg:test's suite paths can be either relative or absolute, but we expect them to always be absolute
+				// so fix them up before we do anything else.
+				const cwd = this.debugSessionLookups[dartCodeDebugSessionID]?.cwd;
+				const pathModule = isWin ? path.win32 : path;
+				const absolutePath = !pathModule.isAbsolute(event.suite.path) && cwd ? pathModule.join(cwd, event.suite.path) : event.suite.path;
+				// HACK: Handle paths with wrong slashes and lowercase drive letters.
+				// https://github.com/Dart-Code/Dart-Code/issues/4441
+				const suitePath = this.normalizePath(absolutePath);
+				return suitePath === event.suite.path ? event : { ...event, suite: { ...event.suite, path: suitePath } };
+			}
+			case "testStart": {
+				const event = evt as TestStartNotification;
+				const test = this.normalizeTestItem(event.test);
+				return test === event.test ? event : { ...event, test };
+			}
+			case "group": {
+				const event = evt as GroupNotification;
+				const group = this.normalizeTestItem(event.group);
+				return group === event.group ? event : { ...event, group };
+			}
+			default:
+				return evt;
+		}
+	}
+
+	private normalizeTestItem<T extends TestItem>(item: T): T {
+		const url = item.url ? forceWindowsDriveLetterToUppercaseInUriString(item.url) : item.url;
+		const rootUrl = item.root_url ? forceWindowsDriveLetterToUppercaseInUriString(item.root_url) : item.root_url;
+		return url === item.url && rootUrl === item.root_url ? item : { ...item, root_url: rootUrl, url }; // eslint-disable-line camelcase
+	}
+
 	private handleSuiteNotification(dartCodeDebugSessionID: string, evt: SuiteNotification) {
 		this.debugSessionLookups[dartCodeDebugSessionID] ??= { cwd: undefined, suiteForID: {}, suiteForTestID: {} };
 
@@ -142,7 +172,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 		// Also capture the test nodes from the outline so that we can look up the full range for a test (instead of online its line/col)
 		// to provide to VS Code to better support "run test at cursor".
-		this.captureTestOutlne(evt.suite.path);
+		this.captureTestOutlne(suiteData.path);
 	}
 
 	private captureTestOutlne(suitePath: string) {
@@ -166,12 +196,18 @@ export class TestSessionCoordinator implements IAmDisposable {
 			? suiteLoadTestName
 			: evt.test.name;
 
-		const { path: testPath, line, character } = this.getLocation(evt.test);
+		const rawGroupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
+		const groupID = this.getRealGroupId(dartCodeDebugSessionID, rawGroupID);
+		const groupName = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)?.name : undefined;
+		const localTestName = groupName && testName?.startsWith(`${groupName} `)
+			? testName.slice(groupName.length + 1)
+			: testName;
 
-		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
-		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
+		const { path: testPath, line, character } = this.getLocation(evt.test, isSetupOrTeardownTestName(localTestName));
 
-		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, testName, this.getRealGroupId(dartCodeDebugSessionID, groupID), testPath, range, evt.time, true);
+		const range = this.getRangeForNode(suite, testPath, line ?? undefined, character ?? undefined);
+
+		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, testName, groupID, testPath, range, evt.time, true);
 	}
 
 	/**
@@ -180,8 +216,8 @@ export class TestSessionCoordinator implements IAmDisposable {
 	 * to them correctly.
 	 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
 	 */
-	private getLocation(item: TestItem): { path?: string, line?: number, character?: number } {
-		const useRootLocation = !isSetupOrTeardownTestName(item.name) && !!item.root_url && !!item.root_line && !!item.root_column;
+	private getLocation(item: TestItem, isSetupOrTeardown = false): { path?: string, line?: number, character?: number } {
+		const useRootLocation = !isSetupOrTeardown && !!item.root_url && !!item.root_line && !!item.root_column;
 
 		const url = useRootLocation
 			? item.root_url ?? undefined
@@ -191,7 +227,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		let line: number | undefined;
 		let character: number | undefined;
 		if (url?.startsWith("file:")) {
-			filePath = maybeUriToFilePath(url);
+			filePath = fsPath(URI.parse(url));
 			if (useRootLocation) {
 				line = item.root_line ?? undefined;
 				character = item.root_column ?? undefined;
@@ -222,9 +258,9 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 
 		const result = evt.skipped ? "skipped" : evt.result;
-		// Only hide synthetic "(loading)" tests when evt.hidden is true; package:test also sets
-		// hidden: true on passing (setUpAll)/(tearDownAll) tests, which currently remain in the
-		// tree (with source locations/gutter icons; see #4681 and #5984).
+		// Only hide synthetic "(loading)" tests when evt.hidden is true; passing (setUpAll) and
+		// (tearDownAll) nodes remain in the tree (and vs.TestRun) for navigation and gutter/status icons,
+		// while TestModel excludes them from suite/group [X/Y passed] counts.
 		const hide = evt.hidden && test.isSyntheticLoadingTest;
 		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time, hide);
 	}
@@ -247,7 +283,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 		const { path: groupPath, line, character } = this.getLocation(evt.group);
 
-		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
+		const range = this.getRangeForNode(suite, groupPath, line ?? undefined, character ?? undefined);
 		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), groupPath, range, true);
 	}
 
@@ -311,14 +347,14 @@ The test description was: .*
 
 		test.outputEvents.push(evt);
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
-		// If a suite load test emits an out-of-band error after its initial hidden testDone
-		// completed (for example an unawaited Future in main()), package:test does not emit a
-		// second testDone, so synthesize testDone now to unhide and report the failure.
-		if (test.isSyntheticLoadingTest && test.hidden)
+		// If a synthetic test ((loading), (setUpAll), or (tearDownAll)) emits an out-of-band error
+		// after its initial passing testDone completed (for example an unawaited Future), package:test
+		// does not emit a second testDone, so synthesize testDone now to report the failure.
+		if (test.isSynthetic && test.status === TestStatus.Passed)
 			this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure ? "failure" : "error", evt.time, false);
 	}
 
-	private getRangeForNode(suite: SuiteData, line: number | undefined, character: number | undefined): Range | undefined {
+	private getRangeForNode(suite: SuiteData, nodePath: string | undefined, line: number | undefined, character: number | undefined): Range | undefined {
 		if (!line || !character)
 			return;
 
@@ -330,7 +366,9 @@ The test description was: .*
 		// The outline data was captured when the suite started, so we can assume it's reasonable accurate, so try to look up the node
 		// there and use its range. Otherwise, just make a range that goes from the start position to the next line (assuming the rest
 		// of the line is the test name, and we can at least support running it there).
-		const testsOnLine = this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine];
+		const testsOnLine = (!nodePath || uriComparisonString(URI.file(nodePath)) === uriComparisonString(URI.file(suite.path)))
+			? this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine]
+			: undefined;
 		const test = testsOnLine ? testsOnLine.find((t) => t.range.start.character === zeroBasedCharacter) : undefined;
 
 		return test?.range ?? {

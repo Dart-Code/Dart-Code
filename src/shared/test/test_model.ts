@@ -95,6 +95,7 @@ export abstract class TreeNode {
 
 	public dispose(): void {
 		this.rangeTracker?.dispose();
+		this.rangeTracker = undefined;
 	}
 }
 
@@ -314,6 +315,8 @@ export class TestModel {
 	}
 
 	public clearAll(): void {
+		for (const suite of this.suites.values())
+			this.disposeSubtree(suite.node);
 		this.suites.clear();
 		this.projectNodes.clear();
 		this.workspaceFolderNodes.clear();
@@ -415,9 +418,15 @@ export class TestModel {
 
 	public updateNode(event?: NodeDidChangeEvent) {
 		if (event?.nodeWasRemoved)
-			event.node.dispose();
+			this.disposeSubtree(event.node);
 
 		this.onDidChangeDataEmitter.fire(event);
+	}
+
+	private disposeSubtree(node: TreeNode): void {
+		node.dispose();
+		for (const child of node.children)
+			this.disposeSubtree(child);
 	}
 
 	public updateSuiteTestCountLabels(suite: SuiteData, forceUpdate: boolean) {
@@ -434,9 +443,10 @@ export class TestModel {
 
 		// Update the cached counts on this node.
 		if (node instanceof TestNode && !node.children.length) {
-			node.testCount = node.hidden ? 0 : 1;
-			node.testCountPass = !node.hidden && node.status === TestStatus.Passed ? 1 : 0;
-			node.testCountSkip = !node.hidden && node.status === TestStatus.Skipped ? 1 : 0;
+			const isCountedTest = !node.hidden && !node.isSynthetic;
+			node.testCount = isCountedTest ? 1 : 0;
+			node.testCountPass = isCountedTest && node.status === TestStatus.Passed ? 1 : 0;
+			node.testCountSkip = isCountedTest && node.status === TestStatus.Skipped ? 1 : 0;
 		} else {
 			node.testCount = node.children.map((c) => c.testCount).reduce((total, value) => total + value, 0);
 			node.testCountPass = node.children.map((c) => c.testCountPass).reduce((total, value) => total + value, 0);
@@ -529,7 +539,7 @@ export class TestModel {
 			groupNode.parent.children.push(groupNode);
 
 		this.updateNode({ node: groupNode });
-		this.setupRangeTracking(groupNode, source, suitePath, range, groupPath);
+		this.setupRangeTracking(groupNode, source, range, groupPath);
 
 		this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
 
@@ -600,7 +610,7 @@ export class TestModel {
 		}
 
 		this.updateNode({ node: testNode });
-		this.setupRangeTracking(testNode, source, suitePath, range, testPath);
+		this.setupRangeTracking(testNode, source, range, testPath);
 
 		if (hasStarted && dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testStarted(dartCodeDebugSessionID, testNode));
@@ -643,7 +653,7 @@ export class TestModel {
 	/**
 	 * If this node is from a result, track its location so we can keep it up-to-date as the user edits the file.
 	 */
-	private setupRangeTracking(node: GroupNode | TestNode, source: TestSource, suitePath: string, range: Range | undefined, nodePath: string | undefined): void {
+	private setupRangeTracking(node: GroupNode | TestNode, source: TestSource, range: Range | undefined, nodePath: string | undefined): void {
 		// Dispose any previous tracker, because we may create a new one below if this new
 		// location needs tracking.
 		node.dispose();
@@ -654,10 +664,21 @@ export class TestModel {
 		if (source !== TestSource.Result || node.testSource !== TestSource.Result)
 			return;
 
+		let isDisposed = false;
+		let resolvedTracker: IAmDisposable | undefined;
+		node.rangeTracker = {
+			dispose: () => {
+				isDisposed = true;
+				resolvedTracker?.dispose();
+			},
+		};
+
 		void this.rangeTracker.trackRangeForUri(
-			URI.file(suitePath),
+			URI.file(nodePath),
 			range,
 			(newRange) => {
+				if (isDisposed)
+					return;
 				if (newRange) {
 					node.range = newRange;
 					this.updateNode({ node });
@@ -666,7 +687,12 @@ export class TestModel {
 				}
 			},
 		).then(
-			(tracker) => node.rangeTracker = tracker,
+			(tracker) => {
+				if (isDisposed)
+					tracker.dispose();
+				else
+					resolvedTracker = tracker;
+			},
 			(e) => this.logger.error(e),
 		);
 	}

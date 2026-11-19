@@ -228,8 +228,9 @@ export function parseTestNameFromOutline(elementName: string): TestNameSegment |
 export const suiteLoadTestName = "(loading)";
 
 /**
- * Returns whether `testName` is a synthetic `(setUp...)` or `(tearDown...)` test emitted by `package:test`.
+ * Returns whether `testName` is an unprefixed synthetic `(setUp...)` or `(tearDown...)` test label emitted by `package:test`.
  */
 export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
-	return !!(testName && (testName.startsWith("(setUp") || testName.startsWith("(tearDown")) && testName.endsWith(")"));
+	const trimmed = testName?.trim();
+	return !!(trimmed && (trimmed.startsWith("(setUp") || trimmed.startsWith("(tearDown")) && trimmed.endsWith(")"));
 }

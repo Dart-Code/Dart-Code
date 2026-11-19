@@ -7,7 +7,7 @@ import "utils.dart";
 // the results from the tests below.
 // == EXPECTED RESULTS ==
 // hello_world
-//     test/tree_test.dart [6/13 passed] Failed
+//     test/tree_test.dart [4/11 passed] Failed
 //         (setUpAll) Passed (utils.dart)
 //         (tearDownAll) Passed (utils.dart)
 //         failing group 1 [2/4 passed] Failed

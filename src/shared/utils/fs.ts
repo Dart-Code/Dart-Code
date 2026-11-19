@@ -46,7 +46,8 @@ export function forceWindowsDriveLetterToUppercase<T extends string | undefined>
 	if (typeof p !== "string")
 		return undefined as (undefined extends T ? undefined : never);
 
-	if (p && isWin && path.isAbsolute(p) && p.startsWith(p.charAt(0).toLowerCase()))
+	const pathModule = isWin ? path.win32 : path;
+	if (p && isWin && pathModule.isAbsolute(p) && p.startsWith(p.charAt(0).toLowerCase()))
 		return p.substr(0, 1).toUpperCase() + p.substr(1);
 
 	return p;
@@ -552,7 +553,7 @@ export function areSameFolder(folder1: string, folder2: string) {
 }
 
 export function normalizeSlashes(p: string) {
-	return p.replace(/[\\/]/g, path.sep);
+	return p.replace(/[\\/]/g, isWin ? path.win32.sep : path.sep);
 }
 
 /**
