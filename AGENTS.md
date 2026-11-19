@@ -65,6 +65,7 @@ Here are some useful commands when working on the project.
 - `npm run build`: Builds the extension bundle (`src/extension/` and `src/debug/`) with Webpack.
 - `npm run build-tests`: Compiles and typechecks `src/test/` and `src/shared/` (`tsc -p ./tsconfig.build.json`), which are not compiled by `npm run build`.
 - `npm run test <...test-file-globs>`: Runs tests matching the given glob or file path (for example `BOT=dart npm run test src/test/dart/utils/fs.test.ts`). This should be used while working on an individual feature because it is faster than running all tests. Note that `npm test` sets `MOCHA_FORBID_ONLY=true`, so use CLI file filters rather than `.only`.
-- `npm run test`: Runs _all_ automatic tests for _all_ bots. This can be run with the `BOT` env variable set to (as defined in `test_all.ts`, for example to `"dart"`) to run only a single bot's tests. The test suite is large and this can be slow.
+- `npm run test`: Runs _all_ automatic tests for _all_ bots without coverage instrumentation. This can be run with the `BOT` env variable set to (as defined in `test_all.ts`, for example to `"dart"`) to run only a single bot's tests. The test suite is large and this can be slow.
+- `npm run test:with-coverage`: Same as `npm run test` (and also accepts optional `<...test-file-globs>`), but cleans `.nyc_output` first, instruments the compiled output with `nyc`, and writes LCOV and console coverage reports.
 - `npm run test-grammar`: Runs snapshot tests for the textmate grammar.
 - `npm run update-grammar-snapshots`: Updates the textmate grammar snapshots.
