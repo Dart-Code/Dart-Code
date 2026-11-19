@@ -286,8 +286,6 @@ const suppressMultilineOutputPatterns: Array<RegExp | { start: RegExp, continuat
 	/\[Jetski\] PostMessageTransport error:/i,
 	/\[Jetski\] Failed to list and register commands/i,
 	/\[RemoteAgentHostProtocol\]/i,
-	/\[UriError\]: Scheme contains illegal characters\./i,
-	/\[node\.js fs\] readdir with filetypes failed with error:\s+Error: ENOENT:/i,
 ];
 
 const suppressOutputPatterns = [
@@ -383,8 +381,6 @@ const suppressOutputPatterns = [
 	/Creation of workbench contribution '.*' took \d+ms\./i,
 	// VS Code Local History copy errors when test files are deleted.
 	/ENOENT: no such file or directory, copyfile .*[\\/]User[\\/]History[\\/]/i,
-	// Test helper fallback when an output pane is focused.
-	/Falling back from output:extension-output-/i,
 ];
 const shouldIncludeOutputLine = (line: string) => !suppressOutputPatterns.some((pattern) => pattern.test(line));
 
