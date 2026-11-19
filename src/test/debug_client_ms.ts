@@ -19,7 +19,7 @@ import net = require('net');
 import { ProtocolClient } from '@vscode/debugadapter-testsupport/lib/protocolClient';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { URI } from 'vscode-uri';
-import { currentTestName } from './helpers';
+import { currentTestName, logger } from './helpers';
 
 export interface ILocation {
 	path?: string;
@@ -43,6 +43,7 @@ export class DebugClient extends ProtocolClient {
 	private _executable: string | undefined;
 	private _args: string[] | undefined;
 	private _adapterProcess?: cp.ChildProcess;
+	private _isStopping = false;
 	private _spawnOptions?: cp.SpawnOptionsWithoutStdio;
 	private _enableStderr: boolean;
 	private _debugType: string;
@@ -98,6 +99,7 @@ export class DebugClient extends ProtocolClient {
 	 * the adapter while running tests. For this reason all timeouts are disabled in server mode.
 	 */
 	public start(port?: number): Promise<void> {
+		this._isStopping = false;
 
 		return new Promise<void>((resolve, reject) => {
 			if (typeof port === 'number') {
@@ -121,8 +123,8 @@ export class DebugClient extends ProtocolClient {
 					reject(err);
 				});
 				this._adapterProcess.stdin!.on('error', (err) => {
-					if (!this._adapterProcess)
-						console.info(`Ignoring error writing to stdin because shutting down: ${err}`);
+					if (!this._adapterProcess || this._isStopping || this._adapterProcess.exitCode !== null || this._adapterProcess.signalCode !== null)
+						logger?.info(`Ignoring error writing to stdin because shutting down: ${err}`);
 					else
 						throw err;
 				});
@@ -142,6 +144,11 @@ export class DebugClient extends ProtocolClient {
 	 * Shutdown the debuggee and the debug adapter (or disconnect if in server mode).
 	 */
 	public stop(): Promise<void> {
+		this._isStopping = true;
+		if (!this._socket && (!this._adapterProcess || this._adapterProcess.exitCode !== null || this._adapterProcess.signalCode !== null || this._adapterProcess.stdin?.destroyed || this._adapterProcess.stdin?.writableEnded)) {
+			this.stopAdapter();
+			return Promise.resolve();
+		}
 
 		return this.disconnectRequest().then(() => {
 			this.stopAdapter();
@@ -153,8 +160,10 @@ export class DebugClient extends ProtocolClient {
 	public get adapterProcess(): cp.ChildProcess | undefined { return this._adapterProcess; }
 
 	public stopAdapter() {
+		this._isStopping = true;
 		if (this._adapterProcess) {
-			this._adapterProcess.kill();
+			if (this._adapterProcess.exitCode === null && this._adapterProcess.signalCode === null)
+				this._adapterProcess.kill();
 			this._adapterProcess = undefined;
 		}
 		if (this._socket) {
