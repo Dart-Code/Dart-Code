@@ -357,7 +357,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
 	}
 
-	context.subscriptions.push(new AddSdkToPathCommands(logger, context, workspaceContext, analytics));
+	const addSdkToPathCommands = new AddSdkToPathCommands(logger, context, workspaceContext, analytics);
+	context.subscriptions.push(addSdkToPathCommands);
 	const projectFinder = new ProjectFinder(logger, util.getExcludedFolders);
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, dartCapabilities, extContext, sdks, pubApi);
@@ -742,6 +743,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (isDartCodeTestRun) {
 		const privateApi: InternalExtensionApi = {
 			addDependencyCommand,
+			addSdkToPath: addSdkToPathCommands,
 			analyzer,
 			clearCaches,
 			commandState,
