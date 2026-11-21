@@ -13,6 +13,8 @@ import { ChildProcessSpawnStub, FakeSpawnResult } from "../../mocks/child_proces
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const childProcess = require("child_process") as typeof import("child_process");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fileSystem = require("fs") as typeof import("fs");
 
 describe("pubspecContentReferencesFlutter", () => {
 	it("returns false for non-Flutter pubspec.yaml", () => {
@@ -341,6 +343,8 @@ describe("SdkUtils", () => {
 	}
 
 	describe("searchPaths, findDartSdk, and findFlutterSdk", () => {
+		const normalizePath = (p: string) => isWin ? p.toLowerCase() : p;
+
 		it("searches without postFilter when omitted", () => {
 			// When no postFilter callback is passed to searchPaths, any directory containing bin/<executable> is returned.
 			const tempDir = createTempDir();
@@ -430,6 +434,86 @@ describe("SdkUtils", () => {
 			const sdkWithEngine = path.join(tempDir, "flutter-engine");
 			createFakeFlutterSdk(sdkWithEngine, { marker: "bin/internal/engine.version" });
 			assert.equal(privateApi.sdkUtils!.findFlutterSdk([sdkWithEngine]).sdkPath, sdkWithEngine);
+		});
+
+		it("deduplicates search paths while preserving first-occurrence order", () => {
+			const tempDir = createTempDir();
+			const emptyDir = path.join(tempDir, "empty");
+			const validSdk = path.join(tempDir, "valid-sdk");
+			fs.mkdirSync(path.join(emptyDir, "bin"), { recursive: true });
+			createFakeDartSdk(validSdk);
+
+			const existsSyncSpy = sb.spy(fileSystem, "existsSync");
+
+			const result = privateApi.sdkUtils!.findDartSdk([
+				emptyDir,
+				`${emptyDir}${path.sep}`,
+				...(isWin ? [emptyDir.toUpperCase()] : []),
+				path.join(emptyDir, "bin"),
+				validSdk,
+			]);
+			assert.equal(result.sdkPath, validSdk);
+			assert.equal(result.originalPath, validSdk);
+
+			const checkedPaths = existsSyncSpy.getCalls().map((c) => normalizePath(String(c.args[0])));
+			assert.deepStrictEqual(checkedPaths, [
+				normalizePath(path.join(emptyDir, executableNames.dart)),
+				normalizePath(path.join(emptyDir, "bin", executableNames.dart)),
+				normalizePath(path.join(validSdk, executableNames.dart)),
+				normalizePath(path.join(validSdk, "bin", executableNames.dart)),
+			]);
+
+			assert.equal(privateApi.sdkUtils!.findDartSdk([validSdk, path.join(validSdk, "bin")]).originalPath, validSdk);
+			assert.equal(privateApi.sdkUtils!.findDartSdk([path.join(validSdk, "bin"), validSdk]).originalPath, path.join(validSdk, "bin"));
+		});
+
+		it("short-circuits search once a valid SDK is found", () => {
+			const tempDir = createTempDir();
+			const firstSdk = path.join(tempDir, "first-sdk");
+			const laterDir = path.join(tempDir, "later-sdk");
+			createFakeDartSdk(firstSdk);
+			createFakeDartSdk(laterDir);
+
+			const existsSyncSpy = sb.spy(fileSystem, "existsSync");
+
+			const result = privateApi.sdkUtils!.findDartSdk([firstSdk, laterDir]);
+			assert.equal(result.sdkPath, firstSdk);
+			assert.equal(result.originalPath, firstSdk);
+
+			const checkedLater = existsSyncSpy.getCalls().some((c) => normalizePath(String(c.args[0])).startsWith(normalizePath(laterDir)));
+			assert.equal(checkedLater, false);
+		});
+
+		it("continues past candidates failing postFilter and preserves deduplicated candidatePaths when no SDK matches", () => {
+			const tempDir = createTempDir();
+			const invalidSdk = path.join(tempDir, "invalid-sdk");
+			const validSdk = path.join(tempDir, "valid-sdk");
+			const unreachedDir = path.join(tempDir, "unreached-dir");
+			touchFile(path.join(invalidSdk, dartVMPath));
+			createFakeDartSdk(validSdk);
+			createFakeDartSdk(unreachedDir);
+
+			const existsSyncSpy = sb.spy(fileSystem, "existsSync");
+
+			const matched = privateApi.sdkUtils!.findDartSdk([invalidSdk, validSdk, unreachedDir]);
+			assert.equal(matched.sdkPath, validSdk);
+			assert.deepStrictEqual(matched.candidatePaths, [invalidSdk, validSdk]);
+			assert.equal(
+				existsSyncSpy.getCalls().some((c) => normalizePath(String(c.args[0])).startsWith(normalizePath(unreachedDir))),
+				false,
+			);
+
+			existsSyncSpy.resetHistory();
+			const unmatched = privateApi.sdkUtils!.findDartSdk([invalidSdk, invalidSdk, path.join(invalidSdk, "bin")]);
+			assert.equal(unmatched.sdkPath, undefined);
+			assert.deepStrictEqual(unmatched.candidatePaths, [invalidSdk]);
+			assert.deepStrictEqual(
+				existsSyncSpy.getCalls().map((c) => normalizePath(String(c.args[0]))),
+				[
+					normalizePath(path.join(invalidSdk, executableNames.dart)),
+					normalizePath(path.join(invalidSdk, "bin", executableNames.dart)),
+				],
+			);
 		});
 	});
 
