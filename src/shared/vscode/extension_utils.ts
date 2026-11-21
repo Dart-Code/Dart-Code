@@ -16,12 +16,12 @@ export function readJson(file: string): unknown {
 
 function getExtensionInfo(): { extensionPath: string; extensionVersion: string } {
 	const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier)!;
-	const extPath = dartExtension.extensionPath;
+	const installedExtensionPath = dartExtension.extensionPath;
 	const version = (dartExtension.packageJSON as { version?: string } | undefined)?.version;
 	if (version)
-		return { extensionPath: extPath, extensionVersion: version };
-	const packageJson = readJson(path.join(extPath, "package.json")) as { version: string };
-	return { extensionPath: extPath, extensionVersion: packageJson.version };
+		return { extensionPath: installedExtensionPath, extensionVersion: version };
+	const packageJson = readJson(path.join(installedExtensionPath, "package.json")) as { version: string };
+	return { extensionPath: installedExtensionPath, extensionVersion: packageJson.version };
 }
 
 
