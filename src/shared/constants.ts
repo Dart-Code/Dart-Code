@@ -29,7 +29,11 @@ export const isWin = process.platform.startsWith("win");
 export const isMac = process.platform === "darwin";
 export const isLinux = !isWin && !isMac;
 export const isChromeOS = isChromeOsImpl();
-export const isWSL = isWslImpl();
+let isWslCache: boolean | undefined;
+export function isWSL(): boolean {
+	isWslCache ??= isWslImpl();
+	return isWslCache;
+}
 // Used for code checks and in Dart SDK urls so Chrome OS is considered Linux.
 export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
 // Used for display (logs, analytics) so Chrome OS is its own.
