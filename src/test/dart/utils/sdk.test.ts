@@ -1360,5 +1360,37 @@ describe("SdkUtils", () => {
 				assert.equal(wcBazel.sdks.flutter, flutterSdk);
 			}
 		});
+
+		it("detects Dart SDK repository root from subfolder only when .git exists", async () => {
+			let currentWorkspacePath = "";
+			sb.stub(vs.workspace, "workspaceFolders").get(() => [
+				{ uri: vs.Uri.file(currentWorkspacePath), name: "dart-sdk-test", index: 0 },
+			]);
+			sb.stub(vs.workspace, "findFiles").resolves([]);
+			defer("clear caches", () => privateApi.clearCaches());
+
+			async function scanRepoFolder(setup: { gitType?: "directory" | "file"; openRoot?: boolean }): Promise<boolean | undefined> {
+				const repoRoot = createTempDir();
+				const subfolder = path.join(repoRoot, "pkg", "analyzer");
+				fs.mkdirSync(subfolder, { recursive: true });
+				touchFile(path.join(repoRoot, "README.dart-sdk"));
+				touchFile(path.join(repoRoot, "DEPS"));
+
+				if (setup.gitType === "directory")
+					fs.mkdirSync(path.join(repoRoot, ".git"), { recursive: true });
+				else if (setup.gitType === "file")
+					touchFile(path.join(repoRoot, ".git"), "gitdir: /some/git/worktree\n");
+
+				currentWorkspacePath = setup.openRoot ? repoRoot : subfolder;
+				privateApi.clearCaches();
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+				return wc.config.disableAutomaticPub;
+			}
+
+			assert.equal(await scanRepoFolder({ gitType: "directory" }), true);
+			assert.equal(await scanRepoFolder({ gitType: "file" }), true);
+			assert.equal(await scanRepoFolder({ openRoot: true }), undefined);
+			assert.equal(await scanRepoFolder({}), undefined);
+		});
 	});
 });

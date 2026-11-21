@@ -767,7 +767,12 @@ function findRootContaining(folder: string, childName: string, expect: "FILE" | 
 		while (child) {
 			try {
 				const fullPath = path.join(child, childName);
-				if (expect === "ANY" || (expect === "FILE" ? existsAndIsFileSync(fullPath) : existsAndIsDirectorySync(fullPath)))
+				const exists = expect === "ANY"
+					? fs.existsSync(fullPath)
+					: expect === "FILE"
+						? existsAndIsFileSync(fullPath)
+						: existsAndIsDirectorySync(fullPath);
+				if (exists)
 					return child;
 			} catch { }
 
