@@ -29,6 +29,7 @@ export const isWin = process.platform.startsWith("win");
 export const isMac = process.platform === "darwin";
 export const isLinux = !isWin && !isMac;
 export const isChromeOS = isChromeOsImpl();
+// Evaluated lazily to avoid reading /proc files at module load time (only used by analytics).
 let isWslCache: boolean | undefined;
 export function isWSL(): boolean {
 	isWslCache ??= isWslImpl();
