@@ -5,12 +5,21 @@ import { createMarkdownString, extensionPath, readJson } from "../../shared/vsco
 import { config } from "../config";
 
 export class SnippetCompletionItemProvider implements CompletionItemProvider {
-	private completions = new CompletionList();
-	private shouldRender: (uri: Uri) => boolean;
+	private completions: CompletionList | undefined;
+	private readonly filename: string;
+	private readonly shouldRender: (uri: Uri) => boolean;
 
 	constructor(private readonly dartCapabilities: DartCapabilities, filename: string, shouldRender: (uri: Uri) => boolean) {
+		this.filename = filename;
 		this.shouldRender = shouldRender;
-		const snippets = readJson(path.join(extensionPath, filename)) as Record<string, Record<string, { prefix: string, description: string | undefined, body: string | string[] }>>;
+	}
+
+	private loadSnippets(): void {
+		if (this.completions)
+			return;
+
+		const completions = new CompletionList();
+		const snippets = readJson(path.join(extensionPath, this.filename)) as Record<string, Record<string, { prefix: string, description: string | undefined, body: string | string[] }>>;
 		for (const snippetType of Object.keys(snippets)) {
 			for (const snippetName of Object.keys(snippets[snippetType])) {
 				const snippet = snippets[snippetType][snippetName];
@@ -24,9 +33,10 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 				completionItem.detail = snippet.description;
 				completionItem.documentation = createMarkdownString("").appendCodeblock(completionItem.insertText.value);
 				completionItem.sortText = "zzzzzzzzzzzzzzzzzzzzzz";
-				this.completions.items.push(completionItem);
+				completions.items.push(completionItem);
 			}
 		}
+		this.completions = completions;
 	}
 
 	public provideCompletionItems(
@@ -46,6 +56,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		if (!this.shouldRender(document.uri))
 			return;
 
+		this.loadSnippets();
 		return this.completions;
 	}
 
