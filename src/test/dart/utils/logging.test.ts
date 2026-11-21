@@ -1,5 +1,7 @@
 import { strict as assert } from "assert";
-import { RingLog } from "../../../shared/logging";
+import { LogCategory } from "../../../shared/enums";
+import { EmittingLogger, RingLog } from "../../../shared/logging";
+import { defer, sb } from "../../helpers";
 
 describe("ring_log", () => {
 	it("wraps around when reaching max size", () => {
@@ -40,5 +42,31 @@ Line 23
 Line 24
 Line 25`,
 		);
+	});
+
+	it("formats LogMessage entries lazily with original timestamp and truncation", () => {
+		const logger = new EmittingLogger();
+		const ringLog = new RingLog(10);
+		const sub = logger.onLog((message) => ringLog.log(message, 10));
+		defer("dispose log listener", () => sub.dispose());
+
+		const toLocaleTimeStringSpy = sb.spy(Date.prototype, "toLocaleTimeString");
+		const clock = sb.useFakeTimers({ now: new Date(2026, 0, 1, 12, 34, 56).getTime() });
+		const expectedTimestamp = new Date(2026, 0, 1, 12, 34, 56).toLocaleTimeString();
+		toLocaleTimeStringSpy.resetHistory();
+
+		logger.info("0123456789abcdef", LogCategory.Analyzer);
+		logger.warn("warn msg", LogCategory.General);
+		assert.equal(toLocaleTimeStringSpy.callCount, 0);
+
+		clock.tick(60_000);
+		const output = ringLog.toString();
+		assert.equal(toLocaleTimeStringSpy.callCount, 2);
+
+		const lines = output.split("\n");
+		assert.equal(lines.length, 2);
+		assert.equal(lines[0], `[${expectedTimestamp}] [Analyzer] [Info] 0123456789…`);
+		assert.equal(lines[1], `[${expectedTimestamp}] [General] [Warn] warn msg`);
+		assert.deepStrictEqual(ringLog.rawLines.filter((l) => l), lines);
 	});
 });

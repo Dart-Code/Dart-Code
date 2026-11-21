@@ -138,7 +138,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	extensionThisSessionStart = Date.now();
 
 	// Ring logger is only set up once and persists over silent restarts.
-	ringLogger ??= logger.onLog((message) => ringLog.log(message.toLine(800)));
+	ringLogger ??= logger.onLog((message) => ringLog.log(message, 800));
 
 	if (isDevExtension)
 		context.subscriptions.push(logToConsole(logger));

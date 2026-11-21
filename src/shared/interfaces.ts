@@ -127,6 +127,7 @@ export interface LogMessage {
 	readonly message: string;
 	readonly severity: LogSeverity;
 	readonly category: LogCategory;
+	readonly timestamp?: number;
 	toLine(maxLength: number): string;
 }
 
