@@ -44,6 +44,8 @@ export class EmittingLogger implements Logger, IAmDisposable {
 }
 
 class LogMessageImpl implements LogMessage {
+	public readonly timestamp = Date.now();
+
 	constructor(
 		readonly message: string,
 		readonly severity: LogSeverity,
@@ -51,16 +53,27 @@ class LogMessageImpl implements LogMessage {
 	) { }
 
 	public toLine(maxLength: number): string {
-		const logMessage = (
-			maxLength && this.message && this.message.length > maxLength
-				? this.message.substring(0, maxLength) + "…"
-				: (this.message || "<empty message>")
-		).trimRight();
-
-		const time = `[${(new Date()).toLocaleTimeString()}]`;
-		const prefix = `[${LogCategory[this.category]}] [${LogSeverity[this.severity]}]`;
-		return `${time} ${prefix} ${logMessage}`;
+		return formatLogLine(
+			truncateLogMessage(this.message, maxLength),
+			this.severity,
+			this.category,
+			this.timestamp,
+		);
 	}
+}
+
+function truncateLogMessage(message: string, maxLength: number): string {
+	return (
+		maxLength && message && message.length > maxLength
+			? message.substring(0, maxLength) + "…"
+			: (message || "<empty message>")
+	).trimRight();
+}
+
+function formatLogLine(logMessage: string, severity: LogSeverity, category: LogCategory, timestamp: number): string {
+	const time = `[${(new Date(timestamp)).toLocaleTimeString()}]`;
+	const prefix = `[${LogCategory[category]}] [${LogSeverity[severity]}]`;
+	return `${time} ${prefix} ${logMessage}`;
 }
 
 export class CategoryLogger implements Logger {
@@ -160,22 +173,47 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 	};
 }
 
+interface RingLogEntry {
+	readonly category: LogCategory;
+	readonly message: string;
+	readonly severity: LogSeverity;
+	readonly timestamp: number;
+}
+
+function formatRingLogEntry(entry: RingLogEntry): string {
+	return formatLogLine(entry.message, entry.severity, entry.category, entry.timestamp);
+}
+
 export class RingLog {
-	private readonly lines: string[];
+	private readonly lines: Array<string | RingLogEntry>;
 	private pointer = 0;
 
-	public get rawLines(): readonly string[] { return this.lines; }
-
-	constructor(public readonly size: number) {
-		this.lines = new Array<string>(this.size);
+	public get rawLines(): readonly string[] {
+		return this.lines.map((line) => typeof line === "string" ? line : formatRingLogEntry(line));
 	}
 
-	public log(message: string) {
-		this.lines[this.pointer] = message;
+	constructor(public readonly size: number) {
+		this.lines = new Array<string | RingLogEntry>(this.size);
+	}
+
+	public log(message: string | LogMessage, maxLength = 0): void {
+		this.lines[this.pointer] = typeof message === "string"
+			? message
+			: {
+				category: message.category,
+				message: truncateLogMessage(message.message, maxLength),
+				severity: message.severity,
+				timestamp: message.timestamp ?? Date.now(),
+			};
 		this.pointer = (this.pointer + 1) % this.size;
 	}
 
 	public toString(): string {
-		return this.lines.slice(this.pointer, this.size).concat(this.lines.slice(0, this.pointer)).filter((l) => l).join("\n");
+		return this.lines
+			.slice(this.pointer, this.size)
+			.concat(this.lines.slice(0, this.pointer))
+			.filter((l): l is string | RingLogEntry => !!l)
+			.map((l) => typeof l === "string" ? l : formatRingLogEntry(l))
+			.join("\n");
 	}
 }
