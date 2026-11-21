@@ -62,6 +62,17 @@ describe("snippets", () => {
 			String(call.args[0]).endsWith(path.join("snippets", "dart.json"));
 
 		await setConfigForTest("dart", "enableServerSnippets", false);
+
+		// Completions rejected inside comments should not load snippets from disk.
+		await setTestContent(`
+		main() {
+			// for
+		}
+		`);
+		const commentSnippets = await getSnippetCompletionsAt("for^");
+		ensureNoSnippet(commentSnippets, "for");
+		assert.equal(readFileSyncSpy.getCalls().filter(isDartSnippetsRead).length, 0);
+
 		await setTestContent(`
 		main() {
 			for
