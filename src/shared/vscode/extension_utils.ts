@@ -16,6 +16,10 @@ export function readJson(file: string): unknown {
 }
 
 function getExtensionVersion(): string {
+	const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
+	const version = (dartExtension?.packageJSON as { version?: string } | undefined)?.version;
+	if (version)
+		return version;
 	const packageJson = readJson(path.join(extensionPath, "package.json")) as { version: string };
 	return packageJson.version;
 }
