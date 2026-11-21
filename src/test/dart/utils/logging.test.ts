@@ -66,6 +66,7 @@ Line 25`,
 		const lines = output.split("\n");
 		assert.equal(lines.length, 2);
 		assert.equal(lines[0], `[${expectedTimestamp}] [Analyzer] [Info] 0123456789…`);
-		assert.ok(lines[1].startsWith(`[${expectedTimestamp}] [General] [Warn] warn msg`));
+		assert.equal(lines[1], `[${expectedTimestamp}] [General] [Warn] warn msg`);
+		assert.deepStrictEqual(ringLog.rawLines.filter((l) => l), lines);
 	});
 });
