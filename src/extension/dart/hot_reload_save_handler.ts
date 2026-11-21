@@ -52,7 +52,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 
 	private updateFileSystemWatcher(): void {
 		if (config.previewHotReloadOnSaveWatcher) {
-			if (this.fileSystemWatcherDisposables.length)
+			if (this.hasFileSystemWatcher)
 				return;
 
 			// TODO: Make this support everything that shouldHotReloadFor() does.
