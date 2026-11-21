@@ -1,4 +1,4 @@
-import { activate, ensureNoSnippet, ensureSnippet, getSnippetCompletionsAt, setTestContent } from "../../helpers";
+import { activate, ensureNoSnippet, ensureSnippet, getSnippetCompletionsAt, setConfigForTest, setTestContent } from "../../helpers";
 
 describe("snippets", () => {
 
@@ -48,5 +48,16 @@ describe("snippets", () => {
 		await setTestContent("stf");
 		const snippets = await getSnippetCompletionsAt("stf^");
 		ensureNoSnippet(snippets, "stful");
+	});
+
+	it("returns lazy-loaded client dart snippets when server snippets are disabled", async () => {
+		await setConfigForTest("dart", "enableServerSnippets", false);
+		await setTestContent(`
+		main() {
+			for
+		}
+		`);
+		const snippets = await getSnippetCompletionsAt("for^");
+		ensureSnippet(snippets, "for", "for");
 	});
 });
