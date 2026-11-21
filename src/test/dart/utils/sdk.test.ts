@@ -343,6 +343,8 @@ describe("SdkUtils", () => {
 	}
 
 	describe("searchPaths, findDartSdk, and findFlutterSdk", () => {
+		const normalizePath = (p: string) => isWin ? p.toLowerCase() : p;
+
 		it("searches without postFilter when omitted", () => {
 			// When no postFilter callback is passed to searchPaths, any directory containing bin/<executable> is returned.
 			const tempDir = createTempDir();
@@ -441,12 +443,12 @@ describe("SdkUtils", () => {
 			fs.mkdirSync(path.join(emptyDir, "bin"), { recursive: true });
 			createFakeDartSdk(validSdk);
 
-			const normalizePath = (p: string) => isWin ? p.toLowerCase() : p;
 			const existsSyncSpy = sb.spy(fileSystem, "existsSync");
 
 			const result = privateApi.sdkUtils!.findDartSdk([
 				emptyDir,
 				`${emptyDir}${path.sep}`,
+				...(isWin ? [emptyDir.toUpperCase()] : []),
 				path.join(emptyDir, "bin"),
 				validSdk,
 			]);
@@ -454,14 +456,12 @@ describe("SdkUtils", () => {
 			assert.equal(result.originalPath, validSdk);
 
 			const checkedPaths = existsSyncSpy.getCalls().map((c) => normalizePath(String(c.args[0])));
-			assert.equal(
-				checkedPaths.filter((p) => p === normalizePath(path.join(emptyDir, executableNames.dart))).length,
-				1,
-			);
-			assert.equal(
-				checkedPaths.filter((p) => p === normalizePath(path.join(emptyDir, "bin", executableNames.dart))).length,
-				1,
-			);
+			assert.deepStrictEqual(checkedPaths, [
+				normalizePath(path.join(emptyDir, executableNames.dart)),
+				normalizePath(path.join(emptyDir, "bin", executableNames.dart)),
+				normalizePath(path.join(validSdk, executableNames.dart)),
+				normalizePath(path.join(validSdk, "bin", executableNames.dart)),
+			]);
 
 			assert.equal(privateApi.sdkUtils!.findDartSdk([validSdk, path.join(validSdk, "bin")]).originalPath, validSdk);
 			assert.equal(privateApi.sdkUtils!.findDartSdk([path.join(validSdk, "bin"), validSdk]).originalPath, path.join(validSdk, "bin"));
@@ -474,7 +474,6 @@ describe("SdkUtils", () => {
 			createFakeDartSdk(firstSdk);
 			createFakeDartSdk(laterDir);
 
-			const normalizePath = (p: string) => isWin ? p.toLowerCase() : p;
 			const existsSyncSpy = sb.spy(fileSystem, "existsSync");
 
 			const result = privateApi.sdkUtils!.findDartSdk([firstSdk, laterDir]);
@@ -494,7 +493,6 @@ describe("SdkUtils", () => {
 			createFakeDartSdk(validSdk);
 			createFakeDartSdk(unreachedDir);
 
-			const normalizePath = (p: string) => isWin ? p.toLowerCase() : p;
 			const existsSyncSpy = sb.spy(fileSystem, "existsSync");
 
 			const matched = privateApi.sdkUtils!.findDartSdk([invalidSdk, validSdk, unreachedDir]);
@@ -509,9 +507,12 @@ describe("SdkUtils", () => {
 			const unmatched = privateApi.sdkUtils!.findDartSdk([invalidSdk, invalidSdk, path.join(invalidSdk, "bin")]);
 			assert.equal(unmatched.sdkPath, undefined);
 			assert.deepStrictEqual(unmatched.candidatePaths, [invalidSdk]);
-			assert.equal(
-				existsSyncSpy.getCalls().filter((c) => normalizePath(String(c.args[0])) === normalizePath(path.join(invalidSdk, "bin", executableNames.dart))).length,
-				1,
+			assert.deepStrictEqual(
+				existsSyncSpy.getCalls().map((c) => normalizePath(String(c.args[0]))),
+				[
+					normalizePath(path.join(invalidSdk, executableNames.dart)),
+					normalizePath(path.join(invalidSdk, "bin", executableNames.dart)),
+				],
 			);
 		});
 	});
