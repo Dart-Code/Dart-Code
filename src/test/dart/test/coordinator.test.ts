@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import * as constants from "../../../shared/constants";
+import { Logger } from "../../../shared/interfaces";
 import { nullLogger } from "../../../shared/logging";
 import { TestSessionCoordinator } from "../../../shared/test/coordinator";
 import { TestModel, TestSource } from "../../../shared/test/test_model";
@@ -679,5 +680,61 @@ hello_world
 			toUnencodedFileUri(utilsPath, true),
 			toUnencodedFileUri(suitePath, true),
 		);
+	});
+
+	it("logs warnings when testDone, print, or error notifications reference a missing suite or test", () => {
+		const warnings: unknown[] = [];
+		const warnLogger: Logger = {
+			error: (e: unknown) => assert.fail(`Unexpected error logged: ${String(e)}`),
+			info: () => { },
+			warn: (message: unknown) => { warnings.push(message); },
+		};
+		const model = new TestModel(warnLogger, privateApi.workspaceContext, { dynamicTestTracking: false, showSkippedTests: true }, () => [], () => undefined);
+		const coordinator = new TestSessionCoordinator(warnLogger, model, { getOutlineFor: () => undefined });
+		defer("Dispose test coordinator", () => coordinator.dispose());
+
+		const sessionID = "session-missing";
+		const debugSessionID = "dbg-missing";
+		const suitePath = path.join(fsPath(helloWorldTestFolder), "missing_test.dart");
+		coordinator.handleDebugSessionStart(debugSessionID, sessionID, fsPath(helloWorldFolder));
+
+		const notifications = [
+			{ hidden: false, result: "success", skipped: false, testID: 1, time: 1, type: "testDone" },
+			{ message: "hello", messageType: "print", testID: 1, time: 2, type: "print" },
+			{ error: "boom", isFailure: false, stackTrace: "stack", testID: 1, time: 3, type: "error" },
+		];
+
+		for (const evt of notifications)
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", evt);
+
+		assert.deepStrictEqual(warnings, [
+			`Could not find suite for test 1 for session ${sessionID}`,
+			`Could not find suite for test 1 for session ${sessionID}`,
+			`Could not find suite for test 1 for session ${sessionID}`,
+		]);
+
+		warnings.length = 0;
+		coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+			suite: { id: 0, path: suitePath, platform: "vm" },
+			time: 0,
+			type: "suite",
+		});
+		coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", {
+			test: { groupIDs: [], id: 1, name: "test 1", suiteID: 0 },
+			time: 1,
+			type: "testStart",
+		});
+
+		const suiteData = model.suites.getForPath(suitePath)!;
+		sb.stub(suiteData, "getCurrentTest").returns(undefined);
+
+		for (const evt of notifications)
+			coordinator.handleDebugSessionCustomEvent(debugSessionID, sessionID, "dart.testNotification", evt);
+
+		assert.deepStrictEqual(warnings, [
+			`Could not find test 1 for session ${sessionID}`,
+			`Could not find test 1 for session ${sessionID}`,
+			`Could not find test 1 for session ${sessionID}`,
+		]);
 	});
 });

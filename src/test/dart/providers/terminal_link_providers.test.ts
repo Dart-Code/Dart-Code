@@ -55,6 +55,83 @@ describe("DartFileUriTerminalLinkProvider", () => {
 	}
 });
 
+describe("terminal_link_provider_utils", () => {
+	beforeEach("activate", () => activate());
+
+	it("parses multiple file and package URI links on one line and skips invalid URIs", () => {
+		const fileLine = "aaa file:///foo/bad.dart:1:2 bbb file:///foo/one.dart:5:8 ccc file:///foo/two.dart line 12";
+		const packageLine = "aaa package:bad/one.dart:1 bbb package:unknown/skip.dart:2 ccc package:foo/main.dart:3:4 ddd package:bar/other.dart line 9";
+
+		const originalParse = vs.Uri.parse.bind(vs.Uri);
+		sb.stub(vs.Uri, "parse").callsFake((value: string, strict?: boolean) => {
+			if (value.includes("/bad.dart") || value.startsWith("package:bad/"))
+				throw new Error("Invalid URI");
+			return originalParse(value, strict);
+		});
+
+		const fileLinks = findFileUriLinks(fileLine);
+		assert.equal(fileLinks.length, 2);
+		assert.deepStrictEqual(
+			fileLinks.map((l) => ({
+				col: l.col,
+				isUri: l.uri instanceof vs.Uri,
+				length: l.length,
+				line: l.line,
+				startIndex: l.startIndex,
+				tooltip: l.tooltip,
+				uriString: l.uri.toString(),
+			})),
+			[
+				{
+					col: 8,
+					isUri: true,
+					length: "file:///foo/one.dart:5:8".length,
+					line: 5,
+					startIndex: fileLine.indexOf("file:///foo/one.dart:5:8"),
+					tooltip: "Open file in editor",
+					uriString: "file:///foo/one.dart",
+				},
+				{
+					col: undefined,
+					isUri: true,
+					length: "file:///foo/two.dart line 12".length,
+					line: 12,
+					startIndex: fileLine.indexOf("file:///foo/two.dart line 12"),
+					tooltip: "Open file in editor",
+					uriString: "file:///foo/two.dart",
+				},
+			],
+		);
+
+		const checkedPackages: string[] = [];
+		const packageLinks = findPackageUriLinks(packageLine, (name) => {
+			checkedPackages.push(name);
+			return name !== "unknown";
+		});
+		assert.deepStrictEqual(checkedPackages, ["unknown", "foo", "bar"]);
+		assert.deepStrictEqual(packageLinks, [
+			{
+				col: 4,
+				length: "package:foo/main.dart:3:4".length,
+				line: 3,
+				packageName: "foo",
+				startIndex: packageLine.indexOf("package:foo/main.dart:3:4"),
+				tooltip: "Open file in editor",
+				uri: "package:foo/main.dart",
+			},
+			{
+				col: undefined,
+				length: "package:bar/other.dart line 9".length,
+				line: 9,
+				packageName: "bar",
+				startIndex: packageLine.indexOf("package:bar/other.dart line 9"),
+				tooltip: "Open file in editor",
+				uri: "package:bar/other.dart",
+			},
+		]);
+	});
+});
+
 describe("DartPackageUriTerminalLinkProvider", () => {
 	beforeEach("activate", () => activate());
 

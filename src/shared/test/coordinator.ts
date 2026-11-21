@@ -9,7 +9,7 @@ import { disposeAll } from "../utils";
 import { forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, normalizeSlashes, uriComparisonString } from "../utils/fs";
 import { TestOutlineVisitor } from "../utils/outline";
 import { isSetupOrTeardownTestName, suiteLoadTestName } from "../utils/test";
-import { SuiteData, TestModel, TestSource } from "./test_model";
+import { SuiteData, TestModel, TestNode, TestSource } from "./test_model";
 
 /** Handles results from a test debug session and provides them to the test model. */
 export class TestSessionCoordinator implements IAmDisposable {
@@ -245,17 +245,28 @@ export class TestSessionCoordinator implements IAmDisposable {
 		return { path: filePath, line, character };
 	}
 
-	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
-		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
+	/** Looks up the suite and current test node for `testID` in `dartCodeDebugSessionID`, logging a warning if either is missing. */
+	private getSuiteAndTest(dartCodeDebugSessionID: string, testID: number): { suite: SuiteData, test: TestNode } | undefined {
+		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[testID];
 		if (!suite) {
-			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
+			this.logger.warn(`Could not find suite for test ${testID} for session ${dartCodeDebugSessionID}`);
 			return;
 		}
-		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
+
+		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
 		if (!test) {
-			this.logger.warn(`Could not find test ${evt.testID} for session ${dartCodeDebugSessionID}`);
+			this.logger.warn(`Could not find test ${testID} for session ${dartCodeDebugSessionID}`);
 			return;
 		}
+
+		return { suite, test };
+	}
+
+	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
+		const suiteAndTest = this.getSuiteAndTest(dartCodeDebugSessionID, evt.testID);
+		if (!suiteAndTest)
+			return;
+		const { suite, test } = suiteAndTest;
 
 		const result = evt.skipped ? "skipped" : evt.result;
 		// Only hide synthetic "(loading)" tests when evt.hidden is true; passing (setUpAll) and
@@ -307,34 +318,20 @@ export class TestSessionCoordinator implements IAmDisposable {
 		if (evt.messageType === "skip" && evt.message === 'Skip: does not have "solo"')
 			return;
 
-		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
-		if (!suite) {
-			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
+		const suiteAndTest = this.getSuiteAndTest(dartCodeDebugSessionID, evt.testID);
+		if (!suiteAndTest)
 			return;
-		}
-
-		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
-		if (!test) {
-			this.logger.warn(`Could not find test ${evt.testID} for session ${dartCodeDebugSessionID}`);
-			return;
-		}
+		const { suite, test } = suiteAndTest;
 
 		test.outputEvents.push(evt);
 		this.data.testOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.message);
 	}
 
 	private handleErrorNotification(dartCodeDebugSessionID: string, evt: ErrorNotification) {
-		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
-		if (!suite) {
-			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
+		const suiteAndTest = this.getSuiteAndTest(dartCodeDebugSessionID, evt.testID);
+		if (!suiteAndTest)
 			return;
-		}
-
-		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
-		if (!test) {
-			this.logger.warn(`Could not find test ${evt.testID} for session ${dartCodeDebugSessionID}`);
-			return;
-		}
+		const { suite, test } = suiteAndTest;
 
 		// Flutter emits an error when tests fail which when reported to the VS Code API will result in not-so-useful text
 		// in the Test Error Peek window, so we suppress messages that match this pattern.
