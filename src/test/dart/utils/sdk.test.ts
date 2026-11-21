@@ -1389,6 +1389,8 @@ describe("SdkUtils", () => {
 
 			assert.equal(await scanRepoFolder({ gitType: "directory" }), true);
 			assert.equal(await scanRepoFolder({ gitType: "file" }), true);
+			assert.equal(await scanRepoFolder({ gitType: "directory", openRoot: true }), true);
+			assert.equal(await scanRepoFolder({ gitType: "file", openRoot: true }), true);
 			assert.equal(await scanRepoFolder({ openRoot: true }), undefined);
 			assert.equal(await scanRepoFolder({}), undefined);
 		});
