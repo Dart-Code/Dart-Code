@@ -103,7 +103,12 @@ describe("terminal_link_provider_utils", () => {
 			],
 		);
 
-		const packageLinks = findPackageUriLinks(packageLine, (name) => name === "foo" || name === "bar");
+		const checkedPackages: string[] = [];
+		const packageLinks = findPackageUriLinks(packageLine, (name) => {
+			checkedPackages.push(name);
+			return name !== "unknown";
+		});
+		assert.deepStrictEqual(checkedPackages, ["unknown", "foo", "bar"]);
 		assert.deepStrictEqual(packageLinks, [
 			{
 				col: 4,

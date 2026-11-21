@@ -11,10 +11,8 @@ const packageUriPattern = createUriPattern("package:");
 /** Finds all URI links matching `pattern` in `content` and maps valid parsed URIs using `createLink`. */
 function findUriLinks<T>(content: string, pattern: RegExp, createLink: (base: DartUriLinkBase, parsedUri: vs.Uri, rawUri: string) => T | undefined): T[] {
 	const results: T[] = [];
-	pattern.lastIndex = 0;
-	let result: RegExpExecArray | null;
-	while ((result = pattern.exec(content)) && result.groups) {
-		const rawUri = result.groups.uri;
+	for (const result of content.matchAll(pattern)) {
+		const { col, line, uri: rawUri } = result.groups!;
 		let parsedUri: vs.Uri;
 		try {
 			parsedUri = vs.Uri.parse(rawUri, true);
@@ -24,9 +22,9 @@ function findUriLinks<T>(content: string, pattern: RegExp, createLink: (base: Da
 
 		const link = createLink(
 			{
-				col: result.groups.col ? parseInt(result.groups.col, 10) : undefined,
+				col: col ? parseInt(col, 10) : undefined,
 				length: result[0].length,
-				line: result.groups.line ? parseInt(result.groups.line, 10) : undefined,
+				line: line ? parseInt(line, 10) : undefined,
 				startIndex: result.index,
 				tooltip: "Open file in editor",
 			},

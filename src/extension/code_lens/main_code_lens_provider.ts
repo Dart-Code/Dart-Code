@@ -39,7 +39,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		else {
 			const actualLength = document.offsetAt(lspToPosition(outline.range.end));
 			if (actualLength !== expectedLength)
-				this.logger.info(`Outline for ${filename} has length ${actualLength} but expected ${expectedLength}, so unable to provide main CodeLens`);
+				this.logger.info(`Outline for ${filename} has length ${actualLength} but expected ${expectedLength}, so main CodeLens may be stale`);
 		}
 		if (!outline?.children?.length)
 			return;
