@@ -12,6 +12,7 @@ import { shouldHotReloadFor } from "../utils";
 
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
+	private fileSystemWatcherDisposables: IAmDisposable[] = [];
 	private readonly hotReloadDelayTimers = new Map<"dart" | "flutter", NodeJS.Timeout>();
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
@@ -38,11 +39,28 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		}));
 
 		// FS-watcher version.
-		// TODO: Make this support everything that shouldHotReloadFor() does.
-		const watcher = workspace.createFileSystemWatcher("**/*.dart");
-		this.disposables.push(watcher);
-		watcher.onDidChange(this.handleFileSystemChange.bind(this));
-		watcher.onDidCreate(this.handleFileSystemChange.bind(this));
+		this.disposables.push(workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.previewHotReloadOnSaveWatcher"))
+				this.updateFileSystemWatcher();
+		}));
+		this.updateFileSystemWatcher();
+	}
+
+	private updateFileSystemWatcher(): void {
+		if (config.previewHotReloadOnSaveWatcher) {
+			if (this.fileSystemWatcherDisposables.length)
+				return;
+
+			// TODO: Make this support everything that shouldHotReloadFor() does.
+			const watcher = workspace.createFileSystemWatcher("**/*.dart");
+			this.fileSystemWatcherDisposables.push(
+				watcher,
+				watcher.onDidChange(this.handleFileSystemChange.bind(this)),
+				watcher.onDidCreate(this.handleFileSystemChange.bind(this)),
+			);
+		} else {
+			disposeAll(this.fileSystemWatcherDisposables);
+		}
 	}
 
 	private handleFileSystemChange(uri: Uri) {
@@ -135,6 +153,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 			clearTimeout(timer);
 		this.hotReloadDelayTimers.clear();
 
+		disposeAll(this.fileSystemWatcherDisposables);
 		disposeAll(this.disposables);
 	}
 }
