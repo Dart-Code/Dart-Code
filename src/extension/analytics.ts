@@ -298,7 +298,7 @@ export class Analytics implements IAmDisposable {
 
 		const platformSuffix = isChromeOS
 			? " (ChromeOS)"
-			: isWSL
+			: isWSL()
 				? " (WSL)"
 				: "";
 		const data: AnalyticsData = {

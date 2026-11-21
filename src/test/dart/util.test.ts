@@ -3,12 +3,15 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { applyColor, faint } from "../../debug/colors";
-import { isWin } from "../../shared/constants";
+import { isLinux, isWin, isWSL } from "../../shared/constants";
 import { escapeDartString, generateTestNameFromFileName, isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
 import { arrayContainsArray } from "../../shared/utils/array";
 import { fsPath, homeRelativePath, isWithinPath, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { resolvePaths } from "../../shared/vscode/utils";
 import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder, helloWorldMainFile, sb } from "../helpers";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fs = require("fs") as typeof import("fs");
 
 describe("versionIsAtLeast", () => {
 	it("should not consider build numbers when comparing versions", () => {
@@ -271,5 +274,20 @@ describe("resolvePaths", () => {
 
 	it("maps relative path with open folder for non-workspace", () => {
 		assert.equal(resolvePaths("./foo"), path.join(fsPath(helloWorldFolder), "foo"));
+	});
+});
+
+describe("isWSL", () => {
+	it("lazily evaluates and caches the result without re-reading /proc", () => {
+		const readFileSyncSpy = sb.spy(fs, "readFileSync");
+		const first = isWSL();
+		assert.equal(typeof first, "boolean");
+		if (isLinux)
+			assert.ok(readFileSyncSpy.callCount > 0, "Expected first isWSL() call on Linux to read /proc");
+
+		readFileSyncSpy.resetHistory();
+		const second = isWSL();
+		assert.equal(second, first);
+		assert.equal(readFileSyncSpy.callCount, 0);
 	});
 });
