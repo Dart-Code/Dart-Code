@@ -4,7 +4,8 @@ import { extensions, MarkdownString, Uri } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../constants";
 import * as dartdoc from "../utils/dartdocs";
 
-export const { extensionPath, extensionVersion } = getExtensionInfo();
+export const extensionPath = extensions.getExtension(dartCodeExtensionIdentifier)!.extensionPath;
+export const extensionVersion = getExtensionVersion();
 export const isPreReleaseExtension = checkIsPreReleaseExtension();
 export const isDevExtension = checkIsDevExtension();
 export const hasFlutterExtension = checkHasFlutterExtension();
@@ -14,14 +15,13 @@ export function readJson(file: string): unknown {
 	return JSON.parse(fs.readFileSync(file).toString());
 }
 
-function getExtensionInfo(): { extensionPath: string; extensionVersion: string } {
-	const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier)!;
-	const installedExtensionPath = dartExtension.extensionPath;
-	const version = (dartExtension.packageJSON as { version?: string } | undefined)?.version;
+function getExtensionVersion(): string {
+	const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
+	const version = (dartExtension?.packageJSON as { version?: string } | undefined)?.version;
 	if (version)
-		return { extensionPath: installedExtensionPath, extensionVersion: version };
-	const packageJson = readJson(path.join(installedExtensionPath, "package.json")) as { version: string };
-	return { extensionPath: installedExtensionPath, extensionVersion: packageJson.version };
+		return version;
+	const packageJson = readJson(path.join(extensionPath, "package.json")) as { version: string };
+	return packageJson.version;
 }
 
 
