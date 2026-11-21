@@ -15,14 +15,12 @@ function findUriLinks<T>(content: string, pattern: RegExp, createLink: (base: Da
 	let result: RegExpExecArray | null;
 	while ((result = pattern.exec(content)) && result.groups) {
 		const rawUri = result.groups.uri;
-		let parsedUri: vs.Uri | undefined;
+		let parsedUri: vs.Uri;
 		try {
 			parsedUri = vs.Uri.parse(rawUri, true);
 		} catch {
 			continue;
 		}
-		if (!parsedUri)
-			continue;
 
 		const link = createLink(
 			{

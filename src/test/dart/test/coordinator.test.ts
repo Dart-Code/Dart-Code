@@ -685,7 +685,7 @@ hello_world
 	it("logs warnings when testDone, print, or error notifications reference a missing suite or test", () => {
 		const warnings: unknown[] = [];
 		const warnLogger: Logger = {
-			error: () => { },
+			error: (e: unknown) => assert.fail(`Unexpected error logged: ${String(e)}`),
 			info: () => { },
 			warn: (message: unknown) => { warnings.push(message); },
 		};
