@@ -235,6 +235,9 @@ export interface InternalExtensionApi {
 	webClient: WebClient;
 	workspaceContext: DartWorkspaceContext;
 	// Only available in test runs.
+	hotReloadOnSaveHandler?: {
+		readonly hasFileSystemWatcher: boolean;
+	};
 	mcpServerProvider?: McpServerDefinitionProvider;
 	sdkUtils?: {
 		findDartSdk(folders: string[]): SdkSearchResults;

@@ -12,6 +12,7 @@ import { shouldHotReloadFor } from "../utils";
 
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
+	private fileSystemWatcherDisposables: IAmDisposable[] = [];
 	private readonly hotReloadDelayTimers = new Map<"dart" | "flutter", NodeJS.Timeout>();
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
@@ -38,16 +39,36 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		}));
 
 		// FS-watcher version.
-		// TODO: Make this support everything that shouldHotReloadFor() does.
-		const watcher = workspace.createFileSystemWatcher("**/*.dart");
-		this.disposables.push(watcher);
-		watcher.onDidChange(this.handleFileSystemChange.bind(this));
-		watcher.onDidCreate(this.handleFileSystemChange.bind(this));
+		this.disposables.push(workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.previewHotReloadOnSaveWatcher"))
+				this.updateFileSystemWatcher();
+		}));
+		this.updateFileSystemWatcher();
+	}
+
+	public get hasFileSystemWatcher(): boolean {
+		return this.fileSystemWatcherDisposables.length > 0;
+	}
+
+	private updateFileSystemWatcher(): void {
+		if (config.previewHotReloadOnSaveWatcher) {
+			if (this.hasFileSystemWatcher)
+				return;
+
+			// TODO: Make this support everything that shouldHotReloadFor() does.
+			const watcher = workspace.createFileSystemWatcher("**/*.dart");
+			this.fileSystemWatcherDisposables.push(
+				watcher,
+				watcher.onDidChange(this.handleFileSystemChange.bind(this)),
+				watcher.onDidCreate(this.handleFileSystemChange.bind(this)),
+			);
+		} else {
+			disposeAll(this.fileSystemWatcherDisposables);
+		}
 	}
 
 	private handleFileSystemChange(uri: Uri) {
-		// Bail if we're not using fs-watcher instead. We still wire this
-		// handler up so we don't need to reload for this setting change.
+		// Guard against queued watcher events if the setting was just disabled.
 		if (!config.previewHotReloadOnSaveWatcher)
 			return;
 
@@ -135,6 +156,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 			clearTimeout(timer);
 		this.hotReloadDelayTimers.clear();
 
+		disposeAll(this.fileSystemWatcherDisposables);
 		disposeAll(this.disposables);
 	}
 }
