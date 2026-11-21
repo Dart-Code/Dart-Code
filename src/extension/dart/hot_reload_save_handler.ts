@@ -46,6 +46,10 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		this.updateFileSystemWatcher();
 	}
 
+	public get hasFileSystemWatcher(): boolean {
+		return this.fileSystemWatcherDisposables.length > 0;
+	}
+
 	private updateFileSystemWatcher(): void {
 		if (config.previewHotReloadOnSaveWatcher) {
 			if (this.fileSystemWatcherDisposables.length)
@@ -64,8 +68,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	}
 
 	private handleFileSystemChange(uri: Uri) {
-		// Bail if we're not using fs-watcher instead. We still wire this
-		// handler up so we don't need to reload for this setting change.
+		// Guard against queued watcher events if the setting was just disabled.
 		if (!config.previewHotReloadOnSaveWatcher)
 			return;
 

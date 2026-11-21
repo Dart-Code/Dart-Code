@@ -574,7 +574,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => debouncedHandleConfigurationChange(e)));
 
 	// Wire up handling of On-Save handlers.
-	context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands, flutterCapabilities));
+	const hotReloadOnSaveHandler = new HotReloadOnSaveHandler(debugCommands, flutterCapabilities);
+	context.subscriptions.push(hotReloadOnSaveHandler);
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
 		context.subscriptions.push(new GenerateLocalizationsOnSaveHandler());
 	}
@@ -770,6 +771,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			getOutputChannel,
 			getOutputChannelNames,
 			getToolEnv,
+			hotReloadOnSaveHandler,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			initialDebugProvider,
 			interactiveRefactors: analyzer.refactors,
