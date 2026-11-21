@@ -1,74 +1,66 @@
 import * as vs from "vscode";
 
-const fileUriPattern = new RegExp("(?<uri>file:\\/{3}\\S+[\\/]\\S+\\.dart)(?:(?:[: ]| line )(?<line>\\d+)(?::(?<col>\\d+))?)?", "mg");
-const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?:(?:[: ]| line )(?<line>\\d+)(?::(?<col>\\d+))?)?", "mg");
+/** Builds a global multiline regex matching Dart URIs with a given prefix and optional line/column suffix. */
+function createUriPattern(uriPrefix: string): RegExp {
+	return new RegExp(`(?<uri>${uriPrefix}\\S+[\\/]\\S+\\.dart)(?:(?:[: ]| line )(?<line>\\d+)(?::(?<col>\\d+))?)?`, "mg");
+}
 
-export function findPackageUriLinks(content: string, isKnownPackage: (packageName: string) => boolean): DartPackageUriLink[] {
-	const results: DartPackageUriLink[] = [];
-	packageUriPattern.lastIndex = -1;
+const fileUriPattern = createUriPattern("file:\\/{3}");
+const packageUriPattern = createUriPattern("package:");
+
+/** Finds all URI links matching `pattern` in `content` and maps valid parsed URIs using `createLink`. */
+function findUriLinks<T>(content: string, pattern: RegExp, createLink: (base: DartUriLinkBase, parsedUri: vs.Uri, rawUri: string) => T | undefined): T[] {
+	const results: T[] = [];
+	pattern.lastIndex = 0;
 	let result: RegExpExecArray | null;
-	while ((result = packageUriPattern.exec(content)) && result.groups) {
-		let uri: vs.Uri | undefined;
+	while ((result = pattern.exec(content)) && result.groups) {
+		const rawUri = result.groups.uri;
+		let parsedUri: vs.Uri | undefined;
 		try {
-			uri = vs.Uri.parse(result.groups.uri, true);
+			parsedUri = vs.Uri.parse(rawUri, true);
 		} catch {
 			continue;
 		}
-		if (!uri)
+		if (!parsedUri)
 			continue;
 
-		const packageName = uri.path.split("/")[0];
-		if (!isKnownPackage(packageName))
-			continue;
-		const line = result.groups.line ? parseInt(result.groups.line) : undefined;
-		const col = result.groups.col ? parseInt(result.groups.col) : undefined;
-		const startIndex = result.index;
-		const length = result[0].length;
-
-		results.push({
-			col,
-			length,
-			line,
-			packageName,
-			startIndex,
-			tooltip: "Open file in editor",
-			uri: result.groups.uri,
-		});
+		const link = createLink(
+			{
+				col: result.groups.col ? parseInt(result.groups.col, 10) : undefined,
+				length: result[0].length,
+				line: result.groups.line ? parseInt(result.groups.line, 10) : undefined,
+				startIndex: result.index,
+				tooltip: "Open file in editor",
+			},
+			parsedUri,
+			rawUri,
+		);
+		if (link)
+			results.push(link);
 	}
 
 	return results;
 }
 
+export function findPackageUriLinks(content: string, isKnownPackage: (packageName: string) => boolean): DartPackageUriLink[] {
+	return findUriLinks(content, packageUriPattern, (base, parsedUri, rawUri) => {
+		const packageName = parsedUri.path.split("/")[0];
+		if (!isKnownPackage(packageName))
+			return undefined;
+
+		return {
+			...base,
+			packageName,
+			uri: rawUri,
+		};
+	});
+}
+
 export function findFileUriLinks(lineContent: string): DartFileUriLink[] {
-	const results: DartFileUriLink[] = [];
-	fileUriPattern.lastIndex = -1;
-	let result: RegExpExecArray | null;
-	while ((result = fileUriPattern.exec(lineContent)) && result.groups) {
-		let uri: vs.Uri | undefined;
-		try {
-			uri = vs.Uri.parse(result.groups.uri, true);
-		} catch {
-			continue;
-		}
-		if (!uri)
-			continue;
-
-		const line = result.groups.line ? parseInt(result.groups.line) : undefined;
-		const col = result.groups.col ? parseInt(result.groups.col) : undefined;
-		const startIndex = result.index;
-		const length = result[0].length;
-
-		results.push({
-			col,
-			length,
-			line,
-			startIndex,
-			tooltip: "Open file in editor",
-			uri,
-		});
-	}
-
-	return results;
+	return findUriLinks(lineContent, fileUriPattern, (base, parsedUri) => ({
+		...base,
+		uri: parsedUri,
+	}));
 }
 
 export function formatLineColFragment(link: { line: number | undefined, col: number | undefined }) {
@@ -80,22 +72,20 @@ export function formatLineColFragment(link: { line: number | undefined, col: num
 		return "";
 }
 
-export interface DartFileUriLink {
+/** Shared location metadata for a Dart URI link matched in terminal or document text. */
+export interface DartUriLinkBase {
 	startIndex: number;
 	length: number;
 	tooltip: string;
-	uri: vs.Uri;
 	line: number | undefined;
 	col: number | undefined;
 }
 
+export interface DartFileUriLink extends DartUriLinkBase {
+	uri: vs.Uri;
+}
 
-export interface DartPackageUriLink {
-	startIndex: number;
-	length: number;
-	tooltip: string;
+export interface DartPackageUriLink extends DartUriLinkBase {
 	packageName: string;
 	uri: string;
-	line: number | undefined;
-	col: number | undefined;
 }
