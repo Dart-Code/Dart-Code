@@ -14,29 +14,29 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		this.shouldRender = shouldRender;
 	}
 
-	private getCompletions(): CompletionList {
-		if (!this.completions) {
-			const completions = new CompletionList();
-			const snippets = readJson(path.join(extensionPath, this.filename)) as Record<string, Record<string, { prefix: string, description: string | undefined, body: string | string[] }>>;
-			for (const snippetType of Object.keys(snippets)) {
-				for (const snippetName of Object.keys(snippets[snippetType])) {
-					const snippet = snippets[snippetType][snippetName];
-					const completionItem = new CompletionItem(snippetName, CompletionItemKind.Snippet);
-					completionItem.filterText = snippet.prefix;
-					completionItem.insertText = new SnippetString(
-						Array.isArray(snippet.body)
-							? snippet.body.join("\n")
-							: snippet.body,
-					);
-					completionItem.detail = snippet.description;
-					completionItem.documentation = createMarkdownString("").appendCodeblock(completionItem.insertText.value);
-					completionItem.sortText = "zzzzzzzzzzzzzzzzzzzzzz";
-					completions.items.push(completionItem);
-				}
+	private loadSnippets(): void {
+		if (this.completions)
+			return;
+
+		const completions = new CompletionList();
+		const snippets = readJson(path.join(extensionPath, this.filename)) as Record<string, Record<string, { prefix: string, description: string | undefined, body: string | string[] }>>;
+		for (const snippetType of Object.keys(snippets)) {
+			for (const snippetName of Object.keys(snippets[snippetType])) {
+				const snippet = snippets[snippetType][snippetName];
+				const completionItem = new CompletionItem(snippetName, CompletionItemKind.Snippet);
+				completionItem.filterText = snippet.prefix;
+				completionItem.insertText = new SnippetString(
+					Array.isArray(snippet.body)
+						? snippet.body.join("\n")
+						: snippet.body,
+				);
+				completionItem.detail = snippet.description;
+				completionItem.documentation = createMarkdownString("").appendCodeblock(completionItem.insertText.value);
+				completionItem.sortText = "zzzzzzzzzzzzzzzzzzzzzz";
+				completions.items.push(completionItem);
 			}
-			this.completions = completions;
 		}
-		return this.completions;
+		this.completions = completions;
 	}
 
 	public provideCompletionItems(
@@ -56,7 +56,8 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		if (!this.shouldRender(document.uri))
 			return;
 
-		return this.getCompletions();
+		this.loadSnippets();
+		return this.completions;
 	}
 
 	private shouldAllowCompletion(line: string): boolean {
