@@ -5,7 +5,7 @@ import { ConfigurationTarget, Uri, workspace } from "vscode";
 import * as constants from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
 import { captureLogs, EmittingLogger, nullLogger } from "../../../shared/logging";
-import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, getDartToolDir, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, normalizeSlashes, prepareLogFilePath, uriComparisonString } from "../../../shared/utils/fs";
+import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, getDartToolDir, getPackageName, getSdkVersion, hasPackageMapFile, hasPubspec, mkDirRecursive, normalizeSlashes, prepareLogFilePath, uriComparisonString } from "../../../shared/utils/fs";
 import { activateWithoutAnalysis, createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, privateApi, sb, setConfigForTest, testProjectsFolder, tryDelete, waitForResult } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
@@ -502,5 +502,49 @@ describe("Windows path and URI normalization", () => {
 		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("file:///c%3A/foo/bar.dart"), "file:///C%3A/foo/bar.dart");
 		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("file:///C%3A/foo/bar.dart"), "file:///C%3A/foo/bar.dart");
 		assert.equal(forceWindowsDriveLetterToUppercaseInUriString("package:foo/bar.dart"), "package:foo/bar.dart");
+	});
+});
+
+describe("getSdkVersion", () => {
+	function createTempSdk(files: { flutterVersionJson?: string; versionFile?: string }): string {
+		const sdkRoot = getRandomTempFolder();
+		defer("Delete temp SDK folder", () => tryDelete(sdkRoot));
+		mkDirRecursive(sdkRoot);
+		if (files.flutterVersionJson !== undefined) {
+			const cacheDir = path.join(sdkRoot, "bin", "cache");
+			mkDirRecursive(cacheDir);
+			fs.writeFileSync(path.join(cacheDir, "flutter.version.json"), files.flutterVersionJson);
+		}
+		if (files.versionFile !== undefined)
+			fs.writeFileSync(path.join(sdkRoot, "version"), files.versionFile);
+		return sdkRoot;
+	}
+
+	it("skips flutter.version.json when isFlutter is false", () => {
+		const sdkRoot = createTempSdk({
+			flutterVersionJson: JSON.stringify({ flutterVersion: "3.24.0" }),
+			versionFile: "3.5.0\n",
+		});
+		assert.equal(getSdkVersion(nullLogger, { sdkRoot, isFlutter: false }), "3.5.0");
+
+		const jsonOnlySdkRoot = createTempSdk({
+			flutterVersionJson: JSON.stringify({ flutterVersion: "3.24.0" }),
+		});
+		assert.equal(getSdkVersion(nullLogger, { sdkRoot: jsonOnlySdkRoot, isFlutter: false }), undefined);
+	});
+
+	it("reads flutter.version.json when isFlutter is true", () => {
+		const sdkRoot = createTempSdk({
+			flutterVersionJson: JSON.stringify({ flutterVersion: "3.24.0" }),
+			versionFile: "3.5.0\n",
+		});
+		assert.equal(getSdkVersion(nullLogger, { sdkRoot, isFlutter: true }), "3.24.0");
+	});
+
+	it("falls back to version file when isFlutter is true and flutter.version.json is missing", () => {
+		const sdkRoot = createTempSdk({
+			versionFile: "3.19.0\n",
+		});
+		assert.equal(getSdkVersion(nullLogger, { sdkRoot, isFlutter: true }), "3.19.0");
 	});
 });
