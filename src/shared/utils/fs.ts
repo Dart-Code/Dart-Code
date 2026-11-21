@@ -396,38 +396,39 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 		: projectFolders;
 }
 
-export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string }): string | undefined {
+export function getSdkVersion(logger: Logger, { sdkRoot, isFlutter = true }: { sdkRoot?: string; isFlutter?: boolean }): string | undefined {
 	if (!sdkRoot)
 		return undefined;
 
-	// Try to read the new JSON file for Flutter. Don't use exist checks as it races,
-	// just try to read and see if we get contents.
-	const jsonVersionFile = path.join(sdkRoot, "bin", "cache", "flutter.version.json");
-	let jsonVersionFileContent: string | undefined;
-	try {
-		jsonVersionFileContent = fs.readFileSync(jsonVersionFile, "utf8").trim();
-	} catch {
-	}
-
-	if (jsonVersionFileContent) {
-		let versionData: { flutterVersion?: unknown } | undefined;
+	if (isFlutter) {
+		// Try to read the new JSON file for Flutter. Don't use exist checks as it races,
+		// just try to read and see if we get contents.
+		const jsonVersionFile = path.join(sdkRoot, "bin", "cache", "flutter.version.json");
+		let jsonVersionFileContent: string | undefined;
 		try {
-			versionData = JSON.parse(jsonVersionFileContent) as { flutterVersion?: unknown } | undefined;
-		} catch (e) {
-			logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON (${String(e)}): ${jsonVersionFileContent}, falling back to legacy file`);
+			jsonVersionFileContent = fs.readFileSync(jsonVersionFile, "utf8").trim();
+		} catch {
 		}
 
-		if (versionData) {
-			const flutterVersion = versionData.flutterVersion;
-			if (typeof flutterVersion === "string") {
-				const validVersion = nullToUndefined(semver.valid(flutterVersion));
-				if (validVersion) {
-					return validVersion;
+		if (jsonVersionFileContent) {
+			let versionData: { flutterVersion?: unknown } | undefined;
+			try {
+				versionData = JSON.parse(jsonVersionFileContent) as { flutterVersion?: unknown } | undefined;
+			} catch (e) {
+				logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON (${String(e)}): ${jsonVersionFileContent}, falling back to legacy file`);
+			}
+
+			if (versionData) {
+				const flutterVersion = versionData.flutterVersion;
+				if (typeof flutterVersion === "string") {
+					const validVersion = nullToUndefined(semver.valid(flutterVersion));
+					if (validVersion)
+						return validVersion;
+					else
+						logger.error(`${jsonVersionFile} did not contain a valid "flutterVersion": ${jsonVersionFileContent}, falling back to legacy file`);
 				} else {
-					logger.error(`${jsonVersionFile} did not contain a valid "flutterVersion": ${jsonVersionFileContent}, falling back to legacy file`);
+					logger.error(`${jsonVersionFile} did not contain a "flutterVersion": ${jsonVersionFileContent}, falling back to legacy file`);
 				}
-			} else {
-				logger.error(`${jsonVersionFile} did not contain a "flutterVersion": ${jsonVersionFileContent}, falling back to legacy file`);
 			}
 		}
 	}

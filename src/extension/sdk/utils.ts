@@ -518,8 +518,8 @@ export class SdkUtils {
 		}
 
 		const isDartFromFlutter = (!!dartSdkResult.originalPath && isDartSdkFromFlutter(dartSdkResult.originalPath)) || (!!dartSdkPath && isDartSdkFromFlutter(dartSdkPath));
-		const dartVersion = getSdkVersion(this.logger, { sdkRoot: dartSdkPath });
-		let flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath });
+		const dartVersion = getSdkVersion(this.logger, { sdkRoot: dartSdkPath, isFlutter: false });
+		let flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, isFlutter: true });
 		// Sometimes the Flutter 'version' file is missing (see https://github.com/flutter/flutter/issues/142521)
 		// but this is almost always on main/master, so in this case treat us as a max version that has everything enabled
 		// instead of nothing.

@@ -30,6 +30,7 @@ abstract class SdkManager {
 	protected abstract get configuredSdk(): string | undefined;
 	protected abstract get configName(): string;
 	protected abstract get executablePath(): string;
+	protected abstract get isFlutter(): boolean;
 	protected abstract get sdkSwitchingTarget(): "workspace" | "global";
 	protected abstract getLabel(version: string): string;
 	protected abstract clearWorkspaceSdk(): void;
@@ -63,7 +64,7 @@ abstract class SdkManager {
 			// Then we need to take the executable name and /bin back off
 			const actualFolder = path.dirname(path.dirname(actualBinary));
 
-			const version = getSdkVersion(this.logger, { sdkRoot: actualFolder });
+			const version = getSdkVersion(this.logger, { sdkRoot: actualFolder, isFlutter: this.isFlutter });
 			return {
 				description: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
 				detail: homeRelativePath(f),
@@ -112,6 +113,7 @@ export class DartSdkManager extends SdkManager {
 	protected get configuredSdk(): string | undefined { return this.config.sdkPath; }
 	protected get configName(): string { return "dart.sdkPaths"; }
 	protected get executablePath() { return dartVMPath; }
+	protected get isFlutter() { return false; }
 	protected get sdkSwitchingTarget() { return this.config.sdkSwitchingTarget; }
 	protected getLabel(version: string) {
 		return `Dart SDK ${version}`;
@@ -135,6 +137,7 @@ export class FlutterSdkManager extends SdkManager {
 	protected get configuredSdk(): string | undefined { return this.config.flutterSdkPath; }
 	protected get configName(): string { return "dart.flutterSdkPaths"; }
 	protected get executablePath() { return flutterPath; }
+	protected get isFlutter() { return true; }
 	protected get sdkSwitchingTarget() { return this.config.sdkSwitchingTarget; }
 	protected getLabel(version: string) {
 		return `Flutter SDK ${version}`;
