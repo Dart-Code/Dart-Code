@@ -4,7 +4,8 @@ import { extensions, MarkdownString, Uri } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../constants";
 import * as dartdoc from "../utils/dartdocs";
 
-export const extensionPath = extensions.getExtension(dartCodeExtensionIdentifier)!.extensionPath;
+const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier)!;
+export const extensionPath = dartExtension.extensionPath;
 export const extensionVersion = getExtensionVersion();
 export const isPreReleaseExtension = checkIsPreReleaseExtension();
 export const isDevExtension = checkIsDevExtension();
@@ -16,6 +17,9 @@ export function readJson(file: string): unknown {
 }
 
 function getExtensionVersion(): string {
+	const version = (dartExtension.packageJSON as { version?: string } | undefined)?.version;
+	if (version)
+		return version;
 	const packageJson = readJson(path.join(extensionPath, "package.json")) as { version: string };
 	return packageJson.version;
 }
