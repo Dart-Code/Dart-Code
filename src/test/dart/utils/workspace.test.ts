@@ -1,13 +1,15 @@
 import { strict as assert } from "assert";
-import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { cursorInstallMcpServer, installFlutterExtensionPromptKey } from "../../../shared/constants";
 import { nullLogger } from "../../../shared/logging";
 import { simplifyVersion } from "../../../shared/utils/workspace";
-import { GlobalState, ProfileState, WorkspaceState } from "../../../shared/vscode/workspace";
-import { defer, tryDelete } from "../../helpers";
+import { Context, GlobalState, ProfileState, WorkspaceState } from "../../../shared/vscode/workspace";
+import { activateWithoutAnalysis, defer, privateApi, sb, tryDelete } from "../../helpers";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fs = require("fs") as typeof import("fs");
 
 describe("simplifyVersion", () => {
 	it("handles simple x.y.z versions", () => {
@@ -66,31 +68,32 @@ describe("simplifyVersion", () => {
 	});
 });
 
-describe("State storage wrappers", () => {
-	function createFakeMemento(initialValues: Record<string, unknown> = {}): vs.Memento {
-		const store = new Map<string, unknown>(Object.entries(initialValues));
-		return {
-			get<T>(key: string, defaultValue?: T): T | undefined {
-				return store.has(key) ? store.get(key) as T : defaultValue;
-			},
-			keys(): readonly string[] {
-				return Array.from(store.keys());
-			},
-			// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
-			async update(key: string, value: unknown): Promise<void> {
-				if (value === undefined)
-					store.delete(key);
-				else
-					store.set(key, value);
-			},
-		};
-	}
+function createFakeMemento(initialValues: Record<string, unknown> = {}): vs.Memento {
+	const store = new Map<string, unknown>(Object.entries(initialValues));
+	return {
+		get<T>(key: string, defaultValue?: T): T | undefined {
+			return store.has(key) ? store.get(key) as T : defaultValue;
+		},
+		keys(): readonly string[] {
+			return Array.from(store.keys());
+		},
+		// eslint-disable-next-line @typescript-eslint/require-await -- Keep exceptions async.
+		async update(key: string, value: unknown): Promise<void> {
+			if (value === undefined)
+				store.delete(key);
+			else
+				store.set(key, value);
+		},
+	};
+}
 
-	function createTempStorageDir(): string {
-		const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dart-code-state-test-"));
-		defer("Delete temp state dir", () => tryDelete(dir));
-		return dir;
-	}
+function createTempStorageDir(): string {
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dart-code-state-test-"));
+	defer("Delete temp state dir", () => tryDelete(dir));
+	return dir;
+}
+
+describe("State storage wrappers", () => {
 
 	it("shares GlobalState across multiple profiles, caches reads in memory, and preserves concurrent writes", () => {
 		const storageDir = path.join(createTempStorageDir(), "nested", "dart-code");
@@ -275,5 +278,63 @@ describe("State storage wrappers", () => {
 		ws1.lastFlutterDeviceId = "macos";
 		assert.equal(ws1.lastFlutterDeviceId, "macos");
 		assert.equal(ws2.lastFlutterDeviceId, undefined);
+	});
+
+	it("skips rewriting state.json when setting a key to the same value already on disk", () => {
+		const storageDir = createTempStorageDir();
+		const globalState = new GlobalState(nullLogger, createFakeMemento(), storageDir);
+
+		globalState.setExperimentRandomNumber("sdkDaps", 42);
+		globalState.setExperimentHasActivated("sdkDaps", true);
+
+		const writeSpy = sb.spy(fs, "writeFileSync");
+		const renameSpy = sb.spy(fs, "renameSync");
+
+		globalState.setExperimentHasActivated("sdkDaps", true);
+		assert.equal(writeSpy.called, false);
+		assert.equal(renameSpy.called, false);
+
+		globalState.setExperimentHasActivated("sdkDaps", false);
+		assert.equal(writeSpy.calledOnce, true);
+		assert.equal(renameSpy.calledOnce, true);
+	});
+});
+
+describe("Experiments", () => {
+	before("activate", () => activateWithoutAnalysis(null));
+
+	function createTempGlobalState(): GlobalState {
+		return new GlobalState(nullLogger, createFakeMemento(), createTempStorageDir());
+	}
+
+	it("does not write state.json when hasActivated is already true", () => {
+		const globalState = createTempGlobalState();
+		globalState.setExperimentRandomNumber("sdkDaps", 1);
+		globalState.setExperimentHasActivated("sdkDaps", true);
+
+		const setActivatedSpy = sb.spy(globalState, "setExperimentHasActivated");
+		const writeSpy = sb.spy(fs, "writeFileSync");
+		const renameSpy = sb.spy(fs, "renameSync");
+
+		privateApi.getExperiments!(nullLogger, privateApi.workspaceContext, { globalState } as unknown as Context);
+
+		assert.equal(setActivatedSpy.called, false);
+		assert.equal(writeSpy.called, false);
+		assert.equal(renameSpy.called, false);
+	});
+
+	it("writes state.json at most once across shared-id experiments on first activation", () => {
+		const globalState = createTempGlobalState();
+		globalState.setExperimentRandomNumber("sdkDaps", 1);
+
+		const setActivatedSpy = sb.spy(globalState, "setExperimentHasActivated");
+		const writeSpy = sb.spy(fs, "writeFileSync");
+		const renameSpy = sb.spy(fs, "renameSync");
+
+		privateApi.getExperiments!(nullLogger, privateApi.workspaceContext, { globalState } as unknown as Context);
+
+		assert.equal(setActivatedSpy.calledOnceWithExactly("sdkDaps", true), true);
+		assert.equal(writeSpy.calledOnce, true);
+		assert.equal(renameSpy.calledOnce, true);
 	});
 });

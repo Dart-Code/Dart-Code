@@ -95,7 +95,7 @@ export class GlobalState {
 	 * exist, or falls back to any existing in-memory state if the file cannot be read or
 	 * parsed (for example due to a transient file lock on Windows).
 	 */
-	private readStateFromDisk(): Record<string, unknown> {
+	private readStateFromDisk(): { data: Record<string, unknown>; readSucceeded: boolean } {
 		this.stateLoadedAt = Date.now();
 		try {
 			const content = fs.readFileSync(this.stateFilePath, "utf8");
@@ -103,12 +103,12 @@ export class GlobalState {
 			const diskState = parsed && typeof parsed === "object" && !Array.isArray(parsed)
 				? parsed as Record<string, unknown>
 				: {};
-			return { ...diskState, ...this.pendingUpdates };
+			return { data: { ...diskState, ...this.pendingUpdates }, readSucceeded: true };
 		} catch (e) {
 			if ((e as NodeJS.ErrnoException | undefined)?.code === "ENOENT")
-				return { ...this.pendingUpdates };
+				return { data: { ...this.pendingUpdates }, readSucceeded: true };
 			this.logger.warn(`Failed to read global state from ${this.stateFilePath}: ${String(e)}`);
-			return { ...this.state, ...this.pendingUpdates };
+			return { data: { ...this.state, ...this.pendingUpdates }, readSucceeded: false };
 		}
 	}
 
@@ -118,19 +118,23 @@ export class GlobalState {
 	 * truncated or partially-written file.
 	 */
 	private updateState(key: string, storedValue: unknown, { onlyIfAbsent = false } = {}): void {
+		// Always re-read from disk immediately before writing so the window between
+		// reading and the atomic rename is as short as possible.
+		const { data, readSucceeded } = this.readStateFromDisk();
+		if (onlyIfAbsent && Object.prototype.hasOwnProperty.call(data, key)) {
+			this.state = data;
+			return;
+		}
+		if (readSucceeded && !Object.keys(this.pendingUpdates).length && Object.prototype.hasOwnProperty.call(data, key) && data[key] === storedValue) {
+			this.state = data;
+			return;
+		}
+
 		const tempFilePath = `${this.stateFilePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
 		try {
 			fs.mkdirSync(this.storagePath, { recursive: true });
 		} catch {
 			// Ignore errors creating directory; writeFileSync below will report if it fails.
-		}
-
-		// Always re-read from disk immediately before writing so the window between
-		// reading and the atomic rename is as short as possible.
-		const data = this.readStateFromDisk();
-		if (onlyIfAbsent && Object.prototype.hasOwnProperty.call(data, key)) {
-			this.state = data;
-			return;
 		}
 
 		this.pendingUpdates[key] = storedValue;
@@ -158,7 +162,7 @@ export class GlobalState {
 		// Cache in memory for reads so we don't hit the disk on every property access,
 		// but re-read periodically in case another window or profile updated the file.
 		if (!this.state || Date.now() - this.stateLoadedAt >= this.cacheDurationMs)
-			this.state = this.readStateFromDisk();
+			this.state = this.readStateFromDisk().data;
 
 		if (Object.prototype.hasOwnProperty.call(this.state, key)) {
 			const val = this.state[key];

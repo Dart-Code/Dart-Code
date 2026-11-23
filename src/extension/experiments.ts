@@ -51,7 +51,8 @@ class Experiment {
 
 		if (this.applies) {
 			const isFirst = !context.globalState.getExperimentHasActivated(id);
-			context.globalState.setExperimentHasActivated(id, true);
+			if (isFirst)
+				context.globalState.setExperimentHasActivated(id, true);
 			logger.info(`Experiment '${id}' is activating (${isFirst ? "first time" : "not first time"})`);
 			void this.activate(isFirst)
 				// Activate is allowed to return false if it skipped activating (eg. not relevant) so
