@@ -350,19 +350,19 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 
 /**
  * Maximum number of concurrent filesystem operations (`readdir`, `stat`, and `analysis_options.yaml` reads)
- * during project folder discovery. Bounded to 32 to speed up I/O without exhausting file descriptors
- * (`EMFILE`) on platforms with low default limits.
+ * during project folder discovery. Bounded to 8 to speed up traversal without contending heavily with
+ * VS Code startup or exhausting file descriptors (`EMFILE`) on platforms with low default limits.
  */
-export const projectSearchConcurrency = 32;
+export const projectSearchConcurrency = 8;
 
-// Common generated/dependency directories that never contain user Dart/Flutter packages.
+// Subdirectories skipped during project discovery.
 // Dot-prefixed directories (e.g. `.git`, `.dart_tool`, `.widget_preview`, `.gradle`, `.idea`, `.vscode`, `.fvm`)
-// are skipped separately via `startsWith(".")`, and `bin`/`cache` match `getChildFolders()`.
+// are skipped separately via `startsWith(".")`. `bin` and `cache` preserve the pre-existing `getChildFolders()`
+// skips (e.g. avoiding `bin/cache/` inside Flutter SDK checkouts), and `node_modules` skips JS dependency trees.
 const skippedProjectSearchFolders = new Set([
 	"bin",
 	"cache",
 	"node_modules",
-	"Pods",
 ]);
 
 /**
