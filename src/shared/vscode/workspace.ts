@@ -91,9 +91,13 @@ export class GlobalState {
 
 	/**
 	 * Reads the current state directly from disk, merging any pending in-memory updates
-	 * that previously failed to write. Returns only pending updates if the file does not
-	 * exist, or falls back to any existing in-memory state if the file cannot be read or
-	 * parsed (for example due to a transient file lock on Windows).
+	 * that previously failed to write.
+	 *
+	 * Returns `{ data, readSucceeded }` where `data` contains the disk state merged with
+	 * pending updates (or only pending updates if the file does not exist, or the
+	 * in-memory state merged with pending updates if reading/parsing fails, for example
+	 * due to a transient file lock on Windows), and `readSucceeded` is `false` only when
+	 * reading or parsing an existing file failed.
 	 */
 	private readStateFromDisk(): { data: Record<string, unknown>; readSucceeded: boolean } {
 		this.stateLoadedAt = Date.now();

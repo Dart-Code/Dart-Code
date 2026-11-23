@@ -298,6 +298,26 @@ describe("State storage wrappers", () => {
 		assert.equal(writeSpy.calledOnce, true);
 		assert.equal(renameSpy.calledOnce, true);
 	});
+
+	it("rewrites state.json when cached value matches but another profile changed disk", () => {
+		const storageDir = createTempStorageDir();
+		const profile1 = new GlobalState(nullLogger, createFakeMemento(), storageDir);
+		const profile2 = new GlobalState(nullLogger, createFakeMemento(), storageDir);
+
+		profile1.setExperimentHasActivated("sdkDaps", true);
+		// Another profile updates the same key on disk while profile1's cache still holds true.
+		profile2.setExperimentHasActivated("sdkDaps", false);
+
+		const writeSpy = sb.spy(fs, "writeFileSync");
+		const renameSpy = sb.spy(fs, "renameSync");
+
+		profile1.setExperimentHasActivated("sdkDaps", true);
+		assert.equal(writeSpy.calledOnce, true);
+		assert.equal(renameSpy.calledOnce, true);
+
+		const profile3 = new GlobalState(nullLogger, createFakeMemento(), storageDir);
+		assert.equal(profile3.getExperimentHasActivated("sdkDaps"), true);
+	});
 });
 
 describe("Experiments", () => {
