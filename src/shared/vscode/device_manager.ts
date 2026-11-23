@@ -39,7 +39,8 @@ export class FlutterDeviceManager implements IAmDisposable {
 		private readonly workspaceContext: WorkspaceContext,
 		private readonly extContext: Context,
 		runIfNoDevices?: () => void,
-		readonly daemonPortOverride?: number
+		readonly daemonPortOverride?: number,
+		private readonly getExcludedFolders?: (f: vs.WorkspaceFolder | undefined) => string[],
 	) {
 		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.name = "Flutter Device";
@@ -496,7 +497,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 
 	private async getSupportedPlatformsForWorkspaceUncached(): Promise<f.PlatformType[]> {
 		// An internal workspace that we assume to be Flutter will not generate project folders, but the daemon will respond to an empty path.
-		const projectFolders = this.workspaceContext.config.forceFlutterWorkspace ? [""] : await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
+		const projectFolders = this.workspaceContext.config.forceFlutterWorkspace ? [""] : await getAllProjectFolders(this.logger, this.getExcludedFolders, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
 		this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
 

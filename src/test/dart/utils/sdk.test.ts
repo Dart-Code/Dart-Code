@@ -8,7 +8,7 @@ import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, clo
 import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
-import { activate, defer, deferUntilLast, getRandomTempFolder, helloWorldFolder, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
+import { activate, defer, deferUntilLast, extApi, getRandomTempFolder, helloWorldFolder, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
 import { ChildProcessSpawnStub, FakeSpawnResult } from "../../mocks/child_process_spawn_stub";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -1477,6 +1477,116 @@ describe("SdkUtils", () => {
 			assert.equal(await scanRepoFolder({ gitType: "file", openRoot: true }), true);
 			assert.equal(await scanRepoFolder({ openRoot: true }), undefined);
 			assert.equal(await scanRepoFolder({}), undefined);
+		});
+
+		it("detects a Flutter repo root and short-circuits pubspec scanning once both Dart and Flutter projects are found", async () => {
+			const origPath = process.env.PATH;
+			const origFlutterRoot = process.env.FLUTTER_ROOT;
+			process.env.PATH = "";
+			delete process.env.FLUTTER_ROOT;
+			defer("restore PATH and FLUTTER_ROOT", () => {
+				if (origPath === undefined)
+					delete process.env.PATH;
+				else
+					process.env.PATH = origPath;
+				if (origFlutterRoot === undefined)
+					delete process.env.FLUTTER_ROOT;
+				else
+					process.env.FLUTTER_ROOT = origFlutterRoot;
+			});
+			await setConfigForTest("dart", "flutterSdkPath", undefined);
+			await setConfigForTest("dart", "sdkPath", undefined);
+			ChildProcessSpawnStub.flutterHelp();
+
+			const repoTempDir = createTempDir();
+			fs.mkdirSync(path.join(repoTempDir, "bin", "cache", "dart-sdk"), { recursive: true });
+			touchFile(path.join(repoTempDir, "bin", "flutter"));
+
+			sb.stub(vs.workspace, "workspaceFolders").get(() => [
+				{ uri: vs.Uri.file(repoTempDir), name: "flutter-repo", index: 0 },
+			]);
+			privateApi.clearCaches();
+			defer("clear caches", () => privateApi.clearCaches());
+
+			const wcRepo = await privateApi.sdkUtils!.scanWorkspace();
+			assert.equal(wcRepo.hasAnyFlutterProjects, true);
+			assert.equal(wcRepo.hasAnyStandardDartProjects, false);
+			assert.equal(wcRepo.firstFlutterProject, repoTempDir);
+
+			// Now verify scanWorkspace short-circuits once a Dart and a Flutter project have both been found.
+			// Place the Dart project at depth 2, Flutter project at depth 3, and third project at depth 4
+			// so BFS traversal order is deterministic regardless of filesystem readdir ordering.
+			const multiTempDir = createTempDir();
+			const dartProj = path.join(multiTempDir, "dart_proj");
+			const flutterProj = path.join(multiTempDir, "level2", "flutter_proj");
+			const thirdProj = path.join(multiTempDir, "level2", "level3", "third_proj");
+			touchFile(path.join(dartProj, "pubspec.yaml"), "name: dart_proj\n");
+			touchFile(path.join(flutterProj, "pubspec.yaml"), "name: flutter_proj\ndependencies:\n  flutter:\n    sdk: flutter\n");
+			touchFile(path.join(thirdProj, "pubspec.yaml"), "name: third_proj\n");
+
+			sb.stub(vs.workspace, "workspaceFolders").get(() => [
+				{ uri: vs.Uri.file(multiTempDir), name: "multi", index: 0 },
+			]);
+			privateApi.clearCaches();
+
+			const readFileSpy = sb.spy(fileSystem, "readFileSync");
+			const wcMulti = await privateApi.sdkUtils!.scanWorkspace();
+			assert.equal(wcMulti.hasAnyStandardDartProjects, true);
+			assert.equal(wcMulti.hasAnyFlutterProjects, true);
+			assert.equal(wcMulti.firstDartProject, dartProj);
+			assert.equal(wcMulti.firstFlutterProject, flutterProj);
+
+			const readPaths = new Set(readFileSpy.getCalls().map((call) => String(call.args[0])));
+			assert.equal(readPaths.has(path.join(dartProj, "pubspec.yaml")), true, "Expected Dart project pubspec.yaml to be read");
+			assert.equal(readPaths.has(path.join(flutterProj, "pubspec.yaml")), true, "Expected Flutter project pubspec.yaml to be read");
+			assert.equal(readPaths.has(path.join(thirdProj, "pubspec.yaml")), false, "Expected third project pubspec.yaml not to be read after short-circuit");
+		});
+
+		it("invalidates project folder cache after handleNewProjects creates a Flutter project from trigger file", async () => {
+			const origPath = process.env.PATH;
+			const origFlutterRoot = process.env.FLUTTER_ROOT;
+			process.env.PATH = "";
+			delete process.env.FLUTTER_ROOT;
+			defer("restore PATH and FLUTTER_ROOT", () => {
+				if (origPath === undefined)
+					delete process.env.PATH;
+				else
+					process.env.PATH = origPath;
+				if (origFlutterRoot === undefined)
+					delete process.env.FLUTTER_ROOT;
+				else
+					process.env.FLUTTER_ROOT = origFlutterRoot;
+			});
+			await setConfigForTest("dart", "flutterSdkPath", undefined);
+			await setConfigForTest("dart", "sdkPath", undefined);
+			ChildProcessSpawnStub.flutterHelp();
+
+			const tempDir = createTempDir();
+			touchFile(path.join(tempDir, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+
+			sb.stub(vs.workspace, "workspaceFolders").get(() => [
+				{ uri: vs.Uri.file(tempDir), name: "new_flutter_app", index: 0 },
+			]);
+			privateApi.clearCaches();
+			defer("clear caches", () => privateApi.clearCaches());
+
+			// Initial scanWorkspace() caches the pre-creation scan (trigger file only, no pubspec.yaml yet).
+			await privateApi.sdkUtils!.scanWorkspace();
+			assert.deepStrictEqual(await extApi.workspace.findProjectFolders(), []);
+
+			// Simulate handleNewProjects() running `_flutter.create` to generate pubspec.yaml and lib/main.dart.
+			executeCommandStub.withArgs("_flutter.create", sinon.match.any).callsFake(() => {
+				touchFile(path.join(tempDir, "pubspec.yaml"), "name: new_flutter_app\n");
+				touchFile(path.join(tempDir, "lib", "main.dart"), "void main() {}\n");
+				return Promise.resolve(0);
+			});
+			sb.stub(vs.window, "showInformationMessage").resolves(undefined);
+			sb.stub(vs.window, "showTextDocument").resolves(undefined);
+
+			await privateApi.handleNewProjects();
+
+			// The cache must have been invalidated so pubspec-only discovery finds the new project immediately.
+			assert.deepStrictEqual(await extApi.workspace.findProjectFolders(), [tempDir]);
 		});
 	});
 });

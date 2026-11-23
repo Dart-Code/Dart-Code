@@ -341,7 +341,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		}
 
 		flutterDaemon = new FlutterDaemon(logger, analytics, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices, portFromLocalExtension);
-		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, extContext, runIfNoDevices, portFromLocalExtension);
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, extContext, runIfNoDevices, portFromLocalExtension, util.getExcludedFolders);
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);
 
@@ -772,6 +772,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			getOutputChannel,
 			getOutputChannelNames,
 			getToolEnv,
+			handleNewProjects: () => handleNewProjects(logger),
 			hotReloadOnSaveHandler,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			initialDebugProvider,
