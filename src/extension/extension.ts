@@ -451,6 +451,15 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const devTools = new DevToolsManager(logger, extContext, analytics, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);
 
+	// Defer eager DevTools startup until the LSP analyzer is ready so it does not compete
+	// with cold analysis for CPU/I/O.
+	const devToolsEagerStart = workspaceContext.config.startDevToolsServerEagerly
+		? analyzer.onReady.then(() => {
+			if (!analyzer.isDisposed)
+				return devTools.handleEagerActivationAndStartup(workspaceContext);
+		})
+		: undefined;
+
 	// Initialize Widget Preview if enabled+supported.
 	const flutterSdk = workspaceContext.sdks.flutter;
 	const flutterWidgetPreviewBehavior = config.flutterWidgetPreview;
@@ -468,7 +477,15 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const firstFlutterProject = workspaceContext.firstFlutterProject;
 		if (firstFlutterProject) {
 			const flutterProjectOrWorkspace = getPubWorkspaceFolderOrPackageFolderPath(firstFlutterProject);
-			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation, flutterWidgetPreviewBehavior));
+			context.subscriptions.push(new FlutterWidgetPreviewManager(
+				logger,
+				flutterSdk,
+				dartToolingDaemon?.dtdUri,
+				() => (devTools.devtoolsUrl ?? devToolsEagerStart?.then(() => devTools.devtoolsUrl))?.catch(() => undefined),
+				flutterProjectOrWorkspace,
+				config.flutterWidgetPreviewLocation,
+				flutterWidgetPreviewBehavior,
+			));
 		}
 	}
 
@@ -681,14 +698,18 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	setCommandVisiblity(true, workspaceContext);
 	void vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, dartPlatformName);
 
-	// Prompt for pub get/upgrade if required
+	// Prompt for pub get/upgrade if required (deferred until LSP analyzer is ready so
+	// synchronous package checks do not block the LSP handshake).
 	function checkForPackages() {
 		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
 		if (workspaceContext.config.disableAutomaticPub)
 			return;
 		void packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true, upgradeOnSdkChange: true });
 	}
-	checkForPackages();
+	void analyzer.onReady.then(() => {
+		if (!analyzer.isDisposed)
+			checkForPackages();
+	});
 
 	// If we're not already in Flutter mode, watch for Flutter projects being added.
 	if (!workspaceContext.hasAnyFlutterProjects)

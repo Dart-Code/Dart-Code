@@ -22,7 +22,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 		private readonly logger: Logger,
 		readonly flutterSdkPath: string,
 		private readonly dtdUri: Promise<string | undefined> | undefined,
-		private readonly devtoolsServerUri: Promise<string | undefined> | undefined,
+		private readonly getDevToolsServerUri: () => Promise<string | undefined> | undefined,
 		readonly tempWorkingDirectory: string,
 		private readonly location: "sidebar" | "beside",
 		private readonly behavior: "startEagerly" | "startLazily",
@@ -52,7 +52,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			this.logger,
 			this.flutterSdkPath,
 			this.dtdUri,
-			this.devtoolsServerUri,
+			this.getDevToolsServerUri(),
 			this.tempWorkingDirectory,
 		);
 		this.disposables.push(this.server);

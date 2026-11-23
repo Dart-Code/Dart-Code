@@ -69,8 +69,6 @@ export class DevToolsManager implements IAmDisposable {
 		this.statusBarItem.text = "Dart DevTools";
 		this.setNotStartedStatusBar();
 
-		void this.handleEagerActivationAndStartup(context.workspaceContext);
-
 		this.disposables.push(vs.debug.onDidTerminateDebugSession(this.handleDebugSessionEnd.bind(this)));
 
 		// Pre-populate pages for the sidebar pages so they don't show up as infinite spinners.
@@ -132,6 +130,8 @@ export class DevToolsManager implements IAmDisposable {
 	}
 
 	public async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
+		if (this.isShuttingDown)
+			return;
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
 				await this.start(true);

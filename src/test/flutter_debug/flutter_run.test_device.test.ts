@@ -250,6 +250,7 @@ describe(`flutter run debugger (only test device)`, () => {
 	});
 
 	it("automatically spawns DevTools at startup", async () => {
+		await waitForResult(() => !!privateApi.devTools.devtoolsUrl, "DevTools did not start", 10000);
 		assert.ok(privateApi.devTools.devtoolsUrl);
 		assert.ok((await privateApi.devTools.devtoolsUrl).startsWith("http://"));
 	});
