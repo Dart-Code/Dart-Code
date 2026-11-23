@@ -8,8 +8,9 @@ import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger, MyCancellationToken } from "../interfaces";
 import { nullLogger } from "../logging";
 import { PackageMap } from "../pub/package_map";
-import { nullToUndefined } from "../utils";
+import { notUndefined, nullToUndefined } from "../utils";
 import { sortBy } from "./array";
+import { mapWithConcurrency } from "./promises";
 
 export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: boolean; } = {}): string {
 	// eslint-disable-next-line no-restricted-properties
@@ -144,8 +145,6 @@ export function findCommonAncestorFolder(folderPaths: string[]): string | undefi
 }
 
 export async function getChildFolders(logger: Logger, parent: string, options?: { allowBin?: boolean; allowCache?: boolean }): Promise<string[]> {
-	if (!fs.existsSync(parent))
-		return [];
 	const files = await readDirAsync(logger, parent);
 
 	return files.filter((f) => f.isDirectory())
@@ -154,20 +153,16 @@ export async function getChildFolders(logger: Logger, parent: string, options?: 
 		.map((item) => path.join(parent, item.name));
 }
 
-function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
-	return new Promise<fs.Dirent[]>((resolve) => fs.readdir(folder,
-		{ withFileTypes: true },
-		(err, files) => {
-			// We will generate errors if we don't have access to this folder
-			// so just skip over it.
-			if (err) {
-				logger.warn(`Skipping folder ${folder} due to error: ${err}`);
-				resolve([]);
-			} else {
-				resolve(files);
-			}
-		},
-	));
+async function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
+	try {
+		return await fs.promises.readdir(folder, { withFileTypes: true });
+	} catch (err: unknown) {
+		// We will generate errors if we don't have access to this folder
+		// so just skip over it (and ignore missing folders).
+		if ((err as { code?: unknown } | undefined)?.code !== "ENOENT")
+			logger.warn(`Skipping folder ${folder} due to error: ${String(err)}`);
+		return [];
+	}
 }
 
 function statSyncSafe(file: string): fs.Stats | undefined {
@@ -225,27 +220,48 @@ async function hasCreateTriggerFileAsync(folder: string): Promise<boolean> {
 	return await existsAndIsFileAsync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
 }
 
-async function isFlutterRepoAsync(folder: string): Promise<boolean> {
-	return await existsAndIsDirectoryAsync(path.join(folder, "bin/flutter")) && await existsAndIsFileAsync(path.join(folder, "bin/cache/dart-sdk"));
+/**
+ * Checks synchronously whether `folder` looks like a Flutter SDK repository root.
+ */
+export function isFlutterRepo(folder: string): boolean {
+	return existsAndIsDirectorySync(path.join(folder, "bin", "cache", "dart-sdk"))
+		&& (existsAndIsFileSync(path.join(folder, "bin", "flutter"))
+			|| (isWin && existsAndIsFileSync(path.join(folder, "bin", "flutter.bat"))));
+}
+
+/**
+ * Checks asynchronously whether `folder` looks like a Flutter SDK repository root.
+ */
+export async function isFlutterRepoAsync(folder: string): Promise<boolean> {
+	return await existsAndIsDirectoryAsync(path.join(folder, "bin", "cache", "dart-sdk"))
+		&& (await existsAndIsFileAsync(path.join(folder, "bin", "flutter"))
+			|| (isWin && await existsAndIsFileAsync(path.join(folder, "bin", "flutter.bat"))));
 }
 
 export function isFlutterProjectFolder(folder?: string): boolean {
 	return projectReferencesFlutter(folder);
 }
 
-export function projectReferencesFlutter(folder?: string): boolean {
-	if (folder && hasPubspec(folder)) {
-		const pubspecPath = path.join(folder, "pubspec.yaml");
-		try {
-			const pubspecContent = fs.readFileSync(pubspecPath);
-			return pubspecContentReferencesFlutter(pubspecContent.toString());
-		} catch (e: unknown) {
-			const err = e as { code?: unknown } | undefined;
-			if (err?.code !== "ENOENT") // Don't warn for missing files.
-				console.warn(`Failed to read ${pubspecPath}: ${String(e)}`);
-		}
+/**
+ * Reads `pubspec.yaml` in `folder`, returning `undefined` if it does not exist or cannot be read.
+ */
+export function tryReadPubspecContent(folder: string): string | undefined {
+	const pubspecPath = path.join(folder, "pubspec.yaml");
+	try {
+		return fs.readFileSync(pubspecPath, "utf8");
+	} catch (e: unknown) {
+		const err = e as { code?: unknown } | undefined;
+		if (err?.code !== "ENOENT" && err?.code !== "EISDIR" && err?.code !== "ENOTDIR") // Don't warn for missing files or directories.
+			console.warn(`Failed to read ${pubspecPath}: ${String(e)}`);
+		return undefined;
 	}
-	return false;
+}
+
+export function projectReferencesFlutter(folder?: string): boolean {
+	if (!folder)
+		return false;
+	const pubspecContent = tryReadPubspecContent(folder);
+	return pubspecContent !== undefined && pubspecContentReferencesFlutter(pubspecContent);
 }
 
 export function pubspecContentReferencesFlutter(content: string): boolean {
@@ -344,56 +360,149 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 	return p;
 }
 
+export const projectSearchConcurrency = 32;
+
+const skippedProjectSearchFolders = new Set([
+	".dart_tool",
+	".fvm",
+	".git",
+	".gradle",
+	".idea",
+	".symlinks",
+	".vscode",
+	".widget_preview",
+	"bin",
+	"build",
+	"cache",
+	"node_modules",
+	"Pods",
+]);
+
+export interface FoundProjectFolder {
+	folder: string;
+	hasPubspec?: boolean;
+}
+
+async function hasFileEntry(folder: string, entries: fs.Dirent[], fileName: string): Promise<boolean> {
+	const entry = entries.find((e) => e.name === fileName);
+	if (!entry)
+		return false;
+	if (entry.isFile())
+		return true;
+	if (entry.isSymbolicLink())
+		return await existsAndIsFileAsync(path.join(folder, fileName));
+	return false;
+}
+
+function hasDirectoryEntry(entries: fs.Dirent[], dirName: string): boolean {
+	const entry = entries.find((e) => e.name === dirName);
+	return !!entry && (entry.isDirectory() || entry.isSymbolicLink());
+}
+
+/**
+ * Walks up to `searchDepth` levels from `roots` and returns all folders that look like project
+ * folders, along with whether each has a `pubspec.yaml` when checked.
+ */
+export async function findProjectFoldersWithDetails(
+	logger: Logger,
+	roots: string[],
+	excludedFolders: string[],
+	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, onlyWorkspaceRoots?: boolean },
+	token: MyCancellationToken,
+): Promise<FoundProjectFolder[]> {
+	const rootSet = new Set<string>(roots);
+	const isExcluded = (folder: string) => excludedFolders.some((ef) => isWithinPathOrEqual(folder, ef));
+
+	interface CandidateFolder {
+		folder: string;
+		entries?: fs.Dirent[];
+	}
+
+	let currentLevel: CandidateFolder[] = [...rootSet].filter((f) => !isExcluded(f)).map((folder) => ({ folder }));
+	const allCandidates: CandidateFolder[] = [...currentLevel];
+	// Start at 1, as we already added the roots.
+	const searchDepth = options.onlyWorkspaceRoots ? 1 : options.searchDepth;
+	for (let i = 1; i < searchDepth; i++) {
+		if (token.isCancellationRequested || !currentLevel.length)
+			break;
+
+		const childrenPerParent = await mapWithConcurrency(currentLevel, projectSearchConcurrency, async (candidate): Promise<CandidateFolder[]> => {
+			if (token.isCancellationRequested)
+				return [];
+
+			const entries = await readDirAsync(logger, candidate.folder);
+			// Store the unfiltered entries before pruning subdirectories like "bin" so project checks can still inspect them.
+			candidate.entries = entries;
+
+			const children: CandidateFolder[] = [];
+			for (const entry of entries) {
+				if (!entry.isDirectory())
+					continue;
+				// Filter by child folder name only so ancestors above a workspace root are never matched.
+				if (skippedProjectSearchFolders.has(entry.name))
+					continue;
+
+				const childPath = path.join(candidate.folder, entry.name);
+				if (rootSet.has(childPath) || isExcluded(childPath))
+					continue;
+
+				children.push({ folder: childPath });
+			}
+			return children;
+		});
+
+		const nextLevel: CandidateFolder[] = [];
+		for (const children of childrenPerParent) {
+			for (const child of children) {
+				nextLevel.push(child);
+				allCandidates.push(child);
+			}
+		}
+		currentLevel = nextLevel;
+	}
+
+	const checkedProjects = await mapWithConcurrency(allCandidates, projectSearchConcurrency, async ({ folder, entries }): Promise<FoundProjectFolder | undefined> => {
+		if (token.isCancellationRequested)
+			return undefined;
+		if (options.requirePubspec) {
+			const hasPubspecFile = entries ? await hasFileEntry(folder, entries, "pubspec.yaml") : await hasPubspecAsync(folder);
+			return hasPubspecFile ? { folder, hasPubspec: true } : undefined;
+		}
+		if (options.onlyWorkspaceRoots)
+			return { folder, hasPubspec: undefined };
+
+		if (entries) {
+			if (await hasFileEntry(folder, entries, "pubspec.yaml"))
+				return { folder, hasPubspec: true };
+			if (await hasFileEntry(folder, entries, FLUTTER_CREATE_PROJECT_TRIGGER_FILE))
+				return { folder, hasPubspec: false };
+			if (hasDirectoryEntry(entries, "bin") && await isFlutterRepoAsync(folder))
+				return { folder, hasPubspec: false };
+			return undefined;
+		}
+
+		if (await hasPubspecAsync(folder))
+			return { folder, hasPubspec: true };
+		if (await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder))
+			return { folder, hasPubspec: false };
+		return undefined;
+	});
+
+	const projectFolders = checkedProjects.filter(notUndefined);
+
+	return options?.sort
+		? sortBy(projectFolders, (p) => p.folder.toLowerCase())
+		: projectFolders;
+}
+
 // Walks a few levels down and returns all folders that look like project
 // folders, such as:
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
 export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, onlyWorkspaceRoots?: boolean }, token: MyCancellationToken): Promise<string[]> {
-	const dartToolFolderName = `${path.sep}.dart_tool${path.sep}`;
-	const widgetPreviewFolderName = `${path.sep}.widget_preview${path.sep}`;
-
-	const rootSet = new Set<string>(roots);
-	let previousLevelFolders = [...rootSet];
-	let allPossibleFolders = previousLevelFolders.slice();
-	// Start at 1, as we already added the roots.
-	const searchDepth = options.onlyWorkspaceRoots ? 1 : options.searchDepth;
-	for (let i = 1; i < searchDepth; i++) {
-		let nextLevelFolders: string[] = [];
-		for (const folder of previousLevelFolders) {
-			if (token.isCancellationRequested)
-				break;
-			const childFolders = (await getChildFolders(logger, folder))
-				.filter((f) => !rootSet.has(f));
-			nextLevelFolders = nextLevelFolders.concat(childFolders);
-		}
-
-		allPossibleFolders = allPossibleFolders.concat(nextLevelFolders);
-		previousLevelFolders = nextLevelFolders;
-	}
-
-	allPossibleFolders = allPossibleFolders
-		.filter((f) => {
-			const folderWithTrailingSlash = `${f}${path.sep}`;
-			return !folderWithTrailingSlash.includes(dartToolFolderName)
-				&& !folderWithTrailingSlash.includes(widgetPreviewFolderName)
-				&& excludedFolders.every((ef) => !isWithinPathOrEqual(f, ef));
-		});
-
-	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
-		exists: options?.requirePubspec
-			? await hasPubspecAsync(folder)
-			: !!options.onlyWorkspaceRoots || await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
-		folder,
-	}));
-	const projectFoldersChecks = await Promise.all(projectFolderPromises);
-	const projectFolders = projectFoldersChecks
-		.filter((res) => res.exists)
-		.map((res) => res.folder);
-
-	return options?.sort
-		? sortBy(projectFolders, (p) => p.toLowerCase())
-		: projectFolders;
+	const results = await findProjectFoldersWithDetails(logger, roots, excludedFolders, options, token);
+	return results.map((r) => r.folder);
 }
 
 export function getSdkVersion(logger: Logger, { sdkRoot, isFlutter = true }: { sdkRoot?: string; isFlutter?: boolean }): string | undefined {

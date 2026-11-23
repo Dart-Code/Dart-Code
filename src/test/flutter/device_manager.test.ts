@@ -1,5 +1,7 @@
 import { strict as assert } from "assert";
 import { EventEmitter } from "events";
+import * as fs from "fs";
+import * as path from "path";
 import * as vs from "vscode";
 import { commands } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
@@ -8,9 +10,10 @@ import * as f from "../../shared/flutter/daemon_interfaces";
 import { IAmDisposable, IFlutterDaemon, SpawnedProcess } from "../../shared/interfaces";
 import * as processes from "../../shared/processes";
 import { UnknownResponse } from "../../shared/services/interfaces";
+import { fsPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
 import * as vsUtils from "../../shared/vscode/utils";
-import { activateWithoutAnalysis, defer, delay, logger, privateApi, sb } from "../helpers";
+import { activateWithoutAnalysis, defer, delay, getRandomTempFolder, logger, privateApi, sb, tryDelete } from "../helpers";
 import { FakeProcessStdIOService } from "../mocks/fake_stdio_service";
 import { androidBogusEmulatorId, androidBogusEmulatorName, androidEmulator, androidEmulatorToOverride, customEmulator, customEmulator1, customEmulator2, customEmulators, desktop, emulatedAndroidMobile, emulatediOSMobile, emulatorCreator, physicalAndroidMobile, webChrome, webServer } from "./flutter_test_devices";
 
@@ -793,6 +796,53 @@ describe("device_manager", () => {
 		tryGetStub.resolves(undefined);
 		const platformsOnUndefined = await dm.getSupportedPlatformsForWorkspace();
 		assert.deepStrictEqual(platformsOnUndefined, []);
+	});
+
+	it("passes getExcludedFolders when discovering projects for supported platforms", async () => {
+		// Wait for the beforeEach manager's initial status bar scan to finish before stubbing workspaceFolders.
+		await dm.getSupportedPlatformsForWorkspace();
+
+		const tempFolder = fsPath(vs.Uri.file(getRandomTempFolder()));
+		defer("delete temp folder", () => tryDelete(tempFolder));
+		const includedProject = path.join(tempFolder, "included_app");
+		const excludedProject = path.join(tempFolder, "excluded_app");
+		for (const dir of [includedProject, excludedProject]) {
+			fs.mkdirSync(dir, { recursive: true });
+			fs.writeFileSync(path.join(dir, "pubspec.yaml"), "name: test\n");
+		}
+
+		sb.stub(vs.workspace, "workspaceFolders").get(() => [
+			{ index: 0, name: path.basename(tempFolder), uri: vs.Uri.file(tempFolder) },
+		]);
+		vsUtils.clearCaches();
+		defer("clear caches", () => vsUtils.clearCaches());
+
+		const localDaemon = new FakeFlutterDaemon();
+		defer("Dispose localDaemon", () => localDaemon.dispose());
+		localDaemon.capabilities = new DaemonCapabilities("0.7.0");
+		const getSupportedSpy = sb.spy(localDaemon, "getSupportedPlatforms");
+		sb.stub(privateApi.workspaceContext, "config").value({ ...privateApi.workspaceContext.config, forceFlutterWorkspace: false });
+		const dmWithExclusions = new FlutterDeviceManager(
+			logger,
+			localDaemon,
+			{
+				flutterCustomEmulators: [],
+				flutterRememberSelectedDevice: true,
+				flutterSelectDeviceWhenConnected: true,
+				flutterShowEmulators: "local",
+				projectSearchDepth: 3,
+			},
+			privateApi.workspaceContext,
+			privateApi.context,
+			undefined,
+			undefined,
+			() => [excludedProject],
+		);
+		defer("Dispose dmWithExclusions", () => dmWithExclusions.dispose());
+
+		await dmWithExclusions.getSupportedPlatformsForWorkspace();
+		assert.equal(getSupportedSpy.calledOnceWithExactly(includedProject), true);
+		assert.equal(getSupportedSpy.calledWith(excludedProject), false);
 	});
 
 	it("updates statusBarItem text and tooltip for various device and support counts", async () => {

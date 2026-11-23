@@ -5,7 +5,7 @@ import { commands, ExtensionContext, extensions, ProgressLocation, Uri, window, 
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartAotRuntimePath, dartPlatformName, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, isWin, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { existsAndIsDirectorySync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter, safeRealpathSync } from "../../shared/utils/fs";
+import { existsAndIsDirectorySync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, isFlutterRepo, pubspecContentReferencesFlutter, safeRealpathSync, tryReadPubspecContent } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processDartSdkRepository, processFuchsiaWorkspace } from "../../shared/utils/workspace";
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders, resolvePaths } from "../../shared/vscode/utils";
@@ -343,23 +343,25 @@ export class SdkUtils {
 		const possibleProjects = await getAllProjectFolders(this.logger, getExcludedFolders, { searchDepth: config.projectSearchDepth });
 
 		// Scan through them all to figure out what type of projects we have.
-		for (const folder of possibleProjects) {
-			const hasPubspecFile = hasPubspec(folder);
-			const refsFlutter = hasPubspecFile && projectReferencesFlutter(folder);
+		for (let i = 0; i < possibleProjects.length; i++) {
+			const folder = possibleProjects[i];
+			const pubspecContent = tryReadPubspecContent(folder);
+			const hasPubspecFile = pubspecContent !== undefined;
+			const refsFlutter = hasPubspecFile && pubspecContentReferencesFlutter(pubspecContent);
 			const refsWeb = false; // hasPubspecFile && referencesWeb(folder);
-			const hasFlutterCreateProjectTriggerFile =
-				fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+			const hasFlutterCreateProjectTriggerFile = !refsFlutter
+				&& existsAndIsFileSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
 
-			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
-			const isFlutterRepo = fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk"));
+			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK.
+			const isFlutterRepoFolder = !refsFlutter && !hasFlutterCreateProjectTriggerFile && isFlutterRepo(folder);
 
 			// Since we just blocked on a lot of sync FS, yield.
 			await resolvedPromise;
 
-			const isSomethingFlutter = refsFlutter || hasFlutterCreateProjectTriggerFile || isFlutterRepo;
+			const isSomethingFlutter = refsFlutter || hasFlutterCreateProjectTriggerFile || isFlutterRepoFolder;
 
 			const kind = isSomethingFlutter ? "Flutter" : "non-Flutter";
-			this.logger.info(`Found ${kind} project at ${folder} (Pubspec? ${hasPubspecFile}, Mobile? ${refsFlutter}, Create Trigger? ${hasFlutterCreateProjectTriggerFile}, Flutter Repo? ${isFlutterRepo})`);
+			this.logger.info(`Found ${kind} project at ${folder} (Pubspec? ${hasPubspecFile}, Mobile? ${refsFlutter}, Create Trigger? ${hasFlutterCreateProjectTriggerFile}, Flutter Repo? ${isFlutterRepoFolder})`);
 
 			// Track the first Dart and Flutter projects.
 			firstDartProject ??= (isSomethingFlutter || hasPubspecFile) ? folder : undefined;
@@ -369,6 +371,13 @@ export class SdkUtils {
 			hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
 			hasAnyWebProject = hasAnyWebProject || refsWeb;
 			hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspecFile);
+
+			if (hasAnyFlutterProject && hasAnyStandardDartProject && firstDartProject && firstFlutterProject) {
+				const remaining = possibleProjects.length - i - 1;
+				if (remaining > 0)
+					this.logger.info(`Skipping project type scan for ${remaining} remaining project${remaining === 1 ? "" : "s"} as both Dart and Flutter projects have already been found`);
+				break;
+			}
 		}
 
 		// Certain types of workspaces will have special config, so read them here.
