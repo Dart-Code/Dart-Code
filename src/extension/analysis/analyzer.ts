@@ -59,8 +59,9 @@ export class LspAnalyzer extends Analyzer {
 	public readonly refactors: InteractiveRefactors;
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
+	private dtd: DartToolingDaemon | undefined;
 
-	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly dtd: DartToolingDaemon | undefined, private readonly analytics: Analytics) {
+	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly analytics: Analytics) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 
 		this.setupStatusItem();
@@ -149,6 +150,17 @@ export class LspAnalyzer extends Analyzer {
 		}).catch(() => {
 			// Handled by initializationFailedHandler / DartErrorHandler.
 		});
+	}
+
+	public setDtd(dtd: DartToolingDaemon | undefined): void {
+		if (this.dtd === dtd)
+			return;
+		this.dtd = dtd;
+		// If the LSP client is already running (for example if DTD was created after
+		// LSP initialization completed), connect now; otherwise the onDidChangeState
+		// listener will connect when the client reaches Running.
+		if (this.client.state === ls.State.Running && !this.isDisposed)
+			void this.connectToDtd(this.dtd);
 	}
 
 	public async connectToDtd(dtd: DartToolingDaemon | undefined): Promise<void> {

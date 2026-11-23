@@ -90,7 +90,7 @@ import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { SdkUtils } from "./sdk/utils";
 import { VsCodeTestController } from "./test/vs_test_controller";
-import { handleNewProjects, showUserPrompts as showUserPromptsImpl } from "./user_prompts";
+import { handleNewProjects, hasNewProjectTriggers, showUserPrompts as showUserPromptsImpl } from "./user_prompts";
 import * as util from "./utils";
 import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
@@ -244,6 +244,72 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
 
+	// TODO: Move these capabilities into WorkspaceContext.
+	if (sdks.dartVersion) {
+		dartCapabilities.version = sdks.dartVersion;
+		analytics.sdkVersion = sdks.dartVersion;
+	}
+
+	if (sdks.flutterVersion) {
+		flutterCapabilities.version = sdks.flutterVersion;
+		analytics.flutterSdkVersion = sdks.flutterVersion;
+
+		// If we're going to pass the DevTools URL to Flutter, we need to eagerly start it
+		// so it's already running.
+		if (workspaceContext.hasAnyFlutterProjects && config.shareDevToolsWithFlutter) {
+			writableConfig.startDevToolsServerEagerly = true;
+		}
+	}
+
+	// Build log headers now we know analyzer type.
+	rebuildLogHeaders();
+
+	const startAnalyzer = (): LspAnalyzer => {
+		// Fire up the analyzer process.
+		const lspAnalyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, analytics);
+		maybeAnalyzer = lspAnalyzer;
+		context.subscriptions.push(lspAnalyzer);
+
+		// Set up immediate analyzer listeners before yielding to the event loop so
+		// notifications cannot arrive before listeners are attached.
+		extensionApiModel.setAnalyzer(lspAnalyzer);
+		context.subscriptions.push(new LspClosingLabelsDecorations(lspAnalyzer.client));
+
+		void lspAnalyzer.onReady.then(() => {
+			if (config.analyzerVmServicePort) {
+				void vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
+			}
+		});
+
+		// Log analysis server first analysis completion time when it completes.
+		let analysisStartTime: Date;
+		const analysisCompleteEvents = lspAnalyzer.onAnalysisStatusChange((status) => {
+			// Analysis started for the first time.
+			if (status.isAnalyzing && !analysisStartTime) {
+				analysisStartTime = new Date();
+			}
+
+			// Analysis ends for the first time.
+			if (!status.isAnalyzing && analysisStartTime) {
+				analysisCompleteEvents.dispose();
+			}
+		});
+		context.subscriptions.push(analysisCompleteEvents);
+
+		return lspAnalyzer;
+	};
+
+	// Start LspAnalyzer as early as possible in the common case and yield to the event
+	// loop so LSP `initialize` is written before secondary daemons/setup run.
+	// When creating a new project via trigger files, defer starting the analyzer until
+	// after handleNewProjects() finishes (to avoid #2793 and errors while packages are fetched).
+	const hasPendingNewProjects = !isRestart && hasNewProjectTriggers();
+	let earlyAnalyzer: LspAnalyzer | undefined;
+	if (!hasPendingNewProjects) {
+		earlyAnalyzer = startAnalyzer();
+		await new Promise<void>((resolve) => setImmediate(resolve));
+	}
+
 	// Add the PATHs to the Terminal environment so if the user runs commands
 	// there they match the versions (and can be resolved, if not already on PATH).
 	//
@@ -263,37 +329,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.environmentVariableCollection.clear();
 	}
 
-	// TODO: Move these capabilities into WorkspaceContext.
 	if (sdks.dartVersion) {
-		dartCapabilities.version = sdks.dartVersion;
-		analytics.sdkVersion = sdks.dartVersion;
 		void checkForStandardDartSdkUpdates(logger, config, workspaceContext, webClient);
-	}
-
-	if (sdks.flutterVersion) {
-		flutterCapabilities.version = sdks.flutterVersion;
-		analytics.flutterSdkVersion = sdks.flutterVersion;
-
-		// If we're going to pass the DevTools URL to Flutter, we need to eagerly start it
-		// so it's already running.
-		if (workspaceContext.hasAnyFlutterProjects && config.shareDevToolsWithFlutter) {
-			writableConfig.startDevToolsServerEagerly = true;
-		}
-	}
-
-	try {
-		if (!experiments)
-			experiments = getExperiments(logger, workspaceContext, extContext);
-	} catch (e) {
-		logger.error(e);
-	}
-
-	// Build log headers now we know analyzer type.
-	rebuildLogHeaders();
-
-	// Show the SDK version in the status bar.
-	if (sdks.dartVersion)
+		// Show the SDK version in the status bar.
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
+	}
 
 	void vs.commands.executeCommand("setContext", GO_TO_IMPORTS_SUPPORTED_CONTEXT, dartCapabilities.supportsGoToImports);
 	void vs.commands.executeCommand("setContext", OBSERVATORY_SUPPORTED_CONTEXT, dartCapabilities.supportsObservatory);
@@ -372,12 +412,20 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(packageCommands);
 	context.subscriptions.push(addDependencyCommand);
 
-	// Handle new projects before creating the analyer to avoid a few issues with
+	// Set up the extension API.
+	extensionApiModel.setProjectFinder(projectFinder);
+	extensionApiModel.setSdkCommands(sdkCommands);
+
+	// Handle new projects before creating the analyzer to avoid a few issues with
 	// showing errors while packages are fetched, plus issues like
 	// https://github.com/Dart-Code/Dart-Code/issues/2793 which occur if the analyzer
 	// is created too early.
-	if (!isRestart)
+	if (hasPendingNewProjects)
 		await handleNewProjects(logger);
+
+	const analyzer = earlyAnalyzer ?? startAnalyzer();
+	if (!earlyAnalyzer)
+		await new Promise<void>((resolve) => setImmediate(resolve));
 
 	// Dart Tooling Daemon.
 	// Set the working directory to the first Dart project's folder (or first workspace folder) as a workaround
@@ -391,40 +439,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, dtdWorkingDirectory, deviceManager)
 		: undefined;
 	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
-
-	// Fire up the analyzer process.
-	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon, analytics);
-	maybeAnalyzer = analyzer;
-	context.subscriptions.push(analyzer);
-
-	// Set up the extension API.
-	extensionApiModel.setAnalyzer(analyzer);
-	extensionApiModel.setProjectFinder(projectFinder);
-	extensionApiModel.setSdkCommands(sdkCommands);
-
-	void analyzer.onReady.then(() => {
-		if (config.analyzerVmServicePort) {
-			void vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
-		}
-	});
-
-	// Log analysis server first analysis completion time when it completes.
-	let analysisStartTime: Date;
-	const analysisCompleteEvents = analyzer.onAnalysisStatusChange((status) => {
-		// Analysis started for the first time.
-		if (status.isAnalyzing && !analysisStartTime) {
-			analysisStartTime = new Date();
-		}
-
-		// Analysis ends for the first time.
-		if (!status.isAnalyzing && analysisStartTime) {
-			analysisCompleteEvents.dispose();
-		}
-	});
+	analyzer.setDtd(dartToolingDaemon);
 
 	// Set up providers.
 	// TODO: Do we need to push all these to subscriptions?!
-	context.subscriptions.push(new LspClosingLabelsDecorations(analyzer.client));
 
 	if (config.showMainCodeLens) {
 		const codeLensProvider = new MainCodeLensProvider(logger, analyzer);
@@ -522,6 +540,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
 
+	// Replay any outlines that arrived while the analyzer was initializing before
+	// TestDiscoverer and VsCodeTestController were wired up.
+	for (const doc of vs.workspace.textDocuments) {
+		if (doc.uri.scheme === "file")
+			testDiscoverer.forceUpdate(doc.uri);
+	}
+
 	new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
@@ -550,6 +575,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
 	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, forcedAnsiColors, forcedSingleThread, removeErrorShowUser, launchStatus, defaultExceptionPauseMode, debugLogger];
+
+	try {
+		if (!experiments)
+			experiments = getExperiments(logger, workspaceContext, extContext);
+	} catch (e) {
+		logger.error(e);
+	}
 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));

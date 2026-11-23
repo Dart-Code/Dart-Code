@@ -173,6 +173,18 @@ function error(err: unknown): void {
 	void vs.window.showErrorMessage(`${String(errorObj?.message ?? err)}`);
 }
 
+/**
+ * Synchronously checks whether any Dart workspace folder contains a new-project
+ * creation trigger file (`dart.create` or `flutter.create`).
+ */
+export function hasNewProjectTriggers(): boolean {
+	return getDartWorkspaceFolders().some((wf) => {
+		const folderPath = fsPath(wf.uri);
+		return fs.existsSync(path.join(folderPath, DART_CREATE_PROJECT_TRIGGER_FILE))
+			|| fs.existsSync(path.join(folderPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+	});
+}
+
 export async function handleNewProjects(logger: Logger): Promise<void> {
 	await Promise.all(getDartWorkspaceFolders().map(async (wf) => {
 		try {

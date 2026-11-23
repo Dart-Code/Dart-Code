@@ -31,6 +31,7 @@ export abstract class Analyzer implements IAmDisposableAsync {
 
 	public abstract getDiagnosticServerPort(): Promise<{ port: number } | undefined>;
 	public abstract forceReanalyze(): Promise<void>;
+	public abstract setDtd(dtd: DartToolingDaemon | undefined): void;
 	public abstract connectToDtd(dtd: DartToolingDaemon | undefined): Promise<void>;
 	public abstract getSuper(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
 	public abstract getImports(params: ls.TextDocumentPositionParams): Promise<ls.Location[] | null>;

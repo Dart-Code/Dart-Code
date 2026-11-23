@@ -816,6 +816,48 @@ describe("analyzer", () => {
 			assert.ok(sendRequest.calledOnceWithExactly(ConnectToDtdRequest.type, { uri: "ws://127.0.0.1:1234/ws", registerExperimentalHandlers: true }));
 		});
 
+		it("setDtd connects immediately when LanguageClient is already Running and ignores duplicate calls", async () => {
+			sb.stub(privateApi.dartCapabilities, "supportsLspOverDtd").get(() => true);
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest").resolves(null);
+			const fakeDtd = { dtdUri: Promise.resolve("ws://127.0.0.1:1234/ws") } as unknown as DartToolingDaemon;
+			const analyzerWithDtd = privateApi.analyzer as unknown as { dtd: DartToolingDaemon | undefined };
+			analyzerWithDtd.dtd = undefined;
+			defer("Restore dtd", () => analyzerWithDtd.dtd = privateApi.toolingDaemon);
+
+			assert.equal(privateApi.analyzer.client.state, ls.State.Running);
+			privateApi.analyzer.setDtd(fakeDtd);
+			await fakeDtd.dtdUri;
+			assert.equal(sendRequest.callCount, 1);
+			assert.ok(sendRequest.calledOnceWithExactly(ConnectToDtdRequest.type, { uri: "ws://127.0.0.1:1234/ws", registerExperimentalHandlers: true }));
+
+			// Calling setDtd again with the same DTD instance should be a no-op.
+			privateApi.analyzer.setDtd(fakeDtd);
+			await fakeDtd.dtdUri;
+			assert.equal(sendRequest.callCount, 1);
+		});
+
+		it("setDtd defers connecting until LanguageClient transitions to Running", async () => {
+			sb.stub(privateApi.dartCapabilities, "supportsLspOverDtd").get(() => true);
+			const sendRequest = sb.stub(privateApi.analyzer.client, "sendRequest").resolves(null);
+			let currentState = ls.State.Starting;
+			sb.stub(privateApi.analyzer.client, "state").get(() => currentState);
+			const fakeDtd = { dtdUri: Promise.resolve("ws://127.0.0.1:1234/ws") } as unknown as DartToolingDaemon;
+			const analyzerWithDtd = privateApi.analyzer as unknown as { dtd: DartToolingDaemon | undefined };
+			analyzerWithDtd.dtd = undefined;
+			defer("Restore dtd", () => analyzerWithDtd.dtd = privateApi.toolingDaemon);
+
+			privateApi.analyzer.setDtd(fakeDtd);
+			await fakeDtd.dtdUri;
+			assert.equal(sendRequest.called, false);
+
+			currentState = ls.State.Running;
+			const clientWithEmitter = privateApi.analyzer.client as unknown as { _stateChangeEmitter: vs.EventEmitter<ls.StateChangeEvent> };
+			const stateEmitter = clientWithEmitter._stateChangeEmitter; // eslint-disable-line no-underscore-dangle
+			stateEmitter.fire({ oldState: ls.State.Starting, newState: ls.State.Running });
+			await fakeDtd.dtdUri;
+			assert.ok(sendRequest.calledOnceWithExactly(ConnectToDtdRequest.type, { uri: "ws://127.0.0.1:1234/ws", registerExperimentalHandlers: true }));
+		});
+
 		it("resets busy status and fires onAnalysisStatusChange when LanguageClient stops mid-analysis", () => {
 			const middleware = privateApi.analyzer.client.clientOptions.middleware!;
 			const statusEvents: Array<{ isAnalyzing: boolean }> = [];
