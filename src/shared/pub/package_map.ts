@@ -34,11 +34,15 @@ export abstract class PackageMap {
 		}
 	}
 
-	public static load(logger: Logger, file: string | undefined): PackageMap {
+	public static load(
+		logger: Logger,
+		file: string | undefined,
+		readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p, "utf8"),
+	): PackageMap {
 		if (!file)
 			return new MissingPackageMap();
 		try {
-			return new PackageConfigJsonPackageMap(logger, file);
+			return new PackageConfigJsonPackageMap(logger, file, readFileSync);
 		} catch (e) {
 			logger.error(e);
 			return new MissingPackageMap();
@@ -54,6 +58,10 @@ export abstract class PackageMap {
 	}
 
 	public get flutterRootPath(): string | undefined {
+		return undefined;
+	}
+
+	public get generatorVersion(): string | undefined {
 		return undefined;
 	}
 
@@ -94,9 +102,14 @@ export class MissingPackageMap extends PackageMap {
 
 class PackageConfigJsonPackageMap extends PackageMap {
 	private map: Record<string, string> = {};
+	private mapLoaded = false;
 	private config?: PackageJsonConfig;
 
-	constructor(private readonly logger: Logger, private readonly packageConfigPath: string) {
+	constructor(
+		private readonly logger: Logger,
+		private readonly packageConfigPath: string,
+		private readonly readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p, "utf8"),
+	) {
 		super();
 		this.load();
 	}
@@ -108,24 +121,43 @@ class PackageConfigJsonPackageMap extends PackageMap {
 	private load() {
 		this.config = undefined;
 		this.map = {};
+		this.mapLoaded = false;
 
-		const json = fs.readFileSync(this.packageConfigPath, "utf8");
+		const json = this.readFileSync(this.packageConfigPath);
 		try {
-			this.config = JSON.parse(json) as PackageJsonConfig;
+			const parsed = JSON.parse(json) as unknown;
+			if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+				throw new Error("Expected a JSON object");
+			this.config = parsed;
 		} catch (e) {
 			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${String(e)}`);
-			return;
 		}
+	}
 
-		for (const pkg of this.config.packages) {
+	private ensureMapLoaded() {
+		if (this.mapLoaded)
+			return;
+		this.mapLoaded = true;
+
+		if (!Array.isArray(this.config?.packages))
+			return;
+
+		try {
+			const map: Record<string, string> = {};
 			const packageConfigFolderPath = path.dirname(this.packageConfigPath);
-			const packageRootPath = this.getPathForUri(pkg.rootUri);
-			if (packageRootPath) {
-				const packageLibPath = this.getPathForUri(pkg.packageUri);
-				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath, packageLibPath ?? "");
-			} else {
-				this.logger.error(`Failed to resolve path for package ${pkg.name}, did not resolve a valid rootUri`);
+			for (const pkg of this.config.packages) {
+				const packageRootPath = this.getPathForUri(pkg.rootUri);
+				if (packageRootPath) {
+					const packageLibPath = this.getPathForUri(pkg.packageUri);
+					map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath, packageLibPath ?? "");
+				} else {
+					this.logger.error(`Failed to resolve path for package ${pkg.name}, did not resolve a valid rootUri`);
+				}
 			}
+			this.map = map;
+		} catch (e) {
+			this.map = {};
+			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${String(e)}`);
 		}
 	}
 
@@ -151,21 +183,32 @@ class PackageConfigJsonPackageMap extends PackageMap {
 		}
 	}
 
-	public get packages(): Record<string, string> { return Object.assign({}, this.map); }
+	public get packages(): Record<string, string> {
+		this.ensureMapLoaded();
+		return Object.assign({}, this.map);
+	}
 
 	public get flutterRootPath(): string | undefined {
 		const flutterRootUri = this.config?.flutterRoot;
 		return flutterRootUri ? this.getPathForUri(flutterRootUri) : undefined;
 	}
 
+	public get generatorVersion(): string | undefined {
+		return typeof this.config?.generatorVersion === "string"
+			? this.config.generatorVersion
+			: undefined;
+	}
+
 	public getPackagePath(name: string): string | undefined {
+		this.ensureMapLoaded();
 		return this.map[name];
 	}
 }
 
 interface PackageJsonConfig {
-	configVersion: number,
-	packages: PackageJsonConfigPackage[];
+	configVersion?: number;
+	generatorVersion?: string | null;
+	packages?: PackageJsonConfigPackage[];
 	flutterRoot?: string;
 }
 

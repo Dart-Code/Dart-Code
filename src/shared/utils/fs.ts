@@ -455,25 +455,6 @@ export function getSdkVersion(logger: Logger, { sdkRoot, isFlutter = true }: { s
 	}
 }
 
-export function getPubGeneratorVersion(
-	logger: Logger,
-	packageMapPath: string,
-	existsSync: (itemPath: string) => boolean,
-	readFileSync: (itemPath: string) => string,
-): string | undefined {
-	if (!existsSync(packageMapPath))
-		return undefined;
-	try {
-		const content = readFileSync(packageMapPath);
-		const data = JSON.parse(content) as { generatorVersion?: string | null };
-		const version = data.generatorVersion;
-		return nullToUndefined(semver.valid(version));
-	} catch (e) {
-		logger.error(e);
-		return undefined;
-	}
-}
-
 export function tryDeleteFile(filePath: string) {
 	if (fs.existsSync(filePath)) {
 		try {

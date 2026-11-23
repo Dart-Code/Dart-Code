@@ -6,7 +6,7 @@ import * as YAML from "yaml";
 import { Logger, Sdks } from "../interfaces";
 import { PackageMap } from "../pub/package_map";
 import { uniq } from "../utils";
-import { fsPath, getPubGeneratorVersion, isWithinPath } from "../utils/fs";
+import { fsPath, isWithinPath } from "../utils/fs";
 import { getPackageOrFolderDisplayName } from "./display_names";
 
 export interface PubPackageStatus {
@@ -158,9 +158,11 @@ function getPubPackageStatus(
 	if (!existsSync(packageMapPath))
 		return { ...result, pubRequired: "GET", reason: "The .dart_tool/package_config.json file is missing" };
 
+	const packageMap = PackageMap.load(logger, packageMapPath, readFileSync);
+
 	// If the Dart SDK version has upgraded by more than just a patch, we should
 	// prefer upgrade.
-	const lastUsedSdkVersion = getPubGeneratorVersion(logger, packageMapPath, existsSync, readFileSync);
+	const lastUsedSdkVersion = semver.valid(packageMap.generatorVersion);
 	const currentSdkVersion = sdks.dartVersion;
 	if (lastUsedSdkVersion && currentSdkVersion) {
 		const lastUsedSdkMajorMinor = `${semver.major(lastUsedSdkVersion)}.${semver.minor(lastUsedSdkVersion)}.0`;
@@ -208,7 +210,6 @@ function getPubPackageStatus(
 	// If we're a Flutter project and our SDK doesn't match the one used
 	// in the package file, we also need running.
 	if (sdks.flutter) {
-		const packageMap = PackageMap.loadForProject(logger, folder);
 		const flutterPackagePath = packageMap.getPackagePath("flutter");
 		if (flutterPackagePath && !isWithinPath(flutterPackagePath, sdks.flutter)) {
 			return { ...result, pubRequired: "GET", reason: `The referenced Flutter package (${flutterPackagePath}) does not match the current SDK in use (${sdks.flutter})` };
