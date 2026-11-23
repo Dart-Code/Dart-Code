@@ -142,15 +142,22 @@ class PackageConfigJsonPackageMap extends PackageMap {
 		if (!Array.isArray(this.config?.packages))
 			return;
 
-		const packageConfigFolderPath = path.dirname(this.packageConfigPath);
-		for (const pkg of this.config.packages) {
-			const packageRootPath = this.getPathForUri(pkg.rootUri);
-			if (packageRootPath) {
-				const packageLibPath = this.getPathForUri(pkg.packageUri);
-				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath, packageLibPath ?? "");
-			} else {
-				this.logger.error(`Failed to resolve path for package ${pkg.name}, did not resolve a valid rootUri`);
+		try {
+			const map: Record<string, string> = {};
+			const packageConfigFolderPath = path.dirname(this.packageConfigPath);
+			for (const pkg of this.config.packages) {
+				const packageRootPath = this.getPathForUri(pkg.rootUri);
+				if (packageRootPath) {
+					const packageLibPath = this.getPathForUri(pkg.packageUri);
+					map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath, packageLibPath ?? "");
+				} else {
+					this.logger.error(`Failed to resolve path for package ${pkg.name}, did not resolve a valid rootUri`);
+				}
 			}
+			this.map = map;
+		} catch (e) {
+			this.map = {};
+			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${String(e)}`);
 		}
 	}
 

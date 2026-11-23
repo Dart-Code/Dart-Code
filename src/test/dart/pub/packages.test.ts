@@ -1156,6 +1156,42 @@ describe("package map", () => {
 			assert.equal(errorSpy.calledOnce, true);
 		});
 
+		it("handles malformed package entries such as null without throwing on first or subsequent lookups", () => {
+			const warnSpy = sb.spy(privateApi.logger, "warn");
+			const flutterSdkDir = path.join(tempFolder, "flutter_sdk");
+			writePackageConfig(JSON.stringify({
+				configVersion: 2,
+				packages: [
+					{
+						name: "flutter",
+						packageUri: "lib/",
+						rootUri: url.pathToFileURL(flutterSdkDir).toString(),
+					},
+					null,
+				],
+			}));
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+			assert.equal(warnSpy.called, false);
+
+			assert.equal(map.getPackagePath("flutter"), undefined);
+			assert.equal(warnSpy.calledOnce, true);
+
+			assert.deepStrictEqual(map.packages, {});
+			assert.equal(map.getPackagePath("flutter"), undefined);
+			assert.equal(warnSpy.calledOnce, true);
+		});
+
+		it("handles non-object JSON in package_config.json without throwing", () => {
+			const warnSpy = sb.spy(privateApi.logger, "warn");
+			writePackageConfig("[]");
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+			assert.equal(warnSpy.calledOnce, true);
+			assert.equal(map.generatorVersion, undefined);
+			assert.deepStrictEqual(map.packages, {});
+		});
+
 		it("handles file:// URIs, relative percent-encoded URIs, and invalid file:// URIs", () => {
 			const filePkgDir = path.join(tempFolder, "file_pkg");
 			const warnSpy = sb.spy(privateApi.logger, "warn");

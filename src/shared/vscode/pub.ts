@@ -5,7 +5,7 @@ import { commands, Uri, window } from "vscode";
 import * as YAML from "yaml";
 import { Logger, Sdks } from "../interfaces";
 import { PackageMap } from "../pub/package_map";
-import { nullToUndefined, uniq } from "../utils";
+import { uniq } from "../utils";
 import { fsPath, isWithinPath } from "../utils/fs";
 import { getPackageOrFolderDisplayName } from "./display_names";
 
@@ -162,7 +162,7 @@ function getPubPackageStatus(
 
 	// If the Dart SDK version has upgraded by more than just a patch, we should
 	// prefer upgrade.
-	const lastUsedSdkVersion = nullToUndefined(semver.valid(packageMap.generatorVersion));
+	const lastUsedSdkVersion = semver.valid(packageMap.generatorVersion);
 	const currentSdkVersion = sdks.dartVersion;
 	if (lastUsedSdkVersion && currentSdkVersion) {
 		const lastUsedSdkMajorMinor = `${semver.major(lastUsedSdkVersion)}.${semver.minor(lastUsedSdkVersion)}.0`;
