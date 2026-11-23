@@ -360,6 +360,85 @@ describe("pub package status", () => {
 		});
 	}
 
+	function runFlutterPubStatusTest(flutterSdk: string, flutterPkgRoot: string, flutterPkgUri: string) {
+		const projectFolder = fixPath("/projects/flutter_proj");
+		const packageConfigPath = path.join(projectFolder, ".dart_tool", "package_config.json");
+		const files: FilesInfo = {
+			[packageConfigPath]: {
+				mtime: 2,
+				content: JSON.stringify({
+					configVersion: 2,
+					generatorVersion: "1.2.3",
+					packages: [
+						{ name: "flutter", rootUri: url.pathToFileURL(flutterPkgRoot).toString(), packageUri: flutterPkgUri },
+					],
+				}),
+			},
+			[path.join(projectFolder, "pubspec.yaml")]: { mtime: 1, content: "dependencies:" },
+		};
+		let packageConfigReadCount = 0;
+
+		const results = getPubWorkspaceStatus(
+			{
+				dartSdkIsFromFlutter: true,
+				dartVersion: "1.2.3",
+				flutter: flutterSdk,
+				flutterVersion: "3.0.0",
+				isPreReleaseSdk: false,
+			},
+			privateApi.logger,
+			[vs.Uri.file(projectFolder)],
+			false,
+			(f) => !!files[f],
+			(f) => {
+				if (f === packageConfigPath)
+					packageConfigReadCount++;
+				if (files[f]?.content !== undefined)
+					return files[f].content;
+				throw new Error("No file/content");
+			},
+			(f) => {
+				if (files[f] !== undefined)
+					return new Date(files[f].mtime);
+				throw new Error("No file");
+			},
+		);
+
+		return { packageConfigReadCount, results };
+	}
+
+	it("reads package_config.json only once per Flutter project when up-to-date", () => {
+		const flutterSdk = fixPath("/sdks/flutter");
+		const { packageConfigReadCount, results } = runFlutterPubStatusTest(
+			flutterSdk,
+			path.join(flutterSdk, "packages", "flutter"),
+			"lib/",
+		);
+
+		assert.equal(packageConfigReadCount, 1);
+		assert.equal(results.length, 1);
+		assert.equal(results[0].pubRequired, false);
+		assert.equal(results[0].reason, "Up-to-date");
+	});
+
+	it("reads package_config.json only once per Flutter project when Flutter package path mismatches SDK", () => {
+		const flutterSdk = fixPath("/sdks/flutter");
+		const otherFlutterPkgRoot = path.join(fixPath("/sdks/other_flutter"), "packages", "flutter");
+		const { packageConfigReadCount, results } = runFlutterPubStatusTest(
+			flutterSdk,
+			otherFlutterPkgRoot,
+			"lib/",
+		);
+
+		assert.equal(packageConfigReadCount, 1);
+		assert.equal(results.length, 1);
+		assert.equal(results[0].pubRequired, "GET");
+		assert.equal(
+			results[0].reason,
+			`The referenced Flutter package (${path.join(otherFlutterPkgRoot, "lib")}) does not match the current SDK in use (${flutterSdk})`,
+		);
+	});
+
 	function expectStatus(workspaceInfo: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", triggeredByFile?: "pubspec.yaml" | "pubspec.lock", reason?: string }>) {
 		workspaceInfo.openFolders = workspaceInfo.openFolders.map(fixPath);
 		const fixedFiles: typeof workspaceInfo.files = {};
@@ -846,6 +925,7 @@ describe("package map", () => {
 			assert.equal(map.getPackagePath("foo"), undefined);
 			assert.equal(map.resolvePackageUri("package:foo/bar.dart"), undefined);
 			assert.equal(map.flutterRootPath, undefined);
+			assert.equal(map.generatorVersion, undefined);
 			map.reload();
 			assert.deepStrictEqual(map.packages, {});
 		});
@@ -1023,6 +1103,57 @@ describe("package map", () => {
 			map.reload();
 
 			assert.equal(map.flutterRootPath, `${flutterSdkDir}${path.sep}`);
+		});
+
+		it("extracts generatorVersion when it is a string, or returns undefined otherwise", () => {
+			writePackageConfig({
+				configVersion: 2,
+				packages: [],
+			});
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+			assert.equal(map.generatorVersion, undefined);
+
+			writePackageConfig({
+				configVersion: 2,
+				generatorVersion: "3.10.1",
+				packages: [],
+			});
+			map.reload();
+			assert.equal(map.generatorVersion, "3.10.1");
+
+			writePackageConfig({
+				configVersion: 2,
+				generatorVersion: 123,
+				packages: [],
+			});
+			map.reload();
+			assert.equal(map.generatorVersion, undefined);
+		});
+
+		it("builds package path map lazily only when packages are accessed", () => {
+			const errorSpy = sb.spy(privateApi.logger, "error");
+			writePackageConfig({
+				configVersion: 2,
+				generatorVersion: "3.10.1",
+				packages: [
+					{
+						name: "invalid_file_uri_pkg",
+						packageUri: "lib/",
+						rootUri: "file://:invalid",
+					},
+				],
+			});
+
+			const map = PackageMap.load(privateApi.logger, packageConfigPath);
+			assert.equal(map.generatorVersion, "3.10.1");
+			assert.equal(errorSpy.called, false);
+
+			assert.equal(map.getPackagePath("invalid_file_uri_pkg"), undefined);
+			assert.equal(errorSpy.calledOnce, true);
+
+			assert.deepStrictEqual(map.packages, {});
+			assert.equal(errorSpy.calledOnce, true);
 		});
 
 		it("handles file:// URIs, relative percent-encoded URIs, and invalid file:// URIs", () => {
