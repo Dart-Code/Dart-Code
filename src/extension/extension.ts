@@ -766,6 +766,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			flutterUiGuideDecorations,
 			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
+			getExperiments,
 			getFolderToRunCommandIn,
 			getLogHeader,
 			getOutputChannel,

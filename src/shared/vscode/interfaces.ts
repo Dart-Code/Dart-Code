@@ -235,6 +235,7 @@ export interface InternalExtensionApi {
 	webClient: WebClient;
 	workspaceContext: DartWorkspaceContext;
 	// Only available in test runs.
+	getExperiments?: (logger: Logger, workspaceContext: WorkspaceContext, context: Context) => unknown;
 	hotReloadOnSaveHandler?: {
 		readonly hasFileSystemWatcher: boolean;
 	};
