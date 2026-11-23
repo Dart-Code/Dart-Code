@@ -8,7 +8,7 @@ import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, clo
 import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
-import { activate, defer, deferUntilLast, getRandomTempFolder, helloWorldFolder, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
+import { activate, defer, deferUntilLast, extApi, getRandomTempFolder, helloWorldFolder, privateApi, sb, setConfigForTest, tryDelete } from "../../helpers";
 import { ChildProcessSpawnStub, FakeSpawnResult } from "../../mocks/child_process_spawn_stub";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -1540,6 +1540,53 @@ describe("SdkUtils", () => {
 			assert.equal(readPaths.has(path.join(dartProj, "pubspec.yaml")), true, "Expected Dart project pubspec.yaml to be read");
 			assert.equal(readPaths.has(path.join(flutterProj, "pubspec.yaml")), true, "Expected Flutter project pubspec.yaml to be read");
 			assert.equal(readPaths.has(path.join(thirdProj, "pubspec.yaml")), false, "Expected third project pubspec.yaml not to be read after short-circuit");
+		});
+
+		it("invalidates project folder cache after handleNewProjects creates a Flutter project from trigger file", async () => {
+			const origPath = process.env.PATH;
+			const origFlutterRoot = process.env.FLUTTER_ROOT;
+			process.env.PATH = "";
+			delete process.env.FLUTTER_ROOT;
+			defer("restore PATH and FLUTTER_ROOT", () => {
+				if (origPath === undefined)
+					delete process.env.PATH;
+				else
+					process.env.PATH = origPath;
+				if (origFlutterRoot === undefined)
+					delete process.env.FLUTTER_ROOT;
+				else
+					process.env.FLUTTER_ROOT = origFlutterRoot;
+			});
+			await setConfigForTest("dart", "flutterSdkPath", undefined);
+			await setConfigForTest("dart", "sdkPath", undefined);
+			ChildProcessSpawnStub.flutterHelp();
+
+			const tempDir = createTempDir();
+			touchFile(path.join(tempDir, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+
+			sb.stub(vs.workspace, "workspaceFolders").get(() => [
+				{ uri: vs.Uri.file(tempDir), name: "new_flutter_app", index: 0 },
+			]);
+			privateApi.clearCaches();
+			defer("clear caches", () => privateApi.clearCaches());
+
+			// Initial scanWorkspace() caches the pre-creation scan (trigger file only, no pubspec.yaml yet).
+			await privateApi.sdkUtils!.scanWorkspace();
+			assert.deepStrictEqual(await extApi.workspace.findProjectFolders(), []);
+
+			// Simulate handleNewProjects() running `_flutter.create` to generate pubspec.yaml and lib/main.dart.
+			executeCommandStub.withArgs("_flutter.create", sinon.match.any).callsFake(() => {
+				touchFile(path.join(tempDir, "pubspec.yaml"), "name: new_flutter_app\n");
+				touchFile(path.join(tempDir, "lib", "main.dart"), "void main() {}\n");
+				return Promise.resolve(0);
+			});
+			sb.stub(vs.window, "showInformationMessage").resolves(undefined);
+			sb.stub(vs.window, "showTextDocument").resolves(undefined);
+
+			await privateApi.handleNewProjects();
+
+			// The cache must have been invalidated so pubspec-only discovery finds the new project immediately.
+			assert.deepStrictEqual(await extApi.workspace.findProjectFolders(), [tempDir]);
 		});
 	});
 });

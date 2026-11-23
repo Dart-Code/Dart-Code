@@ -212,30 +212,13 @@ export function hasPubspec(folder: string): boolean {
 	return existsAndIsFileSync(path.join(folder, "pubspec.yaml"));
 }
 
-async function hasPubspecAsync(folder: string): Promise<boolean> {
-	return await existsAndIsFileAsync(path.join(folder, "pubspec.yaml"));
-}
-
-async function hasCreateTriggerFileAsync(folder: string): Promise<boolean> {
-	return await existsAndIsFileAsync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
-}
-
 /**
- * Checks synchronously whether `folder` looks like a Flutter SDK repository root.
+ * Checks whether `folder` looks like a Flutter SDK repository root.
  */
 export function isFlutterRepo(folder: string): boolean {
 	return existsAndIsDirectorySync(path.join(folder, "bin", "cache", "dart-sdk"))
 		&& (existsAndIsFileSync(path.join(folder, "bin", "flutter"))
 			|| (isWin && existsAndIsFileSync(path.join(folder, "bin", "flutter.bat"))));
-}
-
-/**
- * Checks asynchronously whether `folder` looks like a Flutter SDK repository root.
- */
-export async function isFlutterRepoAsync(folder: string): Promise<boolean> {
-	return await existsAndIsDirectoryAsync(path.join(folder, "bin", "cache", "dart-sdk"))
-		&& (await existsAndIsFileAsync(path.join(folder, "bin", "flutter"))
-			|| (isWin && await existsAndIsFileAsync(path.join(folder, "bin", "flutter.bat"))));
 }
 
 export function isFlutterProjectFolder(folder?: string): boolean {
@@ -284,8 +267,11 @@ export function pubspecContentReferencesFlutter(content: string): boolean {
 }
 
 export function tryGetPackageName(packageDirectory: string): string | undefined {
+	const content = tryReadPubspecContent(packageDirectory);
+	if (content === undefined)
+		return undefined;
 	try {
-		const yaml = YAML.parse(fs.readFileSync(path.join(packageDirectory, "pubspec.yaml")).toString()) as { name?: string } | undefined;
+		const yaml = YAML.parse(content) as { name?: string } | undefined;
 		return yaml?.name ?? undefined;
 	} catch {
 		return undefined;
@@ -297,11 +283,13 @@ export function getPackageName(packageDirectory: string): string {
 }
 
 export function referencesBuildRunner(folder?: string): boolean {
-	if (folder && hasPubspec(folder)) {
-		const regex = new RegExp("build_runner\\s*:", "i");
-		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
-	}
-	return false;
+	if (!folder)
+		return false;
+	const content = tryReadPubspecContent(folder);
+	if (content === undefined)
+		return false;
+	const regex = new RegExp("build_runner\\s*:", "i");
+	return regex.test(content);
 }
 
 export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): string | undefined {
@@ -360,42 +348,72 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 	return p;
 }
 
+/**
+ * Maximum number of concurrent filesystem operations (`readdir`, `stat`, and `analysis_options.yaml` reads)
+ * during project folder discovery. Bounded to 32 to speed up I/O without exhausting file descriptors
+ * (`EMFILE`) on platforms with low default limits.
+ */
 export const projectSearchConcurrency = 32;
 
+// Common generated/dependency directories that never contain user Dart/Flutter packages.
+// Dot-prefixed directories (e.g. `.git`, `.dart_tool`, `.widget_preview`, `.gradle`, `.idea`, `.vscode`, `.fvm`)
+// are skipped separately via `startsWith(".")`, and `bin`/`cache` match `getChildFolders()`.
 const skippedProjectSearchFolders = new Set([
-	".dart_tool",
-	".fvm",
-	".git",
-	".gradle",
-	".idea",
-	".symlinks",
-	".vscode",
-	".widget_preview",
 	"bin",
-	"build",
 	"cache",
 	"node_modules",
 	"Pods",
 ]);
 
+/**
+ * Metadata for a discovered project folder returned by `findProjectFoldersWithDetails()`.
+ */
 export interface FoundProjectFolder {
 	folder: string;
+	/**
+	 * Whether `pubspec.yaml` was confirmed in `folder`:
+	 * - `true`: `pubspec.yaml` exists in `folder`.
+	 * - `false`: No `pubspec.yaml`, but matched as a project trigger (`flutter.create`) or Flutter SDK repo root when `requirePubspec` is false.
+	 * - `undefined`: `pubspec.yaml` was not checked (e.g. `onlyWorkspaceRoots: true` with `requirePubspec: false`).
+	 */
 	hasPubspec?: boolean;
 }
 
-async function hasFileEntry(folder: string, entries: fs.Dirent[], fileName: string): Promise<boolean> {
-	const entry = entries.find((e) => e.name === fileName);
-	if (!entry)
-		return false;
-	if (entry.isFile())
-		return true;
-	if (entry.isSymbolicLink())
+/**
+ * Checks whether `fileName` exists as a file in `folder`, using cached `Dirent` entries when available
+ * and falling back to an async `stat` for leaf folders (`entries === undefined`), symlinks, or
+ * case-insensitive matches (e.g. `Pubspec.yaml` on Windows/macOS).
+ */
+async function folderHasFile(folder: string, entries: fs.Dirent[] | undefined, fileName: string): Promise<boolean> {
+	if (!entries)
 		return await existsAndIsFileAsync(path.join(folder, fileName));
+
+	const exactMatch = entries.find((e) => e.name === fileName);
+	if (exactMatch) {
+		if (exactMatch.isFile())
+			return true;
+		if (exactMatch.isSymbolicLink())
+			return await existsAndIsFileAsync(path.join(folder, fileName));
+		return false;
+	}
+
+	// If a case-different entry exists (e.g. `Pubspec.yaml`), let the OS resolve the canonical filename
+	// so case-insensitive filesystems match while case-sensitive filesystems still return false.
+	const lowerFileName = fileName.toLowerCase();
+	const caseInsensitiveMatch = entries.find((e) => e.name.toLowerCase() === lowerFileName);
+	if (caseInsensitiveMatch && (caseInsensitiveMatch.isFile() || caseInsensitiveMatch.isSymbolicLink()))
+		return await existsAndIsFileAsync(path.join(folder, fileName));
+
 	return false;
 }
 
+/**
+ * Checks whether `entries` contains a directory or symlink matching `dirName` (case-insensitively),
+ * used as a cheap pre-filter before inspecting subdirectories.
+ */
 function hasDirectoryEntry(entries: fs.Dirent[], dirName: string): boolean {
-	const entry = entries.find((e) => e.name === dirName);
+	const lowerDirName = dirName.toLowerCase();
+	const entry = entries.find((e) => e.name.toLowerCase() === lowerDirName);
 	return !!entry && (entry.isDirectory() || entry.isSymbolicLink());
 }
 
@@ -438,12 +456,16 @@ export async function findProjectFoldersWithDetails(
 			for (const entry of entries) {
 				if (!entry.isDirectory())
 					continue;
-				// Filter by child folder name only so ancestors above a workspace root are never matched.
-				if (skippedProjectSearchFolders.has(entry.name))
+				// Filter by child folder name only so hidden/skipped ancestors above a workspace root are never excluded.
+				if (entry.name.startsWith(".") || skippedProjectSearchFolders.has(entry.name))
 					continue;
 
 				const childPath = path.join(candidate.folder, entry.name);
 				if (rootSet.has(childPath) || isExcluded(childPath))
+					continue;
+
+				// Skip generated `build/` output folders, but keep real source packages named `build` (e.g. `dart-lang/build`).
+				if (entry.name === "build" && !(await existsAndIsFileAsync(path.join(childPath, "pubspec.yaml"))))
 					continue;
 
 				children.push({ folder: childPath });
@@ -462,29 +484,28 @@ export async function findProjectFoldersWithDetails(
 	}
 
 	const checkedProjects = await mapWithConcurrency(allCandidates, projectSearchConcurrency, async ({ folder, entries }): Promise<FoundProjectFolder | undefined> => {
-		if (token.isCancellationRequested)
+		// If cancelled, skip un-enumerated candidates (avoiding extra leaf stat I/O),
+		// while still checking already-enumerated shallow folders/roots so mid-traversal
+		// cancellation does not discard known workspace projects.
+		if (token.isCancellationRequested && !entries)
 			return undefined;
-		if (options.requirePubspec) {
-			const hasPubspecFile = entries ? await hasFileEntry(folder, entries, "pubspec.yaml") : await hasPubspecAsync(folder);
-			return hasPubspecFile ? { folder, hasPubspec: true } : undefined;
-		}
-		if (options.onlyWorkspaceRoots)
+
+		if (options.onlyWorkspaceRoots && !options.requirePubspec)
 			return { folder, hasPubspec: undefined };
 
-		if (entries) {
-			if (await hasFileEntry(folder, entries, "pubspec.yaml"))
-				return { folder, hasPubspec: true };
-			if (await hasFileEntry(folder, entries, FLUTTER_CREATE_PROJECT_TRIGGER_FILE))
-				return { folder, hasPubspec: false };
-			if (hasDirectoryEntry(entries, "bin") && await isFlutterRepoAsync(folder))
-				return { folder, hasPubspec: false };
-			return undefined;
-		}
-
-		if (await hasPubspecAsync(folder))
+		// `entries` is populated for traversed non-leaf folders and `undefined` for leaf folders
+		// at `searchDepth` (where we intentionally avoided `readdir` and fall back to stat).
+		if (await folderHasFile(folder, entries, "pubspec.yaml"))
 			return { folder, hasPubspec: true };
-		if (await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder))
+		if (options.requirePubspec)
+			return undefined;
+
+		if (await folderHasFile(folder, entries, FLUTTER_CREATE_PROJECT_TRIGGER_FILE))
 			return { folder, hasPubspec: false };
+
+		if ((!entries || hasDirectoryEntry(entries, "bin")) && isFlutterRepo(folder))
+			return { folder, hasPubspec: false };
+
 		return undefined;
 	});
 

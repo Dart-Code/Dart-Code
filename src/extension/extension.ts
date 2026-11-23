@@ -771,6 +771,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			getOutputChannel,
 			getOutputChannelNames,
 			getToolEnv,
+			handleNewProjects: () => handleNewProjects(logger),
 			hotReloadOnSaveHandler,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			initialDebugProvider,

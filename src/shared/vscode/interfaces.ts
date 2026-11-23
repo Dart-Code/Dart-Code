@@ -201,6 +201,7 @@ export interface InternalExtensionApi {
 	getOutputChannel: (name: string) => OutputChannel;
 	getOutputChannelNames: () => string[];
 	getToolEnv: () => Record<string, string>;
+	handleNewProjects: () => Promise<void>;
 	initialAnalysis: Promise<void>;
 	logger: EmittingLogger;
 	analyzer: Analyzer;

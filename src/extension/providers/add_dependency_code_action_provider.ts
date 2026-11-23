@@ -1,12 +1,10 @@
-import * as fs from "fs";
-import * as path from "path";
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Command, Diagnostic, Range, Selection, TextDocument } from "vscode";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
 import { LanguageClient } from "vscode-languageclient/node";
 import * as YAML from "yaml";
 import { PubPackage } from "../../shared/pub/pub_add";
 import { flatMap } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
+import { fsPath, tryReadPubspecContent } from "../../shared/utils/fs";
 import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
@@ -76,12 +74,11 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 		if (!projectRoot)
 			return;
 
-		const pubspecPath = path.join(projectRoot, "pubspec.yaml");
 		const includeDevDependencies = !(document.uri.path.includes("/lib/") || document.uri.path.includes("/bin/"));
 
 		// Next, filter out any already in pubspec, as that suggests the URI is incorrect
 		// for another reason (and we wouldn't want to try to add something that exists).
-		const existingPackageNames = this.getDependenciesForPubspec(pubspecPath, { includeDevDependencies });
+		const existingPackageNames = this.getDependenciesForPubspec(projectRoot, { includeDevDependencies });
 		if (!existingPackageNames) // undefined = failed to parse, don't show any fixes
 			return;
 		diagnosticsWithPackageNames = diagnosticsWithPackageNames
@@ -110,11 +107,14 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 		return flatMap(diagnosticsWithPackageNames, (item) => this.createActions(document, item.diagnostic, item.packageName!, { includeDevDependencies }));
 	}
 
-	private getDependenciesForPubspec(pubspecPath: string, { includeDevDependencies }: { includeDevDependencies: boolean }): Set<string> | undefined {
+	private getDependenciesForPubspec(projectRoot: string, { includeDevDependencies }: { includeDevDependencies: boolean }): Set<string> | undefined {
+		const pubspecContent = tryReadPubspecContent(projectRoot);
+		if (pubspecContent === undefined)
+			return undefined;
+
 		const existingPackageNames = new Set<string>();
 
 		try {
-			const pubspecContent = fs.readFileSync(pubspecPath).toString();
 			const yaml = YAML.parse(pubspecContent) as Record<string, unknown> | undefined;
 			const dependencies = yaml?.dependencies && typeof yaml.dependencies === "object" ? Object.keys(yaml.dependencies) : [];
 			const devDependencies = includeDevDependencies && yaml?.dev_dependencies && typeof yaml.dev_dependencies === "object" ? Object.keys(yaml.dev_dependencies) : [];

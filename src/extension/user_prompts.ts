@@ -10,7 +10,7 @@ import { versionIsAtLeast } from "../shared/utils";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, getExtensionVersionForReleaseNotes, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate, showSdkDeprecationNoticeIfAppropriate } from "../shared/vscode/user_prompts";
-import { envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
+import { clearCaches, envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
@@ -207,6 +207,7 @@ async function handleDartCreateTrigger(logger: Logger, wf: vs.WorkspaceFolder, t
 		markProjectCreationStarted();
 
 		const success = await createDartProject(fsPath(wf.uri), template.name);
+		clearCaches();
 		if (success) {
 			logger.info(`Fetching packages for newly-created project`, LogCategory.CommandProcesses);
 			await vs.commands.executeCommand("dart.getPackages", wf.uri);
@@ -216,6 +217,7 @@ async function handleDartCreateTrigger(logger: Logger, wf: vs.WorkspaceFolder, t
 			logger.info(`Failed to create new project`, LogCategory.CommandProcesses);
 		}
 	} finally {
+		clearCaches();
 		markProjectCreationEnded();
 	}
 }
@@ -236,6 +238,7 @@ async function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder): Promise<void>
 		if (success)
 			handleFlutterWelcome(wf, json);
 	} finally {
+		clearCaches();
 		markProjectCreationEnded();
 	}
 }

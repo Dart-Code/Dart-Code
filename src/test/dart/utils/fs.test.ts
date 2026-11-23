@@ -6,7 +6,7 @@ import * as constants from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
 import { captureLogs, EmittingLogger, nullLogger } from "../../../shared/logging";
 import { sortBy } from "../../../shared/utils/array";
-import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, getDartToolDir, getPackageName, getSdkVersion, hasPackageMapFile, hasPubspec, isFlutterRepo, isFlutterRepoAsync, mkDirRecursive, normalizeSlashes, prepareLogFilePath, projectReferencesFlutter, tryReadPubspecContent, uriComparisonString } from "../../../shared/utils/fs";
+import { createFolderForFile, existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, findProjectFolders, forceWindowsDriveLetterToUppercase, forceWindowsDriveLetterToUppercaseInUriString, fsPath, getDartToolDir, getPackageName, getSdkVersion, hasPackageMapFile, hasPubspec, isFlutterRepo, mkDirRecursive, normalizeSlashes, prepareLogFilePath, projectReferencesFlutter, referencesBuildRunner, tryGetPackageName, tryReadPubspecContent, uriComparisonString } from "../../../shared/utils/fs";
 import { clearCaches, getAllProjectFolders, getAllProjectFoldersAndExclusions } from "../../../shared/vscode/utils";
 import { activateWithoutAnalysis, createTempPubPackage, defer, fakeCancellationToken, fixPath, flutterHelloWorldFolder, getRandomTempFolder, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, logger, privateApi, sb, setConfigForTest, testProjectsFolder, tryDelete, waitForResult } from "../../helpers";
 
@@ -380,37 +380,32 @@ describe("findProjectFolders", () => {
 		assert.deepStrictEqual(projects, [level5, level7]);
 	});
 
-	it("prunes skipped and excluded folders during traversal while preserving nested roots and skipped ancestor names", async () => {
+	it("prunes skipped and excluded folders during traversal while preserving build packages, nested roots, and skipped ancestor names", async () => {
 		const validProject = createPubspec("my_project");
 		const nestedProject = createPubspec(path.join("my_project", "sub_project"));
 		const excludedProject = createPubspec(path.join("my_project", "excluded_project"));
 		createPubspec(path.join("my_project", "excluded_project", "nested"));
 
-		const skippedFolderNames = [
-			".dart_tool",
-			".fvm",
-			".git",
-			".gradle",
-			".idea",
-			".symlinks",
-			".vscode",
-			".widget_preview",
-			"bin",
-			"build",
-			"cache",
-			"node_modules",
-			"Pods",
-		];
+		// Hidden folders (e.g. .dart_tool, .widget_preview, .git) and generated folders (node_modules) should not be traversed.
+		const skippedFolderNames = [".dart_tool", ".widget_preview", ".git", "node_modules"];
 		const skippedFolders: string[] = [];
 		for (const skippedName of skippedFolderNames) {
-			const skippedFolder = path.join(tempFolder, skippedName);
-			skippedFolders.push(skippedFolder);
+			skippedFolders.push(path.join(tempFolder, skippedName));
 			createPubspec(skippedName);
 			createPubspec(path.join(skippedName, "nested_project"));
 		}
 
+		// A generated `build/` directory without `pubspec.yaml` should be pruned without traversing into it.
+		const generatedBuildFolder = path.join(tempFolder, "build");
+		createPubspec(path.join("build", "nested_generated"));
+		skippedFolders.push(generatedBuildFolder);
+
+		// A real source package named `build` (with `build/pubspec.yaml`, e.g. dart-lang/build) should still be discovered and traversed.
+		const buildPackage = createPubspec(path.join("pkgs", "build"));
+		const buildPackageExample = createPubspec(path.join("pkgs", "build", "example"));
+
 		// Explicitly opened workspace root inside a skipped folder name must still be found.
-		const nestedRootUnderSkippedName = createPubspec(path.join("build", "workspace_root"));
+		const nestedRootUnderSkippedName = createPubspec(path.join("node_modules", "workspace_root"));
 
 		const readdirSpy = sb.spy(fs.promises, "readdir");
 		const projects = await findProjectFolders(
@@ -421,16 +416,16 @@ describe("findProjectFolders", () => {
 			fakeCancellationToken,
 		);
 
-		assert.deepStrictEqual(projects, sortBy([nestedRootUnderSkippedName, validProject, nestedProject], (p) => p.toLowerCase()));
+		assert.deepStrictEqual(projects, sortBy([buildPackage, buildPackageExample, nestedRootUnderSkippedName, validProject, nestedProject], (p) => p.toLowerCase()));
 
 		const visitedDirs = new Set(readdirSpy.getCalls().map((call) => String(call.args[0])));
 		assert.equal(visitedDirs.has(excludedProject), false);
 		for (const skippedFolder of skippedFolders)
 			assert.equal(visitedDirs.has(skippedFolder), false, `Expected ${skippedFolder} not to be traversed`);
 
-		// A workspace root whose ancestor directory name is in the skip list (e.g. .../build/workspace_root)
+		// A workspace root whose ancestor directory name is in the skip list (e.g. .../node_modules/workspace_root)
 		// must still be discovered and traversed normally.
-		const subProjectUnderSkippedAncestor = createPubspec(path.join("build", "workspace_root", "child_pkg"));
+		const subProjectUnderSkippedAncestor = createPubspec(path.join("node_modules", "workspace_root", "child_pkg"));
 		const ancestorProjects = await findProjectFolders(
 			nullLogger,
 			[nestedRootUnderSkippedName],
@@ -509,9 +504,67 @@ describe("findProjectFolders", () => {
 		);
 		assert.deepStrictEqual(cancelledProjects, []);
 	});
+	it("handles case-insensitive pubspec.yaml entries when resolved by the filesystem", async () => {
+		const mixedCaseProj = path.join(tempFolder, "mixed_case");
+		fs.mkdirSync(mixedCaseProj, { recursive: true });
+		const upperPubspec = path.join(mixedCaseProj, "Pubspec.yaml");
+		const lowerPubspec = path.join(mixedCaseProj, "pubspec.yaml");
+		fs.writeFileSync(upperPubspec, "name: mixed_case\n");
+
+		const osIsCaseInsensitive = fs.existsSync(lowerPubspec);
+		const nativeProjects = await findProjectFolders(
+			nullLogger,
+			[tempFolder],
+			[],
+			{ requirePubspec: true, searchDepth: 5 },
+			fakeCancellationToken,
+		);
+		assert.deepStrictEqual(nativeProjects, osIsCaseInsensitive ? [mixedCaseProj] : []);
+
+		// Simulate a case-insensitive filesystem resolving lowercase `pubspec.yaml` to `Pubspec.yaml`.
+		const realStat = fs.promises.stat.bind(fs.promises);
+		sb.stub(fs.promises, "stat").callsFake((targetPath: fs.PathLike) => {
+			const resolved = String(targetPath) === lowerPubspec ? upperPubspec : targetPath;
+			return realStat(resolved);
+		});
+		const projects = await findProjectFolders(
+			nullLogger,
+			[tempFolder],
+			[],
+			{ requirePubspec: true, searchDepth: 5 },
+			fakeCancellationToken,
+		);
+		assert.deepStrictEqual(projects, [mixedCaseProj]);
+	});
+
+	it("preserves already-enumerated projects on mid-traversal cancellation", async () => {
+		const rootProj = createPubspec("root_proj");
+		const subProj = createPubspec(path.join("root_proj", "sub"));
+		const token = { isCancellationRequested: false };
+
+		const realReaddir = fs.promises.readdir.bind(fs.promises);
+		sb.stub(fs.promises, "readdir").callsFake(async (dirPath: fs.PathLike, options?: unknown) => {
+			const res = await realReaddir(dirPath, options as fs.ObjectEncodingOptions & { withFileTypes: true });
+			if (String(dirPath) === rootProj)
+				token.isCancellationRequested = true;
+			return res;
+		});
+
+		const projects = await findProjectFolders(
+			nullLogger,
+			[rootProj],
+			[],
+			{ requirePubspec: true, searchDepth: 3 },
+			token,
+		);
+
+		// `rootProj` was already enumerated before cancellation, whereas `subProj` was not enumerated and should be skipped.
+		assert.deepStrictEqual(projects, [rootProj]);
+		assert.equal(projects.includes(subProj), false);
+	});
 });
 
-describe("isFlutterRepo / isFlutterRepoAsync", () => {
+describe("isFlutterRepo", () => {
 	let tempFolder: string;
 
 	beforeEach(() => {
@@ -519,12 +572,11 @@ describe("isFlutterRepo / isFlutterRepoAsync", () => {
 		defer("delete temp folder", () => tryDelete(tempFolder));
 	});
 
-	it("returns true for valid Flutter repo layout and false for inverted or incomplete layouts", async () => {
+	it("returns true for valid Flutter repo layout and false for inverted or incomplete layouts", () => {
 		const validRepo = path.join(tempFolder, "valid_flutter");
 		fs.mkdirSync(path.join(validRepo, "bin", "cache", "dart-sdk"), { recursive: true });
 		fs.writeFileSync(path.join(validRepo, "bin", "flutter"), "");
 		assert.equal(isFlutterRepo(validRepo), true);
-		assert.equal(await isFlutterRepoAsync(validRepo), true);
 
 		// Verify the previously inverted layout (bin/flutter dir + bin/cache/dart-sdk file) returns false.
 		const invertedRepo = path.join(tempFolder, "inverted_flutter");
@@ -532,27 +584,24 @@ describe("isFlutterRepo / isFlutterRepoAsync", () => {
 		fs.mkdirSync(path.join(invertedRepo, "bin", "cache"), { recursive: true });
 		fs.writeFileSync(path.join(invertedRepo, "bin", "cache", "dart-sdk"), "");
 		assert.equal(isFlutterRepo(invertedRepo), false);
-		assert.equal(await isFlutterRepoAsync(invertedRepo), false);
 
 		const missingSdkRepo = path.join(tempFolder, "missing_sdk");
 		fs.mkdirSync(path.join(missingSdkRepo, "bin"), { recursive: true });
 		fs.writeFileSync(path.join(missingSdkRepo, "bin", "flutter"), "");
 		assert.equal(isFlutterRepo(missingSdkRepo), false);
-		assert.equal(await isFlutterRepoAsync(missingSdkRepo), false);
 	});
 
-	it("accepts bin/flutter.bat on Windows", async () => {
+	it("accepts bin/flutter.bat on Windows", () => {
 		const winRepo = path.join(tempFolder, "win_flutter");
 		fs.mkdirSync(path.join(winRepo, "bin", "cache", "dart-sdk"), { recursive: true });
 		fs.writeFileSync(path.join(winRepo, "bin", "flutter.bat"), "");
 
 		sb.stub(constants, "isWin").value(true);
 		assert.equal(isFlutterRepo(winRepo), true);
-		assert.equal(await isFlutterRepoAsync(winRepo), true);
 	});
 });
 
-describe("tryReadPubspecContent / projectReferencesFlutter", () => {
+describe("tryReadPubspecContent / projectReferencesFlutter / tryGetPackageName / referencesBuildRunner", () => {
 	let tempFolder: string;
 
 	beforeEach(() => {
@@ -563,24 +612,31 @@ describe("tryReadPubspecContent / projectReferencesFlutter", () => {
 	it("handles valid, missing, and directory-named pubspec.yaml", () => {
 		const dartProj = path.join(tempFolder, "dart_proj");
 		fs.mkdirSync(dartProj, { recursive: true });
-		fs.writeFileSync(path.join(dartProj, "pubspec.yaml"), "name: dart_proj\n");
-		assert.equal(tryReadPubspecContent(dartProj), "name: dart_proj\n");
+		fs.writeFileSync(path.join(dartProj, "pubspec.yaml"), "name: dart_proj\ndev_dependencies:\n  build_runner: ^2.0.0\n");
+		assert.equal(tryReadPubspecContent(dartProj), "name: dart_proj\ndev_dependencies:\n  build_runner: ^2.0.0\n");
 		assert.equal(projectReferencesFlutter(dartProj), false);
+		assert.equal(tryGetPackageName(dartProj), "dart_proj");
+		assert.equal(referencesBuildRunner(dartProj), true);
 
 		const flutterProj = path.join(tempFolder, "flutter_proj");
 		fs.mkdirSync(flutterProj, { recursive: true });
 		fs.writeFileSync(path.join(flutterProj, "pubspec.yaml"), "name: flutter_proj\ndependencies:\n  flutter:\n    sdk: flutter\n");
 		assert.equal(projectReferencesFlutter(flutterProj), true);
+		assert.equal(referencesBuildRunner(flutterProj), false);
 
 		const missingProj = path.join(tempFolder, "missing_proj");
 		fs.mkdirSync(missingProj, { recursive: true });
 		assert.equal(tryReadPubspecContent(missingProj), undefined);
 		assert.equal(projectReferencesFlutter(missingProj), false);
+		assert.equal(tryGetPackageName(missingProj), undefined);
+		assert.equal(referencesBuildRunner(missingProj), false);
 
 		const dirPubspecProj = path.join(tempFolder, "dir_pubspec_proj");
 		fs.mkdirSync(path.join(dirPubspecProj, "pubspec.yaml"), { recursive: true });
 		assert.equal(tryReadPubspecContent(dirPubspecProj), undefined);
 		assert.equal(projectReferencesFlutter(dirPubspecProj), false);
+		assert.equal(tryGetPackageName(dirPubspecProj), undefined);
+		assert.equal(referencesBuildRunner(dirPubspecProj), false);
 	});
 });
 
@@ -588,7 +644,7 @@ describe("getAllProjectFolders cache and analysis_options exclusions", () => {
 	let tempFolder: string;
 
 	beforeEach(() => {
-		tempFolder = getRandomTempFolder();
+		tempFolder = fsPath(Uri.file(getRandomTempFolder()));
 		defer("delete temp folder", () => tryDelete(tempFolder));
 		clearCaches();
 		defer("clear caches", () => clearCaches());
@@ -678,6 +734,54 @@ describe("getAllProjectFolders cache and analysis_options exclusions", () => {
 		assert.equal(yamlParseSpy.callCount, 1);
 		assert.deepStrictEqual(withExclude.projectFolders, [rootProj, keptSub]);
 		assert.equal(withExclude.excludedFolders.has(excludedSub), true);
+	});
+
+	it("keeps non-pubspec analysis_options exclusions isolated from pubspec-only cache hits", async () => {
+		const flutterRepo = path.join(tempFolder, "flutter_repo");
+		const scratchDemo = path.join(flutterRepo, "scratch", "demo");
+		fs.mkdirSync(path.join(flutterRepo, "bin", "cache", "dart-sdk"), { recursive: true });
+		fs.writeFileSync(path.join(flutterRepo, "bin", "flutter"), "");
+		fs.writeFileSync(path.join(flutterRepo, "analysis_options.yaml"), "analyzer:\n  exclude:\n    - scratch/**\n");
+		fs.mkdirSync(scratchDemo, { recursive: true });
+		fs.writeFileSync(path.join(scratchDemo, "pubspec.yaml"), "name: demo\n");
+
+		const readdirSpy = sb.spy(fs.promises, "readdir");
+
+		// Broad scan (requirePubspec: false) treats flutterRepo as a project and applies its analysis_options exclusion.
+		const broad = await getAllProjectFoldersAndExclusions(nullLogger, undefined, { requirePubspec: false, searchDepth: 5 });
+		assert.deepStrictEqual(broad.projectFolders, [flutterRepo]);
+		assert.equal(broad.excludedFolders.has(path.join(flutterRepo, "scratch")), true);
+		const callsAfterBroad = readdirSpy.callCount;
+
+		// Warm pubspec-only scan must hit the cache (no extra readdirs) and ignore flutterRepo's exclusions.
+		const warmPubspec = await getAllProjectFoldersAndExclusions(nullLogger, undefined, { requirePubspec: true, sort: true, searchDepth: 5 });
+		assert.equal(readdirSpy.callCount, callsAfterBroad);
+		assert.deepStrictEqual(warmPubspec.projectFolders, [scratchDemo]);
+		assert.equal(warmPubspec.excludedFolders.has(path.join(flutterRepo, "scratch")), false);
+
+		// Cold pubspec-only scan must match the warm result identically.
+		clearCaches();
+		const coldPubspec = await getAllProjectFoldersAndExclusions(nullLogger, undefined, { requirePubspec: true, sort: true, searchDepth: 5 });
+		assert.deepStrictEqual(warmPubspec.projectFolders, coldPubspec.projectFolders);
+		assert.deepStrictEqual([...warmPubspec.excludedFolders], [...coldPubspec.excludedFolders]);
+	});
+
+	it("does not thrash cache when alternating requirePubspec with onlyWorkspaceRoots", async () => {
+		fs.writeFileSync(path.join(tempFolder, "pubspec.yaml"), "name: root\n");
+
+		const testLogger = new EmittingLogger();
+		const infoSpy = sb.spy(testLogger, "info");
+
+		const allRoots = await getAllProjectFolders(testLogger, undefined, { onlyWorkspaceRoots: true, requirePubspec: false, searchDepth: 5 });
+		const pubspecRoots = await getAllProjectFolders(testLogger, undefined, { onlyWorkspaceRoots: true, requirePubspec: true, searchDepth: 5 });
+		assert.deepStrictEqual(allRoots, [tempFolder]);
+		assert.deepStrictEqual(pubspecRoots, [tempFolder]);
+
+		// Both subsequent calls must hit their respective cached entries rather than overwriting each other.
+		await getAllProjectFolders(testLogger, undefined, { onlyWorkspaceRoots: true, requirePubspec: false, searchDepth: 5 });
+		await getAllProjectFolders(testLogger, undefined, { onlyWorkspaceRoots: true, requirePubspec: true, searchDepth: 5 });
+
+		assert.equal(infoSpy.withArgs("Returning cached results for project search").callCount, 2);
 	});
 });
 

@@ -27,10 +27,10 @@ export const hostKind = getHostKind();
 interface ProjectFolderSearchResults { projectFolders: string[], excludedFolders: Set<string> };
 
 interface CachedProjectFolderSearchResults {
-	projectFolders: string[];
-	pubspecProjectFolders?: string[];
-	includesNonPubspec: boolean;
-	excludedFolders: Set<string>;
+	/** Cached results for `requirePubspec: false` (all projects in unsorted BFS order). */
+	allProjects?: ProjectFolderSearchResults;
+	/** Cached results for `requirePubspec: true` (pubspec-only projects in unsorted BFS order). */
+	pubspecProjects?: ProjectFolderSearchResults;
 }
 
 const projectFolderCache = new SimpleTimeBasedCache<CachedProjectFolderSearchResults>();
@@ -80,14 +80,15 @@ export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 async function getAnalysisOptionsExcludedFolders(
 	logger: Logger,
 	projectFolders: string[],
-): Promise<string[]> {
-	const resultsPerFolder = await mapWithConcurrency(projectFolders, projectSearchConcurrency, async (projectFolder): Promise<string[]> => {
+): Promise<Map<string, string[]>> {
+	const entries = await mapWithConcurrency(projectFolders, projectSearchConcurrency, async (projectFolder): Promise<[string, string[]]> => {
 		const results: string[] = [];
 		const analysisOptionsPath = path.join(projectFolder, "analysis_options.yaml");
 		try {
 			const analysisOptionsContent = await fs.promises.readFile(analysisOptionsPath, "utf8");
+			// Do a fast string check first (like `pubspecContentReferencesFlutter`), because YAML parse can be slow in comparison.
 			if (!analysisOptionsContent.includes("exclude"))
-				return results;
+				return [projectFolder, results];
 
 			const yaml = YAML.parse(analysisOptionsContent) as { analyzer?: { exclude?: unknown } } | undefined;
 			const excluded = yaml?.analyzer?.exclude;
@@ -117,33 +118,25 @@ async function getAnalysisOptionsExcludedFolders(
 			if (err?.code !== "ENOENT") // Don't warn for missing files.
 				logger.error(`Failed to read ${analysisOptionsPath}: ${String(e)}`);
 		}
-		return results;
+		return [projectFolder, results];
 	});
 
-	const results: string[] = [];
-	for (const folderResults of resultsPerFolder)
-		results.push(...folderResults);
-	return results;
+	return new Map(entries);
 }
 
 function getCachedProjectFolderResults(
 	cached: CachedProjectFolderSearchResults | undefined,
 	options: { sort?: boolean; requirePubspec?: boolean },
 ): ProjectFolderSearchResults | undefined {
-	if (!cached)
-		return undefined;
-
-	const folders = options.requirePubspec
-		? cached.pubspecProjectFolders
-		: (cached.includesNonPubspec ? cached.projectFolders : undefined);
-	if (!folders)
+	const entry = options.requirePubspec ? cached?.pubspecProjects : cached?.allProjects;
+	if (!entry)
 		return undefined;
 
 	return {
-		excludedFolders: new Set(cached.excludedFolders),
+		excludedFolders: new Set(entry.excludedFolders),
 		projectFolders: options.sort
-			? sortBy([...folders], (p) => p.toLowerCase())
-			: [...folders],
+			? sortBy([...entry.projectFolders], (p) => p.toLowerCase())
+			: [...entry.projectFolders],
 	};
 }
 
@@ -206,8 +199,7 @@ export async function getAllProjectFoldersAndExclusions(
 		let startTimeMs = new Date().getTime();
 
 		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-		let allExcludedFolders = [...initialExcludedFolders];
-		const resultsPromise = findProjectFoldersWithDetails(logger, topLevelFolders, allExcludedFolders, { ...options, sort: false }, tokenSource.token);
+		const resultsPromise = findProjectFoldersWithDetails(logger, topLevelFolders, initialExcludedFolders, { ...options, sort: false }, tokenSource.token);
 
 		tokenSource.token.onCancellationRequested((_) => {
 			logger.info(`Project search was cancelled after ${new Date().getTime() - startTimeMs}ms (was searching ${options.searchDepth} levels)`);
@@ -221,7 +213,7 @@ export async function getAllProjectFoldersAndExclusions(
 		const wasCancelled = tokenSource.token.isCancellationRequested;
 		tokenSource.dispose();
 
-		let foundProjects = await resultsPromise;
+		const foundProjects = await resultsPromise;
 		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for ${foundProjects.length} projects (${options.searchDepth} levels)`);
 		logger.info(`    Found projects:`);
 		for (const project of foundProjects)
@@ -229,39 +221,67 @@ export async function getAllProjectFoldersAndExclusions(
 		startTimeMs = new Date().getTime();
 
 		// Filter out any folders excluded by analysis_options.
+		let exclusionsByFolder = new Map<string, string[]>();
 		if (!wasCancelled) {
 			try {
-				const excludedFolders = await getAnalysisOptionsExcludedFolders(logger, foundProjects.map((p) => p.folder));
-				foundProjects = foundProjects.filter((p) => !excludedFolders.some((ex) => isWithinPathOrEqual(p.folder, ex)));
-				logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules). ${foundProjects.length} projects remain.`);
-
-				allExcludedFolders = allExcludedFolders.concat(excludedFolders);
+				exclusionsByFolder = await getAnalysisOptionsExcludedFolders(logger, foundProjects.map((p) => p.folder));
 			} catch (e) {
 				logger.error(`Failed to filter out analysis_options exclusions: ${String(e)}`);
 			}
 		}
 
-		const projectFolders = foundProjects.map((p) => p.folder);
-		const pubspecProjectFolders = (options.requirePubspec || !options.onlyWorkspaceRoots)
-			? foundProjects.filter((p) => p.hasPubspec).map((p) => p.folder)
-			: undefined;
-		const cacheEntry: CachedProjectFolderSearchResults = {
-			excludedFolders: new Set(allExcludedFolders),
-			includesNonPubspec: !options.requirePubspec,
-			projectFolders,
-			pubspecProjectFolders,
+		const collectExclusions = (projects: typeof foundProjects): string[] => {
+			const exclusions: string[] = [];
+			for (const p of projects) {
+				const folderExclusions = exclusionsByFolder.get(p.folder);
+				if (folderExclusions?.length)
+					exclusions.push(...folderExclusions);
+			}
+			return exclusions;
+		};
+		const applyExclusions = (projects: typeof foundProjects, analysisExclusions: string[]): ProjectFolderSearchResults => {
+			const filteredFolders = analysisExclusions.length
+				? projects.filter((p) => !analysisExclusions.some((ex) => isWithinPathOrEqual(p.folder, ex))).map((p) => p.folder)
+				: projects.map((p) => p.folder);
+			return {
+				excludedFolders: new Set([...initialExcludedFolders, ...analysisExclusions]),
+				projectFolders: filteredFolders,
+			};
 		};
 
-		// Cache the results only if we're still the active run and weren't cancelled.
-		if (inProgressProjectFolderSearch === completer.promise && !wasCancelled)
-			projectFolderCache.add(cacheKey, cacheEntry, projectSearchCacheTimeInMs);
+		const allAnalysisExclusions = collectExclusions(foundProjects);
+		const allProjectsResult = applyExclusions(foundProjects, allAnalysisExclusions);
 
-		const resultFolders = options.requirePubspec ? (pubspecProjectFolders ?? projectFolders) : projectFolders;
+		if (!wasCancelled)
+			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${allAnalysisExclusions.length} exclusion rules). ${allProjectsResult.projectFolders.length} projects remain.`);
+
+		let pubspecProjectsResult: ProjectFolderSearchResults | undefined;
+		if (options.requirePubspec || !options.onlyWorkspaceRoots) {
+			const pubspecCandidates = foundProjects.filter((p) => p.hasPubspec);
+			if (pubspecCandidates.length === foundProjects.length) {
+				pubspecProjectsResult = allProjectsResult;
+			} else {
+				const pubspecAnalysisExclusions = collectExclusions(pubspecCandidates);
+				pubspecProjectsResult = applyExclusions(pubspecCandidates, pubspecAnalysisExclusions);
+			}
+		}
+
+		// Cache the results only if we're still the active run and weren't cancelled.
+		if (inProgressProjectFolderSearch === completer.promise && !wasCancelled) {
+			const existingCached = projectFolderCache.get(cacheKey);
+			const cacheEntry: CachedProjectFolderSearchResults = {
+				allProjects: !options.requirePubspec ? allProjectsResult : existingCached?.allProjects,
+				pubspecProjects: pubspecProjectsResult ?? existingCached?.pubspecProjects,
+			};
+			projectFolderCache.add(cacheKey, cacheEntry, projectSearchCacheTimeInMs);
+		}
+
+		const activeResult = options.requirePubspec ? (pubspecProjectsResult ?? allProjectsResult) : allProjectsResult;
 		return {
-			excludedFolders: new Set(cacheEntry.excludedFolders),
+			excludedFolders: new Set(activeResult.excludedFolders),
 			projectFolders: options.sort
-				? sortBy([...resultFolders], (p) => p.toLowerCase())
-				: [...resultFolders],
+				? sortBy([...activeResult.projectFolders], (p) => p.toLowerCase())
+				: [...activeResult.projectFolders],
 		};
 	} finally {
 		// Clear the promise if it's still ours.
