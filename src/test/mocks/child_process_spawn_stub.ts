@@ -19,6 +19,7 @@ export interface SpawnedProcessCall {
 
 export interface FakeSpawnResult {
 	exitCode?: number;
+	signal?: NodeJS.Signals;
 	stdout?: string;
 	stderr?: string;
 	error?: Error;
@@ -102,6 +103,12 @@ export class ChildProcessSpawnStub {
 					proc.stdout.emit("data", Buffer.from(res.stdout));
 				if (res.stderr)
 					proc.stderr.emit("data", Buffer.from(res.stderr));
+				if (res.signal) {
+					proc.signalCode = res.signal;
+					proc.emit("exit", null, res.signal);
+					proc.emit("close", null, res.signal);
+					return;
+				}
 				const exitCode = res.exitCode ?? 0;
 				proc.exitCode = exitCode;
 				proc.emit("exit", exitCode, null);
@@ -169,6 +176,20 @@ export class ChildProcessSpawnStub {
 			}
 			return false;
 		});
+	}
+
+	static flutterInit(onRun?: (bin: string, args: string[]) => void, options?: FakeSpawnResult) {
+		return new ChildProcessSpawnStub((bin, args) => {
+			const isFlutterDartVersion = ChildProcessSpawnStub.isExecutable(bin, path.join("bin", executableNames.flutterDart))
+				&& ChildProcessSpawnStub.includesArg(args, "--version");
+			const isFlutterHelp = ChildProcessSpawnStub.isExecutable(bin, executableNames.flutter)
+				&& ChildProcessSpawnStub.includesArg(args, "--help");
+			if (isFlutterDartVersion || isFlutterHelp) {
+				onRun?.(bin, args);
+				return true;
+			}
+			return false;
+		}, options);
 	}
 
 	static flutterPub(options?: { stdout?: string, exitCode?: number }) {
