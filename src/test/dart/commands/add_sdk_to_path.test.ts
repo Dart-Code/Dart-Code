@@ -88,6 +88,7 @@ describe("AddSdkToPath", () => {
 		setEnvVar("SHELL", "/bin/bash");
 		const home = useTempHome();
 		const profile = unixProfilePath(home, "bash");
+		const readFileSpy = sb.spy(fs.promises, "readFile");
 		if (outcome === "alreadyExisted")
 			fs.writeFileSync(profile, `export PATH="${path.join(existingSdkPath, "bin")}:$PATH"\n`);
 		else if (outcome === "failed")
@@ -98,7 +99,7 @@ describe("AddSdkToPath", () => {
 			assertAdded: (sdkRoot: string) => {
 				assert.equal(fs.readFileSync(profile, "utf8"), `export PATH="${path.join(sdkRoot, "bin")}:$PATH"\n`);
 			},
-			assertAttempted: () => assert.ok(fs.statSync(profile).isDirectory()),
+			assertAttempted: () => assert.ok(readFileSpy.calledWithExactly(profile, "utf8")),
 			assertNotRun: () => assert.equal(fs.existsSync(profile), false),
 		};
 	}
