@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { SpawnedProcess } from "../../shared/interfaces";
+import { SpawnedProcess } from "../interfaces";
 
 export interface PublicDartExtensionApi {
 	/**
