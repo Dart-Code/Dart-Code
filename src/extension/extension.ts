@@ -19,6 +19,7 @@ import { fsPath, getRandomInt } from "../shared/utils/fs";
 import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
+import { PublicDartExtensionApi } from "../shared/vscode/extension_api";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { McpTools } from "../shared/vscode/mcp";
@@ -35,7 +36,6 @@ import { LspAnalyzer, setAnalysisServerStartReason } from "./analysis/analyzer";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
 import { PublicDartExtensionApiImpl, extensionApiModel } from "./api/extension_api";
-import { PublicDartExtensionApi } from "./api/interfaces";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
@@ -675,7 +675,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Prompt user for any special config we might want to set.
 	const showUserPrompts = () => showUserPromptsImpl(logger, extContext, webClient, analytics, workspaceContext, dartCapabilities, extensionRecommendations);
-	if (!isRestart)
+	if (!isRestart && !isDartCodeTestRun)
 		void showUserPrompts();
 
 	// Turn on all the commands.
@@ -705,7 +705,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			// to finish activating.
 			void flutterExtension.activate()
 				// Then rebuild log because it includes whether we activated Flutter.
-				.then(() => rebuildLogHeaders());
+				.then(() => rebuildLogHeaders(), (e) => logger.error(e));
 		}
 	}
 
@@ -822,7 +822,9 @@ function buildLogHeaders(headerLogger?: Logger, workspaceContext?: WorkspaceCont
 	clearLogHeader();
 	addToLogHeader(() => `Dart Code extension: ${extensionVersion}`);
 	addToLogHeader(() => {
-		const ext = vs.extensions.getExtension(flutterExtensionIdentifier)!;
+		const ext = vs.extensions.getExtension(flutterExtensionIdentifier);
+		if (!ext)
+			return "Flutter extension: not installed";
 		const packageJson = ext.packageJSON as { version?: string };
 		return `Flutter extension: ${packageJson.version} (${ext.isActive ? "" : "not "}activated)`;
 	});

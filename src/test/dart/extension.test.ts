@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { flutterExtensionIdentifier } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { activateWithoutAnalysis, ext, extApi, logger, privateApi, validateExpectedEnv } from "../helpers";
@@ -58,6 +59,14 @@ describe("extension", () => {
 	it("uses 'Dart' as the TestController label", async () => {
 		await activateWithoutAnalysis();
 		assert.equal(privateApi.testController?.controller.label, "Dart");
+	});
+	it("includes Flutter extension status in the log header", async () => {
+		await activateWithoutAnalysis();
+		const logHeader = privateApi.getLogHeader();
+		if (vs.extensions.getExtension(flutterExtensionIdentifier))
+			assert.match(logHeader, /^Flutter extension: .+ \((?:not )?activated\)$/m);
+		else
+			assert.match(logHeader, /^Flutter extension: not installed$/m);
 	});
 	it("declares commandPalette entries with when conditions for all non-global commands", () => {
 		const packageJson = ext.packageJSON as {

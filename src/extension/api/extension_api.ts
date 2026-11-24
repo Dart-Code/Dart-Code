@@ -4,13 +4,13 @@ import { Range } from "vscode-languageclient";
 import { Element, Outline } from "../../shared/analysis/lsp/custom_protocol";
 import { dartVMPath } from "../../shared/constants";
 import { IAmDisposable, Sdks } from "../../shared/interfaces";
+import { PublicCodeLens, PublicCodeLensSuppressOptions, PublicDartExtensionApi, PublicElement, PublicFeatures, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "../../shared/vscode/extension_api";
 import { ProjectFinder } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { SdkCommands } from "../commands/sdk";
 import { config } from "../config";
 import { safeToolSpawn } from "../utils/processes";
 import { FeatureOverrideManager } from "./feature_overrides";
-import { PublicCodeLens, PublicCodeLensSuppressOptions, PublicDartExtensionApi, PublicElement, PublicFeatures, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "./interfaces";
 
 /// A single instance of this class is created (below) that is used internally to modify the data
 /// provided by the API.
