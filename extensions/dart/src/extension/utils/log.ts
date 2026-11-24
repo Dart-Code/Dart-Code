@@ -1,8 +1,8 @@
 import * as os from "os";
 import * as path from "path";
-import { platformEol } from "../../shared/constants";
-import { LogCategory } from "../../shared/enums";
-import { getRandomInt } from "../../shared/utils/fs";
+import { platformEol } from "../../../../../src/shared/constants";
+import { LogCategory } from "../../../../../src/shared/enums";
+import { getRandomInt } from "../../../../../src/shared/utils/fs";
 import { config } from "../config";
 
 let defaultExtensionLogPath: string | undefined;

@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { androidStudioPaths, isMac } from "../../shared/constants";
-import { IAmDisposable, Logger, Sdks } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
+import { androidStudioPaths, isMac } from "../../../../../src/shared/constants";
+import { IAmDisposable, Logger, Sdks } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
 import { getFlutterConfigValue } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 

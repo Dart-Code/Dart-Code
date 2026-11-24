@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { dartVMPath, flutterPath } from "../shared/constants";
-import { DartWorkspaceContext, IAmDisposable, Logger } from "../shared/interfaces";
-import { disposeAll } from "../shared/utils";
-import { fsPath } from "../shared/utils/fs";
+import { dartVMPath, flutterPath } from "../../../../src/shared/constants";
+import { DartWorkspaceContext, IAmDisposable, Logger } from "../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../src/shared/utils";
+import { fsPath } from "../../../../src/shared/utils/fs";
 import { openLogContents } from "./utils";
 import { getLogHeader } from "./utils/log";
 import { runToolProcess } from "./utils/processes";

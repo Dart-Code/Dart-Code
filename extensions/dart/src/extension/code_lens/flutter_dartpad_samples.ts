@@ -1,10 +1,10 @@
 import * as path from "path";
 import { CancellationToken, CodeLens, CodeLensProvider, commands, Event, EventEmitter, Range, TextDocument } from "vscode";
-import { FlutterSdks, IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { ClassOutlineVisitor } from "../../shared/utils/outline";
-import { envUtils, lspToPosition, lspToRange } from "../../shared/vscode/utils";
+import { FlutterSdks, IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { ClassOutlineVisitor } from "../../../../../src/shared/utils/outline";
+import { envUtils, lspToPosition, lspToRange } from "../../../../../src/shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 
 const dartPadSamplePattern = new RegExp("\\{@tool\\s+dartpad");

@@ -1,4 +1,4 @@
-import { forceWindowsDriveLetterToUppercase } from "../shared/utils/fs";
+import { forceWindowsDriveLetterToUppercase } from "../../../../src/shared/utils/fs";
 
 export function formatPathForVm(file: string): string {
 	// Handle drive letter inconsistencies.

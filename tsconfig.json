@@ -1,15 +1,16 @@
 {
-	// Try to keep synced with Flutter extension!
 	"compilerOptions": {
 		"module": "Node16",
 		"moduleResolution": "Node16",
 		"target": "ES2022",
-		"outDir": "out/src",
+		// Emit compiled test/shared JS inside extensions/dart/out so VS Code resolves
+		// require("vscode") in tests to Dart-Code.dart-code's API instance.
+		"outDir": "extensions/dart/out",
 		"lib": [
 			"ES2022"
 		],
 		"sourceMap": true,
-		"rootDir": "src",
+		"rootDir": ".",
 		"strict": true,
 		"skipLibCheck": true,
 		"types": [
@@ -24,7 +25,11 @@
 		".vscode-test",
 		"node_modules",
 		"out",
-		"src/test/test_projects"
+		"extensions/dart/out",
+		"extensions/flutter/out",
+		"src/test/test_projects",
+		"eslint.config.js",
+		"webpack.config.js"
 		// tsconfig.build.json excludes additional paths
 	]
 }

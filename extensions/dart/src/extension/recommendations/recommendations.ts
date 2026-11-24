@@ -1,8 +1,8 @@
 import * as vs from "vscode";
-import { ExtensionRestartReason, flutterExtensionIdentifier, noThanksAction } from "../../shared/constants";
-import { Context } from "../../shared/vscode/workspace";
+import { ExtensionRestartReason, flutterExtensionIdentifier, noThanksAction } from "../../../../../src/shared/constants";
+import { Context } from "../../../../../src/shared/vscode/workspace";
 
-import { Logger } from "../../shared/interfaces";
+import { Logger } from "../../../../../src/shared/interfaces";
 import { Analytics, AnalyticsEvent } from "../analytics";
 import { promptToReloadExtension } from "../utils";
 import { ArbExtensionRecommentation } from "./arb";

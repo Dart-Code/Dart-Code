@@ -1,8 +1,8 @@
 import * as vs from "vscode";
-import { isDartCodeTestRun } from "../../shared/constants";
-import { Logger, SpawnedProcess } from "../../shared/interfaces";
-import { RunProcessResult, runProcess, safeSpawn } from "../../shared/processes";
-import { dashIdeEnvironment, dashIdeName, dashIdeVersion, dashPluginName, dashPluginVersion, dashTool } from "../../shared/vscode/constants";
+import { isDartCodeTestRun } from "../../../../../src/shared/constants";
+import { Logger, SpawnedProcess } from "../../../../../src/shared/interfaces";
+import { RunProcessResult, runProcess, safeSpawn } from "../../../../../src/shared/processes";
+import { dashIdeEnvironment, dashIdeName, dashIdeVersion, dashPluginName, dashPluginVersion, dashTool } from "../../../../../src/shared/vscode/constants";
 
 // Environment used when spawning Dart and Flutter processes.
 let flutterRoot: string | undefined;

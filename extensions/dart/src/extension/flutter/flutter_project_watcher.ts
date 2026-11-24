@@ -1,11 +1,11 @@
 import * as path from "path";
 import { Uri, workspace } from "vscode";
-import { ExtensionRestartReason } from "../../shared/constants";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath, projectReferencesFlutter } from "../../shared/utils/fs";
-import { isInHiddenFolder, isInsideFolderNamed } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
+import { ExtensionRestartReason } from "../../../../../src/shared/constants";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath, projectReferencesFlutter } from "../../../../../src/shared/utils/fs";
+import { isInHiddenFolder, isInsideFolderNamed } from "../../../../../src/shared/vscode/utils";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
 import { promptToReloadExtension } from "../utils";
 
 /**

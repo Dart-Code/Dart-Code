@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { SpawnedProcess } from "../../shared/interfaces";
+import { SpawnedProcess } from "../../../../../src/shared/interfaces";
 
 const channels: Record<string, vs.OutputChannel> = {};
 

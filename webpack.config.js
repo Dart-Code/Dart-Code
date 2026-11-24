@@ -27,8 +27,8 @@ module.exports = (env) => {
 	const config = {
 		devtool: "source-map",
 		entry: {
-			extension: "./src/extension/extension.ts",
-			debug: "./src/debug/debug_entry.ts",
+			"dart/out/dist/extension": "./extensions/dart/src/extension/extension.ts",
+			"dart/out/dist/debug": "./extensions/dart/src/debug/debug_entry.ts",
 		},
 		// https://webpack.js.org/configuration/externals/
 		externals: {
@@ -39,12 +39,16 @@ module.exports = (env) => {
 				exclude: /node_modules/,
 				test: /\.ts$/,
 				loader: "ts-loader",
+				options: {
+					onlyCompileBundledFiles: true,
+				},
 			}],
 		},
 		output: {
-			devtoolModuleFilenameTemplate: "../../[resource-path]",
+			devtoolModuleFilenameTemplate: "../../../../[resource-path]",
+			filename: "[name].js",
 			libraryTarget: "commonjs2",
-			path: path.resolve(__dirname, "out/dist"),
+			path: path.resolve(__dirname, "extensions"),
 		},
 		optimization: {
 			minimize: false,

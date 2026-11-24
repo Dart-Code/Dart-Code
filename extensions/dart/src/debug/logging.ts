@@ -1,8 +1,8 @@
 import { Event } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
-import { LogCategory, LogSeverity } from "../shared/enums";
-import { Logger, LogMessage } from "../shared/interfaces";
-import { errorMessageWithStack } from "../shared/utils";
+import { LogCategory, LogSeverity } from "../../../../src/shared/enums";
+import { Logger, LogMessage } from "../../../../src/shared/interfaces";
+import { errorMessageWithStack } from "../../../../src/shared/utils";
 
 // A logger that passes log events back to the UI in `dart.log` events.
 export class DebugAdapterLogger implements Logger {

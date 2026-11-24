@@ -1,6 +1,6 @@
 import * as vs from "vscode";
-import { IAmDisposable } from "../../shared/interfaces";
-import { fsPath, isWithinPathOrEqual } from "../../shared/utils/fs";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { fsPath, isWithinPathOrEqual } from "../../../../../src/shared/utils/fs";
 
 interface FeatureOverrideRule<TOptions> {
 	folders: vs.Uri[];

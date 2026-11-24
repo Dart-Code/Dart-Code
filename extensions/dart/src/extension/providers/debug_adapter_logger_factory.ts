@@ -1,7 +1,7 @@
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession } from "vscode";
-import { DebuggerType, LogCategory } from "../../shared/enums";
-import { IAmDisposableAsync, Logger } from "../../shared/interfaces";
-import { captureLogs, CategoryLogger, EmittingLogger } from "../../shared/logging";
+import { DebuggerType, LogCategory } from "../../../../../src/shared/enums";
+import { IAmDisposableAsync, Logger } from "../../../../../src/shared/interfaces";
+import { captureLogs, CategoryLogger, EmittingLogger } from "../../../../../src/shared/logging";
 import { config } from "../config";
 import { insertSessionName } from "../utils";
 import { getLogHeader } from "../utils/log";

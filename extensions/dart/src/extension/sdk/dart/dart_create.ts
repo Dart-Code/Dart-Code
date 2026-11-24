@@ -1,8 +1,8 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { dartVMPath } from "../../../shared/constants";
-import { DartProjectTemplate, DartSdks, Logger } from "../../../shared/interfaces";
-import { cleanPubOutput } from "../../../shared/pub/utils";
+import { dartVMPath } from "../../../../../../src/shared/constants";
+import { DartProjectTemplate, DartSdks, Logger } from "../../../../../../src/shared/interfaces";
+import { cleanPubOutput } from "../../../../../../src/shared/pub/utils";
 import { runToolProcess } from "../../utils/processes";
 
 export class DartCreate {

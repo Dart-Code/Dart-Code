@@ -21,7 +21,7 @@ if (testFilterArgs.length > 0) {
 }
 
 async function runTests(testFolderName: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
-	const testFolder = path.join(cwd, "out", "src", "test", testFolderName);
+	const testFolder = path.join(cwd, "extensions", "dart", "out", "src", "test", testFolderName);
 	const files = await getTestSuites(testFolder, testFilterArgs);
 	if (!files.length) {
 		console.warn(`No tests found, skipping!`);
@@ -92,7 +92,7 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 	try {
 		const res = await vstest.runTests({
 			vscodeExecutablePath: ideOverride,
-			extensionDevelopmentPath: cwd,
+			extensionDevelopmentPath: path.join(cwd, "extensions", "dart"),
 			extensionTestsEnv: { ...testEnv, ...env },
 			extensionTestsPath: testFolder,
 			launchArgs: [

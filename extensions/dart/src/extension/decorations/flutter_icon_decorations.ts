@@ -1,10 +1,10 @@
 import * as vs from "vscode";
-import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { docsIconPathFormat } from "../../shared/vscode/extension_utils";
-import { IconRangeComputerLsp } from "../../shared/vscode/icon_range_computer";
+import { FlutterOutline } from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { docsIconPathFormat } from "../../../../../src/shared/vscode/extension_utils";
+import { IconRangeComputerLsp } from "../../../../../src/shared/vscode/icon_range_computer";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { isAnalyzable } from "../utils";
 

@@ -1,11 +1,11 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { modifyingFilesOutsideWorkspaceInfoUrl, moreInfoAction } from "../../shared/constants";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { isWithinWorkspace } from "../../shared/vscode/project";
-import { envUtils } from "../../shared/vscode/utils";
+import { modifyingFilesOutsideWorkspaceInfoUrl, moreInfoAction } from "../../../../../src/shared/constants";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { isWithinWorkspace } from "../../../../../src/shared/vscode/project";
+import { envUtils } from "../../../../../src/shared/vscode/utils";
 import { config } from "../config";
 import * as util from "../utils";
 

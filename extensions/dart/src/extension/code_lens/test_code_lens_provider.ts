@@ -1,10 +1,10 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll, flatMap } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
-import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
-import { lspToRange } from "../../shared/vscode/utils";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll, flatMap } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { TestOutlineInfo, TestOutlineVisitor } from "../../../../../src/shared/utils/outline";
+import { getTemplatedLaunchConfigs } from "../../../../../src/shared/vscode/debugger";
+import { lspToRange } from "../../../../../src/shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { extensionApiModel } from "../api/extension_api";
 import { isTestFile } from "../utils";

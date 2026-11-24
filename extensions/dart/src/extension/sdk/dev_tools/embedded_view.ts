@@ -1,8 +1,8 @@
 import * as vs from "vscode";
-import { Event, EventEmitter } from "../../../shared/events";
-import { IAmDisposable, Logger } from "../../../shared/interfaces";
-import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
-import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
+import { Event, EventEmitter } from "../../../../../../src/shared/events";
+import { IAmDisposable, Logger } from "../../../../../../src/shared/interfaces";
+import { DartDebugSessionInformation } from "../../../../../../src/shared/vscode/interfaces";
+import { envUtils, firstNonEditorColumn } from "../../../../../../src/shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
 import { exposeWebViewUrls, handleUrlAuthFunction, WebViewUrls } from "../../views/shared";
 

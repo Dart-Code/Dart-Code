@@ -1,10 +1,10 @@
 import * as vs from "vscode";
 import { ClientCapabilities, FeatureState, LanguageClient, StaticFeature } from "vscode-languageclient/node";
-import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { DocumentCache } from "../../shared/utils/document_cache";
-import { findVisibleEditor } from "../../shared/vscode/editors";
+import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { DocumentCache } from "../../../../../src/shared/utils/document_cache";
+import { findVisibleEditor } from "../../../../../src/shared/vscode/editors";
 import { config } from "../config";
 
 const validLastCharacters = [")", "]"];

@@ -8,8 +8,10 @@
 		".vscode-test",
 		"node_modules",
 		"out",
-		"src/debug",
-		"src/extension",
+		"extensions/dart/out",
+		"extensions/dart/src/debug",
+		"extensions/dart/src/extension",
+		"extensions/flutter/out",
 		"src/test/test_projects"
 	]
 }

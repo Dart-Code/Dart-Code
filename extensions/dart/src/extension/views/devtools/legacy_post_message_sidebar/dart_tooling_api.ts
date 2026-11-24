@@ -1,12 +1,12 @@
 import * as vs from "vscode";
 
-import { restartReasonManual } from "../../../../shared/constants";
-import { DebuggerType } from "../../../../shared/enums";
-import { Device } from "../../../../shared/flutter/daemon_interfaces";
-import { IAmDisposable } from "../../../../shared/interfaces";
-import { disposeAll, nullToUndefined } from "../../../../shared/utils";
-import { FlutterDeviceManager } from "../../../../shared/vscode/device_manager";
-import { DartDebugSessionInformation } from "../../../../shared/vscode/interfaces";
+import { restartReasonManual } from "../../../../../../../src/shared/constants";
+import { DebuggerType } from "../../../../../../../src/shared/enums";
+import { Device } from "../../../../../../../src/shared/flutter/daemon_interfaces";
+import { IAmDisposable } from "../../../../../../../src/shared/interfaces";
+import { disposeAll, nullToUndefined } from "../../../../../../../src/shared/utils";
+import { FlutterDeviceManager } from "../../../../../../../src/shared/vscode/device_manager";
+import { DartDebugSessionInformation } from "../../../../../../../src/shared/vscode/interfaces";
 import { debugSessions, debugSessionsChanged } from "../../../commands/debug";
 import { DevToolsLocation } from "../../../sdk/dev_tools/manager";
 import { VsCodeApi, VsCodeCapabilities, VsCodeDebugSession, VsCodeDebugSessionsEvent, VsCodeDevice, VsCodeDevicesEvent } from "./interface";

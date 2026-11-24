@@ -1,13 +1,13 @@
 import * as vs from "vscode";
-import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { isDartCodeTestRun, isWin } from "../../shared/constants";
-import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../../shared/constants.contexts";
-import { VmService, VmServiceExtension } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
-import { fsPath } from "../../shared/utils/fs";
-import { DartDebugSessionInformation } from "../../shared/vscode/interfaces";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
+import { FlutterCapabilities } from "../../../../../src/shared/capabilities/flutter";
+import { isDartCodeTestRun, isWin } from "../../../../../src/shared/constants";
+import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../../../../../src/shared/constants.contexts";
+import { VmService, VmServiceExtension } from "../../../../../src/shared/enums";
+import { Logger } from "../../../../../src/shared/interfaces";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { DartDebugSessionInformation } from "../../../../../src/shared/vscode/interfaces";
+import { getDartWorkspaceFolders } from "../../../../../src/shared/vscode/utils";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
 import { DebugCommands, debugSessions } from "../commands/debug";
 
 const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";

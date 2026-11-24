@@ -1,16 +1,16 @@
 import { CancellationToken, TextDocument, Uri, workspace } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { URI } from "vscode-uri";
-import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
-import { EventEmitter } from "../../shared/events";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { DocumentCache } from "../../shared/utils/document_cache";
-import { fsPath } from "../../shared/utils/fs";
-import { waitFor } from "../../shared/utils/promises";
-import { locateBestProjectRoot } from "../../shared/vscode/project";
-import { lspToPosition } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
+import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { EventEmitter } from "../../../../../src/shared/events";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { DocumentCache } from "../../../../../src/shared/utils/document_cache";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { waitFor } from "../../../../../src/shared/utils/promises";
+import { locateBestProjectRoot } from "../../../../../src/shared/vscode/project";
+import { lspToPosition } from "../../../../../src/shared/vscode/utils";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
 import * as util from "../utils";
 
 export class FileTracker implements IAmDisposable {

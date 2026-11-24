@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { ExtensionRestartReason, flutterPath, showLogAction } from "../../shared/constants";
-import { Logger } from "../../shared/interfaces";
+import { ExtensionRestartReason, flutterPath, showLogAction } from "../../../../../src/shared/constants";
+import { Logger } from "../../../../../src/shared/interfaces";
 import { config } from "../config";
 import { ringLog } from "../extension";
 import { promptToReloadExtension, showLog } from "../utils";

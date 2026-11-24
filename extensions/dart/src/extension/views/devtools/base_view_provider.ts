@@ -1,8 +1,8 @@
 import * as vs from "vscode";
-import { DartCapabilities } from "../../../shared/capabilities/dart";
-import { IAmDisposable, Logger } from "../../../shared/interfaces";
-import { disposeAll } from "../../../shared/utils";
-import { envUtils } from "../../../shared/vscode/utils";
+import { DartCapabilities } from "../../../../../../src/shared/capabilities/dart";
+import { IAmDisposable, Logger } from "../../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../../src/shared/utils";
+import { envUtils } from "../../../../../../src/shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
 import { exposeWebViewUrls, handleUrlAuthFunction, WebViewUrls } from "../shared";

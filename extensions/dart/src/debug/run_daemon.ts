@@ -1,7 +1,7 @@
-import { IAmDisposable, Logger } from "../shared/interfaces";
-import { ExecutionInfo } from "../shared/processes";
-import { UnknownNotification, UnknownResponse } from "../shared/services/interfaces";
-import { StdIOService } from "../shared/services/stdio_service";
+import { IAmDisposable, Logger } from "../../../../src/shared/interfaces";
+import { ExecutionInfo } from "../../../../src/shared/processes";
+import { UnknownNotification, UnknownResponse } from "../../../../src/shared/services/interfaces";
+import { StdIOService } from "../../../../src/shared/services/stdio_service";
 import * as f from "./daemon_interfaces";
 
 export class WebRun extends StdIOService<UnknownNotification> {

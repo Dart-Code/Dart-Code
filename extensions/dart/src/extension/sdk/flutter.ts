@@ -1,10 +1,10 @@
 import { CancellationToken, CancellationTokenSource, window } from "vscode";
-import { fiveSecondsInMs, initializingFlutterMessage, showLogAction } from "../../shared/constants";
-import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
-import { logProcess } from "../../shared/logging";
-import { BufferedLogger } from "../../shared/utils";
-import { withProgressIfSlow } from "../../shared/vscode/progress";
+import { fiveSecondsInMs, initializingFlutterMessage, showLogAction } from "../../../../../src/shared/constants";
+import { LogCategory } from "../../../../../src/shared/enums";
+import { Logger } from "../../../../../src/shared/interfaces";
+import { logProcess } from "../../../../../src/shared/logging";
+import { BufferedLogger } from "../../../../../src/shared/utils";
+import { withProgressIfSlow } from "../../../../../src/shared/vscode/progress";
 import * as channels from "../commands/channels";
 import { ringLog } from "../extension";
 import { openLogContents } from "../utils";

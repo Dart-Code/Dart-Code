@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath } from "../../shared/constants";
-import { DartSdks, IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
+import { DartCapabilities } from "../../../../../src/shared/capabilities/dart";
+import { dartVMPath } from "../../../../../src/shared/constants";
+import { DartSdks, IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
 import { config } from "../config";
 import { getToolEnv } from "../utils/processes";
 

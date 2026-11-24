@@ -2,14 +2,14 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, env, TelemetryLogger, TelemetrySender } from "vscode";
-import { dartCodeExtensionIdentifier, ExtensionRestartReason, isChromeOS, isDartCodeTestRun, isWSL } from "../shared/constants";
-import { IAmDisposable, Logger } from "../shared/interfaces";
-import { disposeAll } from "../shared/utils";
-import { getDartToolDir, getRandomInt } from "../shared/utils/fs";
-import { simplifyVersion } from "../shared/utils/workspace";
-import { hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
-import { hostKind } from "../shared/vscode/utils";
-import { WorkspaceContext } from "../shared/workspace";
+import { dartCodeExtensionIdentifier, ExtensionRestartReason, isChromeOS, isDartCodeTestRun, isWSL } from "../../../../src/shared/constants";
+import { IAmDisposable, Logger } from "../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../src/shared/utils";
+import { getDartToolDir, getRandomInt } from "../../../../src/shared/utils/fs";
+import { simplifyVersion } from "../../../../src/shared/utils/workspace";
+import { hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../../../../src/shared/vscode/extension_utils";
+import { hostKind } from "../../../../src/shared/vscode/utils";
+import { WorkspaceContext } from "../../../../src/shared/workspace";
 import { config } from "./config";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.

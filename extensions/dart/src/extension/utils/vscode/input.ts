@@ -1,6 +1,6 @@
 import * as vs from "vscode";
-import { PickableSetting, UserInputOrSettings } from "../../../shared/vscode/input";
-import { Context } from "../../../shared/vscode/workspace";
+import { PickableSetting, UserInputOrSettings } from "../../../../../../src/shared/vscode/input";
+import { Context } from "../../../../../../src/shared/vscode/workspace";
 
 export async function showInputBoxWithSettings(
 	context: Context,

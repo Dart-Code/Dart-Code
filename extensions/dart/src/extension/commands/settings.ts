@@ -1,7 +1,7 @@
 import * as vs from "vscode";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { WorkspaceContext } from "../../shared/workspace";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
 
 export class SettingsCommands implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];

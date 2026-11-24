@@ -1,9 +1,9 @@
 import * as vs from "vscode";
-import { SIDEBAR_AVAILABLE_PREFIX } from "../../../shared/constants.contexts";
-import { Event, EventEmitter } from "../../../shared/events";
-import { IAmDisposable, Logger } from "../../../shared/interfaces";
-import { disposeAll } from "../../../shared/utils";
-import { firstNonEditorColumn } from "../../../shared/vscode/utils";
+import { SIDEBAR_AVAILABLE_PREFIX } from "../../../../../../src/shared/constants.contexts";
+import { Event, EventEmitter } from "../../../../../../src/shared/events";
+import { IAmDisposable, Logger } from "../../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../../src/shared/utils";
+import { firstNonEditorColumn } from "../../../../../../src/shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
 import { handleUrlAuthFunction, WebViewUrls } from "../../views/shared";
 

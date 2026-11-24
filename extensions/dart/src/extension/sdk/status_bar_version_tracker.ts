@@ -1,9 +1,9 @@
-import { MAX_VERSION, MISSING_VERSION_FILE_VERSION } from "../../shared/constants";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
-import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
-import { WorkspaceContext } from "../../shared/workspace";
+import { MAX_VERSION, MISSING_VERSION_FILE_VERSION } from "../../../../../src/shared/constants";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { ANALYSIS_FILTERS } from "../../../../../src/shared/vscode/constants";
+import { getLanguageStatusItem } from "../../../../../src/shared/vscode/status_bar";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
 import { config } from "../config";
 
 export class StatusBarVersionTracker implements IAmDisposable {

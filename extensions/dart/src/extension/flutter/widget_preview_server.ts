@@ -1,11 +1,11 @@
 import * as path from "path";
-import { flutterPath } from "../../shared/constants";
-import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
-import { CategoryLogger } from "../../shared/logging";
-import { UnknownNotification } from "../../shared/services/interfaces";
-import { StdIOService } from "../../shared/services/stdio_service";
-import { PromiseCompleter } from "../../shared/utils";
+import { flutterPath } from "../../../../../src/shared/constants";
+import { LogCategory } from "../../../../../src/shared/enums";
+import { Logger } from "../../../../../src/shared/interfaces";
+import { CategoryLogger } from "../../../../../src/shared/logging";
+import { UnknownNotification } from "../../../../../src/shared/services/interfaces";
+import { StdIOService } from "../../../../../src/shared/services/stdio_service";
+import { PromiseCompleter } from "../../../../../src/shared/utils";
 import { config } from "../config";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 

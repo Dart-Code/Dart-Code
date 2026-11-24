@@ -1,11 +1,11 @@
 import path from "path";
 import * as vs from "vscode";
 import { Range } from "vscode-languageclient";
-import { Element, Outline } from "../../shared/analysis/lsp/custom_protocol";
-import { dartVMPath } from "../../shared/constants";
-import { IAmDisposable, Sdks } from "../../shared/interfaces";
-import { PublicCodeLens, PublicCodeLensSuppressOptions, PublicDartExtensionApi, PublicElement, PublicFeatures, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "../../shared/vscode/extension_api";
-import { ProjectFinder } from "../../shared/vscode/utils";
+import { Element, Outline } from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { dartVMPath } from "../../../../../src/shared/constants";
+import { IAmDisposable, Sdks } from "../../../../../src/shared/interfaces";
+import { PublicCodeLens, PublicCodeLensSuppressOptions, PublicDartExtensionApi, PublicElement, PublicFeatures, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "../../../../../src/shared/vscode/extension_api";
+import { ProjectFinder } from "../../../../../src/shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { SdkCommands } from "../commands/sdk";
 import { config } from "../config";

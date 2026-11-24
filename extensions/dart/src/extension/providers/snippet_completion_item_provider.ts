@@ -1,7 +1,7 @@
 import * as path from "path";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, Position, SnippetString, TextDocument, Uri } from "vscode";
-import { DartCapabilities } from "../../shared/capabilities/dart";
-import { createMarkdownString, extensionPath, readJson } from "../../shared/vscode/extension_utils";
+import { DartCapabilities } from "../../../../../src/shared/capabilities/dart";
+import { createMarkdownString, extensionPath, readJson } from "../../../../../src/shared/vscode/extension_utils";
 import { config } from "../config";
 
 export class SnippetCompletionItemProvider implements CompletionItemProvider {

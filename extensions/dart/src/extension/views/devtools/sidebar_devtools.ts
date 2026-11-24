@@ -1,9 +1,9 @@
 import * as vs from "vscode";
-import { DartCapabilities } from "../../../shared/capabilities/dart";
-import { CommandSource } from "../../../shared/constants";
-import { SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX } from "../../../shared/constants.contexts";
-import { DevToolsPage, IAmDisposable, Logger } from "../../../shared/interfaces";
-import { disposeAll } from "../../../shared/utils";
+import { DartCapabilities } from "../../../../../../src/shared/capabilities/dart";
+import { CommandSource } from "../../../../../../src/shared/constants";
+import { SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX } from "../../../../../../src/shared/constants.contexts";
+import { DevToolsPage, IAmDisposable, Logger } from "../../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../../src/shared/utils";
 import { DevToolsEmbeddedViewOrSidebarView } from "../../sdk/dev_tools/embedded_view";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
 import { WebViewUrls } from "../shared";

@@ -1,11 +1,11 @@
 import { commands, DiagnosticSeverity, languages, TextDocumentSaveReason, Uri, workspace } from "vscode";
-import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { restartReasonSave } from "../../shared/constants";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { isWithinWorkspace } from "../../shared/vscode/project";
-import { isInsideFolderNamed } from "../../shared/vscode/utils";
+import { FlutterCapabilities } from "../../../../../src/shared/capabilities/flutter";
+import { restartReasonSave } from "../../../../../src/shared/constants";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { isWithinWorkspace } from "../../../../../src/shared/vscode/project";
+import { isInsideFolderNamed } from "../../../../../src/shared/vscode/utils";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
 import { shouldHotReloadFor } from "../utils";

@@ -1,8 +1,8 @@
 import * as vs from "vscode";
-import { maxConcurrentProcesses, runWithConcurrencyLimit } from "../../shared/pub/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { getPackageOrFolderDisplayName } from "../../shared/vscode/display_names";
-import { OperationProgress } from "../../shared/vscode/interfaces";
+import { maxConcurrentProcesses, runWithConcurrencyLimit } from "../../../../../src/shared/pub/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { getPackageOrFolderDisplayName } from "../../../../../src/shared/vscode/display_names";
+import { OperationProgress } from "../../../../../src/shared/vscode/interfaces";
 import { config } from "../config";
 
 export async function runBatchFolderOperation(

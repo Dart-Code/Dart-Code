@@ -1,9 +1,9 @@
 import * as vs from "vscode";
-import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { getActiveRealFileEditor } from "../../shared/vscode/editors";
-import { firstEditorColumn, showCode } from "../../shared/vscode/utils";
+import { dartRecommendedConfig, openSettingsAction } from "../../../../../src/shared/constants";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { getActiveRealFileEditor } from "../../../../../src/shared/vscode/editors";
+import { firstEditorColumn, showCode } from "../../../../../src/shared/vscode/utils";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
 export class EditCommands implements IAmDisposable {

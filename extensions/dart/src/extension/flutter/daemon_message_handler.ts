@@ -1,6 +1,6 @@
 import { ExtensionContext, window } from "vscode";
-import { DaemonLog, DaemonLogMessage, ShowMessage } from "../../shared/flutter/daemon_interfaces";
-import { IFlutterDaemon, Logger } from "../../shared/interfaces";
+import { DaemonLog, DaemonLogMessage, ShowMessage } from "../../../../../src/shared/flutter/daemon_interfaces";
+import { IFlutterDaemon, Logger } from "../../../../../src/shared/interfaces";
 import { getOutputChannel } from "../commands/channels";
 
 export function setUpDaemonMessageHandler(logger: Logger, context: ExtensionContext, daemon: IFlutterDaemon) {

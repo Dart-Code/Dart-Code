@@ -1,7 +1,7 @@
-import { Logger } from "../shared/interfaces";
-import { getRandomInt } from "../shared/utils/fs";
-import { Context } from "../shared/vscode/workspace";
-import { WorkspaceContext } from "../shared/workspace";
+import { Logger } from "../../../../src/shared/interfaces";
+import { getRandomInt } from "../../../../src/shared/utils/fs";
+import { Context } from "../../../../src/shared/vscode/workspace";
+import { WorkspaceContext } from "../../../../src/shared/workspace";
 
 // Used for testing. DO NOT COMMIT AS TRUE.
 const clearAllExperiments = false;

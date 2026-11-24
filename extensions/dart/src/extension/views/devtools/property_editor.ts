@@ -1,7 +1,7 @@
 import * as vs from "vscode";
-import { DartCapabilities } from "../../../shared/capabilities/dart";
-import { IAmDisposable, Logger } from "../../../shared/interfaces";
-import { disposeAll } from "../../../shared/utils";
+import { DartCapabilities } from "../../../../../../src/shared/capabilities/dart";
+import { IAmDisposable, Logger } from "../../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../../src/shared/utils";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
 import { MySimpleBaseWebViewProvider } from "./base_view_provider";
 

@@ -1,8 +1,8 @@
 import { DebugProtocol } from "@vscode/debugprotocol";
 import * as vs from "vscode";
-import { SUPPORTS_DEBUG_VALUE_FORMAT } from "../../shared/constants.contexts";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
+import { SUPPORTS_DEBUG_VALUE_FORMAT } from "../../../../../src/shared/constants.contexts";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
 import { config } from "../config";
 
 export class DartDebugAdapterHexViewFactory implements vs.DebugAdapterTrackerFactory, IAmDisposable {

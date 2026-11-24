@@ -1,5 +1,5 @@
 import { default as WebSocket } from "ws";
-import { PromiseCompleter } from "../shared/utils";
+import { PromiseCompleter } from "../../../../src/shared/utils";
 
 export class DebuggerResult {
 	public result: VMResponse;

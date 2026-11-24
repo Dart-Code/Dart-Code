@@ -1,10 +1,10 @@
 import * as path from "path";
 import { commands, TextDocumentSaveReason, Uri, workspace } from "vscode";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { isWithinWorkspace } from "../../shared/vscode/project";
-import { isInsideFolderNamed } from "../../shared/vscode/utils";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { isWithinWorkspace } from "../../../../../src/shared/vscode/project";
+import { isInsideFolderNamed } from "../../../../../src/shared/vscode/utils";
 import { config } from "../config";
 import { isInsideFlutterProject } from "../utils";
 

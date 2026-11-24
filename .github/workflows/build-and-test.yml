@@ -374,10 +374,12 @@ jobs:
             --exclude-all-private
             --exclude '\$\%7B[^}]+\%7D'
             --exclude "^file://"
+            ./extensions/**/*.ts
             ./src/**/*.ts
             ./*.md
+            ./extensions/**/*.md
             ./**/*.license
-            package.json
+            ./extensions/*/package.json
 
   # A single action based on the test outcome that can be used
   # as a required status check. link_check is intentionally excluded

@@ -1,5 +1,5 @@
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, ProgressLocation, window } from "vscode";
-import { PromiseCompleter } from "../../shared/utils";
+import { PromiseCompleter } from "../../../../../src/shared/utils";
 
 export class DartDebugAdapterLaunchStatusFactory implements DebugAdapterTrackerFactory {
 	createDebugAdapterTracker(): DebugAdapterTracker {

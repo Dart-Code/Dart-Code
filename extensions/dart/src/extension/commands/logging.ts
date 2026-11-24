@@ -1,14 +1,14 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { captureLogsMaxLineLength } from "../../shared/constants";
-import { DART_IS_CAPTURING_LOGS_CONTEXT } from "../../shared/constants.contexts";
-import { LogCategory } from "../../shared/enums";
-import { IAmDisposable } from "../../shared/interfaces";
-import { captureLogs, EmittingLogger } from "../../shared/logging";
-import { disposeAll, PromiseCompleter } from "../../shared/utils";
-import { createFolderForFile, forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
-import { hasFlutterExtension } from "../../shared/vscode/extension_utils";
-import { WorkspaceContext } from "../../shared/workspace";
+import { captureLogsMaxLineLength } from "../../../../../src/shared/constants";
+import { DART_IS_CAPTURING_LOGS_CONTEXT } from "../../../../../src/shared/constants.contexts";
+import { LogCategory } from "../../../../../src/shared/enums";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { captureLogs, EmittingLogger } from "../../../../../src/shared/logging";
+import { disposeAll, PromiseCompleter } from "../../../../../src/shared/utils";
+import { createFolderForFile, forceWindowsDriveLetterToUppercase, fsPath } from "../../../../../src/shared/utils/fs";
+import { hasFlutterExtension } from "../../../../../src/shared/vscode/extension_utils";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
 import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, flutterLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;

@@ -2,10 +2,10 @@ import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeA
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
 import { LanguageClient } from "vscode-languageclient/node";
 import * as YAML from "yaml";
-import { PubPackage } from "../../shared/pub/pub_add";
-import { flatMap } from "../../shared/utils";
-import { fsPath, tryReadPubspecContent } from "../../shared/utils/fs";
-import { locateBestProjectRoot } from "../../shared/vscode/project";
+import { PubPackage } from "../../../../../src/shared/pub/pub_add";
+import { flatMap } from "../../../../../src/shared/utils";
+import { fsPath, tryReadPubspecContent } from "../../../../../src/shared/utils/fs";
+import { locateBestProjectRoot } from "../../../../../src/shared/vscode/project";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 

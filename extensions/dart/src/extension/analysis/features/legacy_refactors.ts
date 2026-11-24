@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import { ClientCapabilities, ExecuteCommandSignature, FeatureState, StaticFeature } from "vscode-languageclient";
 import { LanguageClient } from "vscode-languageclient/node";
-import { validClassNameRegex, validMethodNameRegex } from "../../../shared/constants";
-import { Logger } from "../../../shared/interfaces";
+import { validClassNameRegex, validMethodNameRegex } from "../../../../../../src/shared/constants";
+import { Logger } from "../../../../../../src/shared/interfaces";
 
 interface LegacyRefactorCommandArgs {
 	kind?: unknown;

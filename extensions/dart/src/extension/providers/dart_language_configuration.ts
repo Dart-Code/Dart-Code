@@ -1,5 +1,5 @@
 import { IndentAction, LanguageConfiguration, languages, OnEnterRule, workspace } from "vscode";
-import { IAmDisposable } from "../../shared/interfaces";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
 import { config } from "../config";
 
 export class DartLanguageConfiguration implements LanguageConfiguration {

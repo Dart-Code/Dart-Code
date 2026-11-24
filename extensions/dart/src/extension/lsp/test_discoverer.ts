@@ -2,14 +2,14 @@
 
 import * as path from "path";
 import * as vs from "vscode";
-import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protocol";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
-import { disposeAll, uriToFilePath } from "../../shared/utils";
-import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
-import { OutlineVisitor } from "../../shared/utils/outline";
-import { parseTestNameFromOutline, TestNameSegment } from "../../shared/utils/test";
-import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../shared/vscode/utils";
+import { Outline, OutlineParams } from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { SuiteNode, TestModel, TestSource } from "../../../../../src/shared/test/test_model";
+import { disposeAll, uriToFilePath } from "../../../../../src/shared/utils";
+import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../../../../src/shared/utils/fs";
+import { OutlineVisitor } from "../../../../../src/shared/utils/outline";
+import { parseTestNameFromOutline, TestNameSegment } from "../../../../../src/shared/utils/test";
+import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../../../../src/shared/vscode/utils";
 import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
 import { getExcludedFolders, isTestFile } from "../utils";

@@ -6,7 +6,7 @@ coverage:
         target: auto
         threshold: 0.5
         paths:
-          - "src/extension"
+          - "extensions/dart/src/extension"
           - "src/shared"
         # Only report on PRs, as master commits are merge queue groups.
         only_pulls: true
@@ -17,7 +17,7 @@ coverage:
         target: auto
         threshold: 30
         paths:
-          - "src/extension"
+          - "extensions/dart/src/extension"
           - "src/shared"
         # Only report on PRs, as master commits are merge queue groups.
         only_pulls: true

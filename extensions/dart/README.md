@@ -37,7 +37,7 @@ If you have any issues using Dart Code, please file issues on GitHub at [https:/
 - [Prompts to get packages when out of date](https://dartcode.org/docs/settings/#dartprompttogetpackages)
 - Syntax highlighting
 - Code completion
-- [Snippets](https://github.com/Dart-Code/Dart-Code/tree/master/snippets)
+- [Snippets](https://github.com/Dart-Code/Dart-Code/tree/master/extensions/dart/snippets)
 - Realtime errors/warnings/TODOs
 - Documentation in hovers/tooltips
 - Go to Definition

@@ -26,7 +26,8 @@
 	"homepage": "https://dartcode.org/",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Dart-Code/Dart-Code.git"
+		"url": "https://github.com/Dart-Code/Dart-Code.git",
+		"directory": "extensions/dart"
 	},
 	"categories": [
 		"Programming Languages",
@@ -3400,7 +3401,7 @@
 			{
 				"type": "dart",
 				"label": "Dart & Flutter",
-				"program": "./out/src/dist/debug.js",
+				"program": "./out/dist/debug.js",
 				"runtime": "node",
 				"languages": [
 					"dart"
@@ -3758,69 +3759,5 @@
 				}
 			}
 		]
-	},
-	"scripts": {
-		"ensure-icon-submodule": "node -e \"process.exit(require('fs').existsSync('media/doc-icons/material/ac_unit@2x.png') ? 0 : 999)\"",
-		"vscode:prepublish": "npm run ensure-icon-submodule && webpack --mode production",
-		"build": "webpack --mode development --stats errors-only",
-		"watch": "webpack --mode development --watch",
-		"build-tests": "tsc -p ./tsconfig.build.json",
-		"watch-non-ext": "tsc -p ./tsconfig.build.json --watch --extendedDiagnostics",
-		"lint": "eslint",
-		"lint:fix": "eslint --fix",
-		"find-duplicates": "jscpd src/extension src/shared --similarity 0.80 --min-lines 10 --min-tokens 70 --no-tips",
-		"pretest": "npm run build && npm run build-tests",
-		"test": "xvfb-maybe -a -- node ./out/src/test/test_all.js",
-		"pretest:with-coverage": "npm run clean-coverage && npm run pretest && npm run instrument-dist && npm run instrument",
-		"test:with-coverage": "xvfb-maybe -a -- node ./out/src/test/test_all.js",
-		"posttest:with-coverage": "npm run report-coverage",
-		"test-grammar": "vscode-tmgrammar-snap --expandDiff src/test/test_projects/grammar_testing/**/*.dart",
-		"test-all": "npm run test && npm run test-grammar",
-		"clean-coverage": "node -e \"require('fs').rmSync('.nyc_output', { recursive: true, force: true })\"",
-		"instrument-dist": "cd out/dist && nyc instrument --compact false --in-place . . && cd ../..",
-		"instrument": "cd out/src && nyc instrument --compact false --in-place . . && cd ../..",
-		"report-coverage": "node -e \"require('child_process').execFileSync(process.execPath, [require.resolve('nyc/bin/nyc.js'), 'report', '-r', 'lcovonly', '-r', 'text', '--report-dir', require('path').join('coverage', process.env.BOT ?? '')], { stdio: 'inherit' })\"",
-		"update-grammar-snapshots": "vscode-tmgrammar-snap --updateSnapshot \"src/test/test_projects/grammar_testing/**/*.dart\""
-	},
-	"dependencies": {
-		"@vscode/debugadapter": "~1.68.0",
-		"@vscode/debugprotocol": "~1.68.0",
-		"minimatch": "^11.0.9",
-		"semver": "^7.8.6",
-		"vscode-languageclient": "^11.0.0",
-		"vscode-uri": "^3.2.0",
-		"ws": "^8.23.0",
-		"yaml": "^2.9.1"
-	},
-	"devDependencies": {
-		"@eslint/js": "^10.0.1",
-		"@types/mocha": "^10.0.10",
-		"@types/node": "^24.0.0",
-		"@types/semver": "^7.8.0",
-		"@types/sinon": "^22.0.2",
-		"@types/vscode": "~1.101.0",
-		"@types/ws": "^8.18.2",
-		"@vscode/debugadapter-testsupport": "^1.68.0",
-		"@vscode/test-electron": "^3.1.0",
-		"@vscode/vsce": "^4.1.1",
-		"eslint": "^10.15.0",
-		"glob": "^14.0.6",
-		"jscpd": "^5.4.3",
-		"mocha": "^12.0.3",
-		"nyc": "^18.0.0",
-		"ovsx": "^1.4.0",
-		"sinon": "^22.1.0",
-		"source-map-support": "^0.5.21",
-		"ts-loader": "^9.6.2",
-		"typescript-eslint": "^8.73.0",
-		"typescript": "^6.0.3",
-		"vscode-tmgrammar-test": "^0.1.3",
-		"webpack-cli": "^7.3.1",
-		"webpack": "^5.112.2",
-		"xvfb-maybe": "^0.2.1"
-	},
-	"optionalDependencies": {
-		"bufferutil": "^4.2.0",
-		"utf-8-validate": "^6.0.6"
 	}
 }

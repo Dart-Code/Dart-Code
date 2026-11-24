@@ -1,13 +1,13 @@
 import * as vs from "vscode";
-import { DartCapabilities } from "../../shared/capabilities/dart";
-import { moreInfoAction, noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
-import { LogCategory, VersionStatus } from "../../shared/enums";
-import { DartSdks, Logger } from "../../shared/interfaces";
-import { getPubExecutionInfo } from "../../shared/processes";
-import { PubApi } from "../../shared/pub/api";
-import { pubVersionIsAtLeast } from "../../shared/utils";
-import { envUtils } from "../../shared/vscode/utils";
-import { Context } from "../../shared/vscode/workspace";
+import { DartCapabilities } from "../../../../../src/shared/capabilities/dart";
+import { moreInfoAction, noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../../../../src/shared/constants";
+import { LogCategory, VersionStatus } from "../../../../../src/shared/enums";
+import { DartSdks, Logger } from "../../../../../src/shared/interfaces";
+import { getPubExecutionInfo } from "../../../../../src/shared/processes";
+import { PubApi } from "../../../../../src/shared/pub/api";
+import { pubVersionIsAtLeast } from "../../../../../src/shared/utils";
+import { envUtils } from "../../../../../src/shared/vscode/utils";
+import { Context } from "../../../../../src/shared/vscode/workspace";
 import { runToolProcess } from "../utils/processes";
 
 export class PubGlobal {

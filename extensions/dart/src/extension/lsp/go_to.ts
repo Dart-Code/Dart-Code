@@ -1,10 +1,10 @@
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { uriComparisonString } from "../../shared/utils/fs";
-import * as editors from "../../shared/vscode/editors";
-import { showCode } from "../../shared/vscode/utils";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { uriComparisonString } from "../../../../../src/shared/utils/fs";
+import * as editors from "../../../../../src/shared/vscode/editors";
+import { showCode } from "../../../../../src/shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 
 abstract class LspGoToCommand implements IAmDisposable {

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
-import { FLUTTER_WIDGET_PREVIEW_SUPPORTED_CONTEXT } from "../../../shared/constants.contexts";
-import { IAmDisposable, Logger } from "../../../shared/interfaces";
-import { disposeAll, PromiseCompleter } from "../../../shared/utils";
+import { FLUTTER_WIDGET_PREVIEW_SUPPORTED_CONTEXT } from "../../../../../../src/shared/constants.contexts";
+import { IAmDisposable, Logger } from "../../../../../../src/shared/interfaces";
+import { disposeAll, PromiseCompleter } from "../../../../../../src/shared/utils";
 import { FlutterWidgetPreviewServer } from "../../flutter/widget_preview_server";
 import { exposeWebViewUrls, WebViewUrls } from "../../views/shared";
 import { WidgetPreviewEmbeddedView, WidgetPreviewSidebarView, WidgetPreviewView } from "./webviews";

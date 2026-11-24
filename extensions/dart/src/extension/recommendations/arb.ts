@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { fsPath } from "../../shared/utils/fs";
-import { Context } from "../../shared/vscode/workspace";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { Context } from "../../../../../src/shared/vscode/workspace";
 import { ExtensionRecommentations } from "./recommendations";
 
 const arbExtensionIdentifier = "Google.arb-editor";

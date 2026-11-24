@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { flutterPath } from "../../shared/constants";
-import { Logger, Sdks } from "../../shared/interfaces";
-import { getRandomInt, tryDeleteFile } from "../../shared/utils/fs";
-import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
+import { flutterPath } from "../../../../../src/shared/constants";
+import { Logger, Sdks } from "../../../../../src/shared/interfaces";
+import { getRandomInt, tryDeleteFile } from "../../../../../src/shared/utils/fs";
+import { FlutterSampleSnippet } from "../../../../../src/shared/vscode/interfaces";
 import { runToolProcess } from "../utils/processes";
 
 export async function getFlutterSnippets(logger: Logger, sdks: Sdks): Promise<FlutterSampleSnippet[]> {

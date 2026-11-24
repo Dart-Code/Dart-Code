@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
 import { LanguageClient } from "vscode-languageclient/node";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
 import { config } from "../config";
 
 export class SnippetTextEditFeature implements IAmDisposable {

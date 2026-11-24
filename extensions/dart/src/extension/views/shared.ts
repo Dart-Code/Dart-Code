@@ -1,6 +1,6 @@
-import { Logger } from "../../shared/interfaces";
-import { envUtils } from "../../shared/vscode/utils";
-import { requiresAuthIframes } from "../../shared/vscode/utils_cloud";
+import { Logger } from "../../../../../src/shared/interfaces";
+import { envUtils } from "../../../../../src/shared/vscode/utils";
+import { requiresAuthIframes } from "../../../../../src/shared/vscode/utils_cloud";
 
 export const handleUrlAuthFunction = `
 	async function handleUrlAuth(urls) {

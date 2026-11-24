@@ -1,11 +1,11 @@
 import * as path from "path";
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
-import { Outline } from "../../shared/analysis/lsp/custom_protocol";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
-import { lspToPosition, lspToRange } from "../../shared/vscode/utils";
+import { Outline } from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { getTemplatedLaunchConfigs } from "../../../../../src/shared/vscode/debugger";
+import { lspToPosition, lspToRange } from "../../../../../src/shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { extensionApiModel } from "../api/extension_api";
 import { isInsideFlutterProject, isTestFile } from "../utils";

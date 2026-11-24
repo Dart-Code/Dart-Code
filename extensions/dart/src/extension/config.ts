@@ -1,8 +1,8 @@
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
-import { CustomDevToolsConfig, GetSDKCommandConfig } from "../shared/interfaces";
-import { NullAsUndefined, nullToUndefined } from "../shared/utils";
-import { prepareLogFilePath } from "../shared/utils/fs";
-import { resolvePaths } from "../shared/vscode/utils";
+import { CustomDevToolsConfig, GetSDKCommandConfig } from "../../../../src/shared/interfaces";
+import { NullAsUndefined, nullToUndefined } from "../../../../src/shared/utils";
+import { prepareLogFilePath } from "../../../../src/shared/utils/fs";
+import { resolvePaths } from "../../../../src/shared/vscode/utils";
 import { DevToolsLocations, DevToolsLocationsWithDefault } from "./sdk/dev_tools/manager";
 import { insertWorkspaceName } from "./utils";
 

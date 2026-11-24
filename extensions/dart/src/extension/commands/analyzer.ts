@@ -1,11 +1,11 @@
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { Analyzer } from "../../shared/analyzer";
-import { ExtensionRestartReason, issueTrackerAction, issueTrackerUri, showLogAction } from "../../shared/constants";
-import { Logger } from "../../shared/interfaces";
-import { getRandomInt } from "../../shared/utils/fs";
-import { envUtils } from "../../shared/vscode/utils";
+import { Analyzer } from "../../../../../src/shared/analyzer";
+import { ExtensionRestartReason, issueTrackerAction, issueTrackerUri, showLogAction } from "../../../../../src/shared/constants";
+import { Logger } from "../../../../../src/shared/interfaces";
+import { getRandomInt } from "../../../../../src/shared/utils/fs";
+import { envUtils } from "../../../../../src/shared/vscode/utils";
 import { Analytics, AnalyticsEvent } from "../analytics";
 import { config } from "../config";
 import { ringLog } from "../extension";

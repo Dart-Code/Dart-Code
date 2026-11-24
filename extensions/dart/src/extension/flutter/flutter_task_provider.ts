@@ -1,10 +1,10 @@
 
 import * as vs from "vscode";
-import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { isMac, isWin } from "../../shared/constants";
-import { getFutterWebRenderer } from "../../shared/flutter/utils";
-import { DartSdks, Logger } from "../../shared/interfaces";
-import { arrayStartsWith } from "../../shared/utils/array";
+import { FlutterCapabilities } from "../../../../../src/shared/capabilities/flutter";
+import { isMac, isWin } from "../../../../../src/shared/constants";
+import { getFutterWebRenderer } from "../../../../../src/shared/flutter/utils";
+import { DartSdks, Logger } from "../../../../../src/shared/interfaces";
+import { arrayStartsWith } from "../../../../../src/shared/utils/array";
 import { config } from "../config";
 import { BaseTaskProvider, DartTaskDefinition } from "../dart/dart_task_provider";
 

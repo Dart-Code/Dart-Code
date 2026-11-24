@@ -1,11 +1,11 @@
 import { ContinuedEvent, Event, OutputEvent, TerminatedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
-import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
-import { DartLaunchArgs } from "../shared/debugging/interfaces";
-import { LogCategory } from "../shared/enums";
-import { Logger, SpawnedProcess } from "../shared/interfaces";
-import { getPubExecutionInfo } from "../shared/processes";
-import { errorMessage, errorMessageWithStack, usingCustomScript } from "../shared/utils";
+import { debugLaunchProgressId, restartReasonManual } from "../../../../src/shared/constants";
+import { DartLaunchArgs } from "../../../../src/shared/debugging/interfaces";
+import { LogCategory } from "../../../../src/shared/enums";
+import { Logger, SpawnedProcess } from "../../../../src/shared/interfaces";
+import { getPubExecutionInfo } from "../../../../src/shared/processes";
+import { errorMessage, errorMessageWithStack, usingCustomScript } from "../../../../src/shared/utils";
 import { AppProgress } from "./daemon_interfaces";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";

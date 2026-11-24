@@ -1,8 +1,8 @@
 import { Thread, ThreadEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
-import { LogCategory } from "../shared/enums";
-import { Logger } from "../shared/interfaces";
-import { PromiseCompleter, errorMessageWithStack } from "../shared/utils";
+import { LogCategory } from "../../../../src/shared/enums";
+import { Logger } from "../../../../src/shared/interfaces";
+import { PromiseCompleter, errorMessageWithStack } from "../../../../src/shared/utils";
 import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef, VmExceptionMode } from "./dart_debug_protocol";
 

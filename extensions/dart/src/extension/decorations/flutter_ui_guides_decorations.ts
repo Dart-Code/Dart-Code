@@ -1,10 +1,10 @@
 import * as vs from "vscode";
-import * as lsp from "../../shared/analysis/lsp/custom_protocol";
-import { IAmDisposable } from "../../shared/interfaces";
-import { disposeAll, flatMap } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { SingleDocumentPositionTracker } from "../../shared/vscode/trackers";
-import { lspToPosition } from "../../shared/vscode/utils";
+import * as lsp from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll, flatMap } from "../../../../../src/shared/utils";
+import { fsPath } from "../../../../../src/shared/utils/fs";
+import { SingleDocumentPositionTracker } from "../../../../../src/shared/vscode/trackers";
+import { lspToPosition } from "../../../../../src/shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { config } from "../config";
 

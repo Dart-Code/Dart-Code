@@ -2,6 +2,36 @@ import eslint from '@eslint/js';
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
+const restrictedExtensionImportPatterns = [
+	{
+		"group": ["**/../extension/**"],
+		"message": "Do not import extension code because the extension packing will mean duplicate definitions and state."
+	},
+	{
+		"group": ["**/../dart/src/extension/**"],
+		"message": "Do not import extension code because the extension packing will mean duplicate definitions and state."
+	},
+	{
+		"group": ["**/extensions/*/src/extension/**"],
+		"message": "Do not import extension code because the extension packing will mean duplicate definitions and state."
+	},
+];
+
+const restrictedDebugImportPatterns = [
+	{
+		"group": ["**/../debug/**"],
+		"message": "Do not import debugger code because it is expected to run in another process."
+	},
+	{
+		"group": ["**/../dart/src/debug/**"],
+		"message": "Do not import debugger code because it is expected to run in another process."
+	},
+	{
+		"group": ["**/extensions/*/src/debug/**"],
+		"message": "Do not import debugger code because it is expected to run in another process."
+	},
+];
+
 export default defineConfig([
 	eslint.configs.recommended,
 	tseslint.configs.recommendedTypeChecked, // TODO(dantup): Consider strict.
@@ -12,10 +42,10 @@ export default defineConfig([
 			"**/test_projects/**",
 			"eslint.config.js",
 			"lints/**",
-			"media/**",
+			"**/media/**",
 			"node_modules/**",
-			"src/debug/**", // This is legacy code going away soon.
-			"out/**",
+			"extensions/dart/src/debug/**", // This is legacy code going away soon.
+			"**/out/**",
 			"webpack.config.js",
 		],
 	},
@@ -61,14 +91,10 @@ export default defineConfig([
 				}
 			],
 			"no-restricted-imports": ["error", {
-				"patterns": [{
-					"group": ["**/../extension/**"],
-					"message": "Do not import extension code because the extension packing will mean duplicate definitions and state."
-				},
-				{
-					"group": ["**/../debug/**"],
-					"message": "Do not import debugger code because it is expected to run in another process."
-				}]
+				"patterns": [
+					...restrictedExtensionImportPatterns,
+					...restrictedDebugImportPatterns,
+				]
 			}],
 			"arrow-body-style": "error",
 			"arrow-parens": [
@@ -220,7 +246,7 @@ export default defineConfig([
 		// Block importing VS Code except for certain places.
 		files: ["**/*.ts"],
 		ignores: [
-			"src/extension/**",
+			"extensions/dart/src/extension/**",
 			"src/test/**",
 			"**/vscode/**",
 		],
@@ -228,14 +254,10 @@ export default defineConfig([
 			"no-restricted-imports": ["error", {
 				// We need to re-include the patterns from above otherwise they will not be
 				// applied to the bits that match this block.
-				"patterns": [{
-					"group": ["**/../extension/**"],
-					"message": "Do not import extension code because the extension packing will mean duplicate definitions and state."
-				},
-				{
-					"group": ["**/../debug/**"],
-					"message": "Do not import debugger code because it is expected to run in another process."
-				}],
+				"patterns": [
+					...restrictedExtensionImportPatterns,
+					...restrictedDebugImportPatterns,
+				],
 				"paths": ["vscode"]
 			}],
 		},
@@ -248,10 +270,7 @@ export default defineConfig([
 				// We need to re-include the extension pattern from above because overriding
 				// no-restricted-imports here (to allow debug imports in tests) replaces the
 				// top-level rule.
-				"patterns": [{
-					"group": ["**/../extension/**"],
-					"message": "Do not import extension code because the extension packing will mean duplicate definitions and state."
-				}]
+				"patterns": restrictedExtensionImportPatterns,
 			}],
 		},
 	},

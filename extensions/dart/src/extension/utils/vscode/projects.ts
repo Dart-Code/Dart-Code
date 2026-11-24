@@ -1,14 +1,14 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { Uri } from "vscode";
-import { Logger } from "../../../shared/interfaces";
-import { notUndefined } from "../../../shared/utils";
-import { fsPath, homeRelativePath, isFlutterProjectFolder } from "../../../shared/utils/fs";
-import { getActiveRealFileEditor } from "../../../shared/vscode/editors";
-import { locateBestProjectRoot } from "../../../shared/vscode/project";
-import type { PubWorkspaceOrPackageFolderInfo } from "../../../shared/vscode/pub";
-import { getPubWorkspaceOrPackageFolderInfo } from "../../../shared/vscode/pub";
-import { getAllProjectFolders } from "../../../shared/vscode/utils";
+import { Logger } from "../../../../../../src/shared/interfaces";
+import { notUndefined } from "../../../../../../src/shared/utils";
+import { fsPath, homeRelativePath, isFlutterProjectFolder } from "../../../../../../src/shared/utils/fs";
+import { getActiveRealFileEditor } from "../../../../../../src/shared/vscode/editors";
+import { locateBestProjectRoot } from "../../../../../../src/shared/vscode/project";
+import type { PubWorkspaceOrPackageFolderInfo } from "../../../../../../src/shared/vscode/pub";
+import { getPubWorkspaceOrPackageFolderInfo } from "../../../../../../src/shared/vscode/pub";
+import { getAllProjectFolders } from "../../../../../../src/shared/vscode/utils";
 import { config } from "../../config";
 import { getExcludedFolders } from "../../utils";
 

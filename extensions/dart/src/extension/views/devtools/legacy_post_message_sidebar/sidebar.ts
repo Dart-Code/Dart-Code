@@ -1,11 +1,11 @@
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
-import { DartCapabilities } from "../../../../shared/capabilities/dart";
-import { CommandSource } from "../../../../shared/constants";
-import { IAmDisposable, Logger } from "../../../../shared/interfaces";
-import { disposeAll } from "../../../../shared/utils";
-import { FlutterDeviceManager } from "../../../../shared/vscode/device_manager";
-import { envUtils } from "../../../../shared/vscode/utils";
+import { DartCapabilities } from "../../../../../../../src/shared/capabilities/dart";
+import { CommandSource } from "../../../../../../../src/shared/constants";
+import { IAmDisposable, Logger } from "../../../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../../../src/shared/utils";
+import { FlutterDeviceManager } from "../../../../../../../src/shared/vscode/device_manager";
+import { envUtils } from "../../../../../../../src/shared/vscode/utils";
 import { DevToolsManager } from "../../../sdk/dev_tools/manager";
 import { DartApi } from "./dart_tooling_api";
 
