@@ -4,7 +4,7 @@ import * as process from "process";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
-import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev, showLogAction } from "../shared/constants";
+import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, fiveSecondsInMs, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev, showLogAction } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, OBSERVATORY_SUPPORTED_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
@@ -16,6 +16,7 @@ import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAllAsync, withTimeout } from "../shared/utils";
 import { fsPath, getRandomInt } from "../shared/utils/fs";
+import { runWhenReadyOrAfterTimeout } from "../shared/utils/promises";
 import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -113,6 +114,7 @@ let extensionThisSessionStart = extensionTotalSessionStart; // Reset during ever
 
 let previousSettingsObject: Record<string, string | number | boolean | undefined> | undefined;
 let pendingConfigReloadTimer: NodeJS.Timeout | undefined;
+let startupPackageCheck: IAmDisposable | undefined;
 let pendingSdkConfigChangeTimestamp: number | undefined;
 let reloadPromise: Promise<void> | undefined;
 let experiments: KnownExperiments;
@@ -682,14 +684,27 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	setCommandVisiblity(true, workspaceContext);
 	void vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, dartPlatformName);
 
-	// Prompt for pub get/upgrade if required
+	// Prompt for pub get/upgrade if required.
 	function checkForPackages() {
+		startupPackageCheck?.dispose();
+		startupPackageCheck = undefined;
 		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
 		if (workspaceContext.config.disableAutomaticPub)
 			return;
 		void packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true, upgradeOnSdkChange: true });
 	}
-	checkForPackages();
+	// Defer the initial package check until initial analysis completes (or a short fallback
+	// timeout elapses, e.g. on large workspaces or if the analyzer fails to start) so it does
+	// not compete with the LSP startup handshake.
+	startupPackageCheck?.dispose();
+	startupPackageCheck = undefined;
+	if (!workspaceContext.config.disableAutomaticPub) {
+		startupPackageCheck = runWhenReadyOrAfterTimeout(analyzer.onInitialAnalysis, fiveSecondsInMs, () => {
+			if (!analyzer.isDisposed)
+				checkForPackages();
+		});
+		context.subscriptions.push(startupPackageCheck);
+	}
 
 	// If we're not already in Flutter mode, watch for Flutter projects being added.
 	if (!workspaceContext.hasAnyFlutterProjects)
@@ -986,12 +1001,15 @@ function getSettingsThatRequireRestart(): Record<string, string | number | boole
 export async function deactivate(isRestart = false, reason: ExtensionRestartReason | undefined): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
 
-	// Cancel any pending config-change reload timer and clear `previousSettingsObject`
-	// so config-change events firing during deactivation do not schedule another reload.
+	// Cancel any pending config-change reload timer and startup package check, and clear
+	// `previousSettingsObject` so config-change events firing during deactivation do not
+	// schedule another reload.
 	clearTimeout(pendingConfigReloadTimer);
 	pendingConfigReloadTimer = undefined;
 	pendingSdkConfigChangeTimestamp = undefined;
 	previousSettingsObject = undefined;
+	startupPackageCheck?.dispose();
+	startupPackageCheck = undefined;
 
 	// Record session durations.
 	const sessionEndTimestamp = Date.now();
