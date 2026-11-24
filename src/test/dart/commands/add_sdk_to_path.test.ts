@@ -40,6 +40,14 @@ describe("AddSdkToPath", () => {
 		return path.join(home, isMac ? ".bash_profile" : ".bashrc");
 	}
 
+	async function clearClipboardForTest(): Promise<void> {
+		const original = await vs.env.clipboard.readText();
+		defer("restore clipboard", async () => {
+			await vs.env.clipboard.writeText(original);
+		});
+		await vs.env.clipboard.writeText("");
+	}
+
 	function prepareAddToPath(outcome: "succeeded" | "alreadyExisted" | "failed" = "succeeded", existingSdkPath = fakeDartSdk) {
 		if (isWin) {
 			const result = outcome === "alreadyExisted"
@@ -142,7 +150,7 @@ describe("AddSdkToPath", () => {
 		if (!addToPathInstructionsUrl)
 			return this.skip();
 		prepareAddToPath("failed");
-		await vs.env.clipboard.writeText("");
+		await clearClipboardForTest();
 		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
 		showWarningMessage.onFirstCall().resolves(copySdkBinPathToClipboardAction);
 		showWarningMessage.onSecondCall().resolves(noThanksAction);
@@ -286,7 +294,7 @@ describe("AddSdkToPath", () => {
 				return this.skip();
 			setEnvVar("SHELL", undefined);
 			useTempHome();
-			await vs.env.clipboard.writeText("");
+			await clearClipboardForTest();
 			const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 			showInformationMessage.onFirstCall().resolves(copySdkBinPathToClipboardAction);
 			showInformationMessage.onSecondCall().resolves(noThanksAction);
@@ -308,11 +316,12 @@ describe("AddSdkToPath", () => {
 		it("shows manual instructions when PowerShell cannot be spawned", async function () {
 			if (!addToPathInstructionsUrl)
 				return this.skip();
-			ChildProcessSpawnStub.powershellAddToPath({ error: new Error("spawn powershell ENOENT") });
+			const spawn = ChildProcessSpawnStub.powershellAddToPath({ error: new Error("spawn powershell ENOENT") });
 			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(noThanksAction);
 
 			await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
 
+			assert.equal(spawn.calls.length, 1);
 			assert.ok(showWarningMessage.calledOnceWithExactly(unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction));
 		});
 	});
