@@ -194,17 +194,14 @@ export class ChildProcessSpawnStub {
 		});
 	}
 
-	/// Fakes the PowerShell invocation used by `AddSdkToPath.addToPathWindows`,
-	/// which runs `powershell -File <add_to_path.ps1> <sdkPath>` via
-	/// `runToolProcess` → `child_process.spawn`.
-	static powershellAddToPath(options?: { result?: () => FakeSpawnResult }) {
-		return new ChildProcessSpawnStub((bin, args) => {
-			if (bin !== "powershell" && bin !== "powershell.exe")
-				return undefined;
-			if (!args?.some((arg) => arg.replace(/\\/g, "/").endsWith("/add_to_path.ps1")))
-				return undefined;
-			return options?.result ? options.result() : { exitCode: 0 };
-		});
+	/**
+	 * Fakes the PowerShell invocation used by `AddSdkToPath.addToPathWindows`.
+	 */
+	static powershellAddToPath(options?: FakeSpawnResult) {
+		return new ChildProcessSpawnStub(
+			(bin, args) => (bin === "powershell" || bin === "powershell.exe") && args.some((arg) => arg.replace(/\\/g, "/").endsWith("/add_to_path.ps1")),
+			options,
+		);
 	}
 
 	public get calls(): SpawnedProcessCall[] {
