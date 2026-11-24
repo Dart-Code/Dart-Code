@@ -48,7 +48,14 @@ describe("AddSdkToPath", () => {
 		await vs.env.clipboard.writeText("");
 	}
 
-	function prepareAddToPath(outcome: "succeeded" | "alreadyExisted" | "failed" = "succeeded", existingSdkPath = fakeDartSdk) {
+	function prepareAddToPath(
+		outcome: "succeeded" | "alreadyExisted" | "failed" = "succeeded",
+		existingSdkPath = fakeDartSdk,
+	): {
+		assertAdded: (sdkRoot: string) => void;
+		assertAttempted: (sdkRoot: string) => void;
+		assertNotRun: () => void;
+	} {
 		if (isWin) {
 			const result = outcome === "alreadyExisted"
 				? { exitCode: 12345 }
@@ -56,25 +63,28 @@ describe("AddSdkToPath", () => {
 					? { exitCode: 1, stderr: "failure" }
 					: { exitCode: 0 };
 			const spawn = ChildProcessSpawnStub.powershellAddToPath(result);
+			const assertSpawned = (sdkRoot: string) => {
+				spawn.assertCalls([{
+					args: [
+						"-NoProfile",
+						"-NonInteractive",
+						"-WindowStyle", "Hidden",
+						"-ExecutionPolicy", "Bypass",
+						"-File", privateApi.context.asAbsolutePath("media/add_to_path.ps1"),
+						path.join(sdkRoot, "bin"),
+					],
+					bin: "powershell",
+					cwd: undefined,
+				}]);
+			};
 			return {
-				assertAdded: (sdkRoot: string) => {
-					spawn.assertCalls([{
-						args: [
-							"-NoProfile",
-							"-NonInteractive",
-							"-WindowStyle", "Hidden",
-							"-ExecutionPolicy", "Bypass",
-							"-File", privateApi.context.asAbsolutePath("media/add_to_path.ps1"),
-							path.join(sdkRoot, "bin"),
-						],
-						bin: "powershell",
-						cwd: undefined,
-					}]);
-				},
+				assertAdded: assertSpawned,
+				assertAttempted: assertSpawned,
 				assertNotRun: () => spawn.assertCalls([]),
 			};
 		}
 
+		// Cross-platform tests assume a supported Unix shell; non-bash shells are tested under Unix below.
 		setEnvVar("SHELL", "/bin/bash");
 		const home = useTempHome();
 		const profile = unixProfilePath(home, "bash");
@@ -88,6 +98,7 @@ describe("AddSdkToPath", () => {
 			assertAdded: (sdkRoot: string) => {
 				assert.equal(fs.readFileSync(profile, "utf8"), `export PATH="${path.join(sdkRoot, "bin")}:$PATH"\n`);
 			},
+			assertAttempted: () => assert.ok(fs.statSync(profile).isDirectory()),
 			assertNotRun: () => assert.equal(fs.existsSync(profile), false),
 		};
 	}
@@ -120,57 +131,15 @@ describe("AddSdkToPath", () => {
 		assert.ok(showInformationMessage.calledOnceWithExactly(sdkAlreadyOnPathPrompt("Dart")));
 	});
 
-	it("uses the warning prompt for manual instructions after an automatic failure", async function () {
-		if (!addToPathInstructionsUrl)
-			return this.skip();
-		prepareAddToPath("failed");
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(noThanksAction);
-
-		await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
-
-		assert.ok(showWarningMessage.calledOnceWithExactly(unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction));
-	});
-
-	it("opens the instructions URL from the manual instructions prompt", async function () {
-		if (!addToPathInstructionsUrl)
-			return this.skip();
-		prepareAddToPath("failed");
-		const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
-		showWarningMessage.onFirstCall().resolves(openInstructionsAction);
-		showWarningMessage.onSecondCall().resolves(noThanksAction);
-
-		await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
-
-		assert.equal(showWarningMessage.callCount, 2);
-		assert.ok(openInBrowser.calledOnceWithExactly(addToPathInstructionsUrl));
-	});
-
-	it("copies the SDK bin path to the clipboard from the manual instructions prompt", async function () {
-		if (!addToPathInstructionsUrl)
-			return this.skip();
-		prepareAddToPath("failed");
-		await clearClipboardForTest();
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
-		showWarningMessage.onFirstCall().resolves(copySdkBinPathToClipboardAction);
-		showWarningMessage.onSecondCall().resolves(noThanksAction);
-
-		await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
-
-		assert.equal(showWarningMessage.callCount, 2);
-		// vs.env.clipboard cannot be stubbed, so verify the real clipboard like
-		// the debug command tests do.
-		assert.equal(await vs.env.clipboard.readText(), path.join(fakeDartSdk, "bin"));
-	});
-
 	it("reports already-on-PATH when the update fails but PATH contains the SDK", async () => {
-		prepareAddToPath("failed");
+		const env = prepareAddToPath("failed");
 		const originalPath = process.env.PATH;
 		setEnvVar("PATH", `${originalPath ?? ""}${path.delimiter}${path.join(fakeDartSdk, "bin")}`);
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(undefined);
 
 		await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
 
+		env.assertAttempted(fakeDartSdk);
 		assert.ok(showInformationMessage.calledOnceWithExactly(sdkAlreadyOnPathPrompt("Dart")));
 	});
 
@@ -275,54 +244,105 @@ describe("AddSdkToPath", () => {
 				`existing content\nexport PATH="${path.join(fakeDartSdk, "bin")}:$PATH"\nexport PATH="${path.join(fakeFlutterSdk, "bin")}:$PATH"\n`,
 			);
 		});
-
-		it("shows manual instructions when the shell is unsupported", async function () {
-			if (!addToPathInstructionsUrl)
-				return this.skip();
-			setEnvVar("SHELL", "/bin/fish");
-			const home = useTempHome();
-			const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(noThanksAction);
-
-			await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
-
-			assert.ok(showInformationMessage.calledOnceWithExactly(addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction));
-			assert.deepEqual(fs.readdirSync(home), []);
-		});
-
-		it("promptToAddToPath shows manual instructions and copies SDK bin path when automatic add is unavailable", async function () {
-			if (!addToPathInstructionsUrl)
-				return this.skip();
-			setEnvVar("SHELL", undefined);
-			useTempHome();
-			await clearClipboardForTest();
-			const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-			showInformationMessage.onFirstCall().resolves(copySdkBinPathToClipboardAction);
-			showInformationMessage.onSecondCall().resolves(noThanksAction);
-
-			await privateApi.addSdkToPathCommands.promptToAddToPath("Dart", fakeDartSdk);
-
-			assert.equal(showInformationMessage.callCount, 2);
-			assert.deepEqual(showInformationMessage.firstCall.args, [addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction]);
-			assert.equal(await vs.env.clipboard.readText(), path.join(fakeDartSdk, "bin"));
-		});
 	});
 
-	describe("Windows", () => {
+	describe("manual instructions", () => {
 		beforeEach(function () {
-			if (!isWin)
+			if (!addToPathInstructionsUrl)
 				this.skip();
 		});
 
-		it("shows manual instructions when PowerShell cannot be spawned", async function () {
-			if (!addToPathInstructionsUrl)
-				return this.skip();
-			const spawn = ChildProcessSpawnStub.powershellAddToPath({ error: new Error("spawn powershell ENOENT") });
+		it("uses the warning prompt for manual instructions after an automatic failure", async () => {
+			const env = prepareAddToPath("failed");
 			const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(noThanksAction);
 
 			await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
 
-			assert.equal(spawn.calls.length, 1);
+			env.assertAttempted(fakeDartSdk);
 			assert.ok(showWarningMessage.calledOnceWithExactly(unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction));
+		});
+
+		it("opens the instructions URL from the manual instructions prompt", async () => {
+			assert.ok(addToPathInstructionsUrl);
+			const env = prepareAddToPath("failed");
+			const openInBrowser = sb.stub(privateApi.envUtils, "openInBrowser").resolves(true);
+			const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
+			showWarningMessage.onFirstCall().resolves(openInstructionsAction);
+			showWarningMessage.onSecondCall().resolves(noThanksAction);
+
+			await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
+
+			env.assertAttempted(fakeDartSdk);
+			assert.equal(showWarningMessage.callCount, 2);
+			assert.ok(openInBrowser.calledOnceWithExactly(addToPathInstructionsUrl));
+		});
+
+		it("copies the SDK bin path to the clipboard when running dart.addSdkToPath", async () => {
+			const env = prepareAddToPath("failed");
+			await clearClipboardForTest();
+			sb.stub(privateApi.workspaceContext.sdks, "dart").value(fakeDartSdk);
+			sb.stub(privateApi.workspaceContext.sdks, "dartSdkIsFromFlutter").value(false);
+			const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
+			showWarningMessage.onFirstCall().resolves(copySdkBinPathToClipboardAction);
+			showWarningMessage.onSecondCall().resolves(noThanksAction);
+
+			await vs.commands.executeCommand("dart.addSdkToPath");
+
+			env.assertAttempted(fakeDartSdk);
+			assert.equal(showWarningMessage.callCount, 2);
+			// vs.env.clipboard cannot be stubbed, so verify the real clipboard like
+			// the debug command tests do.
+			assert.equal(await vs.env.clipboard.readText(), path.join(fakeDartSdk, "bin"));
+		});
+
+		describe("Unix", () => {
+			beforeEach(function () {
+				if (isWin)
+					this.skip();
+			});
+
+			it("shows manual instructions when the shell is unsupported", async () => {
+				setEnvVar("SHELL", "/bin/fish");
+				const home = useTempHome();
+				const showInformationMessage = sb.stub(vs.window, "showInformationMessage").resolves(noThanksAction);
+
+				await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
+
+				assert.ok(showInformationMessage.calledOnceWithExactly(addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction));
+				assert.deepEqual(fs.readdirSync(home), []);
+			});
+
+			it("promptToAddToPath shows manual instructions and copies SDK bin path when automatic add is unavailable", async () => {
+				setEnvVar("SHELL", undefined);
+				useTempHome();
+				await clearClipboardForTest();
+				const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
+				showInformationMessage.onFirstCall().resolves(copySdkBinPathToClipboardAction);
+				showInformationMessage.onSecondCall().resolves(noThanksAction);
+
+				await privateApi.addSdkToPathCommands.promptToAddToPath("Dart", fakeDartSdk);
+
+				assert.equal(showInformationMessage.callCount, 2);
+				assert.deepEqual(showInformationMessage.firstCall.args, [addSdkToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction]);
+				assert.equal(await vs.env.clipboard.readText(), path.join(fakeDartSdk, "bin"));
+			});
+		});
+
+		describe("Windows", () => {
+			beforeEach(function () {
+				if (!isWin)
+					this.skip();
+			});
+
+			it("shows manual instructions when PowerShell cannot be spawned", async () => {
+				const spawn = ChildProcessSpawnStub.powershellAddToPath({ error: new Error("spawn powershell ENOENT") });
+				const showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves(noThanksAction);
+
+				await privateApi.addSdkToPathCommands.addToPath("Dart", fakeDartSdk);
+
+				assert.equal(spawn.calls.length, 1);
+				assert.ok(showWarningMessage.calledOnceWithExactly(unableToAddToPathPrompt("Dart"), openInstructionsAction, copySdkBinPathToClipboardAction, noThanksAction));
+			});
 		});
 	});
 });
