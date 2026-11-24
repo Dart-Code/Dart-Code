@@ -1,3 +1,5 @@
+import { IAmDisposable } from "../interfaces";
+
 export const resolvedPromise = Promise.resolve();
 
 export async function waitFor<T>(action: () => T | Promise<T>, checkEveryMilliseconds = 50, tryForMilliseconds = 15000, token?: { isCancellationRequested: boolean }): Promise<T | undefined> {
@@ -38,4 +40,39 @@ export async function mapWithConcurrency<T, R>(
 		}
 	}));
 	return results;
+}
+
+/**
+ * Runs `action` at most once, as soon as `ready` settles or after `timeoutMs` elapses,
+ * whichever happens first.
+ *
+ * Returns a disposable that cancels any pending execution and clears the fallback timer.
+ */
+export function runWhenReadyOrAfterTimeout(
+	ready: Promise<unknown>,
+	timeoutMs: number,
+	action: () => void,
+): IAmDisposable {
+	let done = false;
+	const timer = setTimeout(run, timeoutMs);
+	timer.unref();
+
+	function run() {
+		if (done)
+			return;
+		done = true;
+		clearTimeout(timer);
+		action();
+	}
+
+	void ready.then(run, run);
+
+	return {
+		dispose() {
+			if (done)
+				return;
+			done = true;
+			clearTimeout(timer);
+		},
+	};
 }
