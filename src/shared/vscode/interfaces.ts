@@ -79,7 +79,7 @@ export class ProgressMessage {
 	}
 }
 
-export interface AddSdkToPathHandler {
+export interface AddSdkToPathCommandHandler {
 	addToPath(sdkType: SdkTypeString, sdkPath: string | undefined): Promise<void>;
 	promptToAddToPath(sdkType: SdkTypeString, sdkPath: string): Promise<void>;
 }
@@ -130,7 +130,7 @@ export interface InternalExtensionApi {
 		promptForPackageInfo(): Promise<string | PickablePackage | undefined>;
 		promptForPathPackageInfo(packagePath?: string): Promise<PathPubPackage | undefined>;
 	},
-	addSdkToPath: AddSdkToPathHandler;
+	addSdkToPathCommands: AddSdkToPathCommandHandler;
 	clearCaches: () => void;
 	commandState: {
 		numProjectCreationsInProgress: number;

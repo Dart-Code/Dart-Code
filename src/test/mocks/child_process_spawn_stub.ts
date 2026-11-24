@@ -194,17 +194,24 @@ export class ChildProcessSpawnStub {
 		});
 	}
 
-	/// Fakes the PowerShell invocation used by `AddSdkToPath.addToPathWindows`,
-	/// which runs `powershell -File <add_to_path.ps1> <sdkPath>` via
-	/// `runToolProcess` → `child_process.spawn`.
-	static powershellAddToPath(options?: { result?: () => FakeSpawnResult }) {
+	/**
+	 * Fakes the PowerShell invocation used by `AddSdkToPath.addToPathWindows`.
+	 *
+	 * Fails closed for any other PowerShell or `.ps1` invocation so a changed
+	 * command invocation cannot accidentally run the real script.
+	 */
+	static powershellAddToPath(options?: FakeSpawnResult) {
 		return new ChildProcessSpawnStub((bin, args) => {
-			if (bin !== "powershell" && bin !== "powershell.exe")
-				return undefined;
-			if (!args?.some((arg) => arg.replace(/\\/g, "/").endsWith("/add_to_path.ps1")))
-				return undefined;
-			return options?.result ? options.result() : { exitCode: 0 };
-		});
+			const exe = path.win32.basename(bin).toLowerCase();
+			const isPowerShell = exe === "powershell" || exe === "powershell.exe" || exe === "pwsh" || exe === "pwsh.exe";
+			const isAddToPathScript = args.some((arg) => arg.replace(/\\/g, "/").toLowerCase().endsWith("/add_to_path.ps1"));
+			const isPs1Script = args.some((arg) => arg.toLowerCase().endsWith(".ps1"));
+			if ((exe === "powershell" || exe === "powershell.exe") && isAddToPathScript)
+				return true;
+			if (isPowerShell || isPs1Script)
+				throw new Error(`Unexpected PowerShell spawn while powershellAddToPath stub is active: ${bin} ${JSON.stringify(args)}`);
+			return undefined;
+		}, options);
 	}
 
 	public get calls(): SpawnedProcessCall[] {

@@ -744,7 +744,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (isDartCodeTestRun) {
 		const privateApi: InternalExtensionApi = {
 			addDependencyCommand,
-			addSdkToPath: addSdkToPathCommands,
+			addSdkToPathCommands,
 			analyzer,
 			clearCaches,
 			commandState,
