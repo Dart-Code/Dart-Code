@@ -290,34 +290,52 @@ describe("flutter daemon", () => {
 		const { clock, internals, logTimeout } = setupTimeoutDaemonTest();
 		const neverResolves = new PromiseCompleter<unknown>();
 		const sendRequestStub = sb.stub(internals, "sendRequest").callsFake((method: string) => {
-			if (method === "device.enable")
+			if (method === "device.enable" || method === "emulator.getEmulators")
 				return neverResolves.promise;
-			if (method === "emulator.getEmulators")
-				return Promise.resolve([]);
 			return Promise.resolve(undefined);
 		});
 
 		await daemon.handleMessage(JSON.stringify([{ event: "daemon.connected", params: { version: "0.6.1", pid: 999999 } }]) + "\n");
 		await clock.tickAsync(0);
 
-		const emulatorsPromise = daemon.getEmulators();
+		let emulatorsResolved = false;
+		let emulatorsResult: unknown;
+		const emulatorsPromise = daemon.getEmulators().then((result) => {
+			emulatorsResolved = true;
+			emulatorsResult = result;
+			return result;
+		});
 		await clock.tickAsync(0);
 
 		assert.equal(sendRequestStub.calledOnceWithExactly("device.enable"), true);
+		assert.equal(emulatorsResolved, false);
 
 		// At 20s, device.enable falls back so initialization proceeds after the 2s settle delay.
 		await clock.tickAsync(twentySecondsInMs);
 		assert.equal(logTimeout.notCalled, true);
 		assert.equal(sendRequestStub.calledWith("emulator.getEmulators"), false);
+		assert.equal(emulatorsResolved, false);
 
+		// At 22s, initialization settles and emulator.getEmulators starts its own 20s caller fallback.
 		await clock.tickAsync(2000);
-		assert.deepStrictEqual(await emulatorsPromise, []);
 		assert.equal(sendRequestStub.calledWith("emulator.getEmulators"), true);
+		assert.equal(emulatorsResolved, false);
+
+		// At 42s, getEmulators falls back to [] while both hang timers keep waiting up to 2m.
+		await clock.tickAsync(twentySecondsInMs);
+		assert.equal(emulatorsResolved, true);
+		assert.deepStrictEqual(emulatorsResult, []);
+		assert.deepStrictEqual(await emulatorsPromise, []);
+		assert.equal(logTimeout.notCalled, true);
 
 		// At 2m total, the hung device.enable request is recorded.
-		await clock.tickAsync(twoMinutesInMs - twentySecondsInMs - 2000);
+		await clock.tickAsync(twoMinutesInMs - twentySecondsInMs - 2000 - twentySecondsInMs);
 		assert.ok(logTimeout.calledOnceWithExactly("device.enable"));
 		assert.equal(internals.hasLoggedDaemonTimeout, true);
+
+		// At 142s, emulator.getEmulators's hang timer also fires without recording a duplicate event.
+		await clock.tickAsync(twentySecondsInMs + 2000);
+		assert.ok(logTimeout.calledOnceWithExactly("device.enable"));
 	});
 
 	it("does not record a hang timeout when device.enable responds slowly before hangTimeoutMs", async () => {
