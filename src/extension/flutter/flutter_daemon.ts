@@ -53,7 +53,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			// https://github.com/Dart-Code/Dart-Code/issues/5793
 			const completer = this.daemonInitializedCompleter;
 			const markInitializedAfterDelay = () => {
-				if (!this.isShuttingDown && !this.isDisposed)
+				if (!this.isShuttingDown && !this.isDisposed && !this.processExited)
 					this.daemonInitializedTimerId = setTimeout(() => completer.resolve(), 2000).unref();
 			};
 			void this.deviceEnable().then(markInitializedAfterDelay, markInitializedAfterDelay);
@@ -324,8 +324,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("daemon.version");
 	}
 
-	public deviceEnable(): Thenable<UnknownResponse> {
-		return this.sendRequest("device.enable");
+	public deviceEnable(): Promise<UnknownResponse | undefined> {
+		return this.withRecordedTimeout<UnknownResponse | undefined>("device.enable", this.sendRequest("device.enable"), undefined);
 	}
 
 	/**
