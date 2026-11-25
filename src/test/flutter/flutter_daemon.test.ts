@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { flutterPath } from "../../shared/constants";
+import { flutterPath, twentySecondsInMs, twoMinutesInMs } from "../../shared/constants";
 import { PromiseCompleter } from "../../shared/utils";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
 import { activate, defer, fakeCancellationToken, privateApi, sb, waitForResult } from "../helpers";
@@ -233,5 +233,115 @@ describe("flutter daemon", () => {
 		await clock.tickAsync(60 * 1000);
 		assert.equal(showWarning.callCount, 1);
 		assert.equal(showInfo.callCount, 1);
+	});
+
+	function setupTimeoutDaemonTest() {
+		const clock = sb.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		defer("restore fake timers", () => clock.restore());
+
+		interface TimeoutDaemonInternals {
+			isShuttingDown: boolean;
+			processExited: boolean;
+			hasLoggedDaemonTimeout: boolean;
+			daemonInitializedCompleter: PromiseCompleter<void>;
+			daemonInitialized: Promise<void>;
+			daemonInitializedTimerId?: NodeJS.Timeout;
+			additionalPidsToTerminate: number[];
+			analytics: { logErrorFlutterDaemonTimeout: (requestMethod: string) => void };
+			sendRequest: (method: string, params?: unknown) => Promise<unknown>;
+		}
+		const internals = daemon as unknown as TimeoutDaemonInternals;
+		const originalIsShuttingDown = internals.isShuttingDown;
+		const originalProcessExited = internals.processExited;
+		const originalHasLoggedDaemonTimeout = internals.hasLoggedDaemonTimeout;
+		const originalInitializedCompleter = internals.daemonInitializedCompleter;
+		const originalInitialized = internals.daemonInitialized;
+		const originalTimerId = internals.daemonInitializedTimerId;
+		const originalCapabilitiesVersion = daemon.capabilities.version;
+		const originalAdditionalPidsLength = internals.additionalPidsToTerminate.length;
+		defer("restore daemon timeout state", () => {
+			clearTimeout(internals.daemonInitializedTimerId);
+			internals.isShuttingDown = originalIsShuttingDown;
+			internals.processExited = originalProcessExited;
+			internals.hasLoggedDaemonTimeout = originalHasLoggedDaemonTimeout;
+			internals.daemonInitializedCompleter = originalInitializedCompleter;
+			internals.daemonInitialized = originalInitialized;
+			internals.daemonInitializedTimerId = originalTimerId;
+			daemon.capabilities.version = originalCapabilitiesVersion;
+			internals.additionalPidsToTerminate.length = originalAdditionalPidsLength;
+		});
+
+		const initCompleter = new PromiseCompleter<void>();
+		internals.isShuttingDown = false;
+		internals.processExited = false;
+		internals.hasLoggedDaemonTimeout = false;
+		internals.daemonInitializedCompleter = initCompleter;
+		internals.daemonInitialized = initCompleter.promise;
+		internals.daemonInitializedTimerId = undefined;
+
+		sb.stub(vs.commands, "executeCommand").resolves();
+		sb.stub(vs.window, "showWarningMessage").resolves(undefined);
+		const logTimeout = sb.stub(internals.analytics, "logErrorFlutterDaemonTimeout");
+
+		return { clock, internals, logTimeout };
+	}
+
+	it("times out unresponsive device.enable so daemonInitialized resolves and hang timeout is recorded", async () => {
+		const { clock, internals, logTimeout } = setupTimeoutDaemonTest();
+		const neverResolves = new PromiseCompleter<unknown>();
+		const sendRequestStub = sb.stub(internals, "sendRequest").callsFake((method: string) => {
+			if (method === "device.enable")
+				return neverResolves.promise;
+			if (method === "emulator.getEmulators")
+				return Promise.resolve([]);
+			return Promise.resolve(undefined);
+		});
+
+		await daemon.handleMessage(JSON.stringify([{ event: "daemon.connected", params: { version: "0.6.1", pid: 999999 } }]) + "\n");
+		await clock.tickAsync(0);
+
+		const emulatorsPromise = daemon.getEmulators();
+		await clock.tickAsync(0);
+
+		assert.equal(sendRequestStub.calledOnceWithExactly("device.enable"), true);
+
+		// At 20s, device.enable falls back so initialization proceeds after the 2s settle delay.
+		await clock.tickAsync(twentySecondsInMs);
+		assert.equal(logTimeout.notCalled, true);
+		assert.equal(sendRequestStub.calledWith("emulator.getEmulators"), false);
+
+		await clock.tickAsync(2000);
+		assert.deepStrictEqual(await emulatorsPromise, []);
+		assert.equal(sendRequestStub.calledWith("emulator.getEmulators"), true);
+
+		// At 2m total, the hung device.enable request is recorded.
+		await clock.tickAsync(twoMinutesInMs - twentySecondsInMs - 2000);
+		assert.ok(logTimeout.calledOnceWithExactly("device.enable"));
+		assert.equal(internals.hasLoggedDaemonTimeout, true);
+	});
+
+	it("does not record a hang timeout when device.enable responds slowly before hangTimeoutMs", async () => {
+		const { clock, internals, logTimeout } = setupTimeoutDaemonTest();
+		const deviceEnableCompleter = new PromiseCompleter<unknown>();
+		sb.stub(internals, "sendRequest").callsFake((method: string) => {
+			if (method === "device.enable")
+				return deviceEnableCompleter.promise;
+			return Promise.resolve(undefined);
+		});
+
+		await daemon.handleMessage(JSON.stringify([{ event: "daemon.connected", params: { version: "0.6.1", pid: 999999 } }]) + "\n");
+		await clock.tickAsync(0);
+
+		// Caller fallback allows initialization to finish at 22s.
+		await clock.tickAsync(twentySecondsInMs + 2000);
+		await internals.daemonInitialized;
+
+		// Slow response arrives before 2m hang threshold.
+		deviceEnableCompleter.resolve(undefined);
+		await clock.tickAsync(0);
+
+		await clock.tickAsync(twoMinutesInMs);
+		assert.equal(logTimeout.notCalled, true);
+		assert.equal(internals.hasLoggedDaemonTimeout, false);
 	});
 });
