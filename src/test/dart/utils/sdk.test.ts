@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, cloningFlutterMessage, copySdkBinPathToClipboardAction, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterDartPath, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openInstructionsAction, openSettingsAction, showLogAction } from "../../../shared/constants";
+import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, cloningFlutterMessage, copySdkBinPathToClipboardAction, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, fiveSecondsInMs, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterDartPath, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openInstructionsAction, openSettingsAction, showLogAction } from "../../../shared/constants";
 import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
@@ -1126,27 +1126,27 @@ describe("SdkUtils", () => {
 	});
 
 	describe("scanWorkspace", () => {
-		describe("Dart SDK search precedence", () => {
-			// Clears the environment variables that can affect SDK searching so tests are
-			// independent of the machine they're run on. Callers should still set
-			// process.env.PATH and stub workspace folders as required.
-			function useIsolatedSdkSearch(): void {
-				const originalPath = process.env.PATH;
-				const originalFlutterRoot = process.env.FLUTTER_ROOT;
-				process.env.PATH = "";
-				delete process.env.FLUTTER_ROOT;
-				defer("restore PATH and FLUTTER_ROOT", () => {
-					if (originalPath === undefined)
-						delete process.env.PATH;
-					else
-						process.env.PATH = originalPath;
-					if (originalFlutterRoot === undefined)
-						delete process.env.FLUTTER_ROOT;
-					else
-						process.env.FLUTTER_ROOT = originalFlutterRoot;
-				});
-			}
+		// Clears the environment variables that can affect SDK searching so tests are
+		// independent of the machine they're run on. Callers should still set
+		// process.env.PATH and stub workspace folders as required.
+		function useIsolatedSdkSearch(): void {
+			const originalPath = process.env.PATH;
+			const originalFlutterRoot = process.env.FLUTTER_ROOT;
+			process.env.PATH = "";
+			delete process.env.FLUTTER_ROOT;
+			defer("restore PATH and FLUTTER_ROOT", () => {
+				if (originalPath === undefined)
+					delete process.env.PATH;
+				else
+					process.env.PATH = originalPath;
+				if (originalFlutterRoot === undefined)
+					delete process.env.FLUTTER_ROOT;
+				else
+					process.env.FLUTTER_ROOT = originalFlutterRoot;
+			});
+		}
 
+		describe("Dart SDK search precedence", () => {
 			function setWorkspaceFolders(folderPaths: string[]): void {
 				sb.stub(vs.workspace, "workspaceFolders").get(() => folderPaths.map((folder, index) => ({
 					uri: vs.Uri.file(folder),
@@ -1559,25 +1559,8 @@ describe("SdkUtils", () => {
 		});
 
 		describe("Flutter initialization", () => {
-			function isolatePathEnv(): void {
-				const origPath = process.env.PATH;
-				const origFlutterRoot = process.env.FLUTTER_ROOT;
-				process.env.PATH = "";
-				delete process.env.FLUTTER_ROOT;
-				defer("restore PATH and FLUTTER_ROOT", () => {
-					if (origPath === undefined)
-						delete process.env.PATH;
-					else
-						process.env.PATH = origPath;
-					if (origFlutterRoot === undefined)
-						delete process.env.FLUTTER_ROOT;
-					else
-						process.env.FLUTTER_ROOT = origFlutterRoot;
-				});
-			}
-
 			async function setupFlutterWorkspace({ withDartWrapper = true, version = "3.24.0", versionFile = "json" }: { withDartWrapper?: boolean; version?: string | null; versionFile?: "legacy" | "json" | "none" } = {}): Promise<string> {
-				isolatePathEnv();
+				useIsolatedSdkSearch();
 
 				const tempDir = createTempDir();
 				const flutterSdk = path.join(tempDir, "flutter-sdk");
@@ -1738,6 +1721,74 @@ describe("SdkUtils", () => {
 					{ signal: "SIGKILL" },
 					"Failed to initialize Flutter: Process terminated by signal SIGKILL.",
 				);
+			});
+
+			it("disposes the first command's cancellation listener before running fallback flutter --help", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "json", version: "3.24.0" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				const clock = sb.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+				defer("restore fake timers", () => clock.restore());
+				const progressTokenSource = new vs.CancellationTokenSource();
+				defer("dispose progress token source", () => progressTokenSource.dispose());
+				sb.stub(vs.window, "withProgress").callsFake((_options, task) => Promise.resolve(task({ report: () => undefined }, progressTokenSource.token)).catch(() => undefined as never));
+				const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
+				const loggerInfoSpy = sb.spy(privateApi.logger, "info");
+				let dartKillSpy: sinon.SinonSpy | undefined;
+				let flutterKillSpy: sinon.SinonSpy | undefined;
+
+				const spawn = ChildProcessSpawnStub.flutterInit((bin) => {
+					if (bin === path.join(flutterSdk, flutterDartPath))
+						fs.rmSync(versionJsonPath, { force: true });
+					else if (bin === path.join(flutterSdk, flutterPath)) {
+						dartKillSpy = sb.spy(spawn.processes[0], "kill");
+						process.nextTick(() => {
+							flutterKillSpy = sb.spy(spawn.processes[1], "kill");
+							clock.tick(fiveSecondsInMs);
+							progressTokenSource.cancel();
+						});
+					}
+				});
+
+				await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterPath), args: ["--suppress-analytics", "--help"] },
+				]);
+				assert.equal(dartKillSpy?.called, false);
+				assert.equal(flutterKillSpy?.calledOnce, true);
+				assert.equal(loggerInfoSpy.withArgs("User canceled!").callCount, 1);
+				assert.ok(showErrorMessage.calledWithExactly("Flutter initialization was cancelled.", showLogAction));
+			});
+
+			it("does not spawn fallback flutter --help when cancelled right after bin/dart --version completes", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "json", version: "3.24.0" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				const clock = sb.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+				defer("restore fake timers", () => clock.restore());
+				const progressTokenSource = new vs.CancellationTokenSource();
+				defer("dispose progress token source", () => progressTokenSource.dispose());
+				sb.stub(vs.window, "withProgress").callsFake((_options, task) => Promise.resolve(task({ report: () => undefined }, progressTokenSource.token)).catch(() => undefined as never));
+				const loggerWarnSpy = sb.spy(privateApi.logger, "warn");
+
+				const spawn = ChildProcessSpawnStub.flutterInit((bin) => {
+					if (bin === path.join(flutterSdk, flutterDartPath)) {
+						fs.rmSync(versionJsonPath, { force: true });
+						process.nextTick(() => {
+							spawn.processes[0].on("exit", () => {
+								clock.tick(fiveSecondsInMs);
+								progressTokenSource.cancel();
+							});
+						});
+					}
+				});
+
+				await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+				]);
+				assert.ok(loggerWarnSpy.calledWith("Flutter initialization failed, proceeding without! Error: Flutter initialization was cancelled."));
 			});
 		});
 	});

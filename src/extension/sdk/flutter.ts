@@ -61,7 +61,8 @@ async function initializeFlutter(logger: Logger, target: FlutterInitializationTa
 		await runFlutterInitCommand(logger, dartScript, ["--version"], cancellationToken);
 		if (hasFlutterVersion(target.flutterSdkPath))
 			return;
-		logger.info("Flutter version file is missing after running 'dart --version'; running 'flutter --help' to regenerate it");
+		if (!cancellationToken.isCancellationRequested)
+			logger.info("Flutter version file is missing after running 'dart --version'; running 'flutter --help' to regenerate it");
 	}
 
 	await runFlutterInitCommand(logger, flutterScript, ["--suppress-analytics", "--help"], cancellationToken);
@@ -72,6 +73,9 @@ async function initializeFlutter(logger: Logger, target: FlutterInitializationTa
  * and rejects (and shows the user an error) if there are errors.
  */
 function runFlutterInitCommand(logger: Logger, script: string, args: string[], cancellationToken: CancellationToken): Promise<void> {
+	if (cancellationToken.isCancellationRequested)
+		return Promise.reject(new Error(`Flutter initialization was cancelled.`));
+
 	logger.info(`Running '${script} ${args.join(" ")}' to ensure the Flutter SDK is initialized`);
 	const proc = safeToolSpawn(undefined, script, args);
 
@@ -79,7 +83,7 @@ function runFlutterInitCommand(logger: Logger, script: string, args: string[], c
 	const channel = channels.getOutputChannel(`flutter initialization`);
 	channels.runProcessInOutputChannel(proc, channel);
 
-	cancellationToken.onCancellationRequested(() => {
+	const cancellationSubscription = cancellationToken.onCancellationRequested(() => {
 		logger.info(`User canceled!`);
 		proc.kill();
 	});
@@ -92,6 +96,7 @@ function runFlutterInitCommand(logger: Logger, script: string, args: string[], c
 			if (settled)
 				return;
 			settled = true;
+			cancellationSubscription.dispose();
 			outputLog.flushTo(logger);
 			channel.show();
 			const ringLogContents = ringLog.toString();
@@ -122,6 +127,7 @@ function runFlutterInitCommand(logger: Logger, script: string, args: string[], c
 				fail(message);
 			} else {
 				settled = true;
+				cancellationSubscription.dispose();
 				resolve();
 			}
 		});
