@@ -1,0 +1,9 @@
+src/**
+out/src/**
+out/extensions/**
+**/*.map
+*.vsix
+**/.git
+**/.gitattributes
+**/.gitignore
+media/screenshots/**

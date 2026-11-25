@@ -41,7 +41,8 @@ if (!ext) {
 	process.exit(1);
 }
 
-const testFolder = path.join(ext.extensionPath, "src/test");
+export const repoRoot = path.resolve(ext.extensionPath, "../..");
+const testFolder = path.join(repoRoot, "src/test");
 export const testProjectsFolder = path.join(testFolder, "test_projects");
 
 const packageConfigPath = ".dart_tool/package_config.json";
@@ -259,7 +260,7 @@ function setupTestLogging(): boolean {
 
 	if (fileSafeCurrentTestName) {
 		// Use || so an empty DC_TEST_LOGS environment variable still falls back to the default path.
-		const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs"); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+		const logFolder = process.env.DC_TEST_LOGS || path.join(repoRoot, ".dart_code_test_logs"); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
 		if (!fs.existsSync(logFolder))
 			fs.mkdirSync(logFolder);
 		const logFile = fileSafeCurrentTestName + ".txt";

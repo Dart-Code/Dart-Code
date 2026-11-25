@@ -1,0 +1,245 @@
+import * as fs from "fs";
+import { minimatch } from "minimatch";
+import * as os from "os";
+import * as path from "path";
+import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import { ExtensionRestartReason, showLogAction } from "../../../../src/shared/constants";
+import { BasicDebugConfiguration } from "../../../../src/shared/debugging/interfaces";
+import { Logger, WorkspaceConfig } from "../../../../src/shared/interfaces";
+import { filenameSafe } from "../../../../src/shared/utils";
+import { existsAndIsDirectorySync, existsAndIsFileSync, fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../../../../src/shared/utils/fs";
+import { isWithinWorkspace, locateBestProjectRoot } from "../../../../src/shared/vscode/project";
+import { isDartWorkspaceFolder, isInsideFolderNamed } from "../../../../src/shared/vscode/utils";
+import { config } from "./config";
+import { ringLog } from "./extension";
+
+function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
+	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
+}
+
+export function isInsideFlutterProject(uri?: Uri): boolean {
+	if (!uri)
+		return false;
+
+	const projectRoot = locateBestProjectRoot(fsPath(uri));
+	if (projectRoot)
+		return isFlutterProjectFolder(projectRoot);
+	else
+		return isFlutterWorkspaceFolder(workspace.getWorkspaceFolder(uri));
+}
+
+export function isPathInsideFlutterProject(fileOrFolderPath: string): boolean {
+	// TODO(dantup): This can be called quite a lot when discovering tests, so consider
+	//  maintaining a model for the workspace.
+	const projectRoot = locateBestProjectRoot(fileOrFolderPath);
+	if (!projectRoot)
+		return false;
+
+	return isFlutterProjectFolder(projectRoot);
+}
+
+export function insertSessionName(args: { name: string }, logPath: string | undefined) {
+	return logPath
+		? logPath.replace(/\${name}/ig, filenameSafe(args.name || "unnamed-session"))
+		: logPath;
+}
+
+export function insertWorkspaceName<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
+	if (typeof p !== "string")
+		return undefined as (undefined extends T ? undefined : never);
+
+	return p.replace(/\${workspaceName}/ig, filenameSafe(workspace.name ?? "unnamed-workspace"));
+}
+
+export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
+	if (file.isUntitled || !fsPath(file.uri) || file.uri.scheme !== "file")
+		return false;
+
+	const analyzableLanguages = ["dart", "html"];
+	const analyzableFilenames = [".analysis_options", "analysis_options.yaml", "pubspec.yaml"];
+	// We have to include dart/html extensions as this function may be called without a language ID
+	// (for example when triggered by a file system watcher).
+	const analyzableFileExtensions = ["dart", "htm", "html"];
+
+	const extName = path.extname(fsPath(file.uri));
+	const extension = extName ? extName.substr(1) : undefined;
+
+	return !!(file.languageId && analyzableLanguages.includes(file.languageId))
+		|| analyzableFilenames.includes(path.basename(fsPath(file.uri)))
+		|| (extension !== undefined && analyzableFileExtensions.includes(extension));
+}
+
+export function shouldHotReloadFor(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
+	if (file.isUntitled || file.uri.scheme !== "file")
+		return false;
+
+	const filePath = fsPath(file.uri);
+	const extension = path.extname(filePath).substr(1);
+
+	const reloadableFileExtensions = ["dart", "htm", "html", "css", "frag"];
+	if (reloadableFileExtensions.includes(extension))
+		return true;
+
+	const resourceConf = config.for(file.uri);
+	return !!resourceConf.hotReloadPatterns.find((p) => minimatch(filePath, p, { dot: true }));
+}
+
+export function isAnalyzableAndInWorkspace(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
+	return isAnalyzable(file) && isWithinWorkspace(fsPath(file.uri));
+}
+
+export function isTestFileOrFolder(fileOrFolderPath: string | undefined): boolean {
+	return !!fileOrFolderPath && (isTestFile(fileOrFolderPath) || isTestFolder(fileOrFolderPath));
+}
+
+export function isTestFile(file: string): boolean {
+	// To be a test, you must be _test.dart AND inside a test folder (unless allowTestsOutsideTestFolder).
+	// https://github.com/Dart-Code/Dart-Code/issues/1165
+	// https://github.com/Dart-Code/Dart-Code/issues/2021
+	// https://github.com/Dart-Code/Dart-Code/issues/2034
+	return !!file && isDartFile(file)
+		&& (
+			isInsideFolderNamed(file, "test")
+			|| isInsideFolderNamed(file, "integration_test")
+			|| isInsideFolderNamed(file, "test_driver")
+			|| config.allowTestsOutsideTestFolder
+		)
+		&& file.toLowerCase().endsWith("_test.dart");
+}
+
+// Similar to isTestFile, but requires that the file is _test.dart because it will be used as
+// an entry point for pub test running.
+export function isRunnableTestFile(file: string): boolean {
+	return !!file && file.toLowerCase().endsWith("_test.dart") && isDartFile(file);
+}
+
+export function isTestFolder(folderPath: string | undefined): boolean {
+	return !!folderPath
+		&& (
+			isInsideFolderNamed(folderPath, "test")
+			|| isInsideFolderNamed(folderPath, "integration_test")
+		) && existsAndIsDirectorySync(folderPath);
+}
+
+export function projectCanUsePackageTest(folder: string, workspaceConfig: WorkspaceConfig): boolean {
+	// Handle explicit flags.
+	if (workspaceConfig.supportsPackageTest === true)
+		return true;
+	else if (workspaceConfig.supportsPackageTest === false)
+		return false;
+
+	return hasPubspec(folder);
+}
+
+export function isDartFile(file: string): boolean {
+	return !!file && path.extname(file).toLowerCase() === ".dart" && existsAndIsFileSync(file);
+}
+
+export function hasTestFilter(args: string[]) {
+	return args.includes("--name") || args.includes("--pname");
+}
+
+/// Ensures a debug config always has a unique ID we can use to match things up.
+///
+/// Although VS Code assigns an ID, we cannot get at it until after the debug session starts
+/// which might be after we recieve some events (since VS Code fires its event late - after all
+/// initialisation has completed).
+export function ensureDebugLaunchUniqueId(debugConfig: BasicDebugConfiguration): string {
+	const conf = debugConfig as BasicDebugConfiguration & { dartCodeDebugSessionID?: string };
+	if (!conf.dartCodeDebugSessionID) {
+		const dartCodeDebugSessionID = `session-${getRandomInt(0x10000, 0x100000).toString(16)}`;
+		conf.dartCodeDebugSessionID = dartCodeDebugSessionID;
+	}
+	return conf.dartCodeDebugSessionID;
+}
+
+export function isValidEntryFile(file: string | undefined) {
+	if (!file || !isDartFile(file))
+		return false;
+
+	// When in a no-folder workspace, all Dart files are considered runnable.
+	if (!workspace.workspaceFolders?.length)
+		return true;
+
+	return isTestFile(file)
+		|| isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")
+		|| file.endsWith(`lib${path.sep}main.dart`);
+}
+
+export function showLog(specificLog: string | undefined, logContents: string, tempLogPath?: string) {
+	if (specificLog && fs.existsSync(specificLog))
+		void workspace.openTextDocument(specificLog).then(window.showTextDocument);
+	else
+		void openLogContents(undefined, logContents, tempLogPath);
+}
+
+export async function promptToReloadExtension(
+	logger: Logger,
+	{ prompt, buttonText, offerLog, specificLog, severity, restartReason, restartData }:
+		{ prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; severity?: "ERROR" | "WARNING"; restartReason: ExtensionRestartReason, restartData?: string, },
+): Promise<void> {
+	const restartAction = buttonText ?? "Restart Extension";
+	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
+
+	logger.warn(`Prompting to reload: (${prompt}) (actions: ${actions.join(", ")})`);
+
+	const ringLogContents = ringLog.toString();
+	let showPromptAgain = true;
+	const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
+	while (showPromptAgain) {
+		showPromptAgain = false;
+		const show = severity === "ERROR"
+			? window.showErrorMessage
+			: severity === "WARNING"
+				? window.showWarningMessage
+				: window.showInformationMessage;
+		const chosenAction = prompt && await show(prompt, ...actions);
+		if (chosenAction === showLogAction) {
+			showPromptAgain = true;
+			showLog(specificLog, ringLogContents, tempLogPath);
+		} else if (!prompt || chosenAction === restartAction) {
+			void commands.executeCommand("_dart.reloadExtension", restartReason, restartData);
+		}
+	}
+}
+
+const shouldLogTimings = false;
+const start = process.hrtime.bigint();
+let last = start;
+function pad(str: string, length: number) {
+	while (str.length < length)
+		str = "0" + str;
+	return str;
+}
+export const logTime = (taskFinished?: string) => {
+	if (!shouldLogTimings)
+		return;
+	const end = process.hrtime.bigint();
+	console.log(`${pad((end - last).toString(), 15)} ${taskFinished ? "<== " + taskFinished : ""}`);
+	last = end;
+};
+
+export async function openLogContents(logType = `txt`, logContents: string, tempPath?: string) {
+	tempPath ??= path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.${logType}`);
+	fs.writeFileSync(tempPath, logContents);
+	await workspace.openTextDocument(tempPath).then(window.showTextDocument);
+}
+
+/// Gets all excluded folders (full absolute paths) for a given workspace
+/// folder based on config.
+export function getExcludedFolders(f: WorkspaceFolder | undefined): string[] {
+	if (!f)
+		return [];
+
+	const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
+	if (!excludedForWorkspace || !Array.isArray(excludedForWorkspace))
+		return [];
+
+	const workspacePath = fsPath(f.uri);
+	return excludedForWorkspace.map((folder) => {
+		// Handle both relative and absolute paths.
+		if (!path.isAbsolute(folder))
+			folder = path.join(workspacePath, folder);
+		return folder;
+	});
+}

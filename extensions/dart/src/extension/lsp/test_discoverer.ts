@@ -1,0 +1,258 @@
+// TODO: Move this to Shared (and remove dependencies on extension/)
+
+import * as path from "path";
+import * as vs from "vscode";
+import { Outline, OutlineParams } from "../../../../../src/shared/analysis/lsp/custom_protocol";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { SuiteNode, TestModel, TestSource } from "../../../../../src/shared/test/test_model";
+import { disposeAll, uriToFilePath } from "../../../../../src/shared/utils";
+import { existsAndIsDirectorySync, forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../../../../src/shared/utils/fs";
+import { OutlineVisitor } from "../../../../../src/shared/utils/outline";
+import { parseTestNameFromOutline, TestNameSegment } from "../../../../../src/shared/utils/test";
+import { getAllProjectFoldersAndExclusions, isInHiddenFolder } from "../../../../../src/shared/vscode/utils";
+import { FileTracker } from "../analysis/file_tracker";
+import { config } from "../config";
+import { getExcludedFolders, isTestFile } from "../utils";
+
+export class TestDiscoverer implements IAmDisposable {
+	private readonly disposables: IAmDisposable[] = [];
+
+	private readonly debounceTimers: Record<string, NodeJS.Timeout> = {};
+	private readonly debounceDuration = 1500;
+
+	public testDiscoveryPerformed: Promise<void> | undefined;
+	public excludedFolders: Set<string> | undefined;
+
+	constructor(private readonly logger: Logger, public readonly fileTracker: FileTracker, private readonly model: TestModel) {
+		this.disposables.push(fileTracker.onOutline((o) => this.handleOutline(o)));
+
+		const watcher = vs.workspace.createFileSystemWatcher(
+			"**/*",
+			false, // ignoreCreateEvents
+			true, // ignoreChangeEvents
+			false, // ignoreDeleteEvents
+		);
+		this.disposables.push(
+			watcher,
+			watcher.onDidCreate(async (uri) => {
+				// Only handle created files/folders if we have already triggered full suite
+				// discovery. Otherwise, they will be discovered when ensureSuitesDiscovered()
+				// is eventually called.
+				if (!this.testDiscoveryPerformed)
+					return;
+
+				// Wait for initial discovery to complete so excludedFolders is populated.
+				await this.testDiscoveryPerformed;
+				const filePath = fsPath(uri);
+				if (this.isExcludedPath(filePath))
+					return;
+
+				if (isTestFile(filePath)) {
+					this.model.suiteDiscovered(undefined, filePath);
+				} else if (existsAndIsDirectorySync(filePath)) {
+					// If a folder was created or renamed, the watcher event fires only for the
+					// folder itself and not the files inside it, so traverse this folder to
+					// discover any test suites within it.
+					await this.discoverTestSuites(filePath, true);
+				}
+			}),
+			watcher.onDidDelete((uri) => {
+				const filePath = fsPath(uri);
+				// Don't use isTestFile() here because it calls isDartDocument() which checks
+				// for existence, but we've just been deleted.
+				this.model.clearSuiteOrDirectory(filePath);
+			}),
+		);
+	}
+
+	/// Performs suite discovery if it has not already finished. If discovery
+	/// is started (or already in progress), waits for it to complete.
+	public async ensureSuitesDiscovered() {
+		this.testDiscoveryPerformed ??= this.performSuiteDiscovery();
+
+		// Wait for discovery to complete, however it started.
+		await this.testDiscoveryPerformed;
+	}
+
+	private isExcludedPath(fileOrFolderPath: string) {
+		// Hidden folders like .git and .dart_tool are not in excludedFolders (they are skipped
+		// when traversing directories in discoverTestSuites), but the file watcher may fire directly
+		// for files or folders created inside them. Check the path relative to the workspace folder
+		// so that a '.' in an ancestor of the workspace folder does not exclude the whole workspace.
+		if (isInHiddenFolder(fileOrFolderPath))
+			return true;
+
+		return this.excludedFolders
+			? [...this.excludedFolders].some((f) => isWithinPathOrEqual(fileOrFolderPath, f))
+			: false;
+	}
+
+	/// Immediately performs suite discovery. Use [ensureSuitesDiscovered] if you want
+	/// to just ensure discovery has run at least once.
+	private async performSuiteDiscovery() {
+		await vs.window.withProgress(
+			{
+				location: vs.ProgressLocation.Window,
+				title: "Discovering Tests…",
+			},
+			async () => {
+				try {
+					const projectFoldersAndExclusions = await getAllProjectFoldersAndExclusions(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+					const projectFolders = projectFoldersAndExclusions.projectFolders;
+					this.excludedFolders = projectFoldersAndExclusions.excludedFolders;
+					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder)));
+				} catch (e) {
+					this.logger.error(`Failed to discover tests: ${String(e)}`);
+				}
+			},
+		);
+	}
+
+	private async discoverTestSuites(fileOrDirectory: string, isDirectory?: boolean, level = 0) {
+		if (level > 100) return; // Ensure we don't traverse too far or follow any cycles.
+
+		if (isTestFile(fileOrDirectory)) {
+			this.model.suiteDiscovered(undefined, fileOrDirectory);
+		} else if (isDirectory !== false) { // undefined or true are allowed
+			try {
+				const children = await vs.workspace.fs.readDirectory(vs.Uri.file(fileOrDirectory));
+
+				const childPromises = children
+					.map((item) => ({ name: item[0], type: item[1] }))
+					.filter((item) => !item.name.startsWith("."))
+					.map((item) => ({ name: item.name, type: item.type, path: path.join(fileOrDirectory, item.name) }))
+					.filter((item) => !(this.excludedFolders?.has(item.path) ?? false))
+					.map((item) => this.discoverTestSuites(item.path, item.type === vs.FileType.Directory, level + 1));
+
+				await Promise.all(childPromises);
+			} catch (e: unknown) {
+				const err = e as { code?: unknown } | undefined;
+				if (err?.code !== "FileNotADirectory")
+					this.logger.error(`Failed to discover tests: ${String(e)}`);
+			}
+		}
+	}
+
+	public async discoverTestsForSuite(node: SuiteNode): Promise<void> {
+		const doc = await vs.workspace.openTextDocument(node.suiteData.path);
+		// Opening a file that hasn't been opened before does not force analysis, so send a light request that will force
+		// analysis and for the outline to be sent.
+		await vs.commands.executeCommand("vscode.executeHoverProvider", doc.uri, new vs.Position(0, 0));
+		await this.fileTracker.waitForOutline(doc, undefined);
+	}
+
+	/// Forces an update for a file based on the last Outline data (if any).
+	///
+	/// Used by tests to ensure discovery results are available if the test tree state has
+	/// been cleared between test runs.
+	public forceUpdate(uri: vs.Uri) {
+		const outline = this.fileTracker.getOutlineFor(uri);
+		if (outline)
+			this.rebuildFromOutline(fsPath(uri), outline);
+	}
+
+	private handleOutline(outline: OutlineParams) {
+		const suitePath = forceWindowsDriveLetterToUppercase(uriToFilePath(outline.uri));
+
+		const existingTimeout = this.debounceTimers[suitePath];
+		if (existingTimeout)
+			clearTimeout(existingTimeout);
+
+		// If this is the first outline for a file (eg. we've never had a timeout)
+		// we should skip the debounce so things are initially more responsive.
+		const debounceDuration = existingTimeout ? this.debounceDuration : 0;
+
+		this.debounceTimers[suitePath] = setTimeout(() => this.rebuildFromOutline(suitePath, outline.outline), debounceDuration);
+	}
+
+	private rebuildFromOutline(suitePath: string, outline: Outline) {
+		if (isTestFile(suitePath)) {
+			// Generate a unique ID for these IDs to be owned by so that they can be looked
+			// up independent of any other ongoing runs.
+			const dartCodeDebugSessionID = `discovery-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+
+			// Force creation of a node if it's not already there.
+			const suite = this.model.suiteDiscoveredConditional(dartCodeDebugSessionID, suitePath);
+
+			// Mark everything in the suite as potentially-deleted so that we can detect anything
+			// that was not present in the new list to remove it afterwards.
+			this.model.markAllAsPotentiallyDeleted(suite, TestSource.Outline);
+
+			const visitor = new TestDiscoveryVisitor(this.logger, this.model, dartCodeDebugSessionID, suitePath);
+			visitor.visit(outline);
+
+			this.model.removeAllPotentiallyDeletedNodes(suite, TestSource.Outline);
+			this.model.updateSuiteTestCountLabels(suite, true);
+		}
+	}
+
+	public dispose(): void {
+		disposeAll(this.disposables);
+	}
+}
+
+class TestDiscoveryVisitor extends OutlineVisitor {
+	private readonly stack: Array<{ id: number, segments: TestNameSegment[] }> = [];
+	private id = 1;
+
+	constructor(logger: Logger, private readonly model: TestModel, private readonly dartCodeDebugSessionID: string, private readonly suitePath: string) {
+		super(logger);
+	}
+
+	// Only tests and groups inside the top-level main() function are
+	// statically discoverable; tests in other functions appear as dynamic
+	// results when the suite runs.
+	protected visitCompilationUnit(outline: Outline) {
+		for (const child of outline.children ?? []) {
+			if (child.element.kind === "FUNCTION" && child.element.name === "main")
+				super.visitFunction(child);
+		}
+	}
+
+	protected visitFunction(_outline: Outline) {
+		// Do not recurse into nested local helper functions inside main().
+	}
+
+	protected visitUnitTestTest(outline: Outline) {
+		this.handleItem(outline, false, super.visitUnitTestTest.bind(this));
+	}
+	protected visitUnitTestGroup(outline: Outline) {
+		this.handleItem(outline, true, super.visitUnitTestGroup.bind(this));
+	}
+
+	private handleItem(outline: Outline, isGroup: boolean, base: (outline: Outline) => void) {
+		const parsedName = parseTestNameFromOutline(outline.element.name);
+		if (!parsedName?.name || !outline.element.range)
+			return;
+		const { isDynamic } = parsedName;
+
+		const range = outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined);
+		const parent = this.stack.length > 0 ? this.stack[this.stack.length - 1] : undefined;
+
+		const segments = parent
+			? [...parent.segments, parsedName]
+			: [parsedName];
+		const fullName = segments.map((segment) => segment.name).join(" ");
+
+		const thisID = this.id++;
+		if (isGroup)
+			this.model.groupDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, false, segments);
+		else
+			this.model.testDiscovered(this.dartCodeDebugSessionID, this.suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined, false, segments);
+
+		// Do not recurse into dynamically-named groups; their concrete runtime
+		// group instances and child tests will be populated under this node from
+		// test results when the suite runs.
+		if (isGroup && isDynamic)
+			return;
+
+		if (isGroup)
+			this.stack.push({ id: thisID, segments });
+		try {
+			base.bind(this)(outline);
+		} finally {
+			if (isGroup)
+				this.stack.pop();
+		}
+	}
+}

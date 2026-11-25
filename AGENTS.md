@@ -13,13 +13,14 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 
 ## Project Structure
 
-- `src/extension/`: Contains the main extension logic.
-- `src/extension/extension.ts`: The main entry point to the extension (`activate()`).
-- `src/debug/`: Legacy debug adapters that should not be modified. DAP debug adapters now live inside the Dart and Flutter SDKs.
+- `extensions/dart/`: Contains the Dart VS Code extension manifest (`package.json`), assets, snippets, syntax grammars, and source code.
+- `extensions/dart/src/extension/`: Contains the main extension logic.
+- `extensions/dart/src/extension/extension.ts`: The main entry point to the extension (`activate()`).
+- `extensions/dart/src/debug/`: Legacy debug adapters that should not be modified. DAP debug adapters now live inside the Dart and Flutter SDKs.
 - `src/shared/`: Contains code that may be shared between the extension code, legacy debug adapters and tests. Any code that uses the VS Code APIs must be inside a `vscode` sub-folder.
 - `src/test/`: Contains automated tests for the extension, shared into tests for different areas.
 - `src/test/test_projects/`: Sample Dart/Flutter projects that are used by the automated tests.
-- `out/`: Compiled TypeScript output that should not be examined or modified.
+- `extensions/dart/out/`: Compiled TypeScript and Webpack output that should not be examined or modified.
 
 
 ## Rules
@@ -28,9 +29,9 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 
 - All code must be cross-platform, working on Windows, macOS and Linux. This means using things like `path.join()` and taking care when spawning processes.
 - Never access `.fsPath` (on `Uri`) or `.fileName` (on `TextDocument`) directly (enforced by lints). Always use the `fsPath()` helper in `src/shared/utils/fs.ts` (for example `fsPath(uri)` or `fsPath(doc.uri)`), which normalizes Windows drive letters and path casing.
-- Code in `src/extension/` and `src/debug/` must not be imported outside of their respective folders (enforced by lints). In particular, tests in `src/test/` must never import runtime code from `src/extension/` (which would compile an unpacked duplicate copy into `out/src/extension/`); instead, access extension internals through `privateApi` (`InternalExtensionApi` in `src/shared/vscode/interfaces.ts` and `src/extension/extension.ts`) or move shared/pure code to `src/shared/`.
-- Code in `src/shared/` must not contain mutable global/singleton state (immutable constants and lazy caches of deterministic, immutable environment values such as OS detection are fine), and `instanceof` must not be used on classes from `src/shared/` across the extension/test boundary (for example, checking `instanceof` in `src/test/` on an object created by the extension via `privateApi`, or passing a class instance constructed in `src/test/` into `privateApi`), because `src/extension/` is bundled with Webpack (`out/dist/`) while tests run unpacked (`out/src/`), which duplicates module definitions and class constructors across the two environments. Using `instanceof` on `src/shared/` classes within the same side of the boundary (such as inside `src/shared/` or `src/extension/` on extension-owned instances) is fine.
-- All extension settings use the format `dart.*` or `dart.flutter*` and are accessed through a wrapper in `src/extension/config.ts`.
+- Code in `extensions/dart/src/extension/` and `extensions/dart/src/debug/` must not be imported outside of their respective folders (enforced by lints). In particular, tests in `src/test/` must never import runtime code from `extensions/dart/src/extension/` (which would compile an unpacked duplicate copy into `extensions/dart/out/extensions/dart/src/extension/`); instead, access extension internals through `privateApi` (`InternalExtensionApi` in `src/shared/vscode/interfaces.ts` and `extensions/dart/src/extension/extension.ts`) or move shared/pure code to `src/shared/`.
+- Code in `src/shared/` must not contain mutable global/singleton state (immutable constants and lazy caches of deterministic, immutable environment values such as OS detection are fine), and `instanceof` must not be used on classes from `src/shared/` across the extension/test boundary (for example, checking `instanceof` in `src/test/` on an object created by the extension via `privateApi`, or passing a class instance constructed in `src/test/` into `privateApi`), because `extensions/dart/src/extension/` is bundled with Webpack (`extensions/dart/out/dist/`) while tests run unpacked (`extensions/dart/out/src/`), which duplicates module definitions and class constructors across the two environments. Using `instanceof` on `src/shared/` classes within the same side of the boundary (such as inside `src/shared/` or `extensions/dart/src/extension/` on extension-owned instances) is fine.
+- All extension settings use the format `dart.*` or `dart.flutter*` and are accessed through a wrapper in `extensions/dart/src/extension/config.ts`.
 - In tests, use the `defer()` helper (in `src/test/helpers.ts`) instead of `try`/`finally` when cleaning up or resetting state at the end of a test.
 - In tests that stub `child_process.spawn`, always use static factory methods on `ChildProcessSpawnStub` (in `src/test/mocks/child_process_spawn_stub.ts`) rather than calling `new ChildProcessSpawnStub()` or `sb.stub(childProcess, "spawn")` directly. Add a new static method to `ChildProcessSpawnStub` when stubbing a new command or workflow.
 - Do not write Dart parsers, lexers, or tokenizers in the TypeScript extension code (for example, scanning Dart expressions to track nested braces, string literals, or comments). Dart language semantics belong in the Dart analysis server / LSP; if protocol data is ambiguous, prefer a simple heuristic with a comment explaining the trade-off (or ask the user) rather than parsing Dart source in TypeScript.
@@ -48,11 +49,11 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 ## Components
 
 - **LSP**: The Language Server Protocol. A lot of language functionality is provided by an LSP server that lives in the Dart SDK.
-- **DAP**: The Debug Adapter Protocol. Debugging functionality is provided by Debug Adapters that live in the Dart and Flutter SDKs. A legacy TypeScript version of these debug adapters lives in `src/debug/` for older versions of the SDKs.
+- **DAP**: The Debug Adapter Protocol. Debugging functionality is provided by Debug Adapters that live in the Dart and Flutter SDKs. A legacy TypeScript version of these debug adapters lives in `extensions/dart/src/debug/` for older versions of the SDKs.
 - **DTD** or **The Dart Tooling Daemon**: A daemon spawned by the extension to communicate (in both directions) with some other Dart tools.
 - **Flutter Device Daemon**: A daemon spawned by the extension to get updates about available target devices and emulators for Flutter applications.
 - **Pub**: The package manager for Dart, used to manage dependencies.
-- **MCP & Language Model Tools**: `DartMcpServerDefinitionProvider` registers the Dart SDK MCP server (`dart mcp-server`) with VS Code, and `languageModelTools` in `package.json` exposes IDE-integrated tools (such as `dart_format`, `dart_fix`, and `get_dart_tooling_daemon_dtd_uri`) to AI agents.
+- **MCP & Language Model Tools**: `DartMcpServerDefinitionProvider` registers the Dart SDK MCP server (`dart mcp-server`) with VS Code, and `languageModelTools` in `extensions/dart/package.json` exposes IDE-integrated tools (such as `dart_format`, `dart_fix`, and `get_dart_tooling_daemon_dtd_uri`) to AI agents.
 
 
 ## Useful Commands
@@ -62,7 +63,7 @@ Here are some useful commands when working on the project.
 - `npm install`: Installs dependencies. Always run `npm install` first when working in a new worktree or if `node_modules` is missing, before running `npm run lint`, `npm run build`, or `npm test`.
 - `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints. Pass a relative file path to lint only that file.
 - `npm run lint:fix`: Fixes lints that can be fixed automatically.
-- `npm run build`: Builds the extension bundle (`src/extension/` and `src/debug/`) with Webpack.
+- `npm run build`: Builds the extension bundle (`extensions/dart/src/extension/` and `extensions/dart/src/debug/`) with Webpack.
 - `npm run build-tests`: Compiles and typechecks `src/test/` and `src/shared/` (`tsc -p ./tsconfig.build.json`), which are not compiled by `npm run build`.
 - `npm run test <...test-file-globs>`: Runs tests matching the given glob or file path (for example `BOT=dart npm run test src/test/dart/utils/fs.test.ts`). This should be used while working on an individual feature because it is faster than running all tests. Note that `npm test` sets `MOCHA_FORBID_ONLY=true`, so use CLI file filters rather than `.only`.
 - `npm run test`: Runs _all_ automatic tests for _all_ bots without coverage instrumentation. This can be run with the `BOT` env variable set to (as defined in `test_all.ts`, for example to `"dart"`) to run only a single bot's tests. The test suite is large and this can be slow.

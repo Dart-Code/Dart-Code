@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { CancellationToken, commands, debug, DebugAdapterExecutable, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, TestItem, TestRunRequest, Uri } from "vscode";
-import { vmServiceListeningBannerPattern } from "../debug/constants";
+import { vmServiceListeningBannerPattern } from "../../extensions/dart/src/debug/constants";
 import { dartVMPath, flutterPath, isWin } from "../shared/constants";
 import { DartVsCodeLaunchArgs } from "../shared/debugging/interfaces";
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";

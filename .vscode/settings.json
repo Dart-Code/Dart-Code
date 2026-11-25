@@ -4,6 +4,7 @@
 	"editor.tabSize": 4,
 	"files.exclude": {
 		"out": true,
+		"extensions/*/out": true,
 		"**/node_modules": true,
 		".vscode-test": true,
 		".nyc_output": true

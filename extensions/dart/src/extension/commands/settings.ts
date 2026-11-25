@@ -1,0 +1,30 @@
+import * as vs from "vscode";
+import { IAmDisposable, Logger } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
+
+export class SettingsCommands implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
+
+	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext) {
+		this.disposables.push(vs.commands.registerCommand("_dart.settings.openDevToolsLocationSetting", () => this.openSettings("dart.devToolsLocation", true)));
+		this.disposables.push(vs.commands.registerCommand("_dart.settings.openDartTestAdditionalArgs", () => this.openSettings("dart.testAdditionalArgs")));
+		this.disposables.push(vs.commands.registerCommand("_dart.settings.openFlutterTestAdditionalArgs", () => this.openSettings("dart.flutterTestAdditionalArgs")));
+	}
+
+	private async openSettings(settingName: string, forceJson?: boolean): Promise<void> {
+		if (forceJson) {
+			await vs.commands.executeCommand("workbench.action.openSettingsJson", { revealSetting: { key: settingName, edit: true } });
+		} else {
+			await vs.commands.executeCommand("workbench.action.openSettings2", {
+				query: settingName,
+				// https://github.com/microsoft/vscode/issues/226071
+				// target: vs.ConfigurationTarget.Workspace,
+			});
+		}
+	}
+
+	public dispose(): void {
+		disposeAll(this.disposables);
+	}
+}

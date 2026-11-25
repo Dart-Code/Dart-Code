@@ -12,6 +12,7 @@
 .vscode-test/
 .vscode/.browse.VC.db*
 *.log
+*.vsix
 **/test_projects/**/.flutter-plugins*
 **/test_projects/**/windows/
 build/

@@ -1,0 +1,129 @@
+import * as path from "path";
+import * as vs from "vscode";
+import { captureLogsMaxLineLength } from "../../../../../src/shared/constants";
+import { DART_IS_CAPTURING_LOGS_CONTEXT } from "../../../../../src/shared/constants.contexts";
+import { LogCategory } from "../../../../../src/shared/enums";
+import { IAmDisposable } from "../../../../../src/shared/interfaces";
+import { captureLogs, EmittingLogger } from "../../../../../src/shared/logging";
+import { disposeAll, PromiseCompleter } from "../../../../../src/shared/utils";
+import { createFolderForFile, forceWindowsDriveLetterToUppercase, fsPath } from "../../../../../src/shared/utils/fs";
+import { hasFlutterExtension } from "../../../../../src/shared/vscode/extension_utils";
+import { WorkspaceContext } from "../../../../../src/shared/workspace";
+import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, flutterLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
+
+export let isLogging = false;
+
+export class LoggingCommands implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
+	private currentLogCompleter: PromiseCompleter<void> | undefined;
+	private onCaptureLogsEmitter = new vs.EventEmitter<boolean>();
+	public readonly onCaptureLogs = this.onCaptureLogsEmitter.event;
+
+	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string, private readonly workspaceContext: WorkspaceContext) {
+		this.disposables.push(
+			vs.commands.registerCommand("dart.startLogging", this.startLoggingViaPicker.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingDebugging", this.startLoggingDebugging.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingAnalysisServer", this.startLoggingAnalysisServer.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingAnalysisServerTimings", this.startLoggingAnalysisServerTimings.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingExtensionOnly", this.startLoggingExtensionOnly.bind(this)),
+			vs.commands.registerCommand("dart.openExtensionLog", this.openExtensionLog.bind(this)),
+			vs.commands.registerCommand("dart.stopLogging", this.stopLogging.bind(this)),
+		);
+	}
+
+	private async startLoggingViaPicker(): Promise<string | undefined> {
+		const isFlutter = this.workspaceContext.hasAnyFlutterProjects || hasFlutterExtension;
+		const logCategories = Object.keys(userSelectableLogCategories)
+			.filter((k) => isFlutter || !flutterLogCategories.includes(userSelectableLogCategories[k]));
+		const selectedLogCategories = await vs.window.showQuickPick(
+			logCategories.map((k) => ({
+				label: k,
+				logCategory: userSelectableLogCategories[k],
+				picked: true,
+			})),
+			{
+				canPickMany: true,
+				placeHolder: "Select which categories to include in the log",
+			},
+		);
+		if (!selectedLogCategories?.length)
+			return;
+
+		return this.startLogging(selectedLogCategories.map((s) => s.logCategory));
+	}
+
+	private async startLoggingDebugging(): Promise<string | undefined> {
+		return this.startLogging(debuggingLogCategories);
+	}
+
+	private async startLoggingAnalysisServer(): Promise<string | undefined> {
+		return this.startLogging(analysisServerLogCategories);
+	}
+
+	private async startLoggingAnalysisServerTimings(): Promise<string | undefined> {
+		return this.startLogging([LogCategory.AnalyzerTiming]);
+	}
+
+	private async startLoggingExtensionOnly(): Promise<string | undefined> {
+		return this.startLogging(extensionsLogCategories);
+	}
+
+	private async startLogging(categoriesToLog: LogCategory[]): Promise<string | undefined> {
+		const logFilename = path.join(forceWindowsDriveLetterToUppercase(this.extensionLogPath), this.generateFilename());
+		const logUri = vs.Uri.file(logFilename);
+		createFolderForFile(logFilename);
+
+		const allLoggedCategories = [LogCategory.General].concat(categoriesToLog);
+
+		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), captureLogsMaxLineLength, allLoggedCategories);
+		isLogging = true;
+		this.onCaptureLogsEmitter.fire(isLogging);
+		this.disposables.push(logger);
+		void vs.commands.executeCommand("setContext", DART_IS_CAPTURING_LOGS_CONTEXT, true);
+		const completer = new PromiseCompleter<void>();
+		this.currentLogCompleter = completer;
+
+		const isFlutter = this.workspaceContext.hasAnyFlutterProjects || hasFlutterExtension;
+		await vs.window.withProgress(
+			{
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: `${isFlutter ? "Dart and Flutter" : "Dart"} logs are being captured. Reproduce your issue then click Cancel.`,
+			},
+			(_, token) => {
+				token.onCancellationRequested(() => completer.resolve());
+				return completer.promise;
+			},
+		);
+
+		isLogging = false;
+		this.onCaptureLogsEmitter.fire(isLogging);
+		await logger.dispose();
+
+		const doc = await vs.workspace.openTextDocument(logUri);
+		await vs.window.showTextDocument(doc);
+
+		return logFilename;
+	}
+
+	private async openExtensionLog(): Promise<void> {
+		const doc = await vs.workspace.openTextDocument(vs.Uri.file(getExtensionLogPath()));
+		await vs.window.showTextDocument(doc);
+	}
+
+	private stopLogging(): void {
+		if (this.currentLogCompleter)
+			this.currentLogCompleter.resolve();
+	}
+
+	private generateFilename(): string {
+		const pad = (s: string | number) => `0${s.toString()}`.slice(-2);
+		const now = new Date();
+		const formattedDate = `${now.getFullYear()}-${pad(now.getMonth())}-${pad(now.getDay())} ${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+		return `Dart-Code-Log-${formattedDate}.txt`;
+	}
+
+	public dispose(): void {
+		disposeAll(this.disposables);
+	}
+}

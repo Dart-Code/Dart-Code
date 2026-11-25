@@ -1,0 +1,85 @@
+import { Logger } from "../../../../src/shared/interfaces";
+import { getRandomInt } from "../../../../src/shared/utils/fs";
+import { Context } from "../../../../src/shared/vscode/workspace";
+import { WorkspaceContext } from "../../../../src/shared/workspace";
+
+// Used for testing. DO NOT COMMIT AS TRUE.
+const clearAllExperiments = false;
+
+export interface KnownExperiments {
+	// example: Experiment,
+	dartSdkDaps: SdkDapExperiment,
+	// Used for >= 3.13
+	flutterSdkDaps: SdkDapExperiment,
+	// Used for < 3.13
+	flutterSdkDapsLegacy: SdkDapExperiment,
+}
+export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
+	return {
+		// example: new ExampleExperiment(logger, workspaceContext, context),
+		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 100), // TODO(dantup): Remove when happy we don't need to reduce.
+		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 100),
+		flutterSdkDapsLegacy: new SdkDapExperiment(logger, workspaceContext, context, 10), // DO NOT CHANGE LEGACY.
+	};
+}
+
+// class ExampleExperiment extends Experiment {
+// 	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
+// 		super(logger, workspaceContext, context, "example", 10);
+// 	}
+// }
+
+class Experiment {
+	private readonly randomNumber: number;
+	constructor(protected readonly logger: Logger, protected readonly workspaceContext: WorkspaceContext, private readonly context: Context, private readonly id: string, private readonly currentPercent: number) {
+		// If this is the first time we've seen this experiment, generate a random number
+		// from 1-100.
+		if (clearAllExperiments) {
+			context.globalState.setExperimentRandomNumber(id, undefined);
+			context.globalState.setExperimentHasActivated(id, undefined);
+		}
+
+		let randomNumber = context.globalState.getExperimentRandomNumber(id);
+		if (!randomNumber) {
+			randomNumber = getRandomInt(1, 100);
+			context.globalState.setExperimentRandomNumber(id, randomNumber);
+			logger.info(`Generated random number ${randomNumber} for new experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
+		} else {
+			logger.info(`Experiment random number is ${randomNumber} for experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
+		}
+		this.randomNumber = randomNumber;
+
+		if (this.applies) {
+			const isFirst = !context.globalState.getExperimentHasActivated(id);
+			if (isFirst)
+				context.globalState.setExperimentHasActivated(id, true);
+			logger.info(`Experiment '${id}' is activating (${isFirst ? "first time" : "not first time"})`);
+			void this.activate(isFirst)
+				// Activate is allowed to return false if it skipped activating (eg. not relevant) so
+				// first activation can re-run in future.
+				.then((v) => {
+					if (v === false) {
+						logger.info(`Experiment '${id}' aborted. Clearing hasActivated flag`);
+						context.globalState.setExperimentHasActivated(id, undefined);
+					}
+				});
+		} else {
+			logger.info(`Experiment '${id}' does not apply and will not be activated`);
+		}
+	}
+
+	get applies(): boolean { return this.randomNumber <= this.currentPercent; }
+
+	/// Activates the experiment. If returns false, resets the hasActivated flag so it
+	/// is not considered to have run.
+	protected activate(_isFirstActivation: boolean): Promise<undefined | false> { return Promise.resolve(undefined); }
+}
+
+class SdkDapExperiment extends Experiment {
+	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context, percentEnabled: number) {
+		super(logger, workspaceContext, context, "sdkDaps", percentEnabled);
+	}
+
+	get applies(): boolean { return super.applies; }
+}
+

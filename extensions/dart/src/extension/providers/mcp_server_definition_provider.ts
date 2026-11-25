@@ -1,0 +1,61 @@
+import * as path from "path";
+import * as vs from "vscode";
+import { DartCapabilities } from "../../../../../src/shared/capabilities/dart";
+import { dartVMPath } from "../../../../../src/shared/constants";
+import { DartSdks, IAmDisposable } from "../../../../../src/shared/interfaces";
+import { disposeAll } from "../../../../../src/shared/utils";
+import { config } from "../config";
+import { getToolEnv } from "../utils/processes";
+
+export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionProvider, IAmDisposable {
+	private readonly disposables: IAmDisposable[] = [];
+
+	private onDidChangeMcpServerDefinitionsEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
+	public readonly onDidChangeMcpServerDefinitions: vs.Event<void> = this.onDidChangeMcpServerDefinitionsEmitter.event;
+
+	constructor(private readonly sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) {
+		// Inform VS Code the MCP Server list changed if the experiment flag changes.
+		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.mcpServer") || e.affectsConfiguration("dart.mcpServerLogFile") || e.affectsConfiguration("dart.mcpServerTools")) {
+				this.onDidChangeMcpServerDefinitionsEmitter.fire();
+			}
+		}));
+	}
+
+	public provideMcpServerDefinitions(_token: vs.CancellationToken): vs.ProviderResult<vs.McpServerDefinition[]> {
+		// Dart SDK doesn't support it.
+		if (!this.dartCapabilities.supportsMcpServer)
+			return [];
+
+		// Not enabled.
+		if (!config.mcpServer)
+			return [];
+
+
+		const binPath = path.join(this.sdks.dart, dartVMPath);
+		const args = ["mcp-server"];
+		if (this.dartCapabilities.mcpServerRequiresExperimentalFlag)
+			args.push("--experimental-mcp-server");
+
+		// Add log file flag if configured and supported
+		if (config.mcpServerLogFile && this.dartCapabilities.supportsMcpServerLogFile)
+			args.push("--log-file", config.mcpServerLogFile);
+
+		// Add exclude-tool flags if supported and configured (tools set to false are excluded)
+		if (this.dartCapabilities.supportsMcpServerExcludeTool) {
+			const tools: Record<string, boolean> = config.mcpServerTools ?? {};
+			for (const [toolName, enabled] of Object.entries(tools)) {
+				if (!enabled)
+					args.push("--exclude-tool", toolName);
+			}
+		}
+
+		return [
+			new vs.McpStdioServerDefinition("Dart SDK MCP Server", binPath, args, getToolEnv()),
+		];
+	}
+
+	public dispose(): void {
+		disposeAll(this.disposables);
+	}
+}
