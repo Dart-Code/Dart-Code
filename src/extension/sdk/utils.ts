@@ -227,7 +227,7 @@ export class SdkUtils {
 			return cloneResult.result;
 
 		await config.setGlobalFlutterSdkPath(flutterSdkFolder);
-		await ensureFlutterInitialized(this.logger, path.join(flutterSdkFolder, flutterPath));
+		await ensureFlutterInitialized(this.logger, { flutterSdkPath: flutterSdkFolder });
 
 		await new AddSdkToPath(this.logger, this.context, this.analytics).promptToAddToPath("Flutter", flutterSdkFolder);
 
@@ -439,7 +439,7 @@ export class SdkUtils {
 			if (!flutterSdkResult.sdkPath && sdkInitScript && flutterSdkResult.candidatePaths.includes(sdkInitScript)) {
 				// Trigger initialization.
 				this.logger.info(`No Flutter SDK found, but ${sdkInitScript} looks like an init script so attempting to initialize...`);
-				await ensureFlutterInitialized(this.logger, sdkInitScript);
+				await ensureFlutterInitialized(this.logger, { initScript: sdkInitScript });
 
 				// Then search again.
 				this.logger.info(`Snap initialization completed, searching for Flutter SDK again...`);
@@ -461,7 +461,7 @@ export class SdkUtils {
 		let hasAttemptedFlutterInitialization = false;
 		if (hasAnyFlutterProject && flutterSdkPath && !workspaceConfig.skipFlutterInitialization) {
 			hasAttemptedFlutterInitialization = true;
-			await ensureFlutterInitialized(this.logger, path.join(flutterSdkPath, flutterPath));
+			await ensureFlutterInitialized(this.logger, { flutterSdkPath });
 		}
 
 		// User provided custom command to obtain the sdk path
@@ -504,7 +504,7 @@ export class SdkUtils {
 		// still need a Dart SDK (for example, we were activated by running Flutter: Create New Project in an empty workspace.. we
 		// wouldn't trigger the code above).
 		if (!hasAttemptedFlutterInitialization && flutterSdkPath && !dartSdkPath) {
-			await ensureFlutterInitialized(this.logger, path.join(flutterSdkPath, flutterPath));
+			await ensureFlutterInitialized(this.logger, { flutterSdkPath });
 			dartSdkPath = this.findDartSdk([path.join(flutterSdkPath, "bin/cache/dart-sdk")]).sdkPath;
 		}
 

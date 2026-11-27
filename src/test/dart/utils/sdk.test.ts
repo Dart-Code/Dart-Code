@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, cloningFlutterMessage, copySdkBinPathToClipboardAction, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openInstructionsAction, openSettingsAction, showLogAction } from "../../../shared/constants";
+import { addSdkToPathPrompt, addToPathInstructionsUrl, analyzerSnapshotPath, cloningFlutterMessage, copySdkBinPathToClipboardAction, DART_DOWNLOAD_URL, dartAotRuntimePath, dartVMPath, executableNames, ExtensionRestartReason, fiveSecondsInMs, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterDartPath, flutterPath, isWin, MISSING_VERSION_FILE_VERSION, noThanksAction, openInstructionsAction, openSettingsAction, showLogAction } from "../../../shared/constants";
 import { GetSDKCommandConfig } from "../../../shared/interfaces";
 import { fsPath, pubspecContentReferencesFlutter } from "../../../shared/utils/fs";
 import { WorkspaceContext } from "../../../shared/workspace";
@@ -332,8 +332,10 @@ describe("SdkUtils", () => {
 		touchFile(path.join(sdkDir, "version"), version);
 	}
 
-	function createFakeFlutterSdk(sdkDir: string, { marker = "analysis_options.yaml", withDartSdk = false, version = "3.24.0" }: { marker?: "analysis_options.yaml" | "bin/flutter.bat" | "bin/internal/engine.version" | "none", withDartSdk?: boolean, version?: string | null } = {}) {
+	function createFakeFlutterSdk(sdkDir: string, { marker = "analysis_options.yaml", withDartSdk = false, withDartWrapper = false, version = "3.24.0" }: { marker?: "analysis_options.yaml" | "bin/flutter.bat" | "bin/internal/engine.version" | "none", withDartSdk?: boolean, withDartWrapper?: boolean, version?: string | null } = {}) {
 		touchFile(path.join(sdkDir, flutterPath));
+		if (withDartWrapper)
+			touchFile(path.join(sdkDir, flutterDartPath));
 		if (marker !== "none")
 			touchFile(path.join(sdkDir, marker));
 		if (version !== null)
@@ -1124,27 +1126,27 @@ describe("SdkUtils", () => {
 	});
 
 	describe("scanWorkspace", () => {
-		describe("Dart SDK search precedence", () => {
-			// Clears the environment variables that can affect SDK searching so tests are
-			// independent of the machine they're run on. Callers should still set
-			// process.env.PATH and stub workspace folders as required.
-			function useIsolatedSdkSearch(): void {
-				const originalPath = process.env.PATH;
-				const originalFlutterRoot = process.env.FLUTTER_ROOT;
-				process.env.PATH = "";
-				delete process.env.FLUTTER_ROOT;
-				defer("restore PATH and FLUTTER_ROOT", () => {
-					if (originalPath === undefined)
-						delete process.env.PATH;
-					else
-						process.env.PATH = originalPath;
-					if (originalFlutterRoot === undefined)
-						delete process.env.FLUTTER_ROOT;
-					else
-						process.env.FLUTTER_ROOT = originalFlutterRoot;
-				});
-			}
+		// Clears the environment variables that can affect SDK searching so tests are
+		// independent of the machine they're run on. Callers should still set
+		// process.env.PATH and stub workspace folders as required.
+		function useIsolatedSdkSearch(): void {
+			const originalPath = process.env.PATH;
+			const originalFlutterRoot = process.env.FLUTTER_ROOT;
+			process.env.PATH = "";
+			delete process.env.FLUTTER_ROOT;
+			defer("restore PATH and FLUTTER_ROOT", () => {
+				if (originalPath === undefined)
+					delete process.env.PATH;
+				else
+					process.env.PATH = originalPath;
+				if (originalFlutterRoot === undefined)
+					delete process.env.FLUTTER_ROOT;
+				else
+					process.env.FLUTTER_ROOT = originalFlutterRoot;
+			});
+		}
 
+		describe("Dart SDK search precedence", () => {
 			function setWorkspaceFolders(folderPaths: string[]): void {
 				sb.stub(vs.workspace, "workspaceFolders").get(() => folderPaths.map((folder, index) => ({
 					uri: vs.Uri.file(folder),
@@ -1554,6 +1556,240 @@ describe("SdkUtils", () => {
 
 			// The cache must have been invalidated so pubspec-only discovery finds the new project immediately.
 			assert.deepStrictEqual(await extApi.workspace.findProjectFolders(), [tempDir]);
+		});
+
+		describe("Flutter initialization", () => {
+			async function setupFlutterWorkspace({ withDartWrapper = true, version = "3.24.0", versionFile = "json" }: { withDartWrapper?: boolean; version?: string | null; versionFile?: "legacy" | "json" | "none" } = {}): Promise<string> {
+				useIsolatedSdkSearch();
+
+				const tempDir = createTempDir();
+				const flutterSdk = path.join(tempDir, "flutter-sdk");
+				createFakeFlutterSdk(flutterSdk, {
+					withDartSdk: true,
+					withDartWrapper,
+					version: versionFile === "legacy" ? version : null,
+				});
+				if (versionFile === "json" && version !== null)
+					touchFile(path.join(flutterSdk, "bin", "cache", "flutter.version.json"), JSON.stringify({ flutterVersion: version }));
+
+				const flutterProj = path.join(tempDir, "flutter_proj");
+				touchFile(path.join(flutterProj, "pubspec.yaml"), "name: flutter_proj\ndependencies:\n  flutter:\n    sdk: flutter\n");
+				sb.stub(vs.workspace, "workspaceFolders").get(() => [
+					{ uri: vs.Uri.file(flutterProj), name: "flutter_proj", index: 0 },
+				]);
+				privateApi.clearCaches();
+				defer("clear caches", () => privateApi.clearCaches());
+
+				await setConfigForTest("dart", "flutterSdkPath", flutterSdk);
+				await setConfigForTest("dart", "sdkPath", undefined);
+				return flutterSdk;
+			}
+
+			it("uses bin/dart --version when bin/dart and flutter.version.json exist", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "json" });
+				const spawn = ChildProcessSpawnStub.flutterInit();
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+				]);
+				assert.equal(wc.sdks.flutterVersion, "3.24.0");
+			});
+
+			it("uses bin/dart --version when valid legacy version exists even if flutter.version.json is corrupted", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "legacy", version: "3.24.0" });
+				const spawn = ChildProcessSpawnStub.flutterInit();
+
+				let wc = await privateApi.sdkUtils!.scanWorkspace();
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+				]);
+				assert.equal(wc.sdks.flutterVersion, "3.24.0");
+
+				// Corrupt JSON alongside a valid legacy version file still falls back to legacy version in getSdkVersion().
+				touchFile(path.join(flutterSdk, "bin", "cache", "flutter.version.json"), "{not valid json");
+				privateApi.clearCaches();
+				wc = await privateApi.sdkUtils!.scanWorkspace();
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+				]);
+				assert.equal(wc.sdks.flutterVersion, "3.24.0");
+			});
+
+			it("skips bin/dart --version and runs flutter --suppress-analytics --help when no version file exists", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "none" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				const spawn = ChildProcessSpawnStub.flutterInit((bin) => {
+					if (bin === path.join(flutterSdk, flutterPath))
+						touchFile(versionJsonPath, JSON.stringify({ flutterVersion: "3.50.1" }));
+				});
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterPath), args: ["--suppress-analytics", "--help"] },
+				]);
+				assert.equal(wc.sdks.flutterVersion, "3.50.1");
+			});
+
+			it("skips bin/dart --version without error logs when flutter.version.json is corrupted and no legacy version exists", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "none" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				touchFile(versionJsonPath, "{not valid json");
+				const loggerErrorSpy = sb.spy(privateApi.logger, "error");
+				const spawn = ChildProcessSpawnStub.flutterInit((bin) => {
+					if (bin === path.join(flutterSdk, flutterPath))
+						touchFile(versionJsonPath, JSON.stringify({ flutterVersion: "3.50.1" }));
+				});
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterPath), args: ["--suppress-analytics", "--help"] },
+				]);
+				assert.equal(wc.sdks.flutterVersion, "3.50.1");
+				assert.equal(loggerErrorSpy.called, false);
+			});
+
+			it("falls back to flutter --suppress-analytics --help when bin/dart --version invalidates the version file", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "json", version: "3.24.0" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				const spawn = ChildProcessSpawnStub.flutterInit((bin) => {
+					if (bin === path.join(flutterSdk, flutterDartPath))
+						fs.rmSync(versionJsonPath, { force: true });
+					else if (bin === path.join(flutterSdk, flutterPath))
+						touchFile(versionJsonPath, JSON.stringify({ flutterVersion: "3.50.1" }));
+				});
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterPath), args: ["--suppress-analytics", "--help"] },
+				]);
+				assert.equal(wc.sdks.flutterVersion, "3.50.1");
+			});
+
+			it("falls back to flutter --suppress-analytics --help when bin/dart is missing", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ withDartWrapper: false, versionFile: "json" });
+				const spawn = ChildProcessSpawnStub.flutterInit();
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterPath), args: ["--suppress-analytics", "--help"] },
+				]);
+				assert.equal(wc.sdks.flutterVersion, "3.24.0");
+			});
+
+			async function expectInitFailureWithoutFallback(result: FakeSpawnResult, expectedErrorMessage: string): Promise<void> {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "json" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
+				const spawn = ChildProcessSpawnStub.flutterInit(
+					() => fs.rmSync(versionJsonPath, { force: true }),
+					result,
+				);
+
+				const wc = await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+				]);
+				assert.equal(wc.sdks.flutter, flutterSdk);
+				assert.ok(showErrorMessage.calledWithExactly(expectedErrorMessage, showLogAction));
+			}
+
+			it("does not run fallback when bin/dart --version exits non-zero", async () => {
+				await expectInitFailureWithoutFallback(
+					{ exitCode: 1, stderr: "init failed" },
+					"Failed to initialize Flutter: Process exited with code 1.",
+				);
+			});
+
+			it("does not hang or run fallback when bin/dart --version emits a spawn error", async () => {
+				await expectInitFailureWithoutFallback(
+					{ error: new Error("spawn EACCES") },
+					"Failed to initialize Flutter: Error: spawn EACCES.",
+				);
+			});
+
+			it("treats signal termination without cancellation as failure without fallback", async () => {
+				await expectInitFailureWithoutFallback(
+					{ signal: "SIGKILL" },
+					"Failed to initialize Flutter: Process terminated by signal SIGKILL.",
+				);
+			});
+
+			it("disposes the first command's cancellation listener before running fallback flutter --help", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "json", version: "3.24.0" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				const clock = sb.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+				defer("restore fake timers", () => clock.restore());
+				const progressTokenSource = new vs.CancellationTokenSource();
+				defer("dispose progress token source", () => progressTokenSource.dispose());
+				sb.stub(vs.window, "withProgress").callsFake((_options, task) => Promise.resolve(task({ report: () => undefined }, progressTokenSource.token)).catch(() => undefined as never));
+				const showErrorMessage = sb.stub(vs.window, "showErrorMessage").resolves(undefined);
+				const loggerInfoSpy = sb.spy(privateApi.logger, "info");
+				let dartKillSpy: sinon.SinonSpy | undefined;
+				let flutterKillSpy: sinon.SinonSpy | undefined;
+
+				const spawn = ChildProcessSpawnStub.flutterInit((bin) => {
+					if (bin === path.join(flutterSdk, flutterDartPath))
+						fs.rmSync(versionJsonPath, { force: true });
+					else if (bin === path.join(flutterSdk, flutterPath)) {
+						dartKillSpy = sb.spy(spawn.processes[0], "kill");
+						process.nextTick(() => {
+							flutterKillSpy = sb.spy(spawn.processes[1], "kill");
+							clock.tick(fiveSecondsInMs);
+							progressTokenSource.cancel();
+						});
+					}
+				});
+
+				await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterPath), args: ["--suppress-analytics", "--help"] },
+				]);
+				assert.equal(dartKillSpy?.called, false);
+				assert.equal(flutterKillSpy?.calledOnce, true);
+				assert.equal(loggerInfoSpy.withArgs("User canceled!").callCount, 1);
+				assert.ok(showErrorMessage.calledWithExactly("Flutter initialization was cancelled.", showLogAction));
+			});
+
+			it("does not spawn fallback flutter --help when cancelled right after bin/dart --version completes", async () => {
+				const flutterSdk = await setupFlutterWorkspace({ versionFile: "json", version: "3.24.0" });
+				const versionJsonPath = path.join(flutterSdk, "bin", "cache", "flutter.version.json");
+				const clock = sb.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+				defer("restore fake timers", () => clock.restore());
+				const progressTokenSource = new vs.CancellationTokenSource();
+				defer("dispose progress token source", () => progressTokenSource.dispose());
+				sb.stub(vs.window, "withProgress").callsFake((_options, task) => Promise.resolve(task({ report: () => undefined }, progressTokenSource.token)).catch(() => undefined as never));
+				const loggerWarnSpy = sb.spy(privateApi.logger, "warn");
+
+				const spawn = ChildProcessSpawnStub.flutterInit((bin) => {
+					if (bin === path.join(flutterSdk, flutterDartPath)) {
+						fs.rmSync(versionJsonPath, { force: true });
+						process.nextTick(() => {
+							spawn.processes[0].on("exit", () => {
+								clock.tick(fiveSecondsInMs);
+								progressTokenSource.cancel();
+							});
+						});
+					}
+				});
+
+				await privateApi.sdkUtils!.scanWorkspace();
+
+				spawn.assertCalls([
+					{ cwd: undefined, bin: path.join(flutterSdk, flutterDartPath), args: ["--version"] },
+				]);
+				assert.ok(loggerWarnSpy.calledWith("Flutter initialization failed, proceeding without! Error: Flutter initialization was cancelled."));
+			});
 		});
 	});
 });

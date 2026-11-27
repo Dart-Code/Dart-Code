@@ -49,6 +49,7 @@ export const executableNames = {
 	devToolsToolBinary: isWin ? "dt.bat" : "dt",
 	devToolsToolLegacyBinary: isWin ? "devtools_tool.bat" : "devtools_tool",
 	flutter: isWin ? "flutter.bat" : "flutter",
+	flutterDart: isWin ? "dart.bat" : "dart",
 	flutterDev: isWin ? "flutter-dev.bat" : "flutter-dev",
 	pub: isWin ? "pub.bat" : "pub",
 };
@@ -58,6 +59,7 @@ export const dartAotRuntimePath = "bin/" + executableNames.dartaotruntime;
 export const devToolsToolPath = "tool/bin/" + executableNames.devToolsToolBinary;
 export const devToolsToolLegacyPath = "tool/bin/" + executableNames.devToolsToolLegacyBinary;
 
+export const flutterDartPath = "bin/" + executableNames.flutterDart;
 export let flutterPath = "bin/" + executableNames.flutter;
 export function setFlutterDev(useFlutterDev: boolean) {
 	flutterPath = "bin/" + (useFlutterDev ? executableNames.flutterDev : executableNames.flutter);
