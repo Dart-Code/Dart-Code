@@ -8,3 +8,4 @@ This folder contains maintainer and contributor documentation for the Dart-Code 
 
 - **[Releasing (Step-by-Step Guide)](releasing.md)**: Instructions for maintainers performing a pre-release, stable minor release, or patch release, as well as how to recover from a failed release run.
 - **[Release Process (Technical Details)](release-process.md)**: Technical overview of how the versioning scheme, `.github/workflows/release.yml`, safety guards, and VS Code Marketplace Trusted Publishing work under the hood.
+- **[Test Discovery, Test Model, and Test Explorer](test-explorer.md)**: High-level design and behavioral contracts for static and dynamic test discovery, node merging and pruning, synthetic nodes and counts, debug-session ownership, and LCOV coverage integration.
