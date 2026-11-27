@@ -20,6 +20,7 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 - `src/test/`: Contains automated tests for the extension, shared into tests for different areas.
 - `src/test/test_projects/`: Sample Dart/Flutter projects that are used by the automated tests.
 - `out/`: Compiled TypeScript output that should not be examined or modified.
+- `docs/`: Maintainer and contributor documentation serving as the source of truth for high-level concepts, processes, and design decisions (indexed in `docs/README.md`).
 
 
 ## Rules
@@ -34,6 +35,7 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 - In tests, use the `defer()` helper (in `src/test/helpers.ts`) instead of `try`/`finally` when cleaning up or resetting state at the end of a test.
 - In tests that stub `child_process.spawn`, always use static factory methods on `ChildProcessSpawnStub` (in `src/test/mocks/child_process_spawn_stub.ts`) rather than calling `new ChildProcessSpawnStub()` or `sb.stub(childProcess, "spawn")` directly. Add a new static method to `ChildProcessSpawnStub` when stubbing a new command or workflow.
 - Do not write Dart parsers, lexers, or tokenizers in the TypeScript extension code (for example, scanning Dart expressions to track nested braces, string literals, or comments). Dart language semantics belong in the Dart analysis server / LSP; if protocol data is ambiguous, prefer a simple heuristic with a comment explaining the trade-off (or ask the user) rather than parsing Dart source in TypeScript.
+- The `docs/` folder (indexed in `docs/README.md`) is the source of truth for high-level concepts, behavioral contracts, and design decisions. Before modifying a documented area, read the relevant doc; whenever a PR changes documented behavior or introduces an important new design decision, update the existing docs (or add and index a new doc in `docs/README.md`) in the same PR. Keep docs high-level and focused on decisions rather than duplicating code details.
 
 ### Code Style
 
