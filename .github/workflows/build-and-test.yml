@@ -360,17 +360,17 @@ jobs:
       - name: Run Lychee Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          # TODO: Remove `--accept 100..=103,200..=299,503` (and re-evaluate
+          # TODO: Remove `--accept 100..=103,200..=299,503,504` (and re-evaluate
           # retry/concurrency flags if needed) once a Lychee release containing
           # the 5xx retry fix ships and lychee-action@v2 updates to it (v0.24.2
-          # does not retry 503 responses at all).
+          # does not retry 5xx responses at all).
           # Issue: https://github.com/lycheeverse/lychee/issues/2319
           # Fix PR: https://github.com/lycheeverse/lychee/pull/2324
           # Fix commit: https://github.com/lycheeverse/lychee/commit/cad188298b6b0594f5d3a377810016ecec14e540
           # Release PR: https://github.com/lycheeverse/lychee/pull/2217
           args: >
             --root-dir ./
-            --accept 100..=103,200..=299,503
+            --accept 100..=103,200..=299,503,504
             --exclude-all-private
             --exclude '\$\%7B[^}]+\%7D'
             --exclude "^file://"
